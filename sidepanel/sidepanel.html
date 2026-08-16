@@ -16,9 +16,10 @@
         <h1 class="sp-title">Homework Helper</h1>
       </div>
       <div class="sp-header-right">
-        <button class="sp-icon-btn" id="spBtnHistory" data-tooltip-title="Lịch sử giải bài" data-tooltip-desc="Xem danh sách bài tập đã giải trong phiên."></button>
+        <button class="sp-icon-btn" id="spBtnNewChat" data-tooltip-title="Đoạn chat mới" data-tooltip-desc="Bắt đầu một phiên hội thoại bài tập mới."></button>
+        <button class="sp-icon-btn" id="spBtnHistory" data-tooltip-title="Lịch sử các hội thoại" data-tooltip-desc="Xem danh sách các phiên giải bài đã lưu."></button>
         <button class="sp-icon-btn" id="spBtnSettings" data-tooltip-title="Cài đặt Key & Model" data-tooltip-desc="Quản lý danh sách API Key và cơ chế xoay vòng thông minh."></button>
-        <button class="sp-icon-btn" id="spBtnClear" data-tooltip-title="Xóa đoạn chat" data-tooltip-desc="Xóa toàn bộ tin nhắn trong phiên trò chuyện hiện tại."></button>
+        <button class="sp-icon-btn" id="spBtnClear" data-tooltip-title="Xóa đoạn chat" data-tooltip-desc="Xóa hội thoại hiện tại."></button>
         <button class="sp-icon-btn" id="spBtnOptions" data-tooltip-title="Trang cài đặt nâng cao" data-tooltip-desc="Mở giao diện Cài đặt chi tiết & tùy biến giao diện Liquid Glass."></button>
       </div>
     </header>
@@ -96,6 +97,19 @@
           <button class="sp-icon-btn" id="spBtnCloseModal"></button>
         </div>
         <div class="sp-modal-body" id="spModalBody">
+          <!-- Populated by sidepanel.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="sp-modal-backdrop" id="spHistoryModal" style="display: none;">
+      <div class="sp-modal-card" style="max-height: 80vh; display: flex; flex-direction: column;">
+        <div class="sp-modal-header">
+          <div class="sp-modal-title" id="spHistoryModalTitle" style="display:flex; align-items:center; gap:8px;"></div>
+          <button class="sp-icon-btn" id="spBtnCloseHistoryModal"></button>
+        </div>
+        <div class="sp-history-body" id="spHistoryModalBody" style="padding: 14px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px;">
           <!-- Populated by sidepanel.js -->
         </div>
       </div>

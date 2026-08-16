@@ -133,6 +133,8 @@ Ensure maximum pedagogical clarity. If an image contains multiple questions, ask
   disabledSites: [], // list of disabled hostnames
   theme: 'dark', // 'dark' | 'light' | 'system'
   chatHistory: [],
+  conversations: [], // [{ id, title, createdAt, updatedAt, thumbnail, messages: [] }]
+  activeConversationId: null,
 };
 
 export const Storage = {
@@ -184,20 +186,148 @@ export const Storage = {
     return updated;
   },
 
-  async getChatHistory() {
-    const { chatHistory = [] } = await this.get('chatHistory');
-    return chatHistory;
+  // =======================================================
+  // Multi-Session Conversation Management
+  // =======================================================
+  async getConversations() {
+    const { conversations = [], chatHistory = [] } = await this.get(['conversations', 'chatHistory']);
+    if (conversations.length === 0 && chatHistory.length > 0) {
+      // Automatic migration from flat chatHistory to first conversation
+      const firstUserMsg = chatHistory.find((m) => m.role === 'user');
+      const conv = {
+        id: `conv_${Date.now()}`,
+        title: firstUserMsg?.content ? firstUserMsg.content.slice(0, 50) : 'Cuộc trò chuyện trước',
+        createdAt: firstUserMsg?.timestamp || Date.now(),
+        updatedAt: Date.now(),
+        thumbnail: chatHistory.find((m) => m.image)?.image || null,
+        messages: chatHistory,
+      };
+      await this.set({ conversations: [conv], activeConversationId: conv.id });
+      return [conv];
+    }
+    return conversations;
   },
 
-  async addChatMessage(msg) {
-    const { chatHistory = [] } = await this.get('chatHistory');
-    // Keep max 50 recent messages to conserve memory
-    const updated = [...chatHistory, { ...msg, timestamp: Date.now() }].slice(-50);
-    await this.set({ chatHistory: updated });
+  async getActiveConversation() {
+    const conversations = await this.getConversations();
+    const { activeConversationId } = await this.get(['activeConversationId']);
+    if (activeConversationId) {
+      const found = conversations.find((c) => c.id === activeConversationId);
+      if (found) return found;
+    }
+    if (conversations.length > 0) {
+      return conversations[conversations.length - 1];
+    }
+    return null;
+  },
+
+  async createNewConversation(title = 'Cuộc trò chuyện mới') {
+    const conversations = await this.getConversations();
+    const newConv = {
+      id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      title: title,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      thumbnail: null,
+      messages: [],
+    };
+    const updated = [...conversations, newConv];
+    await this.set({
+      conversations: updated,
+      activeConversationId: newConv.id,
+      chatHistory: [],
+    });
+    return newConv;
+  },
+
+  async switchConversation(convId) {
+    const conversations = await this.getConversations();
+    const active = conversations.find((c) => c.id === convId) || null;
+    await this.set({
+      activeConversationId: convId,
+      chatHistory: active ? (active.messages || []) : [],
+    });
+    return active;
+  },
+
+  async deleteConversation(convId) {
+    const conversations = await this.getConversations();
+    const updated = conversations.filter((c) => c.id !== convId);
+    const { activeConversationId } = await this.get(['activeConversationId']);
+    let nextActiveId = activeConversationId;
+    let nextMessages = [];
+
+    if (activeConversationId === convId) {
+      if (updated.length > 0) {
+        nextActiveId = updated[updated.length - 1].id;
+        nextMessages = updated[updated.length - 1].messages;
+      } else {
+        nextActiveId = null;
+        nextMessages = [];
+      }
+    } else {
+      const active = updated.find((c) => c.id === activeConversationId);
+      nextMessages = active ? active.messages : [];
+    }
+
+    await this.set({
+      conversations: updated,
+      activeConversationId: nextActiveId,
+      chatHistory: nextMessages,
+    });
     return updated;
   },
 
+  async getChatHistory() {
+    const activeConv = await this.getActiveConversation();
+    return activeConv ? activeConv.messages : [];
+  },
+
+  async addChatMessage(msg) {
+    const conversations = await this.getConversations();
+    const { activeConversationId } = await this.get(['activeConversationId']);
+    let activeConv = conversations.find((c) => c.id === activeConversationId);
+
+    const messageWithTime = { ...msg, timestamp: Date.now() };
+
+    if (!activeConv) {
+      activeConv = {
+        id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        title: msg.content ? msg.content.slice(0, 50) : (msg.image ? 'Giải bài tập qua ảnh' : 'Bài tập mới'),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        thumbnail: msg.image || null,
+        messages: [messageWithTime],
+      };
+      conversations.push(activeConv);
+    } else {
+      activeConv.messages = [...activeConv.messages, messageWithTime].slice(-50);
+      activeConv.updatedAt = Date.now();
+      if (activeConv.messages.length <= 2 && msg.role === 'user') {
+        activeConv.title = msg.content ? msg.content.slice(0, 50) : (msg.image ? 'Giải bài tập qua ảnh' : activeConv.title);
+      }
+      if (msg.image && !activeConv.thumbnail) {
+        activeConv.thumbnail = msg.image;
+      }
+    }
+
+    // Keep max 50 recent conversations to maintain high performance
+    const finalConversations = conversations.slice(-50);
+
+    await this.set({
+      conversations: finalConversations,
+      activeConversationId: activeConv.id,
+      chatHistory: activeConv.messages,
+    });
+    return activeConv.messages;
+  },
+
   async clearChatHistory() {
-    await this.set({ chatHistory: [] });
+    const { activeConversationId } = await this.get(['activeConversationId']);
+    if (activeConversationId) {
+      await this.deleteConversation(activeConversationId);
+    } else {
+      await this.set({ chatHistory: [], conversations: [] });
+    }
   }
 };

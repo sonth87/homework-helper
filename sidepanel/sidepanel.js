@@ -38,6 +38,7 @@ class SidePanelController {
 
   populateStaticIcons() {
     document.getElementById('spLogo').innerHTML = Icons.appLogo(24);
+    document.getElementById('spBtnNewChat').innerHTML = Icons.plus(16);
     document.getElementById('spBtnHistory').innerHTML = Icons.history(16);
     document.getElementById('spBtnSettings').innerHTML = Icons.settings(16);
     document.getElementById('spBtnClear').innerHTML = Icons.trash(16);
@@ -48,6 +49,8 @@ class SidePanelController {
     document.getElementById('spBtnSend').innerHTML = `<span>Ask AI</span> ${Icons.send(13)}`;
     document.getElementById('spModalTitle').innerHTML = `${Icons.settings(16)} Model & API Key Configuration`;
     document.getElementById('spBtnCloseModal').innerHTML = Icons.x(16);
+    document.getElementById('spHistoryModalTitle').innerHTML = `${Icons.history(16)} Lịch sử các hội thoại`;
+    document.getElementById('spBtnCloseHistoryModal').innerHTML = Icons.x(16);
   }
 
   setupEventListeners() {
@@ -64,36 +67,20 @@ class SidePanelController {
       }
     });
 
-    // Capture button
+    // File input & drag-and-drop
+    document.getElementById('spBtnUpload').addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => this.handleFileUpload(e.target.files[0]));
+    document.getElementById('spBtnRemoveThumb').addEventListener('click', () => this.clearImagePreview());
+
+    // Capture screenshot
     document.getElementById('spBtnCapture').addEventListener('click', async () => {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tab && tab.id) {
+      if (tab?.id) {
         chrome.tabs.sendMessage(tab.id, { action: 'START_CROP' }).catch(() => {});
       }
     });
 
-    // Image upload
-    document.getElementById('spBtnUpload').addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          this.attachedImageBase64 = reader.result;
-          document.getElementById('spThumb').src = reader.result;
-          document.getElementById('spImgPreview').style.display = 'flex';
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    document.getElementById('spBtnRemoveThumb').addEventListener('click', () => {
-      this.attachedImageBase64 = null;
-      document.getElementById('spImgPreview').style.display = 'none';
-      fileInput.value = '';
-    });
-
-    // Study Mode & Language
+    // Study mode & Language selectors
     const modeSelect = document.getElementById('spSelectMode');
     if (modeSelect) {
       Storage.get(['studyMode']).then(({ studyMode = 'step-by-step' }) => {
@@ -132,11 +119,21 @@ class SidePanelController {
       `;
     });
 
-    // History button -> Reload and scroll smoothly to the top of chat
-    document.getElementById('spBtnHistory').addEventListener('click', async () => {
-      await this.loadChatHistory();
-      const body = document.getElementById('spChatBody');
-      body.scrollTo({ top: 0, behavior: 'smooth' });
+    // New Chat button
+    document.getElementById('spBtnNewChat').addEventListener('click', async () => {
+      await Storage.createNewConversation('Đoạn chat mới');
+      this.loadChatHistory();
+      document.getElementById('spTextarea').value = '';
+      document.getElementById('spTextarea').focus();
+    });
+
+    // History button -> Opens History Modal with past questions
+    document.getElementById('spBtnHistory').addEventListener('click', () => {
+      this.openHistoryModal();
+    });
+
+    document.getElementById('spBtnCloseHistoryModal').addEventListener('click', () => {
+      document.getElementById('spHistoryModal').style.display = 'none';
     });
 
     document.getElementById('spBtnOptions').addEventListener('click', () => {
@@ -269,6 +266,24 @@ class SidePanelController {
     }
   }
 
+  handleFileUpload(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.attachedImageBase64 = reader.result;
+      document.getElementById('spThumb').src = reader.result;
+      document.getElementById('spImgPreview').style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  clearImagePreview() {
+    this.attachedImageBase64 = null;
+    document.getElementById('spImgPreview').style.display = 'none';
+    const input = document.getElementById('spFileInput');
+    if (input) input.value = '';
+  }
+
   async handleSend() {
     const textarea = document.getElementById('spTextarea');
     const text = textarea.value.trim();
@@ -293,12 +308,15 @@ class SidePanelController {
     this.activeRequestId = `req_${Date.now()}`;
     document.getElementById('spBtnSend').disabled = true;
 
+    const { outputLanguage = 'en' } = await Storage.get(['outputLanguage']);
+
     chrome.runtime.sendMessage({
       action: 'ASK_AI',
       payload: {
         prompt,
         imageBase64,
         studyMode: this.currentStudyMode,
+        outputLanguage,
         requestId: this.activeRequestId,
       },
     });
@@ -562,9 +580,10 @@ class SidePanelController {
   async loadChatHistory() {
     const history = await Storage.getChatHistory();
     const body = document.getElementById('spChatBody');
+    if (!body) return;
 
+    body.innerHTML = '';
     if (history.length > 0) {
-      body.innerHTML = '';
       history.forEach((msg) => {
         const el = document.createElement('div');
         el.className = `sp-msg ${msg.role === 'user' ? 'sp-msg-user' : 'sp-msg-ai'}`;
@@ -578,7 +597,108 @@ class SidePanelController {
         body.appendChild(el);
       });
       body.scrollTop = body.scrollHeight;
+    } else {
+      body.innerHTML = `
+        <div class="sp-msg sp-msg-ai">
+          <div class="sp-msg-bubble">
+            <div id="spWelcomeText">Xin chào! Tôi là trợ lý Homework Helper. Bạn cần giải bài tập nào hôm nay?</div>
+            <div class="sp-chips-row">
+              <button class="sp-chip" data-query="Giải phương trình bậc hai $ax^2 + bx + c = 0$">Phương trình bậc 2</button>
+              <button class="sp-chip" data-query="Giải thích các định luật chuyển động của Newton">Định luật Newton</button>
+              <button class="sp-chip" data-query="Dịch đoạn văn này sang tiếng Anh">Dịch bài tập</button>
+            </div>
+          </div>
+        </div>
+      `;
     }
+  }
+
+  parseHistorySessions(history) {
+    const sessions = [];
+    let current = null;
+
+    for (let i = 0; i < history.length; i++) {
+      const msg = history[i];
+      if (msg.role === 'user') {
+        current = {
+          user: msg,
+          assistant: null,
+          timestamp: msg.timestamp || Date.now(),
+        };
+        sessions.push(current);
+      } else if (msg.role === 'assistant') {
+        if (current && !current.assistant) {
+          current.assistant = msg;
+        } else {
+          sessions.push({
+            user: { role: 'user', content: msg.content ? msg.content.slice(0, 60) : 'Bài tập đã giải' },
+            assistant: msg,
+            timestamp: msg.timestamp || Date.now(),
+          });
+        }
+      }
+    }
+    return sessions;
+  }
+
+  async openHistoryModal() {
+    const modal = document.getElementById('spHistoryModal');
+    const body = document.getElementById('spHistoryModalBody');
+    if (!modal || !body) return;
+
+    modal.style.display = 'flex';
+    body.innerHTML = '<div style="text-align:center; padding:16px; color:#94a3b8;">Đang tải danh sách hội thoại...</div>';
+
+    const conversations = await Storage.getConversations();
+    const { activeConversationId } = await Storage.get(['activeConversationId']);
+
+    if (conversations.length === 0) {
+      body.innerHTML = `
+        <div style="text-align:center; padding:32px 10px; color:#94a3b8; font-size:13px;">
+          Chưa có hội thoại nào được lưu.<br>Hãy tạo đoạn chat mới để bắt đầu!
+        </div>
+      `;
+      return;
+    }
+
+    body.innerHTML = '';
+    [...conversations].reverse().forEach((conv) => {
+      const el = document.createElement('div');
+      el.className = `sp-history-item ${conv.id === activeConversationId ? 'active' : ''}`;
+
+      let thumbHtml = conv.thumbnail
+        ? `<img src="${conv.thumbnail}" class="sp-history-thumb" alt="thumb">`
+        : `<div class="sp-history-thumb" style="display:flex;align-items:center;justify-content:center;color:#0284c7;background:#e0f2fe;">${Icons.fileText(20)}</div>`;
+
+      const dateStr = conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+      const msgCount = conv.messages?.length || 0;
+
+      el.innerHTML = `
+        ${thumbHtml}
+        <div class="sp-history-info">
+          <div class="sp-history-title">${conv.title || 'Hội thoại không tên'}</div>
+          <div class="sp-history-time">${Icons.clock(12)} ${dateStr} &bull; ${msgCount} tin nhắn</div>
+        </div>
+        <button class="sp-icon-btn sp-btn-del-conv" title="Xóa hội thoại này" style="width:26px;height:26px;color:#94a3b8;flex-shrink:0;">
+          ${Icons.trash(13)}
+        </button>
+      `;
+
+      el.querySelector('.sp-btn-del-conv').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await Storage.deleteConversation(conv.id);
+        this.openHistoryModal();
+        this.loadChatHistory();
+      });
+
+      el.addEventListener('click', async () => {
+        await Storage.switchConversation(conv.id);
+        modal.style.display = 'none';
+        this.loadChatHistory();
+      });
+
+      body.appendChild(el);
+    });
   }
 
   async openSettingsModal() {

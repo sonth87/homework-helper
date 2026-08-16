@@ -129,20 +129,22 @@
 /* Card History Slide-down Overlay Panel */
 .hw-card-history-panel {
   position: absolute;
-  top: 48px;
+  top: 44px;
   left: 0;
   right: 0;
-  bottom: 50px;
-  background: rgba(255, 255, 255, 0.96);
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  z-index: 20;
+  z-index: 100;
   display: flex;
   flex-direction: column;
-  padding: 12px 16px;
+  padding: 14px 16px;
   gap: 10px;
   animation: hwFadeIn 0.15s ease;
   overflow-y: auto;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
 }
 
 .hw-card-history-header {
@@ -160,6 +162,41 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Drawer History Overlay Panel */
+.hw-drawer-history-panel {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 12px;
+  animation: hwFadeIn 0.15s ease;
+  overflow-y: auto;
+}
+
+.hw-drawer-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.hw-drawer-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   overflow-y: auto;
   flex: 1;
 }

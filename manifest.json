@@ -33,6 +33,7 @@
   "permissions": [
     "aiLanguageModelOriginTrial",
     "storage",
+    "unlimitedStorage",
     "tabs",
     "activeTab",
     "scripting",

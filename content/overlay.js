@@ -135,7 +135,10 @@ class InPageOverlay {
             ${Icons.gripHorizontal(16)}
           </div>
           <div class="hw-card-actions">
-            <button class="hw-icon-btn" id="hwBtnCardHistory" title="Lịch sử các câu hỏi đã giải" style="width:24px;height:24px;">
+            <button class="hw-icon-btn" id="hwBtnCardNewChat" title="Tạo hội thoại mới" style="width:24px;height:24px;">
+              ${Icons.plus(14)}
+            </button>
+            <button class="hw-icon-btn" id="hwBtnCardHistory" title="Danh sách các hội thoại đã giải" style="width:24px;height:24px;">
               ${Icons.history(14)}
             </button>
             <button class="hw-icon-btn" id="hwBtnCloseCard" title="Close" style="width:24px;height:24px;">
@@ -148,11 +151,16 @@ class InPageOverlay {
         <div class="hw-card-history-panel" id="hwCardHistoryPanel" style="display: none;">
           <div class="hw-card-history-header">
             <div style="display:flex; align-items:center; gap:6px;">
-              ${Icons.history(14)} <span>Lịch sử giải bài tập</span>
+              ${Icons.history(14)} <span>Lịch sử các hội thoại</span>
             </div>
-            <button class="hw-icon-btn" id="hwBtnCloseCardHistory" style="width:20px;height:20px;">
-              ${Icons.x(12)}
-            </button>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <button class="hw-btn-mini-options" id="hwBtnCardAddConv" style="padding: 3px 8px; font-size: 11px;">
+                ${Icons.plus(12)} Mới
+              </button>
+              <button class="hw-icon-btn" id="hwBtnCloseCardHistory" style="width:22px;height:22px;">
+                ${Icons.x(12)}
+              </button>
+            </div>
           </div>
           <div class="hw-card-history-list" id="hwCardHistoryList"></div>
           <button class="hw-btn-mini-options" id="hwBtnCardOpenDrawer" style="margin-top:6px; width:100%; justify-content:center; padding: 7px 12px;">
@@ -213,13 +221,16 @@ class InPageOverlay {
             <span id="hwHeaderTitle">Homework Helper</span>
           </div>
           <div class="hw-header-actions">
-            <button class="hw-icon-btn" id="hwBtnDrawerHistory" data-tooltip-title="Lịch sử giải bài" data-tooltip-desc="Xem danh sách bài tập đã giải trong phiên.">
+            <button class="hw-icon-btn" id="hwBtnDrawerNewChat" data-tooltip-title="Tạo đoạn chat mới" data-tooltip-desc="Bắt đầu phiên hội thoại bài tập mới.">
+              ${Icons.plus(16)}
+            </button>
+            <button class="hw-icon-btn" id="hwBtnDrawerHistory" data-tooltip-title="Lịch sử các hội thoại" data-tooltip-desc="Xem danh sách các phiên giải bài đã lưu.">
               ${Icons.history(16)}
             </button>
             <button class="hw-icon-btn" id="hwBtnSettings" data-tooltip-title="Cài đặt Key & Model" data-tooltip-desc="Quản lý danh sách API Key và cơ chế xoay vòng thông minh.">
               ${Icons.settings(16)}
             </button>
-            <button class="hw-icon-btn" id="hwBtnClear" data-tooltip-title="Xóa đoạn chat" data-tooltip-desc="Xóa toàn bộ tin nhắn trong phiên trò chuyện hiện tại.">
+            <button class="hw-icon-btn" id="hwBtnClear" data-tooltip-title="Xóa đoạn chat" data-tooltip-desc="Xóa hội thoại hiện tại.">
               ${Icons.trash(16)}
             </button>
             <button class="hw-icon-btn" id="hwBtnSidePanel" data-tooltip-title="Trang Cài đặt & Cấu hình" data-tooltip-desc="Mở trang cài đặt chi tiết để quản lý API Key, bật AI nội bộ và tùy biến giao diện.">
@@ -229,6 +240,24 @@ class InPageOverlay {
               ${Icons.x(16)}
             </button>
           </div>
+        </div>
+
+        <!-- Drawer History Overlay Panel -->
+        <div class="hw-drawer-history-panel" id="hwDrawerHistoryPanel" style="display: none;">
+          <div class="hw-drawer-history-header">
+            <div style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:13.5px; color:#0f172a;">
+              ${Icons.history(16)} <span>Lịch sử các hội thoại</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button class="hw-btn-mini-options" id="hwBtnDrawerAddConv" style="padding: 4px 10px; font-size: 11.5px;">
+                ${Icons.plus(13)} Đoạn chat mới
+              </button>
+              <button class="hw-icon-btn" id="hwBtnCloseDrawerHistory" style="width:24px;height:24px;">
+                ${Icons.x(14)}
+              </button>
+            </div>
+          </div>
+          <div class="hw-drawer-history-list" id="hwDrawerHistoryList"></div>
         </div>
 
         <!-- Model Status Badge -->
@@ -435,6 +464,18 @@ class InPageOverlay {
       }
     });
 
+    // Chips delegation for prompt suggestions
+    s.getElementById('hwChatBody').addEventListener('click', (e) => {
+      const chip = e.target.closest('.hw-chip');
+      if (chip) {
+        const q = chip.getAttribute('data-query');
+        if (q) {
+          textarea.value = q;
+          this.handleSend();
+        }
+      }
+    });
+
     // Study mode selector
     const modeSelect = s.getElementById('hwModeSelect');
     if (modeSelect) {
@@ -471,6 +512,20 @@ class InPageOverlay {
       s.getElementById('hwCardHistoryPanel').style.display = 'none';
     });
 
+    s.getElementById('hwBtnCardNewChat').addEventListener('click', async () => {
+      await Storage.createNewConversation('Bài tập mới');
+      s.getElementById('hwCardHistoryPanel').style.display = 'none';
+      this.popupCard.style.display = 'none';
+      triggerCrop();
+    });
+
+    s.getElementById('hwBtnCardAddConv').addEventListener('click', async () => {
+      await Storage.createNewConversation('Bài tập mới');
+      s.getElementById('hwCardHistoryPanel').style.display = 'none';
+      this.popupCard.style.display = 'none';
+      triggerCrop();
+    });
+
     s.getElementById('hwBtnCardHistory').addEventListener('click', () => {
       const panel = s.getElementById('hwCardHistoryPanel');
       const isVisible = panel.style.display === 'flex';
@@ -492,10 +547,33 @@ class InPageOverlay {
       this.toggleDrawer(true);
     });
 
-    s.getElementById('hwBtnDrawerHistory').addEventListener('click', () => {
+    s.getElementById('hwBtnDrawerNewChat').addEventListener('click', async () => {
+      await Storage.createNewConversation('Đoạn chat mới');
+      s.getElementById('hwDrawerHistoryPanel').style.display = 'none';
       this.loadInitialHistory();
-      const body = s.getElementById('hwChatBody');
-      body.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => s.getElementById('hwTextarea').focus(), 100);
+    });
+
+    s.getElementById('hwBtnDrawerAddConv').addEventListener('click', async () => {
+      await Storage.createNewConversation('Đoạn chat mới');
+      s.getElementById('hwDrawerHistoryPanel').style.display = 'none';
+      this.loadInitialHistory();
+      setTimeout(() => s.getElementById('hwTextarea').focus(), 100);
+    });
+
+    s.getElementById('hwBtnDrawerHistory').addEventListener('click', () => {
+      const panel = s.getElementById('hwDrawerHistoryPanel');
+      const isVisible = panel.style.display === 'flex';
+      if (isVisible) {
+        panel.style.display = 'none';
+      } else {
+        panel.style.display = 'flex';
+        this.renderDrawerHistory();
+      }
+    });
+
+    s.getElementById('hwBtnCloseDrawerHistory').addEventListener('click', () => {
+      s.getElementById('hwDrawerHistoryPanel').style.display = 'none';
     });
 
     // Primary action button (Next Question OR Continue in chat)
@@ -769,6 +847,7 @@ class InPageOverlay {
         prompt,
         imageBase64,
         studyMode: 'step-by-step',
+        outputLanguage,
         requestId: this.activeRequestId,
       },
     });
@@ -877,16 +956,34 @@ class InPageOverlay {
       content: userLabel,
     });
 
-    const { apiConfigs = [], systemPrompt } = await Storage.get(['apiConfigs', 'systemPrompt']);
+    const { apiConfigs = [], systemPrompt, outputLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'outputLanguage']);
     const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
 
     if (enabledKeys.length === 0) {
+      const langNames = {
+        en: 'English',
+        vi: 'Tiếng Việt (Vietnamese)',
+        es: 'Español (Spanish)',
+        fr: 'Français (French)',
+        de: 'Deutsch (German)',
+        'zh-CN': 'Simplified Chinese (简体中文)',
+        'zh-TW': 'Traditional Chinese (繁體中文)',
+        ja: 'Japanese (日本語)',
+        ko: 'Korean (한국어)',
+        pt: 'Portuguese (Português)',
+        id: 'Bahasa Indonesia',
+        ru: 'Russian (Русский)',
+      };
+      const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Tiếng Việt (Vietnamese)';
+      const nanoSysPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE]: You MUST reply in ${targetLangName}.`.trim();
+      const nanoPrompt = `${prompt}\n\n[Output entirely in ${targetLangName}]`;
+
       window.dispatchEvent(
         new CustomEvent('HOMEWORK_AI_NANO_EXEC', {
           detail: {
-            prompt,
+            prompt: nanoPrompt,
             requestId: this.activeRequestId,
-            systemPrompt,
+            systemPrompt: nanoSysPrompt,
           },
         })
       );
@@ -898,6 +995,7 @@ class InPageOverlay {
       payload: {
         prompt,
         studyMode,
+        outputLanguage,
         requestId: this.activeRequestId,
       },
     });
@@ -932,75 +1030,174 @@ class InPageOverlay {
     });
   }
 
+  parseHistorySessions(history) {
+    const sessions = [];
+    let current = null;
+
+    for (let i = 0; i < history.length; i++) {
+      const msg = history[i];
+      if (msg.role === 'user') {
+        current = {
+          user: msg,
+          assistant: null,
+          timestamp: msg.timestamp || Date.now(),
+        };
+        sessions.push(current);
+      } else if (msg.role === 'assistant') {
+        if (current && !current.assistant) {
+          current.assistant = msg;
+        } else {
+          sessions.push({
+            user: { role: 'user', content: msg.content ? msg.content.slice(0, 60) : 'Bài tập đã giải' },
+            assistant: msg,
+            timestamp: msg.timestamp || Date.now(),
+          });
+        }
+      }
+    }
+    return sessions;
+  }
+
   async renderCardHistory() {
-    const history = await Storage.getChatHistory();
+    const conversations = await Storage.getConversations();
+    const { activeConversationId } = await Storage.get(['activeConversationId']);
     const listEl = this.shadow.getElementById('hwCardHistoryList');
     if (!listEl) return;
 
     listEl.innerHTML = '';
-    const userMessages = [];
 
-    for (let i = 0; i < history.length; i++) {
-      if (history[i].role === 'user') {
-        const assistantAnswer = history[i + 1]?.role === 'assistant' ? history[i + 1].content : '';
-        userMessages.push({
-          user: history[i],
-          assistant: assistantAnswer,
-          index: i,
-        });
-      }
-    }
-
-    if (userMessages.length === 0) {
+    if (conversations.length === 0) {
       listEl.innerHTML = `
         <div style="text-align:center; padding:24px 10px; color:#94a3b8; font-size:12px;">
-          Chưa có bài tập nào trong lịch sử.<br>Hãy chụp ảnh hoặc đặt câu hỏi để bắt đầu!
+          Chưa có hội thoại nào được lưu.<br>Hãy tạo bài tập mới để bắt đầu!
         </div>
       `;
       return;
     }
 
     // Render newest first
-    userMessages.reverse().forEach((item) => {
+    [...conversations].reverse().forEach((conv) => {
       const el = document.createElement('div');
-      el.className = 'hw-card-history-item';
+      el.className = `hw-card-history-item ${conv.id === activeConversationId ? 'active' : ''}`;
 
-      let thumbHtml = item.user.image
-        ? `<img src="${item.user.image}" class="hw-card-history-thumb" alt="thumb">`
+      let thumbHtml = conv.thumbnail
+        ? `<img src="${conv.thumbnail}" class="hw-card-history-thumb" alt="thumb">`
         : `<div class="hw-card-history-thumb" style="display:flex;align-items:center;justify-content:center;color:#0284c7;background:#e0f2fe;">${Icons.fileText(18)}</div>`;
 
-      const dateStr = item.user.timestamp ? new Date(item.user.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+      const dateStr = conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+      const msgCount = conv.messages?.length || 0;
 
       el.innerHTML = `
         ${thumbHtml}
         <div class="hw-card-history-info">
-          <div class="hw-card-history-title">${item.user.content || 'Bài tập đã giải'}</div>
-          <div class="hw-card-history-time">${Icons.clock(11)} ${dateStr || 'Gần đây'}</div>
+          <div class="hw-card-history-title">${conv.title || 'Hội thoại không tên'}</div>
+          <div class="hw-card-history-time">${Icons.clock(11)} ${dateStr} &bull; ${msgCount} tin nhắn</div>
         </div>
+        <button class="hw-icon-btn hw-btn-del-conv" title="Xóa hội thoại này" style="width:22px;height:22px;color:#94a3b8;flex-shrink:0;">
+          ${Icons.trash(12)}
+        </button>
       `;
 
-      el.addEventListener('click', () => {
-        // Load this past item directly into the popup card
-        this.shadow.getElementById('hwCardHistoryPanel').style.display = 'none';
-        this.popupMode = item.user.image ? 'screenshot' : 'text';
-        this.popupSourceText = item.user.content;
-        this.popupImageBase64 = item.user.image;
+      // Delete conversation button
+      el.querySelector('.hw-btn-del-conv').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await Storage.deleteConversation(conv.id);
+        this.renderCardHistory();
+      });
 
-        if (item.user.image) {
+      // Switch conversation
+      el.addEventListener('click', async () => {
+        await Storage.switchConversation(conv.id);
+        this.shadow.getElementById('hwCardHistoryPanel').style.display = 'none';
+        this.popupCard.style.display = 'flex';
+
+        const lastAssistant = [...(conv.messages || [])].reverse().find((m) => m.role === 'assistant');
+        const lastUser = [...(conv.messages || [])].reverse().find((m) => m.role === 'user');
+
+        if (lastUser?.image) {
+          this.popupMode = 'screenshot';
+          this.popupImageBase64 = lastUser.image;
+          this.popupSourceText = '';
           const thumb = this.shadow.getElementById('hwCardThumb');
-          thumb.src = item.user.image;
+          thumb.src = lastUser.image;
           thumb.style.display = 'block';
           this.shadow.getElementById('hwCardSourceText').style.display = 'none';
-        } else {
+        } else if (lastUser?.content) {
+          this.popupMode = 'text';
+          this.popupImageBase64 = null;
+          this.popupSourceText = lastUser.content;
           this.shadow.getElementById('hwCardThumb').style.display = 'none';
           const srcEl = this.shadow.getElementById('hwCardSourceText');
-          srcEl.textContent = item.user.content;
+          srcEl.textContent = lastUser.content;
           srcEl.style.display = 'block';
+        } else {
+          this.popupMode = 'text';
+          this.popupImageBase64 = null;
+          this.popupSourceText = '';
+          this.shadow.getElementById('hwCardThumb').style.display = 'none';
+          this.shadow.getElementById('hwCardSourceText').style.display = 'none';
         }
 
         const ansContent = this.shadow.getElementById('hwCardAnswerContent');
-        ansContent.innerHTML = formatMarkdownAndMath(item.assistant || item.user.content);
-        this.activeCardResponseText = item.assistant || '';
+        const replyText = lastAssistant?.content || lastUser?.content || 'Hội thoại rỗng';
+        ansContent.innerHTML = formatMarkdownAndMath(replyText);
+        this.activeCardResponseText = replyText;
+      });
+
+      listEl.appendChild(el);
+    });
+  }
+
+  async renderDrawerHistory() {
+    const conversations = await Storage.getConversations();
+    const { activeConversationId } = await Storage.get(['activeConversationId']);
+    const listEl = this.shadow.getElementById('hwDrawerHistoryList');
+    if (!listEl) return;
+
+    listEl.innerHTML = '';
+
+    if (conversations.length === 0) {
+      listEl.innerHTML = `
+        <div style="text-align:center; padding:32px 10px; color:#94a3b8; font-size:13px;">
+          Chưa có hội thoại nào được lưu.<br>Hãy tạo đoạn chat mới để bắt đầu!
+        </div>
+      `;
+      return;
+    }
+
+    [...conversations].reverse().forEach((conv) => {
+      const el = document.createElement('div');
+      el.className = `hw-card-history-item ${conv.id === activeConversationId ? 'active' : ''}`;
+
+      let thumbHtml = conv.thumbnail
+        ? `<img src="${conv.thumbnail}" class="hw-card-history-thumb" alt="thumb">`
+        : `<div class="hw-card-history-thumb" style="display:flex;align-items:center;justify-content:center;color:#0284c7;background:#e0f2fe;">${Icons.fileText(18)}</div>`;
+
+      const dateStr = conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+      const msgCount = conv.messages?.length || 0;
+
+      el.innerHTML = `
+        ${thumbHtml}
+        <div class="hw-card-history-info">
+          <div class="hw-card-history-title">${conv.title || 'Hội thoại không tên'}</div>
+          <div class="hw-card-history-time">${Icons.clock(11)} ${dateStr} &bull; ${msgCount} tin nhắn</div>
+        </div>
+        <button class="hw-icon-btn hw-btn-del-conv" title="Xóa hội thoại này" style="width:24px;height:24px;color:#94a3b8;flex-shrink:0;">
+          ${Icons.trash(13)}
+        </button>
+      `;
+
+      el.querySelector('.hw-btn-del-conv').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await Storage.deleteConversation(conv.id);
+        this.renderDrawerHistory();
+        this.loadInitialHistory();
+      });
+
+      el.addEventListener('click', async () => {
+        await Storage.switchConversation(conv.id);
+        this.shadow.getElementById('hwDrawerHistoryPanel').style.display = 'none';
+        this.loadInitialHistory();
       });
 
       listEl.appendChild(el);
@@ -1116,12 +1313,30 @@ class InPageOverlay {
 
     // If no keys configured and no image, execute via Main World Gemini Nano directly!
     if (enabledKeys.length === 0 && !imageBase64) {
+      const langNames = {
+        en: 'English',
+        vi: 'Tiếng Việt (Vietnamese)',
+        es: 'Español (Spanish)',
+        fr: 'Français (French)',
+        de: 'Deutsch (German)',
+        'zh-CN': 'Simplified Chinese (简体中文)',
+        'zh-TW': 'Traditional Chinese (繁體中文)',
+        ja: 'Japanese (日本語)',
+        ko: 'Korean (한국어)',
+        pt: 'Portuguese (Português)',
+        id: 'Bahasa Indonesia',
+        ru: 'Russian (Русский)',
+      };
+      const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Tiếng Việt (Vietnamese)';
+      const nanoSysPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`.trim();
+      const nanoPrompt = `${prompt}\n\n[Output entirely in ${targetLangName}]`;
+
       window.dispatchEvent(
         new CustomEvent('HOMEWORK_AI_NANO_EXEC', {
           detail: {
-            prompt,
+            prompt: nanoPrompt,
             requestId: this.activeRequestId,
-            systemPrompt,
+            systemPrompt: nanoSysPrompt,
           },
         })
       );
@@ -1134,6 +1349,7 @@ class InPageOverlay {
         prompt,
         imageBase64,
         studyMode: this.currentStudyMode,
+        outputLanguage,
         requestId: this.activeRequestId,
       },
     });
@@ -1315,9 +1531,10 @@ class InPageOverlay {
   async loadInitialHistory() {
     const history = await Storage.getChatHistory();
     const body = this.shadow.getElementById('hwChatBody');
+    if (!body) return;
 
+    body.innerHTML = '';
     if (history.length > 0) {
-      body.innerHTML = '';
       history.forEach((msg) => {
         const msgEl = document.createElement('div');
         msgEl.className = `hw-msg ${msg.role === 'user' ? 'hw-msg-user' : 'hw-msg-ai'}`;
@@ -1332,6 +1549,19 @@ class InPageOverlay {
         body.appendChild(msgEl);
       });
       body.scrollTop = body.scrollHeight;
+    } else {
+      body.innerHTML = `
+        <div class="hw-msg hw-msg-ai">
+          <div class="hw-msg-bubble" id="hwWelcomeBubble">
+            <div id="hwWelcomeText">Xin chào! Tôi là trợ lý Homework Helper. Bạn cần giải bài tập nào hôm nay?</div>
+            <div class="hw-chips-row" id="hwChipsContainer">
+              <button class="hw-chip" data-query="Giải phương trình bậc hai $ax^2 + bx + c = 0$">Phương trình bậc 2</button>
+              <button class="hw-chip" data-query="Giải thích các định luật chuyển động của Newton">Định luật Newton</button>
+              <button class="hw-chip" data-query="Dịch đoạn văn này sang tiếng Anh">Dịch bài tập</button>
+            </div>
+          </div>
+        </div>
+      `;
     }
   }
 

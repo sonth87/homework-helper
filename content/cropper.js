@@ -162,7 +162,7 @@ class ScreenCropper {
       canvas.height
     );
 
-    const croppedBase64 = canvas.toDataURL('image/png');
+    const croppedBase64 = canvas.toDataURL('image/jpeg', 0.88);
     this.cleanup();
 
     // Broadcast the cropped image to overlay and sidepanel

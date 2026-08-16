@@ -144,12 +144,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Ask AI via Port / Message
   if (action === 'ASK_AI') {
-    const { prompt, imageBase64, studyMode, preferredConfigId, requestId = `req_${Date.now()}` } = payload || {};
+    const { prompt, imageBase64, studyMode, preferredConfigId, outputLanguage: reqLang, requestId = `req_${Date.now()}` } = payload || {};
     const abortController = new AbortController();
     activeStreams.set(requestId, abortController);
 
     (async () => {
-      const { systemPrompt, outputLanguage = 'en' } = await Storage.get(['systemPrompt', 'outputLanguage']);
+      const { systemPrompt, outputLanguage: storedLang = 'en' } = await Storage.get(['systemPrompt', 'outputLanguage']);
+      const outputLanguage = reqLang || storedLang;
       try {
         await AiEngine.ask(
           { prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage },

@@ -17,29 +17,27 @@ export class AiEngine {
    * @param {Function} onChunk - Callback for incremental text chunks: onChunk(text, metadata)
    * @param {AbortSignal} [signal] - Abort signal
    */
-  static async ask({ prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage }, onChunk, signal) {
+  static async ask({ prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage = 'en' }, onChunk, signal) {
     let attempts = 0;
     const maxAttempts = 3;
 
-    let finalSystemPrompt = systemPrompt;
-    if (outputLanguage && outputLanguage !== 'auto') {
-      const langNames = {
-        en: 'English',
-        vi: 'Tiếng Việt (Vietnamese)',
-        es: 'Español (Spanish)',
-        fr: 'Français (French)',
-        de: 'Deutsch (German)',
-        'zh-CN': 'Simplified Chinese (简体中文)',
-        'zh-TW': 'Traditional Chinese (繁體中文)',
-        ja: 'Japanese (日本語)',
-        ko: 'Korean (한국어)',
-        pt: 'Portuguese (Português)',
-        id: 'Bahasa Indonesia',
-        ru: 'Russian (Русский)',
-      };
-      const targetLangName = langNames[outputLanguage] || outputLanguage;
-      finalSystemPrompt = `${systemPrompt || ''}\n\n[LANGUAGE REQUIREMENT]: Always provide your complete answers, step-by-step reasoning, and explanations in ${targetLangName}.`.trim();
-    }
+    const langNames = {
+      en: 'English',
+      vi: 'Tiếng Việt (Vietnamese)',
+      es: 'Español (Spanish)',
+      fr: 'Français (French)',
+      de: 'Deutsch (German)',
+      'zh-CN': 'Simplified Chinese (简体中文)',
+      'zh-TW': 'Traditional Chinese (繁體中文)',
+      ja: 'Japanese (日本語)',
+      ko: 'Korean (한국어)',
+      pt: 'Portuguese (Português)',
+      id: 'Bahasa Indonesia',
+      ru: 'Russian (Русский)',
+    };
+    const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Tiếng Việt (Vietnamese)';
+
+    let finalSystemPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE REQUIREMENT]: You MUST provide your entire solution, explanations, step-by-step reasoning, and answer in ${targetLangName}. Do NOT use any other language unless explicitly requested.`.trim();
 
     while (attempts < maxAttempts) {
       attempts++;
@@ -53,14 +51,14 @@ export class AiEngine {
         onChunk('', { status: 'connecting', model: config.model, provider: config.provider, attempt: attempts });
 
         if (config.provider === 'chrome-builtin') {
-          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, systemPrompt: finalSystemPrompt }, onChunk, signal);
+          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
         } else if (config.provider === 'gemini') {
-          await this.streamGemini(config, { prompt, imageBase64, studyMode, systemPrompt: finalSystemPrompt }, onChunk, signal);
+          await this.streamGemini(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
         } else if (config.provider === 'claude') {
-          await this.streamClaude(config, { prompt, imageBase64, studyMode, systemPrompt: finalSystemPrompt }, onChunk, signal);
+          await this.streamClaude(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
         } else {
           // OpenAI, DeepSeek, Groq, OpenRouter, Custom (all use OpenAI chat completions format)
-          await this.streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, systemPrompt: finalSystemPrompt }, onChunk, signal);
+          await this.streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
         }
 
         // Successfully completed
@@ -88,30 +86,47 @@ export class AiEngine {
     }
   }
 
-  static formatStudyPrompt(studyMode, prompt) {
-    if (!studyMode || studyMode === 'direct') return prompt;
+  static formatStudyPrompt(studyMode, prompt, outputLanguage = 'en') {
+    const langNames = {
+      en: 'English',
+      vi: 'Tiếng Việt (Vietnamese)',
+      es: 'Español (Spanish)',
+      fr: 'Français (French)',
+      de: 'Deutsch (German)',
+      'zh-CN': 'Simplified Chinese (简体中文)',
+      'zh-TW': 'Traditional Chinese (繁體中文)',
+      ja: 'Japanese (日本語)',
+      ko: 'Korean (한국어)',
+      pt: 'Portuguese (Português)',
+      id: 'Bahasa Indonesia',
+      ru: 'Russian (Русский)',
+    };
+    const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Tiếng Việt (Vietnamese)';
+    const langSuffix = `\n\n[Yêu cầu ngôn ngữ: Toàn bộ lời giải và giải thích PHẢI viết bằng ${targetLangName}]`;
+
+    if (!studyMode || studyMode === 'direct') return `${prompt}${langSuffix}`;
 
     const lower = prompt.trim().toLowerCase();
     const isGreeting = /^(hi|hello|hey|xin chào|chào bạn|chào ai|chào|test|alo|ping)\b/i.test(lower) && prompt.trim().length < 25;
-    if (isGreeting) return prompt;
+    if (isGreeting) return `${prompt}${langSuffix}`;
 
     switch (studyMode) {
       case 'hint':
-        return `[MODE: HINT & COACHING]\nGoal: Do NOT give the final answer or final option directly. Instead, provide a helpful pedagogical hint, key formula, and guiding questions to help the student solve it themselves:\n\nQuestion:\n${prompt}`;
+        return `[MODE: GỢI Ý & HƯỚNG DẪN TỰ HỌC]\nMục tiêu: KHÔNG đưa ra đáp án cuối cùng ngay lập tức. Thay vào đó, hãy đưa ra gợi ý sư phạm hữu ích, công thức then chốt và các câu hỏi dẫn dắt để học sinh tự giải:\n\nCâu hỏi:\n${prompt}${langSuffix}`;
       case 'explain':
-        return `[MODE: DEEP CONCEPT EXPLANATION]\nGoal: Explain the underlying scientific/mathematical theories, background principles, and real-world intuitions behind this problem in depth:\n\nQuestion:\n${prompt}`;
+        return `[MODE: GIẢI THÍCH CHUYÊN SÂU]\nMục tiêu: Giải thích bản chất lý thuyết khoa học/toán học, các định luật liên quan và trực quan thực tế đằng sau bài toán này một cách dễ hiểu:\n\nCâu hỏi:\n${prompt}${langSuffix}`;
       case 'translate':
-        return `[MODE: TRANSLATION]\nGoal: Accurately translate and interpret the following problem/text:\n\n${prompt}`;
+        return `[MODE: DỊCH THUẬT & DIỄN GIẢI]\nMục tiêu: Dịch chính xác đề bài và nội dung sau sang ${targetLangName}:\n\n${prompt}${langSuffix}`;
       case 'step-by-step':
       default:
-        return `[MODE: STEP-BY-STEP SOLUTION]\nGoal: Solve this homework question completely with clear numbered steps (Step 1, Step 2...), explicit mathematical reasoning, LaTeX formulas ($...$), and a clearly highlighted final conclusion:\n\nQuestion:\n${prompt}`;
+        return `[MODE: GIẢI CHI TIẾT TỪNG BƯỚC]\nMục tiêu: Giải bài tập sau với các bước rõ ràng (Bước 1, Bước 2...), lập luận toán học chặt chẽ, công thức LaTeX ($...$) và đóng khung đáp án cuối cùng:\n\nCâu hỏi:\n${prompt}${langSuffix}`;
     }
   }
 
   /**
    * Google Gemini SSE Stream
    */
-  static async streamGemini(config, { prompt, imageBase64, studyMode, systemPrompt }, onChunk, signal) {
+  static async streamGemini(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt }, onChunk, signal) {
     const baseUrl = config.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
     const model = config.model || 'gemini-2.5-flash';
     const url = `${baseUrl}/models/${model}:streamGenerateContent?alt=sse&key=${config.apiKey}`;
@@ -128,7 +143,7 @@ export class AiEngine {
       });
     }
 
-    const fullPrompt = this.formatStudyPrompt(studyMode, prompt);
+    const fullPrompt = this.formatStudyPrompt(studyMode, prompt, outputLanguage);
     parts.push({ text: fullPrompt });
 
     const payload = {
@@ -188,7 +203,7 @@ export class AiEngine {
   /**
    * OpenAI / DeepSeek / Groq / OpenRouter / Custom Streaming
    */
-  static async streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, systemPrompt }, onChunk, signal) {
+  static async streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt }, onChunk, signal) {
     const baseUrl = config.baseUrl || 'https://api.openai.com/v1';
     const model = config.model || 'gpt-4o';
     const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
@@ -202,7 +217,7 @@ export class AiEngine {
       });
     }
 
-    const fullPrompt = this.formatStudyPrompt(studyMode, prompt);
+    const fullPrompt = this.formatStudyPrompt(studyMode, prompt, outputLanguage);
     userContent.push({ type: 'text', text: fullPrompt });
 
     const messages = [];
@@ -270,7 +285,7 @@ export class AiEngine {
   /**
    * Anthropic Claude Streaming
    */
-  static async streamClaude(config, { prompt, imageBase64, studyMode, systemPrompt }, onChunk, signal) {
+  static async streamClaude(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt }, onChunk, signal) {
     const baseUrl = config.baseUrl || 'https://api.anthropic.com/v1';
     const model = config.model || 'claude-3-5-sonnet-20241022';
     const url = `${baseUrl.replace(/\/+$/, '')}/messages`;
@@ -289,7 +304,7 @@ export class AiEngine {
       });
     }
 
-    const fullPrompt = this.formatStudyPrompt(studyMode, prompt);
+    const fullPrompt = this.formatStudyPrompt(studyMode, prompt, outputLanguage);
     content.push({ type: 'text', text: fullPrompt });
 
     const payload = {
@@ -352,7 +367,7 @@ export class AiEngine {
   /**
    * Chrome Built-in AI (Gemini Nano On-Device Prompt API)
    */
-  static async streamChromeBuiltin({ prompt, imageBase64, studyMode, systemPrompt }, onChunk, signal) {
+  static async streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt }, onChunk, signal) {
     if (imageBase64) {
       onChunk(
         `> *Lưu ý: Chrome Gemini Nano On-Device hiện tại chuyên về xử lý văn bản. Để phân tích hình ảnh và đồ thị, bạn có thể thêm API Key Google Gemini (Miễn phí) trong Cài đặt.* \n\n`,
@@ -360,7 +375,7 @@ export class AiEngine {
       );
     }
 
-    const fullPrompt = this.formatStudyPrompt(studyMode, prompt);
+    const fullPrompt = this.formatStudyPrompt(studyMode, prompt, outputLanguage);
     const getAi = () => {
       if (typeof chrome !== 'undefined' && chrome.aiOriginTrial?.languageModel) {
         return chrome.aiOriginTrial.languageModel;
