@@ -1,0 +1,229 @@
+/* Text Selection Floating Toolbar & Submenus Styles (Liquid Glass Aesthetic) */
+.hw-selection-toolbar {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, var(--tb-alpha, 0.8));
+  backdrop-filter: blur(var(--tb-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--tb-blur, 16px)) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 24px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  z-index: 2147483640;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: hwToolbarPop 0.15s ease-out;
+  user-select: none;
+  color: #1e293b;
+}
+
+@keyframes hwToolbarPop {
+  0% { opacity: 0; transform: scale(0.92) translateY(4px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Themes */
+.hw-selection-toolbar.theme-glass-dark {
+  background: rgba(15, 23, 42, var(--tb-alpha, 0.8));
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+.hw-selection-toolbar.theme-glass-dark .hw-tb-btn {
+  color: #e2e8f0;
+}
+.hw-selection-toolbar.theme-glass-dark .hw-tb-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.hw-selection-toolbar.theme-cyber-blue {
+  background: rgba(2, 132, 199, var(--tb-alpha, 0.82));
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+.hw-selection-toolbar.theme-cyber-blue .hw-tb-btn {
+  color: #ffffff;
+}
+.hw-selection-toolbar.theme-cyber-blue .hw-tb-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hw-selection-toolbar.theme-emerald {
+  background: rgba(5, 150, 105, var(--tb-alpha, 0.82));
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+.hw-selection-toolbar.theme-emerald .hw-tb-btn {
+  color: #ffffff;
+}
+.hw-selection-toolbar.theme-emerald .hw-tb-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hw-selection-toolbar.theme-purple {
+  background: rgba(124, 58, 237, var(--tb-alpha, 0.82));
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+.hw-selection-toolbar.theme-purple .hw-tb-btn {
+  color: #ffffff;
+}
+.hw-selection-toolbar.theme-purple .hw-tb-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hw-tb-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 2px;
+}
+
+.hw-tb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 14px;
+  background: transparent;
+  border: none;
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+
+.hw-tb-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+.hw-tb-btn.icon-only .hw-tb-label {
+  display: none;
+}
+
+.hw-tb-more-btn {
+  padding: 5px 6px;
+}
+
+/* Dropdown Flyout Menu (Liquid Glass) */
+.hw-tb-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 175px;
+  z-index: 2147483641;
+  animation: hwDropFade 0.12s ease-out;
+}
+
+@keyframes hwDropFade {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.hw-tb-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: background 0.12s ease;
+  position: relative;
+}
+
+.hw-tb-menu-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #0f172a;
+}
+
+.hw-tb-menu-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Submenu for Disable (Liquid Glass) */
+.hw-tb-submenu {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 6px);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 195px;
+  z-index: 2147483642;
+  animation: hwDropFade 0.12s ease-out;
+}
+
+.hw-tb-sub-item {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: #334155;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  text-align: left;
+  width: 100%;
+}
+
+.hw-tb-sub-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #0f172a;
+}
+
+.hw-tb-sub-footer {
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #94a3b8;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  margin-top: 4px;
+}
+
+/* Toolbar Size Variants */
+.hw-selection-toolbar.size-compact {
+  padding: 2px 6px;
+}
+.hw-selection-toolbar.size-compact .hw-tb-btn {
+  padding: 4px 6px;
+  font-size: 11px;
+}
+
+.hw-selection-toolbar.size-large {
+  padding: 6px 12px;
+}
+.hw-selection-toolbar.size-large .hw-tb-btn {
+  padding: 6px 10px;
+  font-size: 13.5px;
+}

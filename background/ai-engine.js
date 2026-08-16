@@ -1,0 +1,448 @@
+/**
+ * Multi-Provider AI Streaming Client
+ * Connects directly to Google Gemini, OpenAI, Claude, DeepSeek, Groq, and Custom endpoints.
+ * Handles multimodal vision (images) and text streaming with automatic failover.
+ */
+
+import { keyRotator } from './key-rotator.js';
+
+export class AiEngine {
+  /**
+   * Main entrypoint to ask AI with text and optional image
+   * @param {Object} params
+   * @param {string} params.prompt - Text question / instructions
+   * @param {string} [params.imageBase64] - Optional base64 image (with or without data URL prefix)
+   * @param {string} [params.studyMode] - 'step-by-step' | 'direct' | 'hint' | 'explain' | 'translate'
+   * @param {string} [params.preferredConfigId] - Specific config ID or null for auto-rotation
+   * @param {Function} onChunk - Callback for incremental text chunks: onChunk(text, metadata)
+   * @param {AbortSignal} [signal] - Abort signal
+   */
+  static async ask({ prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage }, onChunk, signal) {
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    let finalSystemPrompt = systemPrompt;
+    if (outputLanguage && outputLanguage !== 'auto') {
+      const langNames = {
+        en: 'English',
+        vi: 'Tiếng Việt (Vietnamese)',
+        es: 'Español (Spanish)',
+        fr: 'Français (French)',
+        de: 'Deutsch (German)',
+        'zh-CN': 'Simplified Chinese (简体中文)',
+        'zh-TW': 'Traditional Chinese (繁體中文)',
+        ja: 'Japanese (日本語)',
+        ko: 'Korean (한국어)',
+        pt: 'Portuguese (Português)',
+        id: 'Bahasa Indonesia',
+        ru: 'Russian (Русский)',
+      };
+      const targetLangName = langNames[outputLanguage] || outputLanguage;
+      finalSystemPrompt = `${systemPrompt || ''}\n\n[LANGUAGE REQUIREMENT]: Always provide your complete answers, step-by-step reasoning, and explanations in ${targetLangName}.`.trim();
+    }
+
+    while (attempts < maxAttempts) {
+      attempts++;
+      const { config, strategy, totalAvailable } = await keyRotator.getHealthyConfigs(preferredConfigId);
+
+      if (!config) {
+        throw new Error('No active AI model/key configured. Please open Settings and add an API key.');
+      }
+
+      try {
+        onChunk('', { status: 'connecting', model: config.model, provider: config.provider, attempt: attempts });
+
+        if (config.provider === 'chrome-builtin') {
+          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, systemPrompt: finalSystemPrompt }, onChunk, signal);
+        } else if (config.provider === 'gemini') {
+          await this.streamGemini(config, { prompt, imageBase64, studyMode, systemPrompt: finalSystemPrompt }, onChunk, signal);
+        } else if (config.provider === 'claude') {
+          await this.streamClaude(config, { prompt, imageBase64, studyMode, systemPrompt: finalSystemPrompt }, onChunk, signal);
+        } else {
+          // OpenAI, DeepSeek, Groq, OpenRouter, Custom (all use OpenAI chat completions format)
+          await this.streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, systemPrompt: finalSystemPrompt }, onChunk, signal);
+        }
+
+        // Successfully completed
+        await keyRotator.reportSuccess(config.id);
+        return;
+      } catch (err) {
+        if (signal?.aborted) {
+          throw err;
+        }
+
+        console.warn(`[AiEngine] Attempt ${attempts} failed on model ${config.model}:`, err);
+        const statusCode = err.status || 500;
+        await keyRotator.reportFailure(config.id, statusCode);
+
+        if (attempts >= maxAttempts || totalAvailable <= 1) {
+          throw err;
+        }
+
+        // Notify UI about failover
+        onChunk(`\n\n> *[Notice] Key limit reached, automatically switching to backup key...*\n\n`, {
+          status: 'switching',
+          error: err.message,
+        });
+      }
+    }
+  }
+
+  static formatStudyPrompt(studyMode, prompt) {
+    if (!studyMode || studyMode === 'direct') return prompt;
+
+    const lower = prompt.trim().toLowerCase();
+    const isGreeting = /^(hi|hello|hey|xin chào|chào bạn|chào ai|chào|test|alo|ping)\b/i.test(lower) && prompt.trim().length < 25;
+    if (isGreeting) return prompt;
+
+    switch (studyMode) {
+      case 'hint':
+        return `[MODE: HINT & COACHING]\nGoal: Do NOT give the final answer or final option directly. Instead, provide a helpful pedagogical hint, key formula, and guiding questions to help the student solve it themselves:\n\nQuestion:\n${prompt}`;
+      case 'explain':
+        return `[MODE: DEEP CONCEPT EXPLANATION]\nGoal: Explain the underlying scientific/mathematical theories, background principles, and real-world intuitions behind this problem in depth:\n\nQuestion:\n${prompt}`;
+      case 'translate':
+        return `[MODE: TRANSLATION]\nGoal: Accurately translate and interpret the following problem/text:\n\n${prompt}`;
+      case 'step-by-step':
+      default:
+        return `[MODE: STEP-BY-STEP SOLUTION]\nGoal: Solve this homework question completely with clear numbered steps (Step 1, Step 2...), explicit mathematical reasoning, LaTeX formulas ($...$), and a clearly highlighted final conclusion:\n\nQuestion:\n${prompt}`;
+    }
+  }
+
+  /**
+   * Google Gemini SSE Stream
+   */
+  static async streamGemini(config, { prompt, imageBase64, studyMode, systemPrompt }, onChunk, signal) {
+    const baseUrl = config.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
+    const model = config.model || 'gemini-2.5-flash';
+    const url = `${baseUrl}/models/${model}:streamGenerateContent?alt=sse&key=${config.apiKey}`;
+
+    const parts = [];
+    if (imageBase64) {
+      const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+      const mimeType = imageBase64.match(/^data:(image\/[a-z]+);base64,/)?.[1] || 'image/jpeg';
+      parts.push({
+        inline_data: {
+          mime_type: mimeType,
+          data: cleanBase64,
+        },
+      });
+    }
+
+    const fullPrompt = this.formatStudyPrompt(studyMode, prompt);
+    parts.push({ text: fullPrompt });
+
+    const payload = {
+      contents: [{ role: 'user', parts }],
+      system_instruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 4096,
+      },
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal,
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      const err = new Error(`Gemini API Error (${response.status}): ${errText}`);
+      err.status = response.status;
+      throw err;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr) {
+            try {
+              const data = JSON.parse(jsonStr);
+              const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (text) {
+                onChunk(text, { status: 'streaming', model });
+              }
+            } catch (e) {
+              // ignore partial chunk
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * OpenAI / DeepSeek / Groq / OpenRouter / Custom Streaming
+   */
+  static async streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, systemPrompt }, onChunk, signal) {
+    const baseUrl = config.baseUrl || 'https://api.openai.com/v1';
+    const model = config.model || 'gpt-4o';
+    const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
+
+    const userContent = [];
+    if (imageBase64) {
+      const formattedUrl = imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`;
+      userContent.push({
+        type: 'image_url',
+        image_url: { url: formattedUrl },
+      });
+    }
+
+    const fullPrompt = this.formatStudyPrompt(studyMode, prompt);
+    userContent.push({ type: 'text', text: fullPrompt });
+
+    const messages = [];
+    if (systemPrompt) {
+      messages.push({ role: 'system', content: systemPrompt });
+    }
+    messages.push({ role: 'user', content: userContent.length === 1 ? fullPrompt : userContent });
+
+    const payload = {
+      model,
+      messages,
+      stream: true,
+      temperature: 0.4,
+      max_tokens: 4096,
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.apiKey}`,
+      },
+      body: JSON.stringify(payload),
+      signal,
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      const err = new Error(`${config.provider.toUpperCase()} API Error (${response.status}): ${errText}`);
+      err.status = response.status;
+      throw err;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('data: ')) {
+          const jsonStr = trimmed.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+          try {
+            const data = JSON.parse(jsonStr);
+            const text = data.choices?.[0]?.delta?.content;
+            if (text) {
+              onChunk(text, { status: 'streaming', model });
+            }
+          } catch (e) {
+            // ignore partial JSON
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Anthropic Claude Streaming
+   */
+  static async streamClaude(config, { prompt, imageBase64, studyMode, systemPrompt }, onChunk, signal) {
+    const baseUrl = config.baseUrl || 'https://api.anthropic.com/v1';
+    const model = config.model || 'claude-3-5-sonnet-20241022';
+    const url = `${baseUrl.replace(/\/+$/, '')}/messages`;
+
+    const content = [];
+    if (imageBase64) {
+      const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+      const mediaType = imageBase64.match(/^data:(image\/[a-z]+);base64,/)?.[1] || 'image/jpeg';
+      content.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: mediaType,
+          data: cleanBase64,
+        },
+      });
+    }
+
+    const fullPrompt = this.formatStudyPrompt(studyMode, prompt);
+    content.push({ type: 'text', text: fullPrompt });
+
+    const payload = {
+      model,
+      max_tokens: 4096,
+      system: systemPrompt || undefined,
+      messages: [{ role: 'user', content }],
+      stream: true,
+      temperature: 0.4,
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': config.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify(payload),
+      signal,
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      const err = new Error(`Claude API Error (${response.status}): ${errText}`);
+      err.status = response.status;
+      throw err;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('data: ')) {
+          const jsonStr = trimmed.slice(6).trim();
+          try {
+            const data = JSON.parse(jsonStr);
+            if (data.type === 'content_block_delta' && data.delta?.text) {
+              onChunk(data.delta.text, { status: 'streaming', model });
+            }
+          } catch (e) {
+            // ignore partial JSON
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Chrome Built-in AI (Gemini Nano On-Device Prompt API)
+   */
+  static async streamChromeBuiltin({ prompt, imageBase64, studyMode, systemPrompt }, onChunk, signal) {
+    if (imageBase64) {
+      onChunk(
+        `> *Lưu ý: Chrome Gemini Nano On-Device hiện tại chuyên về xử lý văn bản. Để phân tích hình ảnh và đồ thị, bạn có thể thêm API Key Google Gemini (Miễn phí) trong Cài đặt.* \n\n`,
+        { status: 'streaming', model: 'gemini-nano', isBuiltin: true }
+      );
+    }
+
+    const fullPrompt = this.formatStudyPrompt(studyMode, prompt);
+    const getAi = () => {
+      if (typeof chrome !== 'undefined' && chrome.aiOriginTrial?.languageModel) {
+        return chrome.aiOriginTrial.languageModel;
+      }
+      if (typeof ai !== 'undefined' && ai?.languageModel) {
+        return ai.languageModel;
+      }
+      const g = typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : {});
+      return g.ai?.languageModel || g.ai?.assistant || g.LanguageModel || null;
+    };
+    const aiModel = getAi();
+
+    if (aiModel && typeof aiModel.create === 'function') {
+      const session = await aiModel.create({
+        systemPrompt: systemPrompt || undefined,
+        temperature: 0.4,
+        topK: 3,
+      });
+
+      if (typeof session.promptStreaming === 'function') {
+        const stream = session.promptStreaming(fullPrompt, { signal });
+        let accumulated = '';
+        for await (const chunk of stream) {
+          let delta = '';
+          if (typeof chunk === 'string') {
+            if (chunk.startsWith(accumulated)) {
+              delta = chunk.slice(accumulated.length);
+              accumulated = chunk;
+            } else {
+              delta = chunk;
+              accumulated += chunk;
+            }
+          }
+          if (delta) {
+            onChunk(delta, { status: 'streaming', model: 'Gemini Nano (On-Device)', isBuiltin: true });
+          }
+        }
+        chrome.storage?.local?.set?.({ isNanoReady: true });
+        return;
+      } else {
+        const reply = await session.prompt(fullPrompt);
+        onChunk(reply, { status: 'streaming', model: 'Gemini Nano (On-Device)', isBuiltin: true });
+        chrome.storage?.local?.set?.({ isNanoReady: true });
+        return;
+      }
+    }
+
+    // Fallback: Run via active web tab where window.ai is directly exposed by Chrome
+    let tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    let targetTab = tabs && tabs[0]?.url && tabs[0].url.startsWith('http') ? tabs[0] : null;
+
+    if (!targetTab) {
+      const allWebTabs = await chrome.tabs.query({ url: ['https://*/*', 'http://*/*'] });
+      targetTab = allWebTabs && allWebTabs.length > 0 ? allWebTabs[0] : null;
+    }
+
+    if (!targetTab?.id) {
+      throw new Error(
+        'Chrome Built-in AI cần ít nhất 1 tab web thông thường (https://) đang mở để kết nối. Bạn hãy mở một tab web (như https://google.com) rồi thử lại nhé.'
+      );
+    }
+
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: targetTab.id },
+      world: 'MAIN',
+      func: async (promptText, sysPrompt) => {
+        const g = typeof window !== 'undefined' ? window : (typeof self !== 'undefined' ? self : {});
+        const m = g.ai?.languageModel || g.ai?.assistant || (typeof ai !== 'undefined' ? (ai.languageModel || ai.assistant) : null);
+        if (!m) throw new Error('Trình duyệt chưa sẵn sàng window.ai trên tab web.');
+        const session = await m.create({ systemPrompt: sysPrompt || undefined });
+        return await session.prompt(promptText);
+      },
+      args: [fullPrompt, systemPrompt || ''],
+    });
+
+    const reply = results?.[0]?.result;
+    if (reply) {
+      onChunk(reply, { status: 'streaming', model: 'Gemini Nano (On-Device)', isBuiltin: true });
+      chrome.storage?.local?.set?.({ isNanoReady: true });
+    } else {
+      throw new Error('Không nhận được phản hồi từ Gemini Nano.');
+    }
+  }
+}
+

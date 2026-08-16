@@ -1,0 +1,94 @@
+{
+  "manifest_version": 3,
+  "name": "Homework Helper - AI Homework Solver & Academic Assistant",
+  "version": "1.0.0",
+  "description": "Smart AI homework helper and quiz solver. Features Chrome Gemini Nano local AI, multi-model API key rotation, screenshot OCR solver, KaTeX math formulas, text selection toolbar, and Google Forms quiz helper. [Tags: homework, ai, quiz, solver, study, math, tutor, gemini]",
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "32": "assets/icons/icon-32.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Homework Helper",
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "32": "assets/icons/icon-32.png",
+      "48": "assets/icons/icon-48.png",
+      "128": "assets/icons/icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "aiLanguageModelOriginTrial",
+    "storage",
+    "tabs",
+    "activeTab",
+    "scripting",
+    "contextMenus",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*",
+    "https://api.deepseek.com/*",
+    "https://api.groq.com/*",
+    "https://openrouter.ai/*",
+    "<all_urls>"
+  ],
+  "commands": {
+    "chat": {
+      "suggested_key": {
+        "default": "Alt+K",
+        "mac": "Command+K"
+      },
+      "description": "Open AI Chat"
+    },
+    "screenshot": {
+      "suggested_key": {
+        "default": "Alt+C",
+        "mac": "Command+E"
+      },
+      "description": "Crop & Solve Question"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "content/loader.js"
+      ],
+      "css": [
+        "content/styles/cropper.css",
+        "content/styles/tooltip.css"
+      ],
+      "all_frames": false,
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content/*",
+        "content/styles/*",
+        "shared/*",
+        "shared/katex/*",
+        "shared/katex/fonts/*",
+        "assets/icons/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

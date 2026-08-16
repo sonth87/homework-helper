@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homework Helper</title>
+  <link rel="stylesheet" href="../shared/katex/katex.min.css">
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div class="sp-container">
+    <!-- Header -->
+    <header class="sp-header">
+      <div class="sp-header-left">
+        <div class="sp-logo" id="spLogo"></div>
+        <h1 class="sp-title">Homework Helper</h1>
+      </div>
+      <div class="sp-header-right">
+        <button class="sp-icon-btn" id="spBtnHistory" data-tooltip-title="Lịch sử giải bài" data-tooltip-desc="Xem danh sách bài tập đã giải trong phiên."></button>
+        <button class="sp-icon-btn" id="spBtnSettings" data-tooltip-title="Cài đặt Key & Model" data-tooltip-desc="Quản lý danh sách API Key và cơ chế xoay vòng thông minh."></button>
+        <button class="sp-icon-btn" id="spBtnClear" data-tooltip-title="Xóa đoạn chat" data-tooltip-desc="Xóa toàn bộ tin nhắn trong phiên trò chuyện hiện tại."></button>
+        <button class="sp-icon-btn" id="spBtnOptions" data-tooltip-title="Trang cài đặt nâng cao" data-tooltip-desc="Mở giao diện Cài đặt chi tiết & tùy biến giao diện Liquid Glass."></button>
+      </div>
+    </header>
+
+    <!-- Active Model Bar -->
+    <div class="sp-model-bar" id="spModelBar">
+      <span class="sp-model-label">Model:</span>
+      <span class="sp-model-tag" id="spModelTag"></span>
+    </div>
+
+    <!-- Chat Messages Scroll Area -->
+    <main class="sp-chat-body" id="spChatBody">
+      <div class="sp-msg sp-msg-ai">
+        <div class="sp-msg-bubble" id="spWelcomeBubble">
+          <p id="spWelcomeText">Xin chào! Tôi là trợ lý Homework Helper. Bạn cần giải bài tập nào hôm nay?</p>
+          <div class="sp-chips" id="spChipsContainer">
+            <button class="sp-chip" data-query="Giải phương trình bậc hai $ax^2 + bx + c = 0$">Phương trình bậc 2</button>
+            <button class="sp-chip" data-query="Giải thích các định luật chuyển động của Newton">Định luật Newton</button>
+            <button class="sp-chip" data-query="Cân bằng phương trình hóa học và tính số mol">Cân bằng hóa học</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Input Container -->
+    <footer class="sp-footer">
+      <div class="sp-tools">
+        <div class="sp-tools-left">
+          <button class="sp-btn-capture" id="spBtnCapture" data-tooltip-title="Chụp màn hình (Alt+C)" data-tooltip-desc="Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức."></button>
+          <button class="sp-tool-btn" id="spBtnUpload" data-tooltip-title="Tải ảnh bài tập" data-tooltip-desc="Đính kèm file hình ảnh bài tập từ máy tính."></button>
+          <input type="file" id="spFileInput" accept="image/*" style="display: none;">
+        </div>
+        <div class="sp-tools-right" style="display:flex; gap:6px;">
+          <select class="sp-select-mode" id="spSelectLang" data-tooltip-title="Ngôn ngữ phản hồi" data-tooltip-desc="AI sẽ tự động giải bài và trả lời bằng ngôn ngữ này.">
+            <option value="en">English</option>
+            <option value="vi" selected>Tiếng Việt</option>
+            <option value="th">ไทย (Thai)</option>
+            <option value="zh-CN">中文</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="auto">Auto</option>
+          </select>
+          <select class="sp-select-mode" id="spSelectMode" data-tooltip-title="Chế độ giải bài" data-tooltip-desc="Chọn kiểu phản hồi: Từng bước (Step-by-Step), Đáp án ngay (Direct), Gợi ý (Hint), hoặc Giải thích sâu lý thuyết.">
+            <option value="step-by-step">Giải từng bước</option>
+            <option value="direct">Đáp án trực tiếp</option>
+            <option value="hint">Gợi ý & Hướng dẫn</option>
+            <option value="explain">Giải thích sâu</option>
+            <option value="translate">Dịch thuật</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sp-input-box">
+        <div id="spImgPreview" class="sp-img-preview" style="display: none;">
+          <img id="spThumb" src="" alt="Thumbnail">
+          <span>Image Attached</span>
+          <button class="sp-icon-btn" id="spBtnRemoveThumb" style="width:20px;height:20px;"></button>
+        </div>
+        <textarea id="spTextarea" class="sp-textarea" placeholder="Enter your homework question here..."></textarea>
+        <div class="sp-input-actions">
+          <span class="sp-hint">Shift+Enter for newline</span>
+          <button class="sp-btn-send" id="spBtnSend"></button>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Settings Modal -->
+    <div class="sp-modal-backdrop" id="spModal" style="display: none;">
+      <div class="sp-modal-card">
+        <div class="sp-modal-header">
+          <div class="sp-modal-title" id="spModalTitle"></div>
+          <button class="sp-icon-btn" id="spBtnCloseModal"></button>
+        </div>
+        <div class="sp-modal-body" id="spModalBody">
+          <!-- Populated by sidepanel.js -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/katex/katex.min.js"></script>
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>
