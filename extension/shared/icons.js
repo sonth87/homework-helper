@@ -249,6 +249,19 @@ export const Icons = {
     <path d="M9 2v2"></path>
     <path d="M9 20v2"></path>
   `, size, cls),
+
+  scan: (size = 18, cls = '') => createSvg(`
+    <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+    <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+    <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+    <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+  `, size, cls),
+
+  download: (size = 18, cls = '') => createSvg(`
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+    <polyline points="7 10 12 15 17 10"></polyline>
+    <line x1="12" y1="15" x2="12" y2="3"></line>
+  `, size, cls),
 };
 
 

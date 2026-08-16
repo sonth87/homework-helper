@@ -197,4 +197,60 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true, requestId });
     return true;
   }
+
+  // OCR Recognition and Model Management Handlers
+  if (action === 'PERFORM_OCR') {
+    const { imageBase64, targetLang = 'vi' } = payload || {};
+    (async () => {
+      try {
+        const { OcrEngine } = await import('../shared/ocr-engine.js');
+        const text = await OcrEngine.recognize(imageBase64, targetLang);
+        sendResponse({ success: true, text });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+
+  if (action === 'DOWNLOAD_OCR_MODEL') {
+    const { lang } = payload || {};
+    (async () => {
+      try {
+        const { OcrEngine } = await import('../shared/ocr-engine.js');
+        await OcrEngine.downloadModel(lang);
+        sendResponse({ success: true });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+
+  if (action === 'DELETE_OCR_MODEL') {
+    const { lang } = payload || {};
+    (async () => {
+      try {
+        const { OcrEngine } = await import('../shared/ocr-engine.js');
+        await OcrEngine.deleteModel(lang);
+        sendResponse({ success: true });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+
+  if (action === 'CHECK_OCR_UPDATES') {
+    (async () => {
+      try {
+        const { OcrEngine } = await import('../shared/ocr-engine.js');
+        const updates = await OcrEngine.checkForUpdates();
+        sendResponse({ success: true, updates });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true;
+  }
 });

@@ -1,5 +1,6 @@
 import { Icons } from '../shared/icons.js';
 import { Storage, DEFAULT_PROVIDERS, DEFAULT_SETTINGS, SUPPORTED_LANGUAGES } from '../shared/storage.js';
+import { OCR_MODEL_CATALOG, OcrEngine } from '../shared/ocr-engine.js';
 
 class OptionsController {
   constructor() {
@@ -9,8 +10,10 @@ class OptionsController {
   async init() {
     this.renderIcons();
     this.setupNavigation();
+    await this.loadRoutingStrategy();
     await this.loadProvidersAndKeys();
     await this.checkChromeBuiltinAI();
+    await this.loadOcrModelsManager();
     await this.loadAppearanceSettings();
     await this.loadSystemPrompt();
     await this.loadGeneralSettings();
@@ -26,19 +29,27 @@ class OptionsController {
           nanoCard.style.boxShadow = '';
         }, 2500);
       }
+    } else if (window.location.hash === '#ocr') {
+      const ocrNav = document.querySelector('[data-tab="ocr"]');
+      if (ocrNav) ocrNav.click();
     }
   }
 
   renderIcons() {
     document.getElementById('optLogo').innerHTML = Icons.appLogo(28);
     document.getElementById('navIconProviders').innerHTML = Icons.layers(16);
+    document.getElementById('navIconOcr').innerHTML = Icons.scan(16);
     document.getElementById('navIconAppearance').innerHTML = Icons.settings(16);
     document.getElementById('navIconGuide').innerHTML = Icons.helpCircle(16);
     document.getElementById('navIconPrompt').innerHTML = Icons.fileText(16);
     document.getElementById('navIconGeneral').innerHTML = Icons.settings(16);
     document.getElementById('optIconPlus').innerHTML = Icons.plus(16);
+    document.getElementById('optIconRouting').innerHTML = Icons.cpu(18);
     document.getElementById('optIconStrategy').innerHTML = Icons.checkCircle(18, 'text-green-600');
     document.getElementById('optIconBuiltinNano').innerHTML = Icons.cpu(18);
+    document.getElementById('optIconCheckUpdates').innerHTML = Icons.refresh(14);
+    document.getElementById('optIconDownloadCore').innerHTML = Icons.download(14);
+    document.getElementById('optIconCorePackage').innerHTML = Icons.checkCircle(18, 'text-green-600');
 
     // Guide Icons
     document.getElementById('guideIconWhy').innerHTML = Icons.sparkles(16);
@@ -76,12 +87,155 @@ class OptionsController {
         const tab = btn.getAttribute('data-tab');
         document.querySelectorAll('.opt-section').forEach((sec) => sec.classList.remove('active'));
         if (tab === 'providers') document.getElementById('tabProviders').classList.add('active');
+        if (tab === 'ocr') document.getElementById('tabOcr').classList.add('active');
         if (tab === 'appearance') document.getElementById('tabAppearance').classList.add('active');
         if (tab === 'guide') document.getElementById('tabGuide').classList.add('active');
         if (tab === 'prompt') document.getElementById('tabPrompt').classList.add('active');
         if (tab === 'general') document.getElementById('tabGeneral').classList.add('active');
       });
     });
+  }
+
+  async loadRoutingStrategy() {
+    const strategy = await Storage.getRoutingStrategy();
+    const radios = document.querySelectorAll('input[name="optRoutingStrategy"]');
+    radios.forEach((r) => {
+      r.checked = r.value === strategy;
+      r.addEventListener('change', async () => {
+        if (r.checked) {
+          await Storage.setRoutingStrategy(r.value);
+        }
+      });
+    });
+  }
+
+  async loadOcrModelsManager() {
+    const container = document.getElementById('ocrModelsListContainer');
+    const installedModels = await Storage.getInstalledOcrModels();
+
+    container.innerHTML = '';
+    OCR_MODEL_CATALOG.forEach((model) => {
+      const isInstalled = !!installedModels[model.lang]?.isInstalled || model.isBundled;
+      const installedVer = installedModels[model.lang]?.version || model.version;
+
+      const row = document.createElement('div');
+      row.className = 'opt-ocr-item';
+
+      let statusBadge = '';
+      if (model.isBundled) {
+        statusBadge = `<span class="opt-preview-badge" style="background:#ecfdf5; color:#059669;">Tích hợp sẵn v${installedVer}</span>`;
+      } else if (isInstalled) {
+        statusBadge = `<span class="opt-preview-badge" style="background:#ecfdf5; color:#059669;">Đã tải v${installedVer}</span>`;
+      } else {
+        statusBadge = `<span class="opt-preview-badge" style="background:#f1f5f9; color:#64748b;">Chưa tải</span>`;
+      }
+
+      row.innerHTML = `
+        <div class="opt-ocr-info">
+          <div class="opt-ocr-title-row">
+            <strong style="font-size:13.5px; color:#0f172a;">${model.name} (${model.nativeName})</strong>
+            <span style="font-size:11px; padding:1px 6px; border-radius:4px; background:#f1f5f9; color:#475569; font-weight:600;">${model.size}</span>
+            ${statusBadge}
+          </div>
+          <p style="font-size:12px; color:#64748b; margin-top:3px; text-align:left;">${model.description}</p>
+        </div>
+
+        <div class="opt-ocr-actions">
+          ${
+            !isInstalled
+              ? `<button class="opt-btn-secondary btn-download-model" data-lang="${model.lang}" style="padding:6px 14px; font-size:12px; display:flex; align-items:center; gap:5px; white-space:nowrap;">
+                  ${Icons.download(13)} Tải về
+                </button>`
+              : `<button class="opt-btn-secondary btn-delete-model" data-lang="${model.lang}" style="padding:6px 10px; font-size:12px; color:#ef4444; display:flex; align-items:center;" ${model.isBundled ? 'disabled title="Gói cốt lõi tích hợp sẵn trong tiện ích"' : 'title="Xóa model khỏi bộ nhớ Offline"'}>
+                  ${Icons.trash(13)}
+                </button>`
+          }
+        </div>
+      `;
+
+      container.appendChild(row);
+    });
+
+    // Attach Download Handlers
+    container.querySelectorAll('.btn-download-model').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const lang = btn.getAttribute('data-lang');
+        btn.disabled = true;
+        btn.innerHTML = `<span style="display:inline-block; animation:spin 1s linear infinite;">⏳</span> Đang tải...`;
+
+        const progressCard = document.getElementById('ocrProgressCard');
+        const progressLabel = document.getElementById('ocrProgressLabel');
+        const progressPct = document.getElementById('ocrProgressPct');
+        const progressBar = document.getElementById('ocrProgressBar');
+        progressCard.style.display = 'block';
+
+        try {
+          await OcrEngine.downloadModel(lang, (pct, label) => {
+            progressLabel.textContent = label;
+            progressPct.textContent = `${pct}%`;
+            progressBar.style.width = `${pct}%`;
+          });
+          setTimeout(async () => {
+            progressCard.style.display = 'none';
+            await this.loadOcrModelsManager();
+          }, 1200);
+        } catch (err) {
+          alert(`Tải model thất bại: ${err.message}`);
+          progressCard.style.display = 'none';
+          await this.loadOcrModelsManager();
+        }
+      });
+    });
+
+    // Attach Delete Handlers
+    container.querySelectorAll('.btn-delete-model').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const lang = btn.getAttribute('data-lang');
+        if (confirm(`Bạn có chắc muốn xóa model ngôn ngữ này khỏi bộ nhớ đệm?`)) {
+          await OcrEngine.deleteModel(lang);
+          await this.loadOcrModelsManager();
+        }
+      });
+    });
+
+    // Attach Download Core Pack Button
+    document.getElementById('optBtnDownloadCoreOcr').onclick = async () => {
+      const coreLangs = ['vie', 'eng', 'equ'];
+      const progressCard = document.getElementById('ocrProgressCard');
+      const progressLabel = document.getElementById('ocrProgressLabel');
+      const progressPct = document.getElementById('ocrProgressPct');
+      const progressBar = document.getElementById('ocrProgressBar');
+      progressCard.style.display = 'block';
+
+      try {
+        for (let i = 0; i < coreLangs.length; i++) {
+          const l = coreLangs[i];
+          await OcrEngine.downloadModel(l, (pct, label) => {
+            const overallPct = Math.round(((i * 100) + pct) / coreLangs.length);
+            progressLabel.textContent = `[${i + 1}/${coreLangs.length}] ${label}`;
+            progressPct.textContent = `${overallPct}%`;
+            progressBar.style.width = `${overallPct}%`;
+          });
+        }
+        setTimeout(async () => {
+          progressCard.style.display = 'none';
+          await this.loadOcrModelsManager();
+        }, 1200);
+      } catch (err) {
+        alert(`Lỗi khi tải gói cốt lõi: ${err.message}`);
+        progressCard.style.display = 'none';
+      }
+    };
+
+    // Attach Check Updates Button
+    document.getElementById('optBtnCheckOcrUpdates').onclick = async () => {
+      const updates = await OcrEngine.checkForUpdates();
+      if (updates.length === 0) {
+        alert('Tất cả các Model OCR đều đang ở phiên bản mới nhất!');
+      } else {
+        alert(`Đã tìm thấy ${updates.length} bản cập nhật mới! Đang tiến hành đồng bộ...`);
+      }
+    };
   }
 
   async loadProvidersAndKeys() {
@@ -410,7 +564,16 @@ class OptionsController {
   }
 
   async loadGeneralSettings() {
-    const { enableFormsAdapter = true, enableTextTooltip = true, outputLanguage = 'en', disabledSites = [] } = await Storage.get();
+    const { enableFormsAdapter = true, enableTextTooltip = true, uiLanguage = 'vi', outputLanguage = 'en', disabledSites = [] } = await Storage.get();
+
+    const uiLangSelect = document.getElementById('optUiLanguageSelect');
+    if (uiLangSelect) {
+      const uiLangs = SUPPORTED_LANGUAGES.filter((l) => l.id !== 'auto');
+      uiLangSelect.innerHTML = uiLangs.map(
+        (l) => `<option value="${l.id}" ${l.id === uiLanguage ? 'selected' : ''}>${l.name}</option>`
+      ).join('');
+      uiLangSelect.addEventListener('change', () => Storage.set({ uiLanguage: uiLangSelect.value }));
+    }
 
     const langSelect = document.getElementById('optOutputLanguageSelect');
     if (langSelect) {

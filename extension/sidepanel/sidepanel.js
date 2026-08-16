@@ -97,11 +97,9 @@ class SidePanelController {
     if (langSelect) {
       Storage.get(['outputLanguage']).then(({ outputLanguage = 'en' }) => {
         langSelect.value = outputLanguage;
-        this.applyLanguageI18n(outputLanguage);
       });
       langSelect.addEventListener('change', (e) => {
         Storage.set({ outputLanguage: e.target.value });
-        this.applyLanguageI18n(e.target.value);
       });
     }
 
@@ -122,8 +120,11 @@ class SidePanelController {
     // New Chat button
     document.getElementById('spBtnNewChat').addEventListener('click', async () => {
       await Storage.createNewConversation('Đoạn chat mới');
-      this.loadChatHistory();
+      document.getElementById('spHistoryModal').style.display = 'none';
       document.getElementById('spTextarea').value = '';
+      this.clearImagePreview();
+      await this.loadChatHistory();
+      this.showToast('Đã bắt đầu đoạn chat mới');
       document.getElementById('spTextarea').focus();
     });
 
@@ -138,6 +139,11 @@ class SidePanelController {
 
     document.getElementById('spBtnOptions').addEventListener('click', () => {
       chrome.runtime.openOptionsPage();
+    });
+
+    // Model select change -> save preference
+    document.getElementById('spModelSelect').addEventListener('change', async (e) => {
+      await Storage.setActiveConfigId(e.target.value);
     });
 
     // Modal
@@ -177,7 +183,10 @@ class SidePanelController {
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local') {
-          if (changes.chatHistory && !this.isStreaming) {
+          if (changes.uiLanguage) {
+            this.applyLanguageI18n(changes.uiLanguage.newValue);
+          }
+          if ((changes.chatHistory || changes.activeConversationId || changes.conversations) && !this.isStreaming) {
             this.loadChatHistory();
           }
           if (changes.isNanoReady || changes.apiConfigs) {
@@ -404,9 +413,9 @@ class SidePanelController {
       document.body.appendChild(tooltipEl);
     }
 
-    const showTooltip = (el, e) => {
-      const title = el.getAttribute('data-tooltip-title');
-      const desc = el.getAttribute('data-tooltip-desc');
+    const showTooltip = (el) => {
+      const title = el.getAttribute('data-tooltip-title') || el.getAttribute('title');
+      const desc = el.getAttribute('data-tooltip-desc') || '';
       if (!title && !desc) return;
 
       tooltipEl.innerHTML = `
@@ -415,23 +424,33 @@ class SidePanelController {
       `;
 
       tooltipEl.style.display = 'block';
-      const tooltipHeight = tooltipEl.offsetHeight || 50;
-      const tooltipWidth = tooltipEl.offsetWidth || 200;
+      tooltipEl.style.visibility = 'hidden';
+      tooltipEl.classList.remove('show');
+
+      const tooltipHeight = tooltipEl.offsetHeight || 44;
+      const tooltipWidth = Math.min(260, Math.max(160, tooltipEl.offsetWidth || 180));
 
       const rect = el.getBoundingClientRect();
       let top;
-      if (rect.top < 80) {
-        // Place BELOW header buttons so it does NOT cover the button!
+      if (rect.top < 90) {
+        // Place BELOW
         top = rect.bottom + 8;
       } else {
         // Place ABOVE
         top = rect.top - tooltipHeight - 8;
       }
 
-      const left = Math.min(window.innerWidth - tooltipWidth - 14, Math.max(10, rect.left + rect.width / 2 - tooltipWidth / 2));
+      let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+      if (left + tooltipWidth > window.innerWidth - 12) {
+        left = window.innerWidth - tooltipWidth - 12;
+      }
+      if (left < 8) {
+        left = 8;
+      }
 
       tooltipEl.style.top = `${top}px`;
       tooltipEl.style.left = `${left}px`;
+      tooltipEl.style.visibility = 'visible';
       tooltipEl.classList.add('show');
     };
 
@@ -439,15 +458,25 @@ class SidePanelController {
       tooltipEl.classList.remove('show');
     };
 
-    document.querySelectorAll('[data-tooltip-title]').forEach((el) => {
-      el.addEventListener('mouseenter', (e) => showTooltip(el, e));
-      el.addEventListener('mouseleave', hideTooltip);
+    document.addEventListener('mouseover', (e) => {
+      const target = e.target.closest('[data-tooltip-title]');
+      if (target) {
+        showTooltip(target);
+      }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+      const target = e.target.closest('[data-tooltip-title]');
+      if (target) {
+        hideTooltip();
+      }
     });
   }
 
   async applyLanguageI18n(lang = null) {
-    const outputLanguage = lang || (await Storage.get(['outputLanguage'])).outputLanguage || 'en';
-    const dict = getI18n(outputLanguage);
+    const { uiLanguage = 'vi', outputLanguage = 'en' } = await Storage.get(['uiLanguage', 'outputLanguage']);
+    const currentLang = lang || uiLanguage;
+    const dict = getI18n(currentLang);
 
     const textarea = document.getElementById('spTextarea');
     const sendBtn = document.getElementById('spBtnSend');
@@ -577,10 +606,28 @@ class SidePanelController {
     }
   }
 
+  showToast(msg) {
+    const toast = document.getElementById('spToast');
+    if (!toast) return;
+    toast.innerHTML = `<span style="display:flex;align-items:center;gap:6px;">${Icons.checkCircle(13)} ${msg}</span>`;
+    toast.classList.add('show');
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2200);
+  }
+
   async loadChatHistory() {
-    const history = await Storage.getChatHistory();
+    const activeConv = await Storage.getActiveConversation();
+    const history = activeConv?.messages || [];
     const body = document.getElementById('spChatBody');
     if (!body) return;
+
+    const titleEl = document.getElementById('spActiveConvTitle');
+    if (titleEl) {
+      titleEl.textContent = activeConv?.title || 'Đoạn chat mới';
+      titleEl.title = activeConv?.title || 'Đoạn chat mới';
+    }
 
     body.innerHTML = '';
     if (history.length > 0) {

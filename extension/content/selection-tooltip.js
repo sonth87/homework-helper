@@ -237,7 +237,7 @@ class SelectionTooltip {
       return;
     }
 
-    // Open compact Floating Homework Helper Popup (matching QuestionAI UX)
+    // Open compact Floating Homework Helper Solution Card Popup
     window.dispatchEvent(new CustomEvent('HOMEWORK_AI_OPEN_POPUP', {
       detail: {
         type: action,

@@ -18,8 +18,8 @@ export class AiEngine {
    * @param {AbortSignal} [signal] - Abort signal
    */
   static async ask({ prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage = 'en' }, onChunk, signal) {
-    let attempts = 0;
-    const maxAttempts = 3;
+    const { routingStrategy = 'prefer_nano', apiConfigs = [] } = await Storage.get(['routingStrategy', 'apiConfigs']);
+    const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
 
     const langNames = {
       en: 'English',
@@ -36,15 +36,48 @@ export class AiEngine {
       ru: 'Russian (Русский)',
     };
     const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Tiếng Việt (Vietnamese)';
+    const finalSystemPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE REQUIREMENT]: You MUST provide your entire solution, explanations, step-by-step reasoning, and answer in ${targetLangName}. Do NOT use any other language unless explicitly requested.`.trim();
 
-    let finalSystemPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE REQUIREMENT]: You MUST provide your entire solution, explanations, step-by-step reasoning, and answer in ${targetLangName}. Do NOT use any other language unless explicitly requested.`.trim();
+    // 1. nano_only Strategy: 100% On-Device execution
+    if (routingStrategy === 'nano_only') {
+      onChunk('', { status: 'connecting', model: 'Gemini Nano (On-Device)', provider: 'chrome-builtin' });
+      await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
+      return;
+    }
+
+    // 2. prefer_nano Strategy (When text-only and no preferred external config, run Gemini Nano directly)
+    if (routingStrategy === 'prefer_nano' && !imageBase64 && !preferredConfigId) {
+      try {
+        onChunk('', { status: 'connecting', model: 'Gemini Nano (On-Device)', provider: 'chrome-builtin' });
+        await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
+        return;
+      } catch (nanoErr) {
+        if (enabledKeys.length === 0) throw nanoErr;
+        onChunk(`\n\n> *[Thông báo] Gemini Nano không khả dụng, tự động chuyển sang mô hình Cloud Vision API...*\n\n`, {
+          status: 'switching',
+          error: nanoErr.message,
+        });
+      }
+    }
+
+    // 3. API Config Pool Execution (used for prefer_config, config_only, or prefer_nano fallback/multimodal)
+    let attempts = 0;
+    const maxAttempts = 3;
 
     while (attempts < maxAttempts) {
       attempts++;
       const { config, strategy, totalAvailable } = await keyRotator.getHealthyConfigs(preferredConfigId);
 
       if (!config) {
-        throw new Error('No active AI model/key configured. Please open Settings and add an API key.');
+        // Fallback to Gemini Nano if prefer_config is set
+        if (routingStrategy === 'prefer_config' || routingStrategy === 'prefer_nano') {
+          onChunk(`\n\n> *[Thông báo] Không có API Key khả dụng, tự động chuyển về Gemini Nano On-Device...*\n\n`, {
+            status: 'switching',
+          });
+          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
+          return;
+        }
+        throw new Error('Chưa có API Key nào được kích hoạt trong Cài đặt.');
       }
 
       try {
@@ -74,11 +107,19 @@ export class AiEngine {
         await keyRotator.reportFailure(config.id, statusCode);
 
         if (attempts >= maxAttempts || totalAvailable <= 1) {
+          // Last resort fallback to Gemini Nano if prefer_config
+          if (routingStrategy === 'prefer_config' || routingStrategy === 'prefer_nano') {
+            onChunk(`\n\n> *[Thông báo] Tất cả API Key đều bận, tự động chuyển về Gemini Nano On-Device...*\n\n`, {
+              status: 'switching',
+            });
+            await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
+            return;
+          }
           throw err;
         }
 
         // Notify UI about failover
-        onChunk(`\n\n> *[Notice] Key limit reached, automatically switching to backup key...*\n\n`, {
+        onChunk(`\n\n> *[Thông báo] Key ${config.model} gặp giới hạn, tự động xoay sang key dự phòng...*\n\n`, {
           status: 'switching',
           error: err.message,
         });

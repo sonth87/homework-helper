@@ -110,13 +110,12 @@ export const DEFAULT_SETTINGS = {
   activeConfigId: 'auto', // 'auto' (round-robin active) or specific config id
   rotationStrategy: 'round-robin', // 'round-robin' | 'random' | 'fallback-on-error'
   studyMode: 'step-by-step', // 'step-by-step' | 'direct' | 'hint' | 'explain' | 'translate'
+  uiLanguage: 'vi', // 'vi' | 'en' | 'th' | 'zh-CN' | 'zh-TW' | 'ja' | 'ko' | 'es' | 'fr' | 'de' | 'pt' | 'id' | 'ru'
   outputLanguage: 'en', // 'en' | 'vi' | 'es' | 'fr' | 'de' | 'zh-CN' | 'ja' | 'ko' | 'auto'
   systemPrompt: `You are an elite academic tutor and homework assistant AI.
 Your goal is to help students understand complex concepts and solve homework questions step-by-step.
-Always structure your answers with:
-1. **Direct Answer / Conclusion** (Highlight final choice or result clearly).
-2. **Step-by-Step Explanation** (Detailed mathematical/scientific reasoning).
-3. **Key Formula / Concept Applied** (Use clear LaTeX for all math expressions: enclosed in $...$ for inline and $$...$$ for block formulas).
+Always provide crystal clear, pedagogically sound, and mathematically rigorous explanations.
+Use LaTeX math formulas ($...$ for inline, $$...$$ for block formulas) wherever appropriate.
 Ensure maximum pedagogical clarity. If an image contains multiple questions, ask the student which one to solve first, or solve the primary highlighted question.`,
   enableFormsAdapter: true,
   enableTextTooltip: true,
@@ -130,8 +129,12 @@ Ensure maximum pedagogical clarity. If an image contains multiple questions, ask
   toolbarSize: 'normal', // 'compact' | 'normal' | 'large'
   toolbarTheme: 'glass-light', // 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple'
   toolbarCustomColor: '#0284c7',
-  disabledSites: [], // list of disabled hostnames
-  theme: 'dark', // 'dark' | 'light' | 'system'
+  routingStrategy: 'prefer_nano', // 'prefer_nano' | 'prefer_config' | 'nano_only' | 'config_only'
+  installedOcrModels: {
+    vie: { lang: 'vie', name: 'Tiếng Việt', size: '1.9 MB', version: '1.0.0', isBundled: true, isInstalled: true },
+    eng: { lang: 'eng', name: 'English', size: '4.1 MB', version: '1.0.0', isBundled: true, isInstalled: true },
+    equ: { lang: 'equ', name: 'Toán học & Ký hiệu', size: '2.3 MB', version: '1.0.0', isBundled: true, isInstalled: true },
+  },
   chatHistory: [],
   conversations: [], // [{ id, title, createdAt, updatedAt, thumbnail, messages: [] }]
   activeConversationId: null,
@@ -140,11 +143,24 @@ Ensure maximum pedagogical clarity. If an image contains multiple questions, ask
 export const Storage = {
   async get(keys = null) {
     return new Promise((resolve) => {
+      if (typeof chrome === 'undefined' || !chrome.storage?.local) {
+        resolve({ ...DEFAULT_SETTINGS });
+        return;
+      }
       chrome.storage.local.get(keys, (res) => {
+        const merged = { ...DEFAULT_SETTINGS, ...res };
         if (!keys) {
-          resolve({ ...DEFAULT_SETTINGS, ...res });
+          resolve(merged);
+        } else if (Array.isArray(keys)) {
+          const filtered = {};
+          keys.forEach((k) => {
+            filtered[k] = merged[k];
+          });
+          resolve(filtered);
+        } else if (typeof keys === 'string') {
+          resolve({ [keys]: merged[keys] });
         } else {
-          resolve(res);
+          resolve(merged);
         }
       });
     });
@@ -221,8 +237,23 @@ export const Storage = {
     return null;
   },
 
-  async createNewConversation(title = 'Cuộc trò chuyện mới') {
+  async createNewConversation(title = 'Đoạn chat mới') {
     const conversations = await this.getConversations();
+    const { activeConversationId } = await this.get(['activeConversationId']);
+    const active = conversations.find((c) => c.id === activeConversationId);
+
+    // If current active conversation is already empty, reuse it
+    if (active && (!active.messages || active.messages.length === 0)) {
+      active.title = title;
+      active.updatedAt = Date.now();
+      await this.set({
+        conversations: [...conversations],
+        activeConversationId: active.id,
+        chatHistory: [],
+      });
+      return active;
+    }
+
     const newConv = {
       id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       title: title,
@@ -329,5 +360,49 @@ export const Storage = {
     } else {
       await this.set({ chatHistory: [], conversations: [] });
     }
+  },
+
+  // =======================================================
+  // AI Routing Strategy & OCR Models Management
+  // =======================================================
+  async getRoutingStrategy() {
+    const { routingStrategy = 'prefer_nano' } = await this.get(['routingStrategy']);
+    return routingStrategy;
+  },
+
+  async setRoutingStrategy(strategy) {
+    await this.set({ routingStrategy: strategy });
+    return strategy;
+  },
+
+  async getInstalledOcrModels() {
+    const { installedOcrModels = DEFAULT_SETTINGS.installedOcrModels } = await this.get(['installedOcrModels']);
+    return installedOcrModels;
+  },
+
+  async saveOcrModel(modelInfo) {
+    const models = await this.getInstalledOcrModels();
+    const updated = {
+      ...models,
+      [modelInfo.lang]: {
+        ...modelInfo,
+        updatedAt: Date.now(),
+      },
+    };
+    await this.set({ installedOcrModels: updated });
+    return updated;
+  },
+
+  async removeOcrModel(lang) {
+    const models = await this.getInstalledOcrModels();
+    const updated = { ...models };
+    if (updated[lang]?.isBundled) {
+      // If bundled, reset version and mark as not custom updated
+      updated[lang] = { ...DEFAULT_SETTINGS.installedOcrModels[lang], isInstalled: true };
+    } else {
+      delete updated[lang];
+    }
+    await this.set({ installedOcrModels: updated });
+    return updated;
   }
 };

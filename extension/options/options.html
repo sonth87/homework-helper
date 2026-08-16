@@ -21,6 +21,9 @@
         <button class="opt-nav-item active" data-tab="providers">
           <span id="navIconProviders"></span> AI Providers & Keys
         </button>
+        <button class="opt-nav-item" data-tab="ocr">
+          <span id="navIconOcr"></span> Quản lý Model OCR Cục bộ
+        </button>
         <button class="opt-nav-item" data-tab="appearance">
           <span id="navIconAppearance"></span> Giao diện & Tùy biến UI
         </button>
@@ -50,6 +53,55 @@
           <button class="opt-btn-primary" id="optBtnAddKey">
             <span id="optIconPlus"></span> Thêm Model & Key
           </button>
+        </div>
+
+        <!-- AI Routing Strategy Box -->
+        <div class="opt-card" style="border-left: 4px solid #3b82f6;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+            <div style="flex:1;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span id="optIconRouting"></span>
+                <h3 class="opt-card-title">Chiến lược Định tuyến AI (AI Routing Strategy)</h3>
+              </div>
+              <p class="opt-card-desc" style="margin-top:4px;">
+                Chọn cách tiện ích ưu tiên phân luồng giữa mô hình On-Device Gemini Nano và các API đám mây đã cấu hình.
+              </p>
+              
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-top:12px;">
+                <label class="opt-routing-option" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; display:flex; gap:8px; align-items:flex-start; cursor:pointer; background:#fff;">
+                  <input type="radio" name="optRoutingStrategy" value="prefer_nano" checked style="margin-top:2px;">
+                  <div>
+                    <div style="font-weight:700; font-size:13px; color:#0f172a;">Ưu tiên Gemini Nano (Mặc định)</div>
+                    <div style="font-size:11.5px; color:#64748b; margin-top:2px;">Văn bản dùng Nano On-Device; Chụp ảnh tự động chuyển Vision API hoặc OCR.</div>
+                  </div>
+                </label>
+                
+                <label class="opt-routing-option" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; display:flex; gap:8px; align-items:flex-start; cursor:pointer; background:#fff;">
+                  <input type="radio" name="optRoutingStrategy" value="prefer_config" style="margin-top:2px;">
+                  <div>
+                    <div style="font-weight:700; font-size:13px; color:#0f172a;">Ưu tiên Model đã cấu hình</div>
+                    <div style="font-size:11.5px; color:#64748b; margin-top:2px;">Dùng Key đám mây; Tự động fallback về Gemini Nano khi hết quota hoặc lỗi mạng.</div>
+                  </div>
+                </label>
+
+                <label class="opt-routing-option" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; display:flex; gap:8px; align-items:flex-start; cursor:pointer; background:#fff;">
+                  <input type="radio" name="optRoutingStrategy" value="nano_only" style="margin-top:2px;">
+                  <div>
+                    <div style="font-weight:700; font-size:13px; color:#0f172a;">Chỉ dùng Gemini Nano</div>
+                    <div style="font-size:11.5px; color:#64748b; margin-top:2px;">100% Cục bộ On-Device, bảo mật tuyệt đối, không gọi ra ngoài Internet.</div>
+                  </div>
+                </label>
+
+                <label class="opt-routing-option" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; display:flex; gap:8px; align-items:flex-start; cursor:pointer; background:#fff;">
+                  <input type="radio" name="optRoutingStrategy" value="config_only" style="margin-top:2px;">
+                  <div>
+                    <div style="font-weight:700; font-size:13px; color:#0f172a;">Chỉ dùng Model Config</div>
+                    <div style="font-size:11.5px; color:#64748b; margin-top:2px;">Chỉ sử dụng danh sách các API Key trong bảng dưới.</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Strategy Box -->
@@ -128,6 +180,65 @@
         <!-- Keys List -->
         <div class="opt-keys-container" id="optKeysContainer">
           <!-- Dynamically Rendered -->
+        </div>
+      </section>
+
+      <!-- Section: Local OCR Engine & Model Manager -->
+      <section id="tabOcr" class="opt-section">
+        <div class="opt-section-header">
+          <div>
+            <h2 class="opt-heading">Quản lý Model OCR Cục bộ (Offline Vision Engine)</h2>
+            <p class="opt-subheading">
+              Bộ máy nhận diện văn bản & công thức toán học WebAssembly chạy 100% trên trình duyệt. Tự động kết hợp ngôn ngữ và ký hiệu Toán học để trích xuất đề bài đưa vào Gemini Nano.
+            </p>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="opt-btn-secondary" id="optBtnCheckOcrUpdates">
+              <span id="optIconCheckUpdates"></span> Kiểm tra Cập nhật
+            </button>
+            <button class="opt-btn-primary" id="optBtnDownloadCoreOcr">
+              <span id="optIconDownloadCore"></span> Tải Gói Cốt Lõi (Vie + Eng + Math)
+            </button>
+          </div>
+        </div>
+
+        <!-- Notification Banner / Progress -->
+        <div id="ocrProgressCard" class="opt-card" style="display:none; border-left:4px solid #0284c7; background:#f0f9ff; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div id="ocrProgressLabel" style="font-weight:700; font-size:13px; color:#0369a1;">Đang tải model...</div>
+            <div id="ocrProgressPct" style="font-weight:700; font-size:13px; color:#0284c7;">0%</div>
+          </div>
+          <div style="width:100%; height:8px; background:#e0f2fe; border-radius:4px; overflow:hidden;">
+            <div id="ocrProgressBar" style="width:0%; height:100%; background:#0284c7; transition:width 0.2s ease;"></div>
+          </div>
+        </div>
+
+        <!-- Bundled Core Package Card -->
+        <div class="opt-card" style="border-left:4px solid #10b981; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span id="optIconCorePackage"></span>
+                <h3 class="opt-card-title">Gói Cốt Lõi Sẵn Sàng (Core Offline Pack)</h3>
+                <span class="opt-preview-badge" style="background:#ecfdf5; color:#059669; font-weight:700;">Tích hợp sẵn v1.0.0</span>
+              </div>
+              <p class="opt-card-desc" style="margin-top:6px;">
+                Bao gồm: <strong>Tiếng Việt (1.9 MB)</strong>, <strong>Tiếng Anh & Latin (4.1 MB)</strong>, <strong>Ký hiệu Toán học & Công thức (2.3 MB)</strong>. Sẵn sàng nhận diện ảnh đề thi và trắc nghiệm ngay mà không cần tải thêm.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Models Catalog List -->
+        <div class="opt-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 class="opt-card-title">Danh sách Toàn bộ Model Ngôn ngữ Quốc tế</h3>
+            <span style="font-size:12px; color:#64748b;">Lưu trữ an toàn trong IndexedDB Offline</span>
+          </div>
+
+          <div id="ocrModelsListContainer" style="display:flex; flex-direction:column; gap:10px;">
+            <!-- Dynamically Rendered -->
+          </div>
         </div>
       </section>
 
@@ -430,14 +541,22 @@
           </div>
         </div>
 
-        <!-- AI Response Language -->
+        <!-- Language Settings -->
         <div class="opt-card">
-          <h3 class="opt-card-title" style="margin-bottom:12px;">Ngôn ngữ Phản hồi của AI (AI Response Language)</h3>
+          <h3 class="opt-card-title" style="margin-bottom:12px;">Cài đặt Ngôn ngữ (Language Settings)</h3>
           <div class="opt-settings-list">
             <div class="opt-setting-row">
               <div>
-                <div class="opt-setting-title">Ngôn ngữ mặc định cho lời giải</div>
-                <div class="opt-setting-desc">AI sẽ tự động giải bài, giải thích các bước và đưa ra đáp án bằng ngôn ngữ này (Mặc định: Tiếng Anh).</div>
+                <div class="opt-setting-title">Ngôn ngữ Giao diện tiện ích (UI Display Language)</div>
+                <div class="opt-setting-desc">Ngôn ngữ hiển thị của toàn bộ các nút bấm, ngăn kéo chat, popup kết quả và hướng dẫn trên màn hình.</div>
+              </div>
+              <select id="optUiLanguageSelect" class="opt-select"></select>
+            </div>
+
+            <div class="opt-setting-row" style="margin-top:14px; padding-top:14px; border-top:1px solid #e2e8f0;">
+              <div>
+                <div class="opt-setting-title">Ngôn ngữ Phản hồi của AI (AI Response Language)</div>
+                <div class="opt-setting-desc">AI sẽ tự động giải bài, giải thích các bước và đưa ra đáp án bằng ngôn ngữ này (Mặc định: Tiếng Anh / Tự động).</div>
               </div>
               <select id="optOutputLanguageSelect" class="opt-select"></select>
             </div>

@@ -82,6 +82,7 @@ class InPageOverlay {
 
     // Apply visual appearance settings
     await this.applyAppearanceSettings();
+    await this.applyLanguageI18n();
 
     // Event listeners
     this.setupEventListeners();
@@ -218,7 +219,10 @@ class InPageOverlay {
         <div class="hw-header">
           <div class="hw-header-title">
             ${Icons.appLogo(22)}
-            <span id="hwHeaderTitle">Homework Helper</span>
+            <div style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+              <span id="hwHeaderTitle">Homework Helper</span>
+              <span id="hwActiveConvTitle" style="font-size:11px;font-weight:500;color:#64748b;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Đoạn chat mới</span>
+            </div>
           </div>
           <div class="hw-header-actions">
             <button class="hw-icon-btn" id="hwBtnDrawerNewChat" data-tooltip-title="Tạo đoạn chat mới" data-tooltip-desc="Bắt đầu phiên hội thoại bài tập mới.">
@@ -362,7 +366,16 @@ class InPageOverlay {
     s.getElementById('hwBtnClose').addEventListener('click', () => this.toggleDrawer(false));
 
     // Crop trigger (Temporarily hide drawer while cropping)
-    const triggerCrop = () => {
+    const triggerCrop = async () => {
+      const { routingStrategy = 'prefer_nano', apiConfigs = [], installedOcrModels = {} } = await Storage.get(['routingStrategy', 'apiConfigs', 'installedOcrModels']);
+      const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
+      const hasOcr = Object.values(installedOcrModels).some((m) => m.isInstalled || m.isBundled);
+
+      if (routingStrategy === 'config_only' && enabledKeys.length === 0) {
+        chrome.runtime.sendMessage({ action: 'OPEN_OPTIONS' });
+        return;
+      }
+
       if (this.isOpen) {
         this.wasOpenBeforeCrop = true;
         this.toggleDrawer(false);
@@ -494,11 +507,9 @@ class InPageOverlay {
     if (langSelect) {
       Storage.get(['outputLanguage']).then(({ outputLanguage = 'en' }) => {
         langSelect.value = outputLanguage;
-        this.applyLanguageI18n(outputLanguage);
       });
       langSelect.addEventListener('change', (e) => {
         Storage.set({ outputLanguage: e.target.value });
-        this.applyLanguageI18n(e.target.value);
       });
     }
 
@@ -513,17 +524,29 @@ class InPageOverlay {
     });
 
     s.getElementById('hwBtnCardNewChat').addEventListener('click', async () => {
-      await Storage.createNewConversation('Bài tập mới');
+      await Storage.createNewConversation('Đoạn chat mới');
       s.getElementById('hwCardHistoryPanel').style.display = 'none';
       this.popupCard.style.display = 'none';
-      triggerCrop();
+      this.toggleDrawer(true);
+      s.getElementById('hwTextarea').value = '';
+      this.attachedImageBase64 = null;
+      s.getElementById('hwImgPreviewRow').style.display = 'none';
+      await this.loadInitialHistory();
+      this.showToast('Đã bắt đầu đoạn chat mới');
+      setTimeout(() => s.getElementById('hwTextarea').focus(), 100);
     });
 
     s.getElementById('hwBtnCardAddConv').addEventListener('click', async () => {
-      await Storage.createNewConversation('Bài tập mới');
+      await Storage.createNewConversation('Đoạn chat mới');
       s.getElementById('hwCardHistoryPanel').style.display = 'none';
       this.popupCard.style.display = 'none';
-      triggerCrop();
+      this.toggleDrawer(true);
+      s.getElementById('hwTextarea').value = '';
+      this.attachedImageBase64 = null;
+      s.getElementById('hwImgPreviewRow').style.display = 'none';
+      await this.loadInitialHistory();
+      this.showToast('Đã bắt đầu đoạn chat mới');
+      setTimeout(() => s.getElementById('hwTextarea').focus(), 100);
     });
 
     s.getElementById('hwBtnCardHistory').addEventListener('click', () => {
@@ -550,14 +573,22 @@ class InPageOverlay {
     s.getElementById('hwBtnDrawerNewChat').addEventListener('click', async () => {
       await Storage.createNewConversation('Đoạn chat mới');
       s.getElementById('hwDrawerHistoryPanel').style.display = 'none';
-      this.loadInitialHistory();
+      s.getElementById('hwTextarea').value = '';
+      this.attachedImageBase64 = null;
+      s.getElementById('hwImgPreviewRow').style.display = 'none';
+      await this.loadInitialHistory();
+      this.showToast('Đã bắt đầu đoạn chat mới');
       setTimeout(() => s.getElementById('hwTextarea').focus(), 100);
     });
 
     s.getElementById('hwBtnDrawerAddConv').addEventListener('click', async () => {
       await Storage.createNewConversation('Đoạn chat mới');
       s.getElementById('hwDrawerHistoryPanel').style.display = 'none';
-      this.loadInitialHistory();
+      s.getElementById('hwTextarea').value = '';
+      this.attachedImageBase64 = null;
+      s.getElementById('hwImgPreviewRow').style.display = 'none';
+      await this.loadInitialHistory();
+      this.showToast('Đã bắt đầu đoạn chat mới');
       setTimeout(() => s.getElementById('hwTextarea').focus(), 100);
     });
 
@@ -676,10 +707,13 @@ class InPageOverlay {
           if (changes.enableFloatingButton || changes.fabSize || changes.popupOpacity || changes.popupBlur) {
             this.applyAppearanceSettings();
           }
+          if (changes.uiLanguage) {
+            this.applyLanguageI18n(changes.uiLanguage.newValue);
+          }
           if (changes.isNanoReady || changes.apiConfigs) {
             this.updateActiveModelBadge();
           }
-          if (changes.chatHistory && this.isOpen && !this.isStreaming) {
+          if ((changes.chatHistory || changes.activeConversationId || changes.conversations) && this.isOpen && !this.isStreaming) {
             this.loadInitialHistory();
           }
         }
@@ -696,9 +730,9 @@ class InPageOverlay {
       this.shadow.appendChild(tooltipEl);
     }
 
-    const showTooltip = (el, e) => {
-      const title = el.getAttribute('data-tooltip-title');
-      const desc = el.getAttribute('data-tooltip-desc');
+    const showTooltip = (el) => {
+      const title = el.getAttribute('data-tooltip-title') || el.getAttribute('title');
+      const desc = el.getAttribute('data-tooltip-desc') || '';
       if (!title && !desc) return;
 
       tooltipEl.innerHTML = `
@@ -707,23 +741,33 @@ class InPageOverlay {
       `;
 
       tooltipEl.style.display = 'block';
-      const tooltipHeight = tooltipEl.offsetHeight || 50;
-      const tooltipWidth = tooltipEl.offsetWidth || 200;
+      tooltipEl.style.visibility = 'hidden';
+      tooltipEl.classList.remove('show');
+
+      const tooltipHeight = tooltipEl.offsetHeight || 44;
+      const tooltipWidth = Math.min(280, Math.max(180, tooltipEl.offsetWidth || 200));
 
       const rect = el.getBoundingClientRect();
       let top;
-      if (rect.top < 80) {
-        // Place BELOW header buttons so it does NOT cover the button!
+      if (rect.top < 90) {
+        // Place BELOW header buttons
         top = rect.bottom + 8;
       } else {
         // Place ABOVE
         top = rect.top - tooltipHeight - 8;
       }
 
-      const left = Math.min(window.innerWidth - tooltipWidth - 14, Math.max(10, rect.left + rect.width / 2 - tooltipWidth / 2));
+      let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+      if (left + tooltipWidth > window.innerWidth - 12) {
+        left = window.innerWidth - tooltipWidth - 12;
+      }
+      if (left < 10) {
+        left = 10;
+      }
 
       tooltipEl.style.top = `${top}px`;
       tooltipEl.style.left = `${left}px`;
+      tooltipEl.style.visibility = 'visible';
       tooltipEl.classList.add('show');
     };
 
@@ -731,15 +775,26 @@ class InPageOverlay {
       tooltipEl.classList.remove('show');
     };
 
-    this.shadow.querySelectorAll('[data-tooltip-title]').forEach((el) => {
-      el.addEventListener('mouseenter', (e) => showTooltip(el, e));
-      el.addEventListener('mouseleave', hideTooltip);
+    // Event delegation on Shadow Root ensures all current and future elements trigger tooltips reliably
+    this.shadow.addEventListener('mouseover', (e) => {
+      const target = e.target.closest('[data-tooltip-title]');
+      if (target) {
+        showTooltip(target);
+      }
+    });
+
+    this.shadow.addEventListener('mouseout', (e) => {
+      const target = e.target.closest('[data-tooltip-title]');
+      if (target) {
+        hideTooltip();
+      }
     });
   }
 
   async applyLanguageI18n(lang = null) {
-    const outputLanguage = lang || (await Storage.get(['outputLanguage'])).outputLanguage || 'en';
-    const dict = getI18n(outputLanguage);
+    const { uiLanguage = 'vi', outputLanguage = 'en' } = await Storage.get(['uiLanguage', 'outputLanguage']);
+    const currentLang = lang || uiLanguage;
+    const dict = getI18n(currentLang);
     const s = this.shadow;
 
     const textarea = s.getElementById('hwTextarea');
@@ -840,6 +895,37 @@ class InPageOverlay {
       content: isVi ? 'Giải bài tập trong hình ảnh đã chụp' : 'Solve homework problem from captured image',
       image: imageBase64,
     });
+
+    const { apiConfigs = [], systemPrompt, routingStrategy = 'prefer_nano' } = await Storage.get(['apiConfigs', 'systemPrompt', 'routingStrategy']);
+    const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
+
+    // If running in Gemini Nano mode (no keys or nano_only), run Local OCR first!
+    if (enabledKeys.length === 0 || routingStrategy === 'nano_only') {
+      content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} ${isVi ? 'Đang quét chữ và công thức qua OCR Cục bộ...' : 'Scanning text & formulas with Local OCR...'}</span>`;
+
+      chrome.runtime.sendMessage({
+        action: 'PERFORM_OCR',
+        payload: { imageBase64, targetLang: outputLanguage }
+      }, (res) => {
+        const ocrText = res?.text || '';
+        const nanoPrompt = isVi
+          ? `Đề bài toán/bài tập trích xuất từ hình ảnh:\n${ocrText || '(Hình ảnh bài tập)'}\n\nVui lòng giải chi tiết từng bước bằng Tiếng Việt kèm công thức toán LaTeX ($...$) và đóng khung kết quả cuối cùng:`
+          : `Homework problem from image:\n${ocrText || '(Homework image)'}\n\nPlease solve this step-by-step with LaTeX formulas ($...$) and highlight the final answer:`;
+
+        const nanoSysPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${isVi ? 'Tiếng Việt (Vietnamese)' : outputLanguage}.`;
+
+        window.dispatchEvent(
+          new CustomEvent('HOMEWORK_AI_NANO_EXEC', {
+            detail: {
+              prompt: nanoPrompt,
+              requestId: this.activeRequestId,
+              systemPrompt: nanoSysPrompt,
+            },
+          })
+        );
+      });
+      return;
+    }
 
     chrome.runtime.sendMessage({
       action: 'ASK_AI',
@@ -1528,10 +1614,33 @@ class InPageOverlay {
     }
   }
 
+  showToast(msg) {
+    let toast = this.shadow.getElementById('hwToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'hwToast';
+      toast.className = 'hw-toast';
+      this.shadow.appendChild(toast);
+    }
+    toast.innerHTML = `<span style="display:flex;align-items:center;gap:6px;">${Icons.checkCircle(14)} ${msg}</span>`;
+    toast.classList.add('show');
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2200);
+  }
+
   async loadInitialHistory() {
-    const history = await Storage.getChatHistory();
+    const activeConv = await Storage.getActiveConversation();
+    const history = activeConv?.messages || [];
     const body = this.shadow.getElementById('hwChatBody');
     if (!body) return;
+
+    const titleEl = this.shadow.getElementById('hwActiveConvTitle');
+    if (titleEl) {
+      titleEl.textContent = activeConv?.title || 'Đoạn chat mới';
+      titleEl.title = activeConv?.title || 'Đoạn chat mới';
+    }
 
     body.innerHTML = '';
     if (history.length > 0) {
