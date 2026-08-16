@@ -24,27 +24,27 @@
       <button class="pop-card-btn pop-card-primary" id="popBtnOpenSidePanel">
         <span id="popIconSidePanel"></span>
         <div class="pop-btn-text">
-          <span class="pop-btn-title">Open AI Side Panel</span>
-          <span class="pop-btn-desc">Workspace alongside any webpage</span>
+          <span class="pop-btn-title" id="popSidePanelTitle">Open AI Side Panel</span>
+          <span class="pop-btn-desc" id="popSidePanelDesc">Workspace alongside any webpage</span>
         </div>
       </button>
 
       <button class="pop-card-btn" id="popBtnCapture">
         <span id="popIconCapture"></span>
         <div class="pop-btn-text">
-          <span class="pop-btn-title">Crop & Solve (Alt+C)</span>
-          <span class="pop-btn-desc">Snip formulas or diagrams</span>
+          <span class="pop-btn-title" id="popCaptureTitle">Crop & Solve (Alt+C)</span>
+          <span class="pop-btn-desc" id="popCaptureDesc">Snip formulas or diagrams</span>
         </div>
       </button>
 
       <!-- Key Rotation Status -->
       <div class="pop-status-box">
         <div class="pop-status-row">
-          <span class="pop-label">Active Keys Pool:</span>
+          <span class="pop-label" id="popLabelKeyPool">Active Keys Pool:</span>
           <span class="pop-badge" id="popKeyCount">0 Keys</span>
         </div>
         <div class="pop-status-row">
-          <span class="pop-label">Rotation Mode:</span>
+          <span class="pop-label" id="popLabelRotationMode">Rotation Mode:</span>
           <span class="pop-value" id="popRotationMode">Round Robin</span>
         </div>
       </div>
@@ -52,11 +52,11 @@
       <!-- Feature Toggles -->
       <div class="pop-toggles">
         <label class="pop-toggle-row">
-          <span>Google Forms Assistant</span>
+          <span id="popLabelForms">Google Forms Assistant</span>
           <input type="checkbox" id="popToggleForms" checked>
         </label>
         <label class="pop-toggle-row">
-          <span>Selection Tooltip (Highlight Text)</span>
+          <span id="popLabelTooltip">Selection Tooltip (Highlight Text)</span>
           <input type="checkbox" id="popToggleTooltip" checked>
         </label>
       </div>
@@ -64,7 +64,7 @@
 
     <footer class="pop-footer">
       <button class="pop-btn-settings" id="popBtnConfigure">
-        <span id="popIconGear"></span> Configure Models & Keys
+        <span id="popIconGear"></span> <span id="popConfigureBtnText">Configure Models & Keys</span>
       </button>
     </footer>
   </div>

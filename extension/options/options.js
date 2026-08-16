@@ -1,6 +1,7 @@
 import { Icons } from '../shared/icons.js';
 import { Storage, DEFAULT_PROVIDERS, DEFAULT_SETTINGS, SUPPORTED_LANGUAGES } from '../shared/storage.js';
 import { OCR_MODEL_CATALOG, OcrEngine } from '../shared/ocr-engine.js';
+import { getOptionsI18n } from '../shared/i18n.js';
 
 class OptionsController {
   constructor() {
@@ -10,6 +11,7 @@ class OptionsController {
   async init() {
     this.renderIcons();
     this.setupNavigation();
+    await this.applyLanguageI18n();
     await this.loadRoutingStrategy();
     await this.loadProvidersAndKeys();
     await this.checkChromeBuiltinAI();
@@ -17,6 +19,15 @@ class OptionsController {
     await this.loadAppearanceSettings();
     await this.loadSystemPrompt();
     await this.loadGeneralSettings();
+
+    // Listen to real-time storage changes
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && changes.uiLanguage) {
+          this.applyLanguageI18n(changes.uiLanguage.newValue);
+        }
+      });
+    }
 
     // Check URL hash for direct navigation to Gemini Nano
     if (window.location.hash === '#builtin-nano') {
@@ -111,7 +122,8 @@ class OptionsController {
 
   async loadOcrModelsManager() {
     const container = document.getElementById('ocrModelsListContainer');
-    const installedModels = await Storage.getInstalledOcrModels();
+    const { installedModels = {}, uiLanguage = 'vi' } = await Storage.get(['installedModels', 'uiLanguage']);
+    const dict = getOptionsI18n(uiLanguage);
 
     container.innerHTML = '';
     OCR_MODEL_CATALOG.forEach((model) => {
@@ -123,11 +135,11 @@ class OptionsController {
 
       let statusBadge = '';
       if (model.isBundled) {
-        statusBadge = `<span class="opt-preview-badge" style="background:#ecfdf5; color:#059669;">Tích hợp sẵn v${installedVer}</span>`;
+        statusBadge = `<span class="opt-preview-badge" style="background:#ecfdf5; color:#059669;">${dict.corePackBadge || `Tích hợp sẵn v${installedVer}`}</span>`;
       } else if (isInstalled) {
-        statusBadge = `<span class="opt-preview-badge" style="background:#ecfdf5; color:#059669;">Đã tải v${installedVer}</span>`;
+        statusBadge = `<span class="opt-preview-badge" style="background:#ecfdf5; color:#059669;">${dict.ocrInstalled || 'Đã tải'} v${installedVer}</span>`;
       } else {
-        statusBadge = `<span class="opt-preview-badge" style="background:#f1f5f9; color:#64748b;">Chưa tải</span>`;
+        statusBadge = `<span class="opt-preview-badge" style="background:#f1f5f9; color:#64748b;">${dict.ocrNotInstalled || 'Chưa tải'}</span>`;
       }
 
       row.innerHTML = `
@@ -144,9 +156,9 @@ class OptionsController {
           ${
             !isInstalled
               ? `<button class="opt-btn-secondary btn-download-model" data-lang="${model.lang}" style="padding:6px 14px; font-size:12px; display:flex; align-items:center; gap:5px; white-space:nowrap;">
-                  ${Icons.download(13)} Tải về
+                  ${Icons.download(13)} ${dict.ocrDownloadBtn || 'Tải về'}
                 </button>`
-              : `<button class="opt-btn-secondary btn-delete-model" data-lang="${model.lang}" style="padding:6px 10px; font-size:12px; color:#ef4444; display:flex; align-items:center;" ${model.isBundled ? 'disabled title="Gói cốt lõi tích hợp sẵn trong tiện ích"' : 'title="Xóa model khỏi bộ nhớ Offline"'}>
+              : `<button class="opt-btn-secondary btn-delete-model" data-lang="${model.lang}" style="padding:6px 10px; font-size:12px; color:#ef4444; display:flex; align-items:center;" ${model.isBundled ? 'disabled title="Gói cốt lõi tích hợp sẵn trong tiện ích"' : `title="${dict.ocrDeleteBtn || 'Xóa'}"`}>
                   ${Icons.trash(13)}
                 </button>`
           }
@@ -161,7 +173,7 @@ class OptionsController {
       btn.addEventListener('click', async () => {
         const lang = btn.getAttribute('data-lang');
         btn.disabled = true;
-        btn.innerHTML = `<span style="display:inline-block; animation:spin 1s linear infinite;">⏳</span> Đang tải...`;
+        btn.innerHTML = `<span style="display:inline-block; animation:spin 1s linear infinite;">⏳</span> ${dict.ocrDownloading || 'Đang tải...'}`;
 
         const progressCard = document.getElementById('ocrProgressCard');
         const progressLabel = document.getElementById('ocrProgressLabel');
@@ -191,7 +203,7 @@ class OptionsController {
     container.querySelectorAll('.btn-delete-model').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const lang = btn.getAttribute('data-lang');
-        if (confirm(`Bạn có chắc muốn xóa model ngôn ngữ này khỏi bộ nhớ đệm?`)) {
+        if (confirm(`${dict.ocrConfirmDelete || 'Bạn có chắc muốn xóa model ngôn ngữ này khỏi bộ nhớ đệm?'}`)) {
           await OcrEngine.deleteModel(lang);
           await this.loadOcrModelsManager();
         }
@@ -240,22 +252,25 @@ class OptionsController {
 
   async loadProvidersAndKeys() {
     const { apiConfigs = [] } = await Storage.getApiConfigs();
+    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+    const dict = getOptionsI18n(uiLanguage);
     const container = document.getElementById('optKeysContainer');
 
     container.innerHTML = '';
     if (apiConfigs.length === 0) {
       container.innerHTML = `
         <div class="opt-card" style="text-align:center; padding:32px; color:#64748b;">
-          Chưa có API Key nào được thêm. Nhấn <strong>"Thêm Model & Key"</strong> ở trên để bắt đầu sử dụng hoàn toàn miễn phí.
+          ${dict.subheadingProviders || 'Chưa có API Key nào được thêm. Nhấn "Thêm Model & Key" ở trên để bắt đầu sử dụng hoàn toàn miễn phí.'}
         </div>
       `;
     } else {
       apiConfigs.forEach((cfg) => {
-        container.appendChild(this.createKeyCard(cfg));
+        container.appendChild(this.createKeyCard(cfg, false, dict));
       });
     }
 
-    document.getElementById('optBtnAddKey').addEventListener('click', () => {
+    const addBtn = document.getElementById('optBtnAddKey');
+    addBtn.onclick = () => {
       const newConfig = {
         id: `cfg_${Date.now()}`,
         provider: 'gemini',
@@ -266,11 +281,12 @@ class OptionsController {
         isEnabled: true,
       };
       if (apiConfigs.length === 0) container.innerHTML = '';
-      container.appendChild(this.createKeyCard(newConfig, true));
-    });
+      container.appendChild(this.createKeyCard(newConfig, true, dict));
+    };
   }
 
-  createKeyCard(cfg, isNew = false) {
+  createKeyCard(cfg, isNew = false, dict = null) {
+    const d = dict || getOptionsI18n();
     const card = document.createElement('div');
     card.className = 'opt-key-card';
     card.setAttribute('data-id', cfg.id);
@@ -290,23 +306,23 @@ class OptionsController {
           <input type="checkbox" class="card-enabled" ${cfg.isEnabled ? 'checked' : ''}>
           <span>${providerObj.name}</span>
         </label>
-        <button class="opt-btn-secondary card-delete" style="color:#ef4444; padding:4px 8px; font-size:12px;">
-          ${Icons.trash(14)} Xóa
+        <button class="opt-btn-secondary card-delete" style="color:#ef4444; padding:4px 8px; font-size:12px;" title="${d.ocrDeleteBtn || 'Xóa'}">
+          ${Icons.trash(14)} ${d.ocrDeleteBtn || 'Xóa'}
         </button>
       </div>
 
       <div class="opt-key-grid">
         <select class="opt-select card-provider">${providerOptions}</select>
         <select class="opt-select card-model">${modelOptions}</select>
-        <input type="password" class="opt-input card-key" placeholder="Nhập API Key (sk-... / AIza...)" value="${cfg.apiKey || ''}">
+        <input type="password" class="opt-input card-key" placeholder="${d.keyPlaceholder || 'Nhập API Key'} (sk-... / AIza...)" value="${cfg.apiKey || ''}">
       </div>
 
       <div class="opt-key-actions">
         <div style="font-size:12px; color:#64748b;" class="card-status">
-          ${cfg.cooldownUntil && cfg.cooldownUntil > Date.now() ? `${Icons.alertCircle(12)} Đang tạm nghỉ do Rate Limit (đến ${new Date(cfg.cooldownUntil).toLocaleTimeString()})` : 'Trạng thái: Sẵn sàng'}
+          ${cfg.cooldownUntil && cfg.cooldownUntil > Date.now() ? `${Icons.alertCircle(12)} ${d.cooldownStatus || 'Đang tạm nghỉ'} (${new Date(cfg.cooldownUntil).toLocaleTimeString()})` : (d.statusReady || 'Trạng thái: Sẵn sàng')}
         </div>
         <button class="opt-btn-secondary card-test" style="padding:4px 10px; font-size:12px;">
-          ${Icons.refresh(12)} Kiểm tra Kết nối
+          ${Icons.refresh(12)} ${d.testConnection || 'Kiểm tra Kết nối'}
         </button>
       </div>
     `;
@@ -547,14 +563,308 @@ class OptionsController {
     });
   }
 
+  showToast(msg) {
+    const toast = document.getElementById('optToast');
+    if (!toast) return;
+    toast.innerHTML = `<span style="display:flex;align-items:center;gap:8px;">${Icons.checkCircle(16)} <span>${msg}</span></span>`;
+    toast.classList.add('show');
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2200);
+  }
+
+  async applyLanguageI18n(lang = null) {
+    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+    const currentLang = lang || uiLanguage;
+    const dict = getOptionsI18n(currentLang);
+
+    // Sidebar Nav
+    const navProviders = document.getElementById('navTextProviders');
+    if (navProviders) navProviders.textContent = dict.navProviders;
+    const navOcr = document.getElementById('navTextOcr');
+    if (navOcr) navOcr.textContent = dict.navOcr;
+    const navAppearance = document.getElementById('navTextAppearance');
+    if (navAppearance) navAppearance.textContent = dict.navAppearance;
+    const navGuide = document.getElementById('navTextGuide');
+    if (navGuide) navGuide.textContent = dict.navGuide;
+    const navPrompt = document.getElementById('navTextPrompt');
+    if (navPrompt) navPrompt.textContent = dict.navPrompt;
+    const navGeneral = document.getElementById('navTextGeneral');
+    if (navGeneral) navGeneral.textContent = dict.navGeneral;
+
+    // Brand Desc
+    const brandDesc = document.querySelector('.opt-brand-desc');
+    if (brandDesc) brandDesc.textContent = dict.brandDesc;
+
+    // Providers Tab
+    const headingProviders = document.getElementById('optHeadingProviders');
+    if (headingProviders) headingProviders.textContent = dict.headingProviders;
+    const subheadingProviders = document.getElementById('optSubheadingProviders');
+    if (subheadingProviders) subheadingProviders.textContent = dict.subheadingProviders;
+    const btnAddKeyText = document.getElementById('optBtnAddKeyText');
+    if (btnAddKeyText) btnAddKeyText.textContent = dict.btnAddKey;
+
+    const routingTitle = document.getElementById('optRoutingTitle');
+    if (routingTitle) routingTitle.textContent = dict.routingTitle;
+    const routingDesc = document.getElementById('optRoutingDesc');
+    if (routingDesc) routingDesc.textContent = dict.routingDesc;
+
+    const opt1Title = document.getElementById('optRoutingOpt1Title');
+    if (opt1Title) opt1Title.textContent = dict.routingOpt1Title;
+    const opt1Desc = document.getElementById('optRoutingOpt1Desc');
+    if (opt1Desc) opt1Desc.textContent = dict.routingOpt1Desc;
+
+    const opt2Title = document.getElementById('optRoutingOpt2Title');
+    if (opt2Title) opt2Title.textContent = dict.routingOpt2Title;
+    const opt2Desc = document.getElementById('optRoutingOpt2Desc');
+    if (opt2Desc) opt2Desc.textContent = dict.routingOpt2Desc;
+
+    const opt3Title = document.getElementById('optRoutingOpt3Title');
+    if (opt3Title) opt3Title.textContent = dict.routingOpt3Title;
+    const opt3Desc = document.getElementById('optRoutingOpt3Desc');
+    if (opt3Desc) opt3Desc.textContent = dict.routingOpt3Desc;
+
+    const opt4Title = document.getElementById('optRoutingOpt4Title');
+    if (opt4Title) opt4Title.textContent = dict.routingOpt4Title;
+    const opt4Desc = document.getElementById('optRoutingOpt4Desc');
+    if (opt4Desc) opt4Desc.textContent = dict.routingOpt4Desc;
+
+    const strategyTitle = document.getElementById('optStrategyTitle');
+    if (strategyTitle) strategyTitle.textContent = dict.strategyTitle;
+    const strategyDesc = document.getElementById('optStrategyDesc');
+    if (strategyDesc) strategyDesc.textContent = dict.strategyDesc;
+
+    const nanoTitle = document.getElementById('builtinNanoTitle');
+    if (nanoTitle) nanoTitle.textContent = dict.builtinNanoTitle;
+    const nanoDesc = document.getElementById('builtinNanoDesc');
+    if (nanoDesc) nanoDesc.textContent = dict.builtinNanoDesc;
+
+    const btnFlags = document.getElementById('btnOpenFlagsFromOptions');
+    if (btnFlags) btnFlags.textContent = dict.btnOpenFlags;
+    const btnTestAi = document.getElementById('btnTestBuiltinAI');
+    if (btnTestAi) btnTestAi.textContent = dict.btnTestBuiltinAI;
+
+    // OCR Tab
+    const headingOcr = document.getElementById('optHeadingOcr');
+    if (headingOcr) headingOcr.textContent = dict.headingOcr;
+    const subheadingOcr = document.getElementById('optSubheadingOcr');
+    if (subheadingOcr) subheadingOcr.textContent = dict.subheadingOcr;
+    const btnCheckOcrUpdatesText = document.getElementById('optBtnCheckOcrUpdatesText');
+    if (btnCheckOcrUpdatesText) btnCheckOcrUpdatesText.textContent = dict.btnCheckUpdates;
+    const btnDownloadCoreOcrText = document.getElementById('optBtnDownloadCoreOcrText');
+    if (btnDownloadCoreOcrText) btnDownloadCoreOcrText.textContent = dict.btnDownloadCore;
+    const corePackTitle = document.getElementById('optCorePackTitle');
+    if (corePackTitle) corePackTitle.textContent = dict.corePackTitle;
+    const corePackBadge = document.getElementById('optCorePackBadge');
+    if (corePackBadge) corePackBadge.textContent = dict.corePackBadge;
+    const corePackDesc = document.getElementById('optCorePackDesc');
+    if (corePackDesc) corePackDesc.textContent = dict.corePackDesc;
+    const allOcrTitle = document.getElementById('optAllOcrTitle');
+    if (allOcrTitle) allOcrTitle.textContent = dict.allOcrTitle;
+    const allOcrSub = document.getElementById('optAllOcrSub');
+    if (allOcrSub) allOcrSub.textContent = dict.allOcrSub;
+
+    // Appearance Tab
+    const headingAppearance = document.getElementById('optHeadingAppearance');
+    if (headingAppearance) headingAppearance.textContent = dict.headingAppearance;
+    const subheadingAppearance = document.getElementById('optSubheadingAppearance');
+    if (subheadingAppearance) subheadingAppearance.textContent = dict.subheadingAppearance;
+
+    const cardFabTitle = document.getElementById('optCardFabTitle');
+    if (cardFabTitle) cardFabTitle.textContent = dict.cardFabTitle;
+    const labelFabDisplay = document.getElementById('optLabelFabDisplay');
+    if (labelFabDisplay) labelFabDisplay.textContent = dict.labelFabDisplay;
+    const labelFabDisplayDesc = document.getElementById('optLabelFabDisplayDesc');
+    if (labelFabDisplayDesc) labelFabDisplayDesc.textContent = dict.labelFabDisplayDesc;
+    const labelFabSize = document.getElementById('optLabelFabSize');
+    if (labelFabSize) labelFabSize.textContent = dict.labelFabSize;
+    const labelFabSizeDesc = document.getElementById('optLabelFabSizeDesc');
+    if (labelFabSizeDesc) labelFabSizeDesc.textContent = dict.labelFabSizeDesc;
+    const optFabOptSmall = document.getElementById('optFabOptSmall');
+    if (optFabOptSmall) optFabOptSmall.textContent = dict.fabSizeSmall;
+    const optFabOptNormal = document.getElementById('optFabOptNormal');
+    if (optFabOptNormal) optFabOptNormal.textContent = dict.fabSizeNormal;
+    const optFabOptLarge = document.getElementById('optFabOptLarge');
+    if (optFabOptLarge) optFabOptLarge.textContent = dict.fabSizeLarge;
+
+    const cardToolbarTitle = document.getElementById('optCardToolbarTitle');
+    if (cardToolbarTitle) cardToolbarTitle.textContent = dict.cardToolbarTitle;
+    const labelToolbarTheme = document.getElementById('optLabelToolbarTheme');
+    if (labelToolbarTheme) labelToolbarTheme.textContent = dict.labelToolbarTheme;
+    const labelToolbarThemeDesc = document.getElementById('optLabelToolbarThemeDesc');
+    if (labelToolbarThemeDesc) labelToolbarThemeDesc.textContent = dict.labelToolbarThemeDesc;
+    const optThemeOptLight = document.getElementById('optThemeOptLight');
+    if (optThemeOptLight) optThemeOptLight.textContent = dict.toolbarThemeLight;
+    const optThemeOptDark = document.getElementById('optThemeOptDark');
+    if (optThemeOptDark) optThemeOptDark.textContent = dict.toolbarThemeDark;
+    const optThemeOptBlue = document.getElementById('optThemeOptBlue');
+    if (optThemeOptBlue) optThemeOptBlue.textContent = dict.toolbarThemeBlue;
+    const optThemeOptGreen = document.getElementById('optThemeOptGreen');
+    if (optThemeOptGreen) optThemeOptGreen.textContent = dict.toolbarThemeGreen;
+    const optThemeOptPurple = document.getElementById('optThemeOptPurple');
+    if (optThemeOptPurple) optThemeOptPurple.textContent = dict.toolbarThemePurple;
+
+    const labelToolbarText = document.getElementById('optLabelToolbarText');
+    if (labelToolbarText) labelToolbarText.textContent = dict.labelToolbarText;
+    const labelToolbarTextDesc = document.getElementById('optLabelToolbarTextDesc');
+    if (labelToolbarTextDesc) labelToolbarTextDesc.textContent = dict.labelToolbarTextDesc;
+    const labelToolbarSize = document.getElementById('optLabelToolbarSize');
+    if (labelToolbarSize) labelToolbarSize.textContent = dict.labelToolbarSize;
+    const labelToolbarSizeDesc = document.getElementById('optLabelToolbarSizeDesc');
+    if (labelToolbarSizeDesc) labelToolbarSizeDesc.textContent = dict.labelToolbarSizeDesc;
+    const optSizeOptCompact = document.getElementById('optSizeOptCompact');
+    if (optSizeOptCompact) optSizeOptCompact.textContent = dict.toolbarSizeCompact;
+    const optSizeOptNormal = document.getElementById('optSizeOptNormal');
+    if (optSizeOptNormal) optSizeOptNormal.textContent = dict.toolbarSizeNormal;
+    const optSizeOptLarge = document.getElementById('optSizeOptLarge');
+    if (optSizeOptLarge) optSizeOptLarge.textContent = dict.toolbarSizeLarge;
+
+    const labelToolbarOpacity = document.getElementById('optLabelToolbarOpacity');
+    if (labelToolbarOpacity) labelToolbarOpacity.textContent = dict.labelToolbarOpacity;
+    const labelToolbarOpacityDesc = document.getElementById('optLabelToolbarOpacityDesc');
+    if (labelToolbarOpacityDesc) labelToolbarOpacityDesc.textContent = dict.labelToolbarOpacityDesc;
+    const labelToolbarBlur = document.getElementById('optLabelToolbarBlur');
+    if (labelToolbarBlur) labelToolbarBlur.textContent = dict.labelToolbarBlur;
+    const labelToolbarBlurDesc = document.getElementById('optLabelToolbarBlurDesc');
+    if (labelToolbarBlurDesc) labelToolbarBlurDesc.textContent = dict.labelToolbarBlurDesc;
+
+    const cardPopupTitle = document.getElementById('optCardPopupTitle');
+    if (cardPopupTitle) cardPopupTitle.textContent = dict.cardPopupTitle;
+    const labelPopupOpacity = document.getElementById('optLabelPopupOpacity');
+    if (labelPopupOpacity) labelPopupOpacity.textContent = dict.labelPopupOpacity;
+    const labelPopupOpacityDesc = document.getElementById('optLabelPopupOpacityDesc');
+    if (labelPopupOpacityDesc) labelPopupOpacityDesc.textContent = dict.labelPopupOpacityDesc;
+    const labelPopupBlur = document.getElementById('optLabelPopupBlur');
+    if (labelPopupBlur) labelPopupBlur.textContent = dict.labelPopupBlur;
+    const labelPopupBlurDesc = document.getElementById('optLabelPopupBlurDesc');
+    if (labelPopupBlurDesc) labelPopupBlurDesc.textContent = dict.labelPopupBlurDesc;
+
+    const livePreviewBadge = document.getElementById('optLivePreviewBadge');
+    if (livePreviewBadge) livePreviewBadge.textContent = dict.livePreviewBadge;
+    const livePreviewSub = document.getElementById('optLivePreviewSub');
+    if (livePreviewSub) livePreviewSub.textContent = dict.livePreviewSub;
+
+    // Guide Tab
+    const headingGuide = document.getElementById('optHeadingGuide');
+    if (headingGuide) headingGuide.textContent = dict.headingGuide;
+    const subheadingGuide = document.getElementById('optSubheadingGuide');
+    if (subheadingGuide) subheadingGuide.textContent = dict.subheadingGuide;
+    const optGuideWhyTitle = document.getElementById('optGuideWhyTitle');
+    if (optGuideWhyTitle) optGuideWhyTitle.textContent = dict.guideWhyTitle;
+    const optGuideWhyItem1 = document.getElementById('optGuideWhyItem1');
+    if (optGuideWhyItem1) optGuideWhyItem1.innerHTML = dict.guideWhy1;
+    const optGuideWhyItem2 = document.getElementById('optGuideWhyItem2');
+    if (optGuideWhyItem2) optGuideWhyItem2.innerHTML = dict.guideWhy2;
+    const optGuideWhyItem3 = document.getElementById('optGuideWhyItem3');
+    if (optGuideWhyItem3) optGuideWhyItem3.innerHTML = dict.guideWhy3;
+
+    const optGuideHowTitle = document.getElementById('optGuideHowTitle');
+    if (optGuideHowTitle) optGuideHowTitle.textContent = dict.guideHowTitle;
+    const optGuideHowItem1 = document.getElementById('optGuideHowItem1');
+    if (optGuideHowItem1) optGuideHowItem1.innerHTML = dict.guideHow1;
+    const optGuideHowItem2 = document.getElementById('optGuideHowItem2');
+    if (optGuideHowItem2) optGuideHowItem2.innerHTML = dict.guideHow2;
+    const optGuideHowItem3 = document.getElementById('optGuideHowItem3');
+    if (optGuideHowItem3) optGuideHowItem3.innerHTML = dict.guideHow3;
+
+    const optGuideLinksTitle = document.getElementById('optGuideLinksTitle');
+    if (optGuideLinksTitle) optGuideLinksTitle.textContent = dict.guideLinksTitle;
+
+    const linkSubGemini = document.getElementById('optLinkSubGemini');
+    if (linkSubGemini) linkSubGemini.textContent = dict.linkSubGemini;
+    const linkSubGroq = document.getElementById('optLinkSubGroq');
+    if (linkSubGroq) linkSubGroq.textContent = dict.linkSubGroq;
+    const linkSubOpenAI = document.getElementById('optLinkSubOpenAI');
+    if (linkSubOpenAI) linkSubOpenAI.textContent = dict.linkSubOpenAI;
+    const linkSubDeepSeek = document.getElementById('optLinkSubDeepSeek');
+    if (linkSubDeepSeek) linkSubDeepSeek.textContent = dict.linkSubDeepSeek;
+    const linkSubClaude = document.getElementById('optLinkSubClaude');
+    if (linkSubClaude) linkSubClaude.textContent = dict.linkSubClaude;
+
+    const linkBtnGeminiSpan = document.querySelector('#optLinkBtnGemini span:first-child');
+    if (linkBtnGeminiSpan) linkBtnGeminiSpan.textContent = dict.getKeyGemini;
+    const linkBtnGroqSpan = document.querySelector('#optLinkBtnGroq span:first-child');
+    if (linkBtnGroqSpan) linkBtnGroqSpan.textContent = dict.getKeyGroq;
+    const linkBtnOpenAISpan = document.querySelector('#optLinkBtnOpenAI span:first-child');
+    if (linkBtnOpenAISpan) linkBtnOpenAISpan.textContent = dict.getKeyOpenAI;
+    const linkBtnDeepSeekSpan = document.querySelector('#optLinkBtnDeepSeek span:first-child');
+    if (linkBtnDeepSeekSpan) linkBtnDeepSeekSpan.textContent = dict.getKeyDeepSeek;
+    const linkBtnClaudeSpan = document.querySelector('#optLinkBtnClaude span:first-child');
+    if (linkBtnClaudeSpan) linkBtnClaudeSpan.textContent = dict.getKeyClaude;
+
+    // Prompt Tab
+    const headingPrompt = document.getElementById('optHeadingPrompt');
+    if (headingPrompt) headingPrompt.textContent = dict.headingPrompt;
+    const subheadingPrompt = document.getElementById('optSubheadingPrompt');
+    if (subheadingPrompt) subheadingPrompt.textContent = dict.subheadingPrompt;
+    const btnResetPrompt = document.getElementById('optBtnResetPrompt');
+    if (btnResetPrompt) btnResetPrompt.textContent = dict.btnResetPrompt;
+    const btnSavePrompt = document.getElementById('optBtnSavePrompt');
+    if (btnSavePrompt) btnSavePrompt.textContent = dict.btnSavePrompt;
+
+    // General Tab
+    const headingGen = document.getElementById('optHeadingGeneral');
+    if (headingGen) headingGen.textContent = dict.headingGeneral;
+    const subheadingGen = document.getElementById('optSubheadingGeneral');
+    if (subheadingGen) subheadingGen.textContent = dict.subheadingGeneral;
+
+    const cardLangTitle = document.getElementById('optCardLangTitle');
+    if (cardLangTitle) cardLangTitle.textContent = currentLang === 'vi' ? 'Cài đặt Ngôn ngữ (Language Settings)' : 'Language Settings';
+    const uiLangTitle = document.getElementById('optUiLangTitle');
+    if (uiLangTitle) uiLangTitle.textContent = dict.uiLangTitle;
+    const uiLangDesc = document.getElementById('optUiLangDesc');
+    if (uiLangDesc) uiLangDesc.textContent = dict.uiLangDesc;
+
+    const respLangTitle = document.getElementById('optRespLangTitle');
+    if (respLangTitle) respLangTitle.textContent = dict.respLangTitle;
+    const respLangDesc = document.getElementById('optRespLangDesc');
+    if (respLangDesc) respLangDesc.textContent = dict.respLangDesc;
+
+    const formsTitle = document.getElementById('optFormsTitle');
+    if (formsTitle) formsTitle.textContent = dict.formsTitle;
+    const formsDesc = document.getElementById('optFormsDesc');
+    if (formsDesc) formsDesc.textContent = dict.formsDesc;
+
+    const tooltipTitle = document.getElementById('optTooltipTitle');
+    if (tooltipTitle) tooltipTitle.textContent = dict.tooltipTitle;
+    const tooltipDesc = document.getElementById('optTooltipDesc');
+    if (tooltipDesc) tooltipDesc.textContent = dict.tooltipDesc;
+
+    const disabledSitesTitle = document.getElementById('optDisabledSitesTitle');
+    if (disabledSitesTitle) disabledSitesTitle.textContent = dict.disabledSitesTitle;
+    const disabledSitesDesc = document.getElementById('optDisabledSitesDesc');
+    if (disabledSitesDesc) disabledSitesDesc.textContent = dict.disabledSitesDesc;
+
+    const backupTitle = document.getElementById('optBackupTitle');
+    if (backupTitle) backupTitle.textContent = dict.backupTitle;
+    const backupDesc = document.getElementById('optBackupDesc');
+    if (backupDesc) backupDesc.textContent = dict.backupDesc;
+
+    const btnExport = document.getElementById('optBtnExport');
+    if (btnExport) btnExport.textContent = dict.btnExport;
+    const btnClearData = document.getElementById('optBtnClearData');
+    if (btnClearData) btnClearData.textContent = dict.btnClearData;
+
+    const aboutTitle = document.getElementById('optAboutTitle');
+    if (aboutTitle) aboutTitle.textContent = dict.aboutTitle;
+    const aboutDesc = document.getElementById('optAboutDesc');
+    if (aboutDesc) aboutDesc.textContent = dict.aboutDesc;
+
+    // Refresh dynamic lists
+    await this.loadProvidersAndKeys();
+    await this.loadOcrModelsManager();
+  }
+
   async loadSystemPrompt() {
-    const { systemPrompt } = await Storage.get(['systemPrompt']);
+    const { systemPrompt, uiLanguage = 'vi' } = await Storage.get(['systemPrompt', 'uiLanguage']);
     const textarea = document.getElementById('optSystemPromptTextarea');
     textarea.value = systemPrompt || DEFAULT_SETTINGS.systemPrompt;
 
     document.getElementById('optBtnSavePrompt').addEventListener('click', async () => {
       await Storage.set({ systemPrompt: textarea.value });
-      alert('Đã lưu System Prompt thành công!');
+      const dict = getOptionsI18n(uiLanguage);
+      this.showToast(dict.toastPromptSaved || 'Đã lưu System Prompt thành công!');
     });
 
     document.getElementById('optBtnResetPrompt').addEventListener('click', async () => {
@@ -572,7 +882,13 @@ class OptionsController {
       uiLangSelect.innerHTML = uiLangs.map(
         (l) => `<option value="${l.id}" ${l.id === uiLanguage ? 'selected' : ''}>${l.name}</option>`
       ).join('');
-      uiLangSelect.addEventListener('change', () => Storage.set({ uiLanguage: uiLangSelect.value }));
+      uiLangSelect.addEventListener('change', async () => {
+        const newLang = uiLangSelect.value;
+        await Storage.set({ uiLanguage: newLang });
+        await this.applyLanguageI18n(newLang);
+        const dict = getOptionsI18n(newLang);
+        this.showToast(dict.toastLangUpdated);
+      });
     }
 
     const langSelect = document.getElementById('optOutputLanguageSelect');
@@ -580,7 +896,11 @@ class OptionsController {
       langSelect.innerHTML = SUPPORTED_LANGUAGES.map(
         (l) => `<option value="${l.id}" ${l.id === outputLanguage ? 'selected' : ''}>${l.name}</option>`
       ).join('');
-      langSelect.addEventListener('change', () => Storage.set({ outputLanguage: langSelect.value }));
+      langSelect.addEventListener('change', async () => {
+        await Storage.set({ outputLanguage: langSelect.value });
+        const dict = getOptionsI18n(uiLangSelect?.value || 'vi');
+        this.showToast(dict.toastLangUpdated);
+      });
     }
 
     const checkForms = document.getElementById('optCheckForms');
@@ -597,7 +917,8 @@ class OptionsController {
     disabledContainer.innerHTML = '';
 
     if (disabledSites.length === 0) {
-      disabledContainer.innerHTML = '<div style="font-size:12px; color:#94a3b8;">Chưa có website nào bị tắt.</div>';
+      const dict = getOptionsI18n(uiLanguage);
+      disabledContainer.innerHTML = `<div style="font-size:12px; color:#94a3b8;">${dict.noDisabledSites || 'Chưa có website nào bị tắt.'}</div>`;
     } else {
       disabledSites.forEach((site) => {
         const item = document.createElement('div');
@@ -627,9 +948,11 @@ class OptionsController {
     });
 
     document.getElementById('optBtnClearData').addEventListener('click', async () => {
-      if (confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử Chat không?')) {
+      const { uiLanguage: curLang = 'vi' } = await Storage.get(['uiLanguage']);
+      const dict = getOptionsI18n(curLang);
+      if (confirm(curLang === 'vi' ? 'Bạn có chắc chắn muốn xóa toàn bộ lịch sử Chat không?' : 'Are you sure you want to clear all chat history?')) {
         await Storage.clearChatHistory();
-        alert('Đã xóa lịch sử chat.');
+        this.showToast(dict.toastDataCleared);
       }
     });
   }

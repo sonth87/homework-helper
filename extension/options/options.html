@@ -19,22 +19,22 @@
       </div>
       <nav class="opt-nav">
         <button class="opt-nav-item active" data-tab="providers">
-          <span id="navIconProviders"></span> AI Providers & Keys
+          <span id="navIconProviders"></span> <span id="navTextProviders">AI Providers & Keys</span>
         </button>
         <button class="opt-nav-item" data-tab="ocr">
-          <span id="navIconOcr"></span> Quản lý Model OCR Cục bộ
+          <span id="navIconOcr"></span> <span id="navTextOcr">Quản lý Model OCR Cục bộ</span>
         </button>
         <button class="opt-nav-item" data-tab="appearance">
-          <span id="navIconAppearance"></span> Giao diện & Tùy biến UI
+          <span id="navIconAppearance"></span> <span id="navTextAppearance">Giao diện & Tùy biến UI</span>
         </button>
         <button class="opt-nav-item" data-tab="guide">
-          <span id="navIconGuide"></span> Hướng dẫn Lấy Key Miễn phí
+          <span id="navIconGuide"></span> <span id="navTextGuide">Hướng dẫn Lấy Key Miễn phí</span>
         </button>
         <button class="opt-nav-item" data-tab="prompt">
-          <span id="navIconPrompt"></span> System Instructions
+          <span id="navIconPrompt"></span> <span id="navTextPrompt">System Instructions</span>
         </button>
         <button class="opt-nav-item" data-tab="general">
-          <span id="navIconGeneral"></span> Cài đặt Chung
+          <span id="navIconGeneral"></span> <span id="navTextGeneral">Cài đặt Chung</span>
         </button>
       </nav>
     </aside>
@@ -45,13 +45,13 @@
       <section id="tabProviders" class="opt-section active">
         <div class="opt-section-header">
           <div>
-            <h2 class="opt-heading">AI Models & API Key Pool</h2>
-            <p class="opt-subheading">
+            <h2 class="opt-heading" id="optHeadingProviders">AI Models & API Key Pool</h2>
+            <p class="opt-subheading" id="optSubheadingProviders">
               Thêm một hoặc nhiều API Key. Tiện ích tự động cân bằng tải và chuyển sang key dự phòng khi gặp giới hạn Rate Limit.
             </p>
           </div>
           <button class="opt-btn-primary" id="optBtnAddKey">
-            <span id="optIconPlus"></span> Thêm Model & Key
+            <span id="optIconPlus"></span> <span id="optBtnAddKeyText">Thêm Model & Key</span>
           </button>
         </div>
 
@@ -61,9 +61,9 @@
             <div style="flex:1;">
               <div style="display:flex; align-items:center; gap:8px;">
                 <span id="optIconRouting"></span>
-                <h3 class="opt-card-title">Chiến lược Định tuyến AI (AI Routing Strategy)</h3>
+                <h3 class="opt-card-title" id="optRoutingTitle">Chiến lược Định tuyến AI (AI Routing Strategy)</h3>
               </div>
-              <p class="opt-card-desc" style="margin-top:4px;">
+              <p class="opt-card-desc" id="optRoutingDesc" style="margin-top:4px;">
                 Chọn cách tiện ích ưu tiên phân luồng giữa mô hình On-Device Gemini Nano và các API đám mây đã cấu hình.
               </p>
               
@@ -71,32 +71,32 @@
                 <label class="opt-routing-option" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; display:flex; gap:8px; align-items:flex-start; cursor:pointer; background:#fff;">
                   <input type="radio" name="optRoutingStrategy" value="prefer_nano" checked style="margin-top:2px;">
                   <div>
-                    <div style="font-weight:700; font-size:13px; color:#0f172a;">Ưu tiên Gemini Nano (Mặc định)</div>
-                    <div style="font-size:11.5px; color:#64748b; margin-top:2px;">Văn bản dùng Nano On-Device; Chụp ảnh tự động chuyển Vision API hoặc OCR.</div>
+                    <div id="optRoutingOpt1Title" style="font-weight:700; font-size:13px; color:#0f172a;">Ưu tiên Gemini Nano (Mặc định)</div>
+                    <div id="optRoutingOpt1Desc" style="font-size:11.5px; color:#64748b; margin-top:2px;">Văn bản dùng Nano On-Device; Chụp ảnh tự động chuyển Vision API hoặc OCR.</div>
                   </div>
                 </label>
                 
                 <label class="opt-routing-option" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; display:flex; gap:8px; align-items:flex-start; cursor:pointer; background:#fff;">
                   <input type="radio" name="optRoutingStrategy" value="prefer_config" style="margin-top:2px;">
                   <div>
-                    <div style="font-weight:700; font-size:13px; color:#0f172a;">Ưu tiên Model đã cấu hình</div>
-                    <div style="font-size:11.5px; color:#64748b; margin-top:2px;">Dùng Key đám mây; Tự động fallback về Gemini Nano khi hết quota hoặc lỗi mạng.</div>
+                    <div id="optRoutingOpt2Title" style="font-weight:700; font-size:13px; color:#0f172a;">Ưu tiên Model đã cấu hình</div>
+                    <div id="optRoutingOpt2Desc" style="font-size:11.5px; color:#64748b; margin-top:2px;">Dùng Key đám mây; Tự động fallback về Gemini Nano khi hết quota hoặc lỗi mạng.</div>
                   </div>
                 </label>
 
                 <label class="opt-routing-option" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; display:flex; gap:8px; align-items:flex-start; cursor:pointer; background:#fff;">
                   <input type="radio" name="optRoutingStrategy" value="nano_only" style="margin-top:2px;">
                   <div>
-                    <div style="font-weight:700; font-size:13px; color:#0f172a;">Chỉ dùng Gemini Nano</div>
-                    <div style="font-size:11.5px; color:#64748b; margin-top:2px;">100% Cục bộ On-Device, bảo mật tuyệt đối, không gọi ra ngoài Internet.</div>
+                    <div id="optRoutingOpt3Title" style="font-weight:700; font-size:13px; color:#0f172a;">Chỉ dùng Gemini Nano</div>
+                    <div id="optRoutingOpt3Desc" style="font-size:11.5px; color:#64748b; margin-top:2px;">100% Cục bộ On-Device, bảo mật tuyệt đối, không gọi ra ngoài Internet.</div>
                   </div>
                 </label>
 
                 <label class="opt-routing-option" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; display:flex; gap:8px; align-items:flex-start; cursor:pointer; background:#fff;">
                   <input type="radio" name="optRoutingStrategy" value="config_only" style="margin-top:2px;">
                   <div>
-                    <div style="font-weight:700; font-size:13px; color:#0f172a;">Chỉ dùng Model Config</div>
-                    <div style="font-size:11.5px; color:#64748b; margin-top:2px;">Chỉ sử dụng danh sách các API Key trong bảng dưới.</div>
+                    <div id="optRoutingOpt4Title" style="font-weight:700; font-size:13px; color:#0f172a;">Chỉ dùng Model Config</div>
+                    <div id="optRoutingOpt4Desc" style="font-size:11.5px; color:#64748b; margin-top:2px;">Chỉ sử dụng danh sách các API Key trong bảng dưới.</div>
                   </div>
                 </label>
               </div>
@@ -109,9 +109,9 @@
           <div class="opt-strategy-info">
             <div style="display:flex; align-items:center; gap:8px;">
               <span id="optIconStrategy"></span>
-              <h3 class="opt-card-title">Cơ chế xoay vòng thông minh (Smart Load Balancing & Fallback)</h3>
+              <h3 class="opt-card-title" id="optStrategyTitle">Cơ chế xoay vòng thông minh (Smart Load Balancing & Fallback)</h3>
             </div>
-            <p class="opt-card-desc" style="margin-top:4px;">
+            <p class="opt-card-desc" id="optStrategyDesc" style="margin-top:4px;">
               Hệ thống tự động phân phối đều câu hỏi qua các key đang hoạt động (Round-Robin). Nếu 1 key gặp lỗi Rate Limit (HTTP 429) hoặc tạm quá tải, hệ thống tự động đưa key đó vào hàng chờ nghỉ 60 giây và <strong>ngay lập tức chuyển sang Key kế tiếp</strong> mà không làm gián đoạn câu trả lời.
             </p>
           </div>
@@ -123,10 +123,10 @@
             <div>
               <div style="display:flex; align-items:center; gap:8px;">
                 <span id="optIconBuiltinNano"></span>
-                <h3 class="opt-card-title">Chrome Built-in AI (Gemini Nano Local On-Device)</h3>
+                <h3 class="opt-card-title" id="builtinNanoTitle">Chrome Built-in AI (Gemini Nano Local On-Device)</h3>
                 <span id="builtinNanoBadge" class="opt-preview-badge" style="background:#e0f2fe; color:#0369a1;">Đang kiểm tra...</span>
               </div>
-              <p class="opt-card-desc" style="margin-top:6px; color:#334155;">
+              <p class="opt-card-desc" id="builtinNanoDesc" style="margin-top:6px; color:#334155;">
                 Mô hình AI nội bộ chạy 100% trên thiết bị của bạn. <strong>Không cần API Key, hoàn toàn miễn phí & hoạt động Offline</strong>. Tiện ích tự động sử dụng model này khi chưa có Key nào được thêm hoặc khi tất cả các Key đám mây bị cạn hạn ngạch (Rate Limit).
               </p>
             </div>
@@ -187,17 +187,17 @@
       <section id="tabOcr" class="opt-section">
         <div class="opt-section-header">
           <div>
-            <h2 class="opt-heading">Quản lý Model OCR Cục bộ (Offline Vision Engine)</h2>
-            <p class="opt-subheading">
+            <h2 class="opt-heading" id="optHeadingOcr">Quản lý Model OCR Cục bộ (Offline Vision Engine)</h2>
+            <p class="opt-subheading" id="optSubheadingOcr">
               Bộ máy nhận diện văn bản & công thức toán học WebAssembly chạy 100% trên trình duyệt. Tự động kết hợp ngôn ngữ và ký hiệu Toán học để trích xuất đề bài đưa vào Gemini Nano.
             </p>
           </div>
           <div style="display:flex; gap:10px;">
             <button class="opt-btn-secondary" id="optBtnCheckOcrUpdates">
-              <span id="optIconCheckUpdates"></span> Kiểm tra Cập nhật
+              <span id="optIconCheckUpdates"></span> <span id="optBtnCheckOcrUpdatesText">Kiểm tra Cập nhật</span>
             </button>
             <button class="opt-btn-primary" id="optBtnDownloadCoreOcr">
-              <span id="optIconDownloadCore"></span> Tải Gói Cốt Lõi (Vie + Eng + Math)
+              <span id="optIconDownloadCore"></span> <span id="optBtnDownloadCoreOcrText">Tải Gói Cốt Lõi (Vie + Eng + Math)</span>
             </button>
           </div>
         </div>
@@ -219,10 +219,10 @@
             <div>
               <div style="display:flex; align-items:center; gap:8px;">
                 <span id="optIconCorePackage"></span>
-                <h3 class="opt-card-title">Gói Cốt Lõi Sẵn Sàng (Core Offline Pack)</h3>
-                <span class="opt-preview-badge" style="background:#ecfdf5; color:#059669; font-weight:700;">Tích hợp sẵn v1.0.0</span>
+                <h3 class="opt-card-title" id="optCorePackTitle">Gói Cốt Lõi Sẵn Sàng (Core Offline Pack)</h3>
+                <span class="opt-preview-badge" id="optCorePackBadge" style="background:#ecfdf5; color:#059669; font-weight:700;">Tích hợp sẵn v1.0.0</span>
               </div>
-              <p class="opt-card-desc" style="margin-top:6px;">
+              <p class="opt-card-desc" id="optCorePackDesc" style="margin-top:6px;">
                 Bao gồm: <strong>Tiếng Việt (1.9 MB)</strong>, <strong>Tiếng Anh & Latin (4.1 MB)</strong>, <strong>Ký hiệu Toán học & Công thức (2.3 MB)</strong>. Sẵn sàng nhận diện ảnh đề thi và trắc nghiệm ngay mà không cần tải thêm.
               </p>
             </div>
@@ -232,8 +232,8 @@
         <!-- Models Catalog List -->
         <div class="opt-card">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-            <h3 class="opt-card-title">Danh sách Toàn bộ Model Ngôn ngữ Quốc tế</h3>
-            <span style="font-size:12px; color:#64748b;">Lưu trữ an toàn trong IndexedDB Offline</span>
+            <h3 class="opt-card-title" id="optAllOcrTitle">Danh sách Toàn bộ Model Ngôn ngữ Quốc tế</h3>
+            <span style="font-size:12px; color:#64748b;" id="optAllOcrSub">Lưu trữ an toàn trong IndexedDB Offline</span>
           </div>
 
           <div id="ocrModelsListContainer" style="display:flex; flex-direction:column; gap:10px;">
@@ -246,8 +246,8 @@
       <section id="tabAppearance" class="opt-section">
         <div class="opt-section-header">
           <div>
-            <h2 class="opt-heading">Giao diện Liquid Glass & Xem trước Trực tiếp</h2>
-            <p class="opt-subheading">Tùy biến hiệu ứng kính mờ (Liquid Glass), màu sắc, độ mờ hậu cảnh và kích thước với khung Live Preview thời gian thực.</p>
+            <h2 class="opt-heading" id="optHeadingAppearance">Giao diện Liquid Glass & Xem trước Trực tiếp</h2>
+            <p class="opt-subheading" id="optSubheadingAppearance">Tùy biến hiệu ứng kính mờ (Liquid Glass), màu sắc, độ mờ hậu cảnh và kích thước với khung Live Preview thời gian thực.</p>
           </div>
         </div>
 
@@ -256,25 +256,25 @@
           <div class="opt-appearance-controls">
             <!-- 1. Floating Action Buttons (FAB) -->
             <div class="opt-card">
-              <h3 class="opt-card-title" style="margin-bottom:12px;">2 Nút Nổi Ngoài Màn Hình (Floating FAB)</h3>
+              <h3 class="opt-card-title" id="optCardFabTitle" style="margin-bottom:12px;">2 Nút Nổi Ngoài Màn Hình (Floating FAB)</h3>
               <div class="opt-settings-list">
                 <label class="opt-setting-row">
                   <div>
-                    <div class="opt-setting-title">Hiển thị 2 nút nổi ngoài màn hình</div>
-                    <div class="opt-setting-desc">Hiện nút chụp nhanh (Alt+C) và mở trợ lý ở mép phải màn hình.</div>
+                    <div class="opt-setting-title" id="optLabelFabDisplay">Hiển thị 2 nút nổi ngoài màn hình</div>
+                    <div class="opt-setting-desc" id="optLabelFabDisplayDesc">Hiện nút chụp nhanh (Alt+C) và mở trợ lý ở mép phải màn hình.</div>
                   </div>
                   <input type="checkbox" id="optCheckFab" checked>
                 </label>
 
                 <div class="opt-setting-row">
                   <div>
-                    <div class="opt-setting-title">Kích cỡ của 2 nút nổi</div>
-                    <div class="opt-setting-desc">Kích thước vòng tròn icon.</div>
+                    <div class="opt-setting-title" id="optLabelFabSize">Kích cỡ của 2 nút nổi</div>
+                    <div class="opt-setting-desc" id="optLabelFabSizeDesc">Kích thước vòng tròn icon.</div>
                   </div>
                   <select id="optFabSizeSelect" class="opt-select">
-                    <option value="small">Nhỏ gọn (30px)</option>
-                    <option value="normal" selected>Tiêu chuẩn (36px)</option>
-                    <option value="large">Lớn (44px)</option>
+                    <option value="small" id="optFabOptSmall">Nhỏ gọn (30px)</option>
+                    <option value="normal" id="optFabOptNormal" selected>Tiêu chuẩn (36px)</option>
+                    <option value="large" id="optFabOptLarge">Lớn (44px)</option>
                   </select>
                 </div>
               </div>
@@ -282,54 +282,54 @@
 
             <!-- 2. Selection Toolbar -->
             <div class="opt-card">
-              <h3 class="opt-card-title" style="margin-bottom:12px;">Thanh Công Cụ Khi Bôi Đen (Selection Toolbar)</h3>
+              <h3 class="opt-card-title" id="optCardToolbarTitle" style="margin-bottom:12px;">Thanh Công Cụ Khi Bôi Đen (Selection Toolbar)</h3>
               <div class="opt-settings-list">
                 <div class="opt-setting-row">
                   <div>
-                    <div class="opt-setting-title">Chủ đề Màu sắc (Color Theme)</div>
-                    <div class="opt-setting-desc">Chọn phong cách Liquid Glass cho thanh công cụ.</div>
+                    <div class="opt-setting-title" id="optLabelToolbarTheme">Chủ đề Màu sắc (Color Theme)</div>
+                    <div class="opt-setting-desc" id="optLabelToolbarThemeDesc">Chọn phong cách Liquid Glass cho thanh công cụ.</div>
                   </div>
                   <select id="optToolbarThemeSelect" class="opt-select">
-                    <option value="glass-light" selected>Liquid Glass Light (Trắng trong suốt)</option>
-                    <option value="glass-dark">Liquid Glass Dark (Đen khói / Midnight)</option>
-                    <option value="cyber-blue">Cyber Blue (Xanh dương)</option>
-                    <option value="emerald">Emerald Green (Xanh ngọc)</option>
-                    <option value="purple">Purple Glass (Tím Neon)</option>
+                    <option value="glass-light" id="optThemeOptLight" selected>Liquid Glass Light (Trắng trong suốt)</option>
+                    <option value="glass-dark" id="optThemeOptDark">Liquid Glass Dark (Đen khói / Midnight)</option>
+                    <option value="cyber-blue" id="optThemeOptBlue">Cyber Blue (Xanh dương)</option>
+                    <option value="emerald" id="optThemeOptGreen">Emerald Green (Xanh ngọc)</option>
+                    <option value="purple" id="optThemeOptPurple">Purple Glass (Tím Neon)</option>
                   </select>
                 </div>
 
                 <label class="opt-setting-row">
                   <div>
-                    <div class="opt-setting-title">Hiển thị chữ kèm icon ở Toolbar</div>
-                    <div class="opt-setting-desc">Bật để hiện nhãn (Answer, Copy, Search, Translate), tắt để chỉ hiện icon tối giản.</div>
+                    <div class="opt-setting-title" id="optLabelToolbarText">Hiển thị chữ kèm icon ở Toolbar</div>
+                    <div class="opt-setting-desc" id="optLabelToolbarTextDesc">Bật để hiện nhãn (Answer, Copy, Search, Translate), tắt để chỉ hiện icon tối giản.</div>
                   </div>
                   <input type="checkbox" id="optCheckToolbarText" checked>
                 </label>
 
                 <div class="opt-setting-row">
                   <div>
-                    <div class="opt-setting-title">Kích cỡ Toolbar</div>
-                    <div class="opt-setting-desc">Độ lớn của thanh công cụ.</div>
+                    <div class="opt-setting-title" id="optLabelToolbarSize">Kích cỡ Toolbar</div>
+                    <div class="opt-setting-desc" id="optLabelToolbarSizeDesc">Độ lớn của thanh công cụ.</div>
                   </div>
                   <select id="optToolbarSizeSelect" class="opt-select">
-                    <option value="compact">Nhỏ gọn (Compact)</option>
-                    <option value="normal" selected>Tiêu chuẩn (Normal)</option>
-                    <option value="large">Lớn (Large)</option>
+                    <option value="compact" id="optSizeOptCompact">Nhỏ gọn (Compact)</option>
+                    <option value="normal" id="optSizeOptNormal" selected>Tiêu chuẩn (Normal)</option>
+                    <option value="large" id="optSizeOptLarge">Lớn (Large)</option>
                   </select>
                 </div>
 
                 <div class="opt-setting-row">
                   <div>
-                    <div class="opt-setting-title">Độ trong suốt nền Toolbar (Opacity): <span id="valToolbarOpacity">90%</span></div>
-                    <div class="opt-setting-desc">Độ mờ kính của thanh công cụ.</div>
+                    <div class="opt-setting-title"><span id="optLabelToolbarOpacity">Độ trong suốt nền Toolbar (Opacity):</span> <span id="valToolbarOpacity">90%</span></div>
+                    <div class="opt-setting-desc" id="optLabelToolbarOpacityDesc">Độ mờ kính của thanh công cụ.</div>
                   </div>
                   <input type="range" id="optRangeToolbarOpacity" min="40" max="100" value="90" class="opt-range">
                 </div>
 
                 <div class="opt-setting-row">
                   <div>
-                    <div class="opt-setting-title">Độ mờ hậu cảnh Toolbar (Blur): <span id="valToolbarBlur">14px</span></div>
-                    <div class="opt-setting-desc">Hiệu ứng làm mờ văn bản bên dưới thanh công cụ.</div>
+                    <div class="opt-setting-title"><span id="optLabelToolbarBlur">Độ mờ hậu cảnh Toolbar (Blur):</span> <span id="valToolbarBlur">14px</span></div>
+                    <div class="opt-setting-desc" id="optLabelToolbarBlurDesc">Hiệu ứng làm mờ văn bản bên dưới thanh công cụ.</div>
                   </div>
                   <input type="range" id="optRangeToolbarBlur" min="0" max="30" value="14" class="opt-range">
                 </div>
@@ -338,20 +338,20 @@
 
             <!-- 3. Homework Helper Popup -->
             <div class="opt-card">
-              <h3 class="opt-card-title" style="margin-bottom:12px;">Popup "Homework Helper" Ngoài Màn Hình</h3>
+              <h3 class="opt-card-title" id="optCardPopupTitle" style="margin-bottom:12px;">Popup "Homework Helper" Ngoài Màn Hình</h3>
               <div class="opt-settings-list">
                 <div class="opt-setting-row">
                   <div>
-                    <div class="opt-setting-title">Độ trong suốt nền Popup: <span id="valPopupOpacity">92%</span></div>
-                    <div class="opt-setting-desc">Độ mờ kính của popup giải bài.</div>
+                    <div class="opt-setting-title"><span id="optLabelPopupOpacity">Độ trong suốt nền Popup:</span> <span id="valPopupOpacity">92%</span></div>
+                    <div class="opt-setting-desc" id="optLabelPopupOpacityDesc">Độ mờ kính của popup giải bài.</div>
                   </div>
                   <input type="range" id="optRangePopupOpacity" min="40" max="100" value="92" class="opt-range">
                 </div>
 
                 <div class="opt-setting-row">
                   <div>
-                    <div class="opt-setting-title">Độ mờ hậu cảnh Popup (Blur): <span id="valPopupBlur">16px</span></div>
-                    <div class="opt-setting-desc">Hiệu ứng làm mờ trang web phía sau popup.</div>
+                    <div class="opt-setting-title"><span id="optLabelPopupBlur">Độ mờ hậu cảnh Popup (Blur):</span> <span id="valPopupBlur">16px</span></div>
+                    <div class="opt-setting-desc" id="optLabelPopupBlurDesc">Hiệu ứng làm mờ trang web phía sau popup.</div>
                   </div>
                   <input type="range" id="optRangePopupBlur" min="0" max="30" value="16" class="opt-range">
                 </div>
@@ -363,8 +363,8 @@
           <div class="opt-preview-sticky">
             <div class="opt-preview-card">
               <div class="opt-preview-header">
-                <div class="opt-preview-badge">Live Liquid Glass Preview</div>
-                <div style="font-size:11px; color:#64748b;">Xem trước tương tác thực tế</div>
+                <div class="opt-preview-badge" id="optLivePreviewBadge">Live Liquid Glass Preview</div>
+                <div style="font-size:11px; color:#64748b;" id="optLivePreviewSub">Xem trước tương tác thực tế</div>
               </div>
 
               <!-- Mock Webpage with background textures to see blur -->
@@ -427,87 +427,87 @@
       <section id="tabGuide" class="opt-section">
         <div class="opt-section-header">
           <div>
-            <h2 class="opt-heading">Hướng dẫn Lấy API Key & Cơ chế Xoay Vòng</h2>
-            <p class="opt-subheading">Giải thích chi tiết về lợi ích của việc cấu hình nhiều API Key và cách nhận API Key miễn phí từ các nhà cung cấp.</p>
+            <h2 class="opt-heading" id="optHeadingGuide">Hướng dẫn Lấy API Key & Cơ chế Xoay Vòng</h2>
+            <p class="opt-subheading" id="optSubheadingGuide">Giải thích chi tiết về lợi ích của việc cấu hình nhiều API Key và cách nhận API Key miễn phí từ các nhà cung cấp.</p>
           </div>
         </div>
 
         <div class="opt-guide-grid">
           <div class="opt-card opt-guide-card">
             <h3 class="opt-guide-title">
-              <span id="guideIconWhy"></span> Tại sao nên thêm nhiều API Key?
+              <span id="guideIconWhy"></span> <span id="optGuideWhyTitle">Tại sao nên thêm nhiều API Key?</span>
             </h3>
             <ul class="opt-guide-list">
-              <li><strong>Tránh giới hạn Rate Limit:</strong> Các tài khoản miễn phí của Google Gemini, Groq, hoặc OpenAI thường giới hạn số request/phút (RPM) hoặc số token/ngày. Thêm nhiều key giúp bạn hỏi liên tục không lo bị nghẽn.</li>
-              <li><strong>Hoạt động bền bir 24/7:</strong> Nếu một key tạm thời hết quota hoặc bị lỗi mạng, extension sẽ tự động chuyển sang key khác trong tích tắc.</li>
-              <li><strong>Kết hợp nhiều model:</strong> Bạn có thể thêm cả Gemini 2.5 Flash (siêu nhanh, hình ảnh tốt) và OpenAI GPT-4o / DeepSeek R1 để có câu trả lời đa dạng.</li>
+              <li id="optGuideWhyItem1"><strong>Tránh giới hạn Rate Limit:</strong> Các tài khoản miễn phí của Google Gemini, Groq, hoặc OpenAI thường giới hạn số request/phút (RPM) hoặc số token/ngày. Thêm nhiều key giúp bạn hỏi liên tục không lo bị nghẽn.</li>
+              <li id="optGuideWhyItem2"><strong>Hoạt động bền bỉ 24/7:</strong> Nếu một key tạm thời hết quota hoặc bị lỗi mạng, extension sẽ tự động chuyển sang key khác trong tích tắc.</li>
+              <li id="optGuideWhyItem3"><strong>Kết hợp nhiều model:</strong> Bạn có thể thêm cả Gemini 2.5 Flash (siêu nhanh, hình ảnh tốt) và OpenAI GPT-4o / DeepSeek R1 để có câu trả lời đa dạng.</li>
             </ul>
           </div>
 
           <div class="opt-card opt-guide-card">
             <h3 class="opt-guide-title">
-              <span id="guideIconHow"></span> Cơ chế hoạt động như thế nào?
+              <span id="guideIconHow"></span> <span id="optGuideHowTitle">Cơ chế hoạt động như thế nào?</span>
             </h3>
             <ol class="opt-guide-list">
-              <li>Mỗi khi bạn chụp ảnh bài toán hoặc hỏi AI, extension sẽ chọn key kế tiếp trong danh sách đang bật.</li>
-              <li>Nếu nhà cung cấp phản hồi lỗi <strong>429 (Too Many Requests / Quota Exceeded)</strong>, key đó sẽ được tạm nghỉ 60 giây và request được tự động chuyển ngay sang key kế tiếp.</li>
-              <li>Toàn bộ diễn ra trực tiếp trên trình duyệt của bạn (Zero-Login), không lưu trữ hay gửi key qua máy chủ trung gian nào.</li>
+              <li id="optGuideHowItem1">Mỗi khi bạn chụp ảnh bài toán hoặc hỏi AI, extension sẽ chọn key kế tiếp trong danh sách đang bật.</li>
+              <li id="optGuideHowItem2">Nếu nhà cung cấp phản hồi lỗi <strong>429 (Too Many Requests / Quota Exceeded)</strong>, key đó sẽ được tạm nghỉ 60 giây và request được tự động chuyển ngay sang key kế tiếp.</li>
+              <li id="optGuideHowItem3">Toàn bộ diễn ra trực tiếp trên trình duyệt của bạn (Zero-Login), không lưu trữ hay gửi key qua máy chủ trung gian nào.</li>
             </ol>
           </div>
         </div>
 
         <!-- Where to get keys -->
         <div class="opt-card" style="margin-top: 16px;">
-          <h3 class="opt-card-title" style="margin-bottom: 12px;">Địa chỉ lấy API Key chính thức (Nhiều nguồn Miễn phí)</h3>
+          <h3 class="opt-card-title" id="optGuideLinksTitle" style="margin-bottom: 12px;">Địa chỉ lấy API Key chính thức (Nhiều nguồn Miễn phí)</h3>
           
           <div class="opt-links-list">
             <div class="opt-link-item">
               <div>
                 <strong>Google AI Studio (Gemini 2.5 Flash / 1.5 Pro)</strong>
-                <div class="opt-link-sub">Miễn phí hoàn toàn với hạn mức rất cao, hỗ trợ ảnh/công thức toán học siêu nhanh.</div>
+                <div class="opt-link-sub" id="optLinkSubGemini">Miễn phí hoàn toàn với hạn mức rất cao, hỗ trợ ảnh/công thức toán học siêu nhanh.</div>
               </div>
-              <a href="https://aistudio.google.com/app/apikey" target="_blank" class="opt-btn-secondary">
-                Lấy Key Gemini <span id="linkIconGemini"></span>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" class="opt-btn-secondary" id="optLinkBtnGemini">
+                <span>Lấy Key Gemini</span> <span id="linkIconGemini"></span>
               </a>
             </div>
 
             <div class="opt-link-item">
               <div>
                 <strong>Groq Console (Llama 3.3 / Llama 3.2 Vision)</strong>
-                <div class="opt-link-sub">Tốc độ xử lý cực nhanh (hàng trăm token/giây), miễn phí đăng ký.</div>
+                <div class="opt-link-sub" id="optLinkSubGroq">Tốc độ xử lý cực nhanh (hàng trăm token/giây), miễn phí đăng ký.</div>
               </div>
-              <a href="https://console.groq.com/keys" target="_blank" class="opt-btn-secondary">
-                Lấy Key Groq <span id="linkIconGroq"></span>
+              <a href="https://console.groq.com/keys" target="_blank" class="opt-btn-secondary" id="optLinkBtnGroq">
+                <span>Lấy Key Groq</span> <span id="linkIconGroq"></span>
               </a>
             </div>
 
             <div class="opt-link-item">
               <div>
                 <strong>OpenAI Platform (GPT-4o, GPT-4o-mini)</strong>
-                <div class="opt-link-sub">Mô hình AI đa năng hàng đầu thế giới về suy luận toán học và ngôn ngữ.</div>
+                <div class="opt-link-sub" id="optLinkSubOpenAI">Mô hình AI đa năng hàng đầu thế giới về suy luận toán học và ngôn ngữ.</div>
               </div>
-              <a href="https://platform.openai.com/api-keys" target="_blank" class="opt-btn-secondary">
-                Lấy Key OpenAI <span id="linkIconOpenAI"></span>
+              <a href="https://platform.openai.com/api-keys" target="_blank" class="opt-btn-secondary" id="optLinkBtnOpenAI">
+                <span>Lấy Key OpenAI</span> <span id="linkIconOpenAI"></span>
               </a>
             </div>
 
             <div class="opt-link-item">
               <div>
                 <strong>DeepSeek Platform (DeepSeek V3 / R1)</strong>
-                <div class="opt-link-sub">Chuyên gia giải toán và suy luận logic chuyên sâu với chi phí cực rẻ.</div>
+                <div class="opt-link-sub" id="optLinkSubDeepSeek">Chuyên gia giải toán và suy luận logic chuyên sâu với chi phí cực rẻ.</div>
               </div>
-              <a href="https://platform.deepseek.com/api_keys" target="_blank" class="opt-btn-secondary">
-                Lấy Key DeepSeek <span id="linkIconDeepSeek"></span>
+              <a href="https://platform.deepseek.com/api_keys" target="_blank" class="opt-btn-secondary" id="optLinkBtnDeepSeek">
+                <span>Lấy Key DeepSeek</span> <span id="linkIconDeepSeek"></span>
               </a>
             </div>
 
             <div class="opt-link-item">
               <div>
                 <strong>Anthropic Console (Claude 3.5 Sonnet)</strong>
-                <div class="opt-link-sub">Khả năng đọc hiểu hình ảnh bài tập và trình bày lời giải mẫu mực.</div>
+                <div class="opt-link-sub" id="optLinkSubClaude">Khả năng đọc hiểu hình ảnh bài tập và trình bày lời giải mẫu mực.</div>
               </div>
-              <a href="https://console.anthropic.com/" target="_blank" class="opt-btn-secondary">
-                Lấy Key Claude <span id="linkIconClaude"></span>
+              <a href="https://console.anthropic.com/" target="_blank" class="opt-btn-secondary" id="optLinkBtnClaude">
+                <span>Lấy Key Claude</span> <span id="linkIconClaude"></span>
               </a>
             </div>
           </div>
@@ -518,8 +518,8 @@
       <section id="tabPrompt" class="opt-section">
         <div class="opt-section-header">
           <div>
-            <h2 class="opt-heading">System Prompt & Phong cách Sư phạm</h2>
-            <p class="opt-subheading">Tùy chỉnh hướng dẫn hệ thống để AI giải thích chi tiết từng bước, bọc công thức bằng $...$, hoặc trả lời ngắn gọn.</p>
+            <h2 class="opt-heading" id="optHeadingPrompt">System Prompt & Phong cách Sư phạm</h2>
+            <p class="opt-subheading" id="optSubheadingPrompt">Tùy chỉnh hướng dẫn hệ thống để AI giải thích chi tiết từng bước, bọc công thức bằng $...$, hoặc trả lời ngắn gọn.</p>
           </div>
         </div>
 
@@ -536,27 +536,27 @@
       <section id="tabGeneral" class="opt-section">
         <div class="opt-section-header">
           <div>
-            <h2 class="opt-heading">Cài đặt Chung & Ngôn ngữ</h2>
-            <p class="opt-subheading">Quản lý ngôn ngữ phản hồi mặc định, Google Forms và sao lưu dữ liệu.</p>
+            <h2 class="opt-heading" id="optHeadingGeneral">Cài đặt Chung & Ngôn ngữ</h2>
+            <p class="opt-subheading" id="optSubheadingGeneral">Quản lý ngôn ngữ phản hồi mặc định, Google Forms và sao lưu dữ liệu.</p>
           </div>
         </div>
 
         <!-- Language Settings -->
         <div class="opt-card">
-          <h3 class="opt-card-title" style="margin-bottom:12px;">Cài đặt Ngôn ngữ (Language Settings)</h3>
+          <h3 class="opt-card-title" id="optCardLangTitle" style="margin-bottom:12px;">Cài đặt Ngôn ngữ (Language Settings)</h3>
           <div class="opt-settings-list">
             <div class="opt-setting-row">
               <div>
-                <div class="opt-setting-title">Ngôn ngữ Giao diện tiện ích (UI Display Language)</div>
-                <div class="opt-setting-desc">Ngôn ngữ hiển thị của toàn bộ các nút bấm, ngăn kéo chat, popup kết quả và hướng dẫn trên màn hình.</div>
+                <div class="opt-setting-title" id="optUiLangTitle">Ngôn ngữ Giao diện tiện ích (UI Display Language)</div>
+                <div class="opt-setting-desc" id="optUiLangDesc">Ngôn ngữ hiển thị của toàn bộ các nút bấm, ngăn kéo chat, popup kết quả và hướng dẫn trên màn hình.</div>
               </div>
               <select id="optUiLanguageSelect" class="opt-select"></select>
             </div>
 
             <div class="opt-setting-row" style="margin-top:14px; padding-top:14px; border-top:1px solid #e2e8f0;">
               <div>
-                <div class="opt-setting-title">Ngôn ngữ Phản hồi của AI (AI Response Language)</div>
-                <div class="opt-setting-desc">AI sẽ tự động giải bài, giải thích các bước và đưa ra đáp án bằng ngôn ngữ này (Mặc định: Tiếng Anh / Tự động).</div>
+                <div class="opt-setting-title" id="optRespLangTitle">Ngôn ngữ Phản hồi của AI (AI Response Language)</div>
+                <div class="opt-setting-desc" id="optRespLangDesc">AI sẽ tự động giải bài, giải thích các bước và đưa ra đáp án bằng ngôn ngữ này (Mặc định: Tiếng Anh / Tự động).</div>
               </div>
               <select id="optOutputLanguageSelect" class="opt-select"></select>
             </div>
@@ -566,16 +566,16 @@
         <div class="opt-card opt-settings-list" style="margin-top: 16px;">
           <label class="opt-setting-row">
             <div>
-              <div class="opt-setting-title">Google Forms Deep Assistant</div>
-              <div class="opt-setting-desc">Tự động nhận diện câu hỏi và hiển thị nút "AI Solve" trên Google Forms.</div>
+              <div class="opt-setting-title" id="optFormsTitle">Google Forms Deep Assistant</div>
+              <div class="opt-setting-desc" id="optFormsDesc">Tự động nhận diện câu hỏi và hiển thị nút "AI Solve" trên Google Forms.</div>
             </div>
             <input type="checkbox" id="optCheckForms" checked>
           </label>
 
           <label class="opt-setting-row">
             <div>
-              <div class="opt-setting-title">Text Selection Quick Tooltip</div>
-              <div class="opt-setting-desc">Kích hoạt thanh công cụ nổi khi bôi đen văn bản.</div>
+              <div class="opt-setting-title" id="optTooltipTitle">Text Selection Quick Tooltip</div>
+              <div class="opt-setting-desc" id="optTooltipDesc">Kích hoạt thanh công cụ nổi khi bôi đen văn bản.</div>
             </div>
             <input type="checkbox" id="optCheckTooltip" checked>
           </label>
@@ -583,15 +583,15 @@
 
         <!-- Disabled Sites List -->
         <div class="opt-card" style="margin-top: 16px;">
-          <h3 class="opt-card-title">Danh sách Website Đã Tắt Tiện ích</h3>
-          <p class="opt-card-desc" style="margin-bottom: 12px;">Các tên miền bạn đã chọn "Disable for this website" từ menu toolbar.</p>
+          <h3 class="opt-card-title" id="optDisabledSitesTitle">Danh sách Website Đã Tắt Tiện ích</h3>
+          <p class="opt-card-desc" id="optDisabledSitesDesc" style="margin-bottom: 12px;">Các tên miền bạn đã chọn "Disable for this website" từ menu toolbar.</p>
           <div id="optDisabledSitesList" style="display:flex; flex-direction:column; gap:6px;"></div>
         </div>
 
         <!-- Backup & Clear -->
         <div class="opt-card" style="margin-top: 16px;">
-          <h3 class="opt-card-title">Sao lưu & Quản lý dữ liệu</h3>
-          <p class="opt-card-desc" style="margin-bottom: 12px;">Xuất cấu hình các key ra file JSON để chuyển sang máy khác hoặc xóa lịch sử chat.</p>
+          <h3 class="opt-card-title" id="optBackupTitle">Sao lưu & Quản lý dữ liệu</h3>
+          <p class="opt-card-desc" id="optBackupDesc" style="margin-bottom: 12px;">Xuất cấu hình các key ra file JSON để chuyển sang máy khác hoặc xóa lịch sử chat.</p>
           <div style="display:flex; gap:10px;">
             <button class="opt-btn-secondary" id="optBtnExport">Xuất cấu hình JSON</button>
             <button class="opt-btn-secondary" id="optBtnClearData" style="color:#ef4444;">Xóa toàn bộ lịch sử Chat</button>
@@ -600,8 +600,8 @@
 
         <!-- About & Tags -->
         <div class="opt-card" style="margin-top: 16px;">
-          <h3 class="opt-card-title">Thông tin Ứng dụng & Tags</h3>
-          <p class="opt-card-desc" style="margin-bottom: 12px;">
+          <h3 class="opt-card-title" id="optAboutTitle">Thông tin Ứng dụng & Tags</h3>
+          <p class="opt-card-desc" id="optAboutDesc" style="margin-bottom: 12px;">
             <strong>Homework Helper</strong> - Trợ lý giải bài tập và ôn luyện học tập thông minh. Hỗ trợ AI cục bộ Chrome Gemini Nano Offline, xoay vòng đa mô hình AI (Gemini 2.5 Flash, GPT-4o, Claude 3.5 Sonnet, DeepSeek R1, Groq Llama 3.3), chụp ảnh OCR quét đề bài, giải toán từng bước với công thức KaTeX, thanh công cụ bôi đen văn bản và hỗ trợ làm trắc nghiệm Google Forms.
           </p>
           <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
@@ -622,6 +622,9 @@
         </div>
       </section>
     </main>
+
+    <!-- Floating Options Toast -->
+    <div class="opt-toast" id="optToast"></div>
   </div>
 
   <script type="module" src="options.js"></script>

@@ -7,7 +7,7 @@
 import { Icons } from '../shared/icons.js';
 import { Storage, DEFAULT_PROVIDERS } from '../shared/storage.js';
 import { formatMarkdownAndMath } from '../shared/markdown-katex.js';
-import { getI18n } from '../shared/i18n.js';
+import { getI18n, getFloatingPopupI18n } from '../shared/i18n.js';
 
 const LANGUAGE_OPTIONS = [
   { id: 'en', name: 'English' },
@@ -795,6 +795,7 @@ class InPageOverlay {
     const { uiLanguage = 'vi', outputLanguage = 'en' } = await Storage.get(['uiLanguage', 'outputLanguage']);
     const currentLang = lang || uiLanguage;
     const dict = getI18n(currentLang);
+    const cardDict = getFloatingPopupI18n(currentLang);
     const s = this.shadow;
 
     const textarea = s.getElementById('hwTextarea');
@@ -804,12 +805,22 @@ class InPageOverlay {
     const welcomeText = s.getElementById('hwWelcomeText');
     const chipsContainer = s.getElementById('hwChipsContainer');
     const modeSelect = s.getElementById('hwModeSelect');
+    const activeConvTitle = s.getElementById('hwActiveConvTitle');
+    const btnDrawerAddConv = s.getElementById('hwBtnDrawerAddConv');
+    const btnCardCopy = s.getElementById('hwBtnCardCopy');
+    const btnCardRetry = s.getElementById('hwBtnCardRetry');
 
     if (textarea) textarea.placeholder = dict.placeholder;
     if (sendBtnLabel) sendBtnLabel.textContent = dict.askAiBtn;
     if (captureBtn) captureBtn.innerHTML = `${Icons.scissors(14)} ${dict.captureBtn}`;
     if (hintText) hintText.textContent = dict.shiftEnterHint;
     if (welcomeText) welcomeText.textContent = dict.welcomeText;
+    if (activeConvTitle && (!activeConvTitle.textContent || activeConvTitle.textContent === 'Đoạn chat mới' || activeConvTitle.textContent === 'New Chat')) {
+      activeConvTitle.textContent = dict.newChat;
+    }
+    if (btnDrawerAddConv) btnDrawerAddConv.innerHTML = `${Icons.plus(13)} ${dict.newChat}`;
+    if (btnCardCopy) btnCardCopy.innerHTML = `${Icons.copy(14)} ${cardDict.copy}`;
+    if (btnCardRetry) btnCardRetry.innerHTML = `${Icons.refresh(14)} ${cardDict.retry}`;
 
     if (chipsContainer && dict.chips) {
       chipsContainer.innerHTML = dict.chips.map(
@@ -827,29 +838,35 @@ class InPageOverlay {
     // Update tooltips
     if (dict.tooltips) {
       const t = dict.tooltips;
-      s.getElementById('hwBtnSettings')?.setAttribute('data-tooltip-title', t.settings.title);
-      s.getElementById('hwBtnSettings')?.setAttribute('data-tooltip-desc', t.settings.desc);
+      s.getElementById('hwBtnDrawerNewChat')?.setAttribute('data-tooltip-title', t.newChat?.title || dict.newChat);
+      s.getElementById('hwBtnDrawerNewChat')?.setAttribute('data-tooltip-desc', t.newChat?.desc || '');
 
-      s.getElementById('hwBtnClear')?.setAttribute('data-tooltip-title', t.clear.title);
-      s.getElementById('hwBtnClear')?.setAttribute('data-tooltip-desc', t.clear.desc);
+      s.getElementById('hwBtnDrawerHistory')?.setAttribute('data-tooltip-title', t.history?.title || dict.historyTitle);
+      s.getElementById('hwBtnDrawerHistory')?.setAttribute('data-tooltip-desc', t.history?.desc || '');
+
+      s.getElementById('hwBtnSettings')?.setAttribute('data-tooltip-title', t.settings?.title || 'Cài đặt Key & Model');
+      s.getElementById('hwBtnSettings')?.setAttribute('data-tooltip-desc', t.settings?.desc || 'Quản lý danh sách API Key và cơ chế xoay vòng thông minh.');
+
+      s.getElementById('hwBtnClear')?.setAttribute('data-tooltip-title', t.clear?.title || 'Xóa đoạn chat');
+      s.getElementById('hwBtnClear')?.setAttribute('data-tooltip-desc', t.clear?.desc || 'Xóa hội thoại hiện tại.');
 
       s.getElementById('hwBtnSidePanel')?.setAttribute('data-tooltip-title', t.options?.title || 'Trang Cài đặt & Cấu hình');
       s.getElementById('hwBtnSidePanel')?.setAttribute('data-tooltip-desc', t.options?.desc || 'Mở trang cài đặt chi tiết để quản lý API Key, bật AI nội bộ và tùy biến giao diện.');
 
-      s.getElementById('hwBtnClose')?.setAttribute('data-tooltip-title', t.close.title);
-      s.getElementById('hwBtnClose')?.setAttribute('data-tooltip-desc', t.close.desc);
+      s.getElementById('hwBtnClose')?.setAttribute('data-tooltip-title', t.close?.title || 'Đóng bảng giải bài');
+      s.getElementById('hwBtnClose')?.setAttribute('data-tooltip-desc', t.close?.desc || 'Thu gọn ngăn kéo vào cạnh màn hình.');
 
-      s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-title', t.capture.title);
-      s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-desc', t.capture.desc);
+      s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-title', t.capture?.title || 'Chụp màn hình (Alt+C)');
+      s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-desc', t.capture?.desc || 'Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.');
 
-      s.getElementById('hwBtnUploadImg')?.setAttribute('data-tooltip-title', t.upload.title);
-      s.getElementById('hwBtnUploadImg')?.setAttribute('data-tooltip-desc', t.upload.desc);
+      s.getElementById('hwBtnUploadImg')?.setAttribute('data-tooltip-title', t.upload?.title || 'Tải ảnh bài tập');
+      s.getElementById('hwBtnUploadImg')?.setAttribute('data-tooltip-desc', t.upload?.desc || 'Đính kèm file hình ảnh bài tập từ máy tính.');
 
-      s.getElementById('hwLangSelect')?.setAttribute('data-tooltip-title', t.lang.title);
-      s.getElementById('hwLangSelect')?.setAttribute('data-tooltip-desc', t.lang.desc);
+      s.getElementById('hwLangSelect')?.setAttribute('data-tooltip-title', t.lang?.title || 'Ngôn ngữ phản hồi');
+      s.getElementById('hwLangSelect')?.setAttribute('data-tooltip-desc', t.lang?.desc || 'AI sẽ tự động giải bài và trả lời bằng ngôn ngữ này.');
 
-      s.getElementById('hwModeSelect')?.setAttribute('data-tooltip-title', t.mode.title);
-      s.getElementById('hwModeSelect')?.setAttribute('data-tooltip-desc', t.mode.desc);
+      s.getElementById('hwModeSelect')?.setAttribute('data-tooltip-title', t.mode?.title || 'Chế độ giải bài');
+      s.getElementById('hwModeSelect')?.setAttribute('data-tooltip-desc', t.mode?.desc || 'Chọn kiểu phản hồi: Từng bước, Đáp án ngay, Gợi ý, hoặc Giải thích sâu lý thuyết.');
     }
   }
 
@@ -861,10 +878,11 @@ class InPageOverlay {
     this.popupMode = 'screenshot';
     this.popupSourceText = '';
 
-    const { outputLanguage = 'en' } = await Storage.get(['outputLanguage']);
+    const { uiLanguage = 'en', outputLanguage = 'en' } = await Storage.get(['uiLanguage', 'outputLanguage']);
     const isVi = outputLanguage === 'vi';
+    const cardDict = getFloatingPopupI18n(uiLanguage);
 
-    s.getElementById('hwPopupTitle').textContent = 'Homework Helper';
+    s.getElementById('hwPopupTitle').textContent = cardDict.helperTitle;
     s.getElementById('hwTranslateBar').style.display = 'none';
     s.getElementById('hwCardSourceText').style.display = 'none';
 
@@ -872,13 +890,13 @@ class InPageOverlay {
     thumb.src = imageBase64;
     thumb.style.display = 'block';
 
-    s.getElementById('hwCardAnswerHeading').textContent = isVi ? 'Lời giải chi tiết' : 'Answer';
-    s.getElementById('hwBtnPrimaryLabel').textContent = isVi ? 'Câu hỏi kế tiếp' : 'Next Question';
+    s.getElementById('hwCardAnswerHeading').textContent = cardDict.answerHeading;
+    s.getElementById('hwBtnPrimaryLabel').textContent = cardDict.nextQuestion;
     s.getElementById('hwBtnCardPrimary').querySelector('.lucide-icon')?.remove();
     s.getElementById('hwBtnCardPrimary').insertAdjacentHTML('afterbegin', Icons.scissors(14));
 
     const content = s.getElementById('hwCardAnswerContent');
-    content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} ${isVi ? 'Đang giải từng bước với công thức KaTeX...' : 'Solving step-by-step with KaTeX formulas...'}</span>`;
+    content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} ${cardDict.solvingStepByStep}</span>`;
 
     this.popupCard.style.display = 'flex';
     this.activeCardResponseText = '';
@@ -901,7 +919,7 @@ class InPageOverlay {
 
     // If running in Gemini Nano mode (no keys or nano_only), run Local OCR first!
     if (enabledKeys.length === 0 || routingStrategy === 'nano_only') {
-      content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} ${isVi ? 'Đang quét chữ và công thức qua OCR Cục bộ...' : 'Scanning text & formulas with Local OCR...'}</span>`;
+      content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} ${cardDict.scanningOcr}</span>`;
 
       chrome.runtime.sendMessage({
         action: 'PERFORM_OCR',
@@ -939,11 +957,14 @@ class InPageOverlay {
     });
   }
 
-  openActionPopup(type, text, rect) {
+  async openActionPopup(type, text, rect) {
     const s = this.shadow;
     this.popupMode = type;
     this.popupSourceText = text;
     this.popupImageBase64 = null;
+
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const cardDict = getFloatingPopupI18n(uiLanguage);
 
     s.getElementById('hwCardThumb').style.display = 'none';
 
@@ -957,33 +978,33 @@ class InPageOverlay {
     const primaryBtn = s.getElementById('hwBtnCardPrimary');
     const primaryLabel = s.getElementById('hwBtnPrimaryLabel');
 
-    primaryLabel.textContent = 'Continue in chat';
+    primaryLabel.textContent = cardDict.continueInChat;
     primaryBtn.querySelector('.lucide-icon')?.remove();
     primaryBtn.insertAdjacentHTML('afterbegin', Icons.messageCircle(14));
 
     if (type === 'translate') {
-      titleEl.textContent = 'Translate';
-      headingEl.textContent = 'Translation';
+      titleEl.textContent = cardDict.translateTitle;
+      headingEl.textContent = cardDict.translateHeading;
       translateBar.style.display = 'flex';
     } else if (type === 'search') {
-      titleEl.textContent = 'Search & Homework Helper';
-      headingEl.textContent = 'Results & Answer';
+      titleEl.textContent = cardDict.searchTitle;
+      headingEl.textContent = cardDict.searchHeading;
       translateBar.style.display = 'none';
     } else if (type === 'explain') {
-      titleEl.textContent = 'Deep Explanation';
-      headingEl.textContent = 'Explanation';
+      titleEl.textContent = cardDict.explainTitle;
+      headingEl.textContent = cardDict.explainHeading;
       translateBar.style.display = 'none';
     } else if (type === 'summarize') {
-      titleEl.textContent = 'Summary';
-      headingEl.textContent = 'Key Takeaways';
+      titleEl.textContent = cardDict.summarizeTitle;
+      headingEl.textContent = cardDict.summarizeHeading;
       translateBar.style.display = 'none';
     } else if (type === 'grammar') {
-      titleEl.textContent = 'Grammar Checker';
-      headingEl.textContent = 'Corrections & Polish';
+      titleEl.textContent = cardDict.grammarTitle;
+      headingEl.textContent = cardDict.grammarHeading;
       translateBar.style.display = 'none';
     } else {
-      titleEl.textContent = 'Homework Helper';
-      headingEl.textContent = 'Answer';
+      titleEl.textContent = cardDict.helperTitle;
+      headingEl.textContent = cardDict.answerHeading;
       translateBar.style.display = 'none';
     }
 
@@ -1002,8 +1023,11 @@ class InPageOverlay {
 
   async executePopupAction(type, text) {
     const s = this.shadow;
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const cardDict = getFloatingPopupI18n(uiLanguage);
+
     const content = s.getElementById('hwCardAnswerContent');
-    content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} Processing request...</span>`;
+    content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} ${cardDict.processing}</span>`;
 
     this.activeCardResponseText = '';
     this.isStreaming = true;
@@ -1236,7 +1260,8 @@ class InPageOverlay {
 
   async renderDrawerHistory() {
     const conversations = await Storage.getConversations();
-    const { activeConversationId } = await Storage.get(['activeConversationId']);
+    const { activeConversationId, uiLanguage = 'en' } = await Storage.get(['activeConversationId', 'uiLanguage']);
+    const dict = getI18n(uiLanguage);
     const listEl = this.shadow.getElementById('hwDrawerHistoryList');
     if (!listEl) return;
 
@@ -1245,7 +1270,7 @@ class InPageOverlay {
     if (conversations.length === 0) {
       listEl.innerHTML = `
         <div style="text-align:center; padding:32px 10px; color:#94a3b8; font-size:13px;">
-          Chưa có hội thoại nào được lưu.<br>Hãy tạo đoạn chat mới để bắt đầu!
+          ${dict.emptyHistory || 'Chưa có hội thoại nào được lưu.<br>Hãy tạo đoạn chat mới để bắt đầu!'}
         </div>
       `;
       return;
@@ -1265,10 +1290,10 @@ class InPageOverlay {
       el.innerHTML = `
         ${thumbHtml}
         <div class="hw-card-history-info">
-          <div class="hw-card-history-title">${conv.title || 'Hội thoại không tên'}</div>
+          <div class="hw-card-history-title">${conv.title || dict.newChat || 'Hội thoại không tên'}</div>
           <div class="hw-card-history-time">${Icons.clock(11)} ${dateStr} &bull; ${msgCount} tin nhắn</div>
         </div>
-        <button class="hw-icon-btn hw-btn-del-conv" title="Xóa hội thoại này" style="width:24px;height:24px;color:#94a3b8;flex-shrink:0;">
+        <button class="hw-icon-btn hw-btn-del-conv" title="Delete" style="width:24px;height:24px;color:#94a3b8;flex-shrink:0;">
           ${Icons.trash(13)}
         </button>
       `;
@@ -1327,7 +1352,8 @@ class InPageOverlay {
 
   async updateActiveModelBadge() {
     const { apiConfigs = [] } = await Storage.getApiConfigs();
-    const { isNanoReady } = await Storage.get(['isNanoReady']);
+    const { isNanoReady, uiLanguage = 'en' } = await Storage.get(['isNanoReady', 'uiLanguage']);
+    const dict = getI18n(uiLanguage);
     const pill = this.shadow.getElementById('hwModelPill');
     const enabledCount = apiConfigs.filter((c) => c.isEnabled && c.apiKey).length;
 
@@ -1339,7 +1365,7 @@ class InPageOverlay {
 
       if (isReady) {
         Storage.set({ isNanoReady: true });
-        pill.innerHTML = `${Icons.cpu(12)} Chrome Gemini Nano (Ready On-Device)`;
+        pill.innerHTML = `${Icons.cpu(12)} ${dict.modelNanoReady || 'Chrome Gemini Nano (Ready On-Device)'}`;
         pill.style.background = '#dcfce7';
         pill.style.color = '#15803d';
         pill.style.border = '1px solid rgba(34, 197, 94, 0.3)';
@@ -1347,18 +1373,18 @@ class InPageOverlay {
         pill.title = '';
         pill.onclick = null;
       } else {
-        pill.innerHTML = `${Icons.alertCircle(12)} Chrome Gemini Nano (Setup Required)`;
+        pill.innerHTML = `${Icons.alertCircle(12)} ${dict.modelNanoSetup || 'Chrome Gemini Nano (Setup Required)'}`;
         pill.style.background = '#fef9c3';
         pill.style.color = '#a16207';
         pill.style.border = '1px solid rgba(234, 179, 8, 0.4)';
         pill.style.cursor = 'pointer';
-        pill.title = 'Nhấn để xem hướng dẫn kích hoạt Gemini Nano trong Cài đặt';
+        pill.title = dict.modelNanoClick || 'Click to view Gemini Nano guide in Settings';
         pill.onclick = () => {
           chrome.runtime.sendMessage({ action: 'OPEN_OPTIONS', hash: 'builtin-nano' });
         };
       }
     } else {
-      pill.innerHTML = `${Icons.layers(12)} Smart Key Rotation (${enabledCount} Active)`;
+      pill.innerHTML = `${Icons.layers(12)} ${dict.modelAutoRotate || 'Auto-Rotate'} (${enabledCount} Active)`;
       pill.style.background = '#e0f2fe';
       pill.style.color = '#0369a1';
       pill.style.border = '1px solid rgba(2, 132, 199, 0.25)';
@@ -1528,18 +1554,20 @@ class InPageOverlay {
     }
   }
 
-  handleStreamError(err) {
+  async handleStreamError(err) {
     this.isStreaming = false;
     this.shadow.getElementById('hwBtnSend').disabled = false;
 
     const errStr = String(err || '');
     const isNanoError = errStr.includes('Gemini Nano') || errStr.includes('prompt-api') || errStr.includes('Optimization Guide');
+    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+    const isVi = uiLanguage === 'vi';
 
     if (this.activeTarget === 'card') {
       const content = this.shadow.getElementById('hwCardAnswerContent');
       content.innerHTML = `
         <div style="color: #dc2626; display:flex; align-items:center; gap:6px;">
-          ${Icons.alertCircle(16)} <strong>Lỗi:</strong> ${err}
+          ${Icons.alertCircle(16)} <strong>${isVi ? 'Lỗi:' : 'Error:'}</strong> ${err}
         </div>
       `;
       return;
@@ -1552,35 +1580,35 @@ class InPageOverlay {
         contentEl.innerHTML = `
           <div class="hw-nano-guide-card">
             <div class="hw-nano-guide-header">
-              ${Icons.cpu(16)} <span>Hướng dẫn Kích hoạt Chrome Gemini Nano (Local AI)</span>
+              ${Icons.cpu(16)} <span>${isVi ? 'Hướng dẫn Kích hoạt Chrome Gemini Nano (Local AI)' : 'Chrome Gemini Nano Activation Guide (Local AI)'}</span>
             </div>
             <div class="hw-nano-steps">
               <div class="hw-nano-step">
                 <span class="hw-step-num">1</span>
-                <div>Bật cờ <strong>Prompt API</strong>:
-                  <button class="hw-btn-mini-flags" id="hwBtnFlagPromptApi">${Icons.externalLink(11)} Mở #prompt-api</button>
+                <div>${isVi ? 'Bật cờ' : 'Enable flag'} <strong>Prompt API</strong>:
+                  <button class="hw-btn-mini-flags" id="hwBtnFlagPromptApi">${Icons.externalLink(11)} ${isVi ? 'Mở #prompt-api' : 'Open #prompt-api'}</button>
                 </div>
               </div>
               <div class="hw-nano-step">
                 <span class="hw-step-num">2</span>
-                <div>Bật cờ <strong>Optimization Guide</strong> sang <em>Enabled BypassPerfRequirement</em>:
-                  <button class="hw-btn-mini-flags" id="hwBtnFlagOptGuide">${Icons.externalLink(11)} Mở #optimization-guide</button>
+                <div>${isVi ? 'Bật cờ' : 'Set flag'} <strong>Optimization Guide</strong> ${isVi ? 'sang' : 'to'} <em>Enabled BypassPerfRequirement</em>:
+                  <button class="hw-btn-mini-flags" id="hwBtnFlagOptGuide">${Icons.externalLink(11)} ${isVi ? 'Mở #optimization-guide' : 'Open #optimization-guide'}</button>
                 </div>
               </div>
               <div class="hw-nano-step">
                 <span class="hw-step-num">3</span>
-                <div>Nhấn <strong>Relaunch</strong> ở góc dưới để khởi động lại Chrome.</div>
+                <div>${isVi ? 'Nhấn <strong>Relaunch</strong> ở góc dưới để khởi động lại Chrome.' : 'Click <strong>Relaunch</strong> to restart Chrome.'}</div>
               </div>
               <div class="hw-nano-step">
                 <span class="hw-step-num">4</span>
-                <div>Tải model tại <strong>chrome://components</strong> (nhấn Check for update):
-                  <button class="hw-btn-mini-flags" id="hwBtnOpenCompTab">${Icons.externalLink(11)} Mở components</button>
+                <div>${isVi ? 'Tải model tại <strong>chrome://components</strong> (nhấn Check for update):' : 'Download model at <strong>chrome://components</strong> (Click Check for update):'}
+                  <button class="hw-btn-mini-flags" id="hwBtnOpenCompTab">${Icons.externalLink(11)} ${isVi ? 'Mở components' : 'Open components'}</button>
                 </div>
               </div>
             </div>
             <div class="hw-nano-guide-footer">
               <button class="hw-btn-mini-options" id="hwBtnAddKeyFallback">
-                ${Icons.plus(12)} Hoặc thêm API Key Miễn phí (Gemini / Groq)
+                ${Icons.plus(12)} ${isVi ? 'Hoặc thêm API Key Miễn phí (Gemini / Groq)' : 'Or Add Free Cloud Key (Gemini / Groq)'}
               </button>
             </div>
           </div>
@@ -1604,10 +1632,10 @@ class InPageOverlay {
       } else {
         contentEl.innerHTML = `
           <div style="color: #dc2626; display: flex; align-items: center; gap: 6px;">
-            ${Icons.alertCircle(16)} <strong>Lỗi:</strong> ${err}
+            ${Icons.alertCircle(16)} <strong>${isVi ? 'Lỗi:' : 'Error:'}</strong> ${err}
           </div>
           <div style="margin-top: 8px; font-size: 12px; color: #64748b;">
-            Nhấn vào <strong>Cài đặt (${Icons.settings(12)})</strong> để thêm hoặc kiểm tra lại các API Key.
+            ${isVi ? `Nhấn vào <strong>Cài đặt (${Icons.settings(12)})</strong> để thêm hoặc kiểm tra lại các API Key.` : `Click <strong>Settings (${Icons.settings(12)})</strong> to add or verify your API Keys.`}
           </div>
         `;
       }
@@ -1659,14 +1687,16 @@ class InPageOverlay {
       });
       body.scrollTop = body.scrollHeight;
     } else {
+      const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+      const dict = getI18n(uiLanguage);
       body.innerHTML = `
         <div class="hw-msg hw-msg-ai">
           <div class="hw-msg-bubble" id="hwWelcomeBubble">
-            <div id="hwWelcomeText">Xin chào! Tôi là trợ lý Homework Helper. Bạn cần giải bài tập nào hôm nay?</div>
+            <div id="hwWelcomeText">${dict.welcomeText || 'Xin chào! Tôi là trợ lý Homework Helper. Bạn cần giải bài tập nào hôm nay?'}</div>
             <div class="hw-chips-row" id="hwChipsContainer">
-              <button class="hw-chip" data-query="Giải phương trình bậc hai $ax^2 + bx + c = 0$">Phương trình bậc 2</button>
-              <button class="hw-chip" data-query="Giải thích các định luật chuyển động của Newton">Định luật Newton</button>
-              <button class="hw-chip" data-query="Dịch đoạn văn này sang tiếng Anh">Dịch bài tập</button>
+              <button class="hw-chip" data-query="Giải phương trình bậc hai $ax^2 + bx + c = 0$">${uiLanguage === 'vi' ? 'Phương trình bậc 2' : 'Quadratic Equation'}</button>
+              <button class="hw-chip" data-query="Giải thích các định luật chuyển động của Newton">${uiLanguage === 'vi' ? 'Định luật Newton' : 'Newton Laws'}</button>
+              <button class="hw-chip" data-query="Dịch đoạn văn này sang tiếng Anh">${uiLanguage === 'vi' ? 'Dịch bài tập' : 'Translate Question'}</button>
             </div>
           </div>
         </div>
@@ -1680,10 +1710,12 @@ class InPageOverlay {
     modal.style.display = 'flex';
 
     const { apiConfigs = [] } = await Storage.getApiConfigs();
+    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+    const isVi = uiLanguage === 'vi';
 
     body.innerHTML = `
       <div style="font-size: 12px; color: #64748b; line-height: 1.4;">
-        Thêm một hoặc nhiều API Key. Tiện ích tự động xoay vòng cân bằng tải và chuyển sang key dự phòng khi gặp giới hạn Rate Limit.
+        ${isVi ? 'Thêm một hoặc nhiều API Key. Tiện ích tự động xoay vòng cân bằng tải và chuyển sang key dự phòng khi gặp giới hạn Rate Limit.' : 'Add one or more API Keys. The extension automatically load-balances and falls back to backup keys when hitting rate limits.'}
       </div>
 
       <!-- Chrome Built-in AI Gemini Nano Guide Section in Modal -->
@@ -1692,34 +1724,34 @@ class InPageOverlay {
           ${Icons.cpu(14)} Chrome Gemini Nano (Local AI)
         </div>
         <div style="font-size:11.5px; color:#334155; margin-top:6px; line-height:1.6;">
-          Mô hình AI nội bộ chạy Offline. Nhấn các liên kết bên dưới để mở trực tiếp:
+          ${isVi ? 'Mô hình AI nội bộ chạy Offline. Nhấn các liên kết bên dưới để mở trực tiếp:' : 'On-Device AI running offline. Click links below to open flags directly:'}
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
           <button class="hw-copy-btn" id="hwModalBtnFlagPrompt" style="background:#0284c7; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} 1. Mở #prompt-api
+            ${Icons.externalLink(11)} ${isVi ? '1. Mở #prompt-api' : '1. Open #prompt-api'}
           </button>
           <button class="hw-copy-btn" id="hwModalBtnFlagOptGuide" style="background:#0284c7; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} 2. Mở #optimization-guide
+            ${Icons.externalLink(11)} ${isVi ? '2. Mở #optimization-guide' : '2. Open #optimization-guide'}
           </button>
           <button class="hw-copy-btn" id="hwModalBtnComponents" style="background:#0369a1; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} 3. Mở components
+            ${Icons.externalLink(11)} ${isVi ? '3. Mở components' : '3. Open components'}
           </button>
         </div>
       </div>
 
       <!-- Configured Keys List -->
       <div id="hwModalKeyList" style="display:flex; flex-direction:column; gap:10px; margin-top: 10px;">
-        ${apiConfigs.length === 0 ? '<div style="text-align:center; padding:12px; color:#94a3b8; font-size:12px;">Chưa có API Key nào. Nhấn nút bên dưới để thêm.</div>' : ''}
+        ${apiConfigs.length === 0 ? `<div style="text-align:center; padding:12px; color:#94a3b8; font-size:12px;">${isVi ? 'Chưa có API Key nào. Nhấn nút bên dưới để thêm.' : 'No API Key configured. Click below to add.'}</div>` : ''}
       </div>
 
       <!-- Add New Key Button -->
       <button class="hw-btn-add" id="hwBtnAddKey">
-        ${Icons.plus(16)} Thêm AI Provider / Key
+        ${Icons.plus(16)} ${isVi ? 'Thêm AI Provider / Key' : 'Add AI Provider / Key'}
       </button>
 
       <div style="text-align:right; margin-top:6px;">
         <a href="#" id="hwLinkFullOptions" style="font-size:12px; color:#0284c7; text-decoration:none;">
-          Xem hướng dẫn lấy Key miễn phí & cài đặt nâng cao &rarr;
+          ${isVi ? 'Xem hướng dẫn lấy Key miễn phí & cài đặt nâng cao →' : 'View free key guide & advanced settings →'}
         </a>
       </div>
     `;
@@ -1783,7 +1815,7 @@ class InPageOverlay {
           <input type="checkbox" class="hw-cfg-enabled" ${cfg.isEnabled ? 'checked' : ''}>
           <span>${providerObj.name}</span>
         </div>
-        <button class="hw-icon-btn hw-cfg-delete" style="color:#ef4444;" title="Xóa">${Icons.trash(14)}</button>
+        <button class="hw-icon-btn hw-cfg-delete" style="color:#ef4444;" title="Delete">${Icons.trash(14)}</button>
       </div>
 
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
@@ -1791,13 +1823,13 @@ class InPageOverlay {
         <select class="hw-input-field hw-cfg-model">${modelOptions}</select>
       </div>
 
-      <input type="password" class="hw-input-field hw-cfg-key" placeholder="Nhập API Key (sk-... / AIza...)" value="${cfg.apiKey || ''}">
+      <input type="password" class="hw-input-field hw-cfg-key" placeholder="API Key (sk-... / AIza...)" value="${cfg.apiKey || ''}">
       
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
         <button class="hw-copy-btn hw-cfg-test" style="background:#e0f2fe; color:#0369a1;">
-          ${Icons.refresh(12)} Kiểm tra
+          ${Icons.refresh(12)} Test Key
         </button>
-        <span class="hw-cfg-status" style="font-size:11px; color:#64748b;">${cfg.cooldownUntil && cfg.cooldownUntil > Date.now() ? `${Icons.alertCircle(12)} Đang tạm nghỉ` : ''}</span>
+        <span class="hw-cfg-status" style="font-size:11px; color:#64748b;">${cfg.cooldownUntil && cfg.cooldownUntil > Date.now() ? `${Icons.alertCircle(12)} Cooldown 60s` : ''}</span>
       </div>
     `;
 

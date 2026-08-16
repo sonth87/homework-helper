@@ -4,6 +4,8 @@
  */
 
 import { Icons } from '../shared/icons.js';
+import { Storage } from '../shared/storage.js';
+import { getCropperI18n } from '../shared/i18n.js';
 
 class ScreenCropper {
   constructor() {
@@ -29,7 +31,7 @@ class ScreenCropper {
     await new Promise((resolve) => setTimeout(resolve, 60));
 
     // 3. Request crisp screenshot from background service worker
-    chrome.runtime.sendMessage({ action: 'CAPTURE_VISIBLE_TAB' }, (res) => {
+    chrome.runtime.sendMessage({ action: 'CAPTURE_VISIBLE_TAB' }, async (res) => {
       if (!res?.success || !res.dataUrl) {
         console.error('Failed to capture tab:', res?.error);
         window.dispatchEvent(new CustomEvent('HOMEWORK_AI_RESTORE_UI'));
@@ -37,18 +39,21 @@ class ScreenCropper {
       }
 
       this.rawImageDataUrl = res.dataUrl;
-      this.renderOverlay();
+      await this.renderOverlay();
     });
   }
 
-  renderOverlay() {
+  async renderOverlay() {
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const dict = getCropperI18n(uiLanguage);
+
     this.overlay = document.createElement('div');
     this.overlay.className = 'hw-crop-overlay';
 
     // Tip at top
     const tip = document.createElement('div');
     tip.className = 'hw-crop-tip';
-    tip.innerHTML = `${Icons.scissors(16)} <span>Click and drag to select a formula or question (ESC to cancel)</span>`;
+    tip.innerHTML = `${Icons.scissors(16)} <span>${dict.tip}</span>`;
     this.overlay.appendChild(tip);
 
     // Selection box
@@ -115,8 +120,11 @@ class ScreenCropper {
     this.renderToolbar(rect);
   }
 
-  renderToolbar(rect) {
+  async renderToolbar(rect) {
     if (this.toolbar) this.toolbar.remove();
+
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const dict = getCropperI18n(uiLanguage);
 
     this.toolbar = document.createElement('div');
     this.toolbar.className = 'hw-crop-toolbar';
@@ -124,8 +132,8 @@ class ScreenCropper {
     this.toolbar.style.top = `${rect.bottom + 10}px`;
 
     this.toolbar.innerHTML = `
-      <button class="hw-crop-btn hw-crop-btn-cancel" id="hwCropCancel">Cancel</button>
-      <button class="hw-crop-btn hw-crop-btn-primary" id="hwCropSolve">${Icons.sparkles(14)} Ask AI</button>
+      <button class="hw-crop-btn hw-crop-btn-cancel" id="hwCropCancel">${dict.cancel}</button>
+      <button class="hw-crop-btn hw-crop-btn-primary" id="hwCropSolve">${Icons.sparkles(14)} ${dict.askAi}</button>
     `;
 
     this.overlay.appendChild(this.toolbar);

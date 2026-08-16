@@ -5,6 +5,7 @@
 
 import { Icons } from '../shared/icons.js';
 import { Storage } from '../shared/storage.js';
+import { getSelectionTooltipI18n } from '../shared/i18n.js';
 
 class SelectionTooltip {
   constructor() {
@@ -74,7 +75,10 @@ class SelectionTooltip {
       toolbarShowText = true,
       toolbarSize = 'normal',
       toolbarTheme = 'glass-light',
+      uiLanguage = 'en',
     } = await Storage.get();
+
+    const dict = getSelectionTooltipI18n(uiLanguage);
 
     this.toolbar = document.createElement('div');
     this.toolbar.className = `hw-selection-toolbar size-${toolbarSize} theme-${toolbarTheme}`;
@@ -98,22 +102,22 @@ class SelectionTooltip {
       <div class="hw-tb-logo">${Icons.appLogo(18)}</div>
       
       <button class="hw-tb-btn ${iconOnlyCls}" data-action="answer">
-        ${Icons.messageCircle(14)} <span class="hw-tb-label">Answer</span>
+        ${Icons.messageCircle(14)} <span class="hw-tb-label">${dict.answer}</span>
       </button>
 
       <button class="hw-tb-btn ${iconOnlyCls}" data-action="copy">
-        ${Icons.copy(14)} <span class="hw-tb-label">Copy</span>
+        ${Icons.copy(14)} <span class="hw-tb-label">${dict.copy}</span>
       </button>
 
       <button class="hw-tb-btn ${iconOnlyCls}" data-action="search">
-        ${Icons.globe(14)} <span class="hw-tb-label">Search</span>
+        ${Icons.globe(14)} <span class="hw-tb-label">${dict.search}</span>
       </button>
 
       <button class="hw-tb-btn ${iconOnlyCls}" data-action="translate">
-        ${Icons.languages(14)} <span class="hw-tb-label">Translate</span>
+        ${Icons.languages(14)} <span class="hw-tb-label">${dict.translate}</span>
       </button>
 
-      <button class="hw-tb-btn hw-tb-more-btn" id="hwTbMoreBtn" title="More Options">
+      <button class="hw-tb-btn hw-tb-more-btn" id="hwTbMoreBtn" title="${dict.more}">
         ${Icons.chevronUp(14)}
       </button>
     `;
@@ -139,12 +143,15 @@ class SelectionTooltip {
     document.body.appendChild(this.toolbar);
   }
 
-  toggleDropdown(rect) {
+  async toggleDropdown(rect) {
     if (this.dropdown) {
       this.dropdown.remove();
       this.dropdown = null;
       return;
     }
+
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const dict = getSelectionTooltipI18n(uiLanguage);
 
     this.dropdown = document.createElement('div');
     this.dropdown.className = 'hw-tb-dropdown';
@@ -152,25 +159,25 @@ class SelectionTooltip {
 
     this.dropdown.innerHTML = `
       <button class="hw-tb-menu-item" data-action="explain">
-        <div class="hw-tb-menu-item-left">${Icons.helpCircle(15)} Explain it</div>
+        <div class="hw-tb-menu-item-left">${Icons.helpCircle(15)} ${dict.explain}</div>
       </button>
       <button class="hw-tb-menu-item" data-action="summarize">
-        <div class="hw-tb-menu-item-left">${Icons.bookOpen(15)} Summarise</div>
+        <div class="hw-tb-menu-item-left">${Icons.bookOpen(15)} ${dict.summarize}</div>
       </button>
       <button class="hw-tb-menu-item" data-action="grammar">
-        <div class="hw-tb-menu-item-left">${Icons.edit(15)} Grammar checker</div>
+        <div class="hw-tb-menu-item-left">${Icons.edit(15)} ${dict.grammar}</div>
       </button>
       <div class="hw-tb-menu-item" id="hwTbDisableItem">
-        <div class="hw-tb-menu-item-left">${Icons.slash(15)} Disable</div>
+        <div class="hw-tb-menu-item-left">${Icons.slash(15)} ${dict.disable}</div>
         ${Icons.chevronRight(13)}
         
         <!-- Submenu -->
         <div class="hw-tb-submenu" id="hwTbSubmenu" style="display: none;">
-          <button class="hw-tb-sub-item" data-disable="session">Disable until next visit</button>
-          <button class="hw-tb-sub-item" data-disable="page">Disable for this page</button>
-          <button class="hw-tb-sub-item" data-disable="site">Disable for this website</button>
-          <button class="hw-tb-sub-item" data-disable="global">Disable globally</button>
-          <div class="hw-tb-sub-footer">You can re-enable in setting</div>
+          <button class="hw-tb-sub-item" data-disable="session">${dict.disableSession}</button>
+          <button class="hw-tb-sub-item" data-disable="page">${dict.disablePage}</button>
+          <button class="hw-tb-sub-item" data-disable="site">${dict.disableSite}</button>
+          <button class="hw-tb-sub-item" data-disable="global">${dict.disableGlobal}</button>
+          <div class="hw-tb-sub-footer">${dict.disableFooter}</div>
         </div>
       </div>
     `;

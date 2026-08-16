@@ -141,16 +141,29 @@ class SidePanelController {
       chrome.runtime.openOptionsPage();
     });
 
-    // Model select change -> save preference
-    document.getElementById('spModelSelect').addEventListener('change', async (e) => {
-      await Storage.setActiveConfigId(e.target.value);
+    // Model bar / tag click -> Opens Model & Key Settings Modal
+    document.getElementById('spModelBar')?.addEventListener('click', () => this.openSettingsModal());
+
+    // Settings Modal
+    document.getElementById('spBtnSettings')?.addEventListener('click', () => this.openSettingsModal());
+    document.getElementById('spBtnCloseModal')?.addEventListener('click', () => {
+      const modal = document.getElementById('spModal');
+      if (modal) modal.style.display = 'none';
+      this.updateModelBadge();
     });
 
-    // Modal
-    document.getElementById('spBtnSettings').addEventListener('click', () => this.openSettingsModal());
-    document.getElementById('spBtnCloseModal').addEventListener('click', () => {
-      document.getElementById('spModal').style.display = 'none';
-      this.updateModelBadge();
+    // Close modal when clicking on backdrop
+    document.getElementById('spModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'spModal') {
+        document.getElementById('spModal').style.display = 'none';
+        this.updateModelBadge();
+      }
+    });
+
+    document.getElementById('spHistoryModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'spHistoryModal') {
+        document.getElementById('spHistoryModal').style.display = 'none';
+      }
     });
 
     // Chips delegation
@@ -201,7 +214,8 @@ class SidePanelController {
     const { apiConfigs = [], activeConfigId, rotationStrategy } = await Storage.getApiConfigs();
     const { isNanoReady } = await Storage.get(['isNanoReady']);
     const tag = document.getElementById('spModelTag');
-    const enabledCount = apiConfigs.filter((c) => c.isEnabled && c.apiKey).length;
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const dict = getI18n(uiLanguage);
 
     if (enabledCount === 0) {
       let isReady = !!isNanoReady;
@@ -237,7 +251,7 @@ class SidePanelController {
 
       if (isReady) {
         Storage.set({ isNanoReady: true });
-        tag.innerHTML = `${Icons.cpu(12)} Chrome Gemini Nano (Ready On-Device)`;
+        tag.innerHTML = `${Icons.cpu(12)} ${dict.modelNanoReady || 'Chrome Gemini Nano (Ready On-Device)'}`;
         tag.style.background = 'rgba(34, 197, 94, 0.15)';
         tag.style.color = '#16a34a';
         tag.style.border = '1px solid rgba(34, 197, 94, 0.3)';
@@ -245,18 +259,18 @@ class SidePanelController {
         tag.title = '';
         tag.onclick = null;
       } else {
-        tag.innerHTML = `${Icons.alertCircle(12)} Chrome Gemini Nano (Setup Required)`;
+        tag.innerHTML = `${Icons.alertCircle(12)} ${dict.modelNanoSetup || 'Chrome Gemini Nano (Setup Required)'}`;
         tag.style.background = 'rgba(234, 179, 8, 0.15)';
         tag.style.color = '#a16207';
         tag.style.border = '1px solid rgba(234, 179, 8, 0.4)';
         tag.style.cursor = 'pointer';
-        tag.title = 'Nhấn để xem hướng dẫn kích hoạt Gemini Nano trong Cài đặt';
+        tag.title = dict.modelNanoClick || 'Click to view guide in Settings';
         tag.onclick = () => {
           chrome.runtime.sendMessage({ action: 'OPEN_OPTIONS', hash: 'builtin-nano' });
         };
       }
     } else if (activeConfigId === 'auto') {
-      tag.innerHTML = `${Icons.layers(12)} ${rotationStrategy === 'random' ? 'Random Balance' : 'Round-Robin'} (${enabledCount} keys)`;
+      tag.innerHTML = `${Icons.layers(12)} ${dict.modelAutoRotate || 'Auto-Rotate'} (${enabledCount} keys)`;
       tag.style.background = 'rgba(2, 132, 199, 0.12)';
       tag.style.color = '#0284c7';
       tag.style.border = 'none';
@@ -467,10 +481,14 @@ class SidePanelController {
 
     document.addEventListener('mouseout', (e) => {
       const target = e.target.closest('[data-tooltip-title]');
-      if (target) {
+      const related = e.relatedTarget ? e.relatedTarget.closest('[data-tooltip-title]') : null;
+      if (target && target !== related) {
         hideTooltip();
       }
     });
+
+    // Also hide on click
+    document.addEventListener('click', () => hideTooltip());
   }
 
   async applyLanguageI18n(lang = null) {
@@ -505,33 +523,50 @@ class SidePanelController {
       ).join('');
     }
 
+    const activeConvTitle = document.getElementById('spActiveConvTitle');
+    if (activeConvTitle && (!activeConvTitle.textContent || activeConvTitle.textContent === 'Đoạn chat mới' || activeConvTitle.textContent === 'New Chat')) {
+      activeConvTitle.textContent = dict.newChat;
+    }
+
+    // Modal titles
+    const modalTitle = document.getElementById('spModalTitle');
+    if (modalTitle) modalTitle.innerHTML = `${Icons.settings(16)} ${dict.tooltips?.settings?.title || 'Model & API Key Configuration'}`;
+    const historyModalTitle = document.getElementById('spHistoryModalTitle');
+    if (historyModalTitle) historyModalTitle.innerHTML = `${Icons.history(16)} ${dict.historyTitle || 'Chat History'}`;
+
     // Update tooltips
     if (dict.tooltips) {
       const t = dict.tooltips;
-      document.getElementById('spBtnSettings')?.setAttribute('data-tooltip-title', t.settings.title);
-      document.getElementById('spBtnSettings')?.setAttribute('data-tooltip-desc', t.settings.desc);
+      document.getElementById('spBtnNewChat')?.setAttribute('data-tooltip-title', t.newChat?.title || dict.newChat);
+      document.getElementById('spBtnNewChat')?.setAttribute('data-tooltip-desc', t.newChat?.desc || '');
 
-      document.getElementById('spBtnClear')?.setAttribute('data-tooltip-title', t.clear.title);
-      document.getElementById('spBtnClear')?.setAttribute('data-tooltip-desc', t.clear.desc);
+      document.getElementById('spBtnHistory')?.setAttribute('data-tooltip-title', t.history?.title || dict.historyTitle);
+      document.getElementById('spBtnHistory')?.setAttribute('data-tooltip-desc', t.history?.desc || '');
+
+      document.getElementById('spBtnSettings')?.setAttribute('data-tooltip-title', t.settings?.title || 'Cài đặt Key & Model');
+      document.getElementById('spBtnSettings')?.setAttribute('data-tooltip-desc', t.settings?.desc || 'Quản lý danh sách API Key và cơ chế xoay vòng thông minh.');
+
+      document.getElementById('spBtnClear')?.setAttribute('data-tooltip-title', t.clear?.title || 'Xóa đoạn chat');
+      document.getElementById('spBtnClear')?.setAttribute('data-tooltip-desc', t.clear?.desc || 'Xóa hội thoại hiện tại.');
 
       document.getElementById('spBtnOptions')?.setAttribute('data-tooltip-title', t.options?.title || 'Trang Cài đặt & Cấu hình');
       document.getElementById('spBtnOptions')?.setAttribute('data-tooltip-desc', t.options?.desc || 'Mở trang cài đặt chi tiết để quản lý API Key, bật AI nội bộ và tùy biến giao diện.');
 
-      document.getElementById('spBtnCapture')?.setAttribute('data-tooltip-title', t.capture.title);
-      document.getElementById('spBtnCapture')?.setAttribute('data-tooltip-desc', t.capture.desc);
+      document.getElementById('spBtnCapture')?.setAttribute('data-tooltip-title', t.capture?.title || 'Chụp màn hình (Alt+C)');
+      document.getElementById('spBtnCapture')?.setAttribute('data-tooltip-desc', t.capture?.desc || 'Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.');
 
-      document.getElementById('spBtnUpload')?.setAttribute('data-tooltip-title', t.upload.title);
-      document.getElementById('spBtnUpload')?.setAttribute('data-tooltip-desc', t.upload.desc);
+      document.getElementById('spBtnUpload')?.setAttribute('data-tooltip-title', t.upload?.title || 'Tải ảnh bài tập');
+      document.getElementById('spBtnUpload')?.setAttribute('data-tooltip-desc', t.upload?.desc || 'Đính kèm file hình ảnh bài tập từ máy tính.');
 
-      document.getElementById('spSelectLang')?.setAttribute('data-tooltip-title', t.lang.title);
-      document.getElementById('spSelectLang')?.setAttribute('data-tooltip-desc', t.lang.desc);
+      document.getElementById('spSelectLang')?.setAttribute('data-tooltip-title', t.lang?.title || 'Ngôn ngữ phản hồi');
+      document.getElementById('spSelectLang')?.setAttribute('data-tooltip-desc', t.lang?.desc || 'AI sẽ tự động giải bài và trả lời bằng ngôn ngữ này.');
 
-      document.getElementById('spSelectMode')?.setAttribute('data-tooltip-title', t.mode.title);
-      document.getElementById('spSelectMode')?.setAttribute('data-tooltip-desc', t.mode.desc);
+      document.getElementById('spSelectMode')?.setAttribute('data-tooltip-title', t.mode?.title || 'Chế độ giải bài');
+      document.getElementById('spSelectMode')?.setAttribute('data-tooltip-desc', t.mode?.desc || 'Chọn kiểu phản hồi: Từng bước, Đáp án ngay, Gợi ý, hoặc Giải thích sâu lý thuyết.');
     }
   }
 
-  handleError(err) {
+  async handleError(err) {
     this.isStreaming = false;
     document.getElementById('spBtnSend').disabled = false;
 
@@ -540,40 +575,42 @@ class SidePanelController {
 
     const errStr = String(err || '');
     const isNanoError = errStr.includes('Gemini Nano') || errStr.includes('prompt-api') || errStr.includes('Optimization Guide');
+    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+    const isVi = uiLanguage === 'vi';
 
     if (isNanoError) {
       content.innerHTML = `
         <div class="sp-nano-guide-card">
           <div class="sp-nano-guide-header">
-            ${Icons.cpu(16)} <span>Hướng dẫn Kích hoạt Chrome Gemini Nano (Local AI)</span>
+            ${Icons.cpu(16)} <span>${isVi ? 'Hướng dẫn Kích hoạt Chrome Gemini Nano (Local AI)' : 'Chrome Gemini Nano Activation Guide (Local AI)'}</span>
           </div>
           <div class="sp-nano-steps">
             <div class="sp-nano-step">
               <span class="sp-step-num">1</span>
-              <div>Bật cờ <strong>Prompt API</strong>:
-                <button class="sp-btn-mini-flags" id="spBtnFlagPromptApi">${Icons.externalLink(11)} Mở #prompt-api</button>
+              <div>${isVi ? 'Bật cờ' : 'Enable flag'} <strong>Prompt API</strong>:
+                <button class="sp-btn-mini-flags" id="spBtnFlagPromptApi">${Icons.externalLink(11)} ${isVi ? 'Mở #prompt-api' : 'Open #prompt-api'}</button>
               </div>
             </div>
             <div class="sp-nano-step">
               <span class="sp-step-num">2</span>
-              <div>Bật cờ <strong>Optimization Guide</strong> sang <em>Enabled BypassPerfRequirement</em>:
-                <button class="sp-btn-mini-flags" id="spBtnFlagOptGuide">${Icons.externalLink(11)} Mở #optimization-guide</button>
+              <div>${isVi ? 'Bật cờ' : 'Set flag'} <strong>Optimization Guide</strong> ${isVi ? 'sang' : 'to'} <em>Enabled BypassPerfRequirement</em>:
+                <button class="sp-btn-mini-flags" id="spBtnFlagOptGuide">${Icons.externalLink(11)} ${isVi ? 'Mở #optimization-guide' : 'Open #optimization-guide'}</button>
               </div>
             </div>
             <div class="sp-nano-step">
               <span class="sp-step-num">3</span>
-              <div>Nhấn <strong>Relaunch</strong> ở góc dưới để khởi động lại Chrome.</div>
+              <div>${isVi ? 'Nhấn <strong>Relaunch</strong> ở góc dưới để khởi động lại Chrome.' : 'Click <strong>Relaunch</strong> to restart Chrome.'}</div>
             </div>
             <div class="sp-nano-step">
               <span class="sp-step-num">4</span>
-              <div>Tải model tại <strong>chrome://components</strong> (nhấn Check for update):
-                <button class="sp-btn-mini-flags" id="spBtnOpenCompTab">${Icons.externalLink(11)} Mở components</button>
+              <div>${isVi ? 'Tải model tại <strong>chrome://components</strong> (nhấn Check for update):' : 'Download model at <strong>chrome://components</strong> (Click Check for update):'}
+                <button class="sp-btn-mini-flags" id="spBtnOpenCompTab">${Icons.externalLink(11)} ${isVi ? 'Mở components' : 'Open components'}</button>
               </div>
             </div>
           </div>
           <div class="sp-nano-guide-footer">
             <button class="sp-btn-mini-options" id="spBtnAddKeyFallback">
-              ${Icons.plus(12)} Hoặc thêm API Key Miễn phí (Gemini / Groq)
+              ${Icons.plus(12)} ${isVi ? 'Hoặc thêm API Key Miễn phí (Gemini / Groq)' : 'Or Add Free Cloud Key (Gemini / Groq)'}
             </button>
           </div>
         </div>
@@ -645,14 +682,18 @@ class SidePanelController {
       });
       body.scrollTop = body.scrollHeight;
     } else {
+      const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+      const dict = getI18n(uiLanguage);
+      const chipsHtml = (dict.chips || []).map(
+        (c) => `<button class="sp-chip" data-query="${c.query}">${c.label}</button>`
+      ).join('');
+
       body.innerHTML = `
         <div class="sp-msg sp-msg-ai">
           <div class="sp-msg-bubble">
-            <div id="spWelcomeText">Xin chào! Tôi là trợ lý Homework Helper. Bạn cần giải bài tập nào hôm nay?</div>
-            <div class="sp-chips-row">
-              <button class="sp-chip" data-query="Giải phương trình bậc hai $ax^2 + bx + c = 0$">Phương trình bậc 2</button>
-              <button class="sp-chip" data-query="Giải thích các định luật chuyển động của Newton">Định luật Newton</button>
-              <button class="sp-chip" data-query="Dịch đoạn văn này sang tiếng Anh">Dịch bài tập</button>
+            <div id="spWelcomeText">${dict.welcomeText}</div>
+            <div class="sp-chips-row" id="spChipsContainer">
+              ${chipsHtml}
             </div>
           </div>
         </div>
@@ -693,8 +734,11 @@ class SidePanelController {
     const body = document.getElementById('spHistoryModalBody');
     if (!modal || !body) return;
 
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const dict = getI18n(uiLanguage);
+
     modal.style.display = 'flex';
-    body.innerHTML = '<div style="text-align:center; padding:16px; color:#94a3b8;">Đang tải danh sách hội thoại...</div>';
+    body.innerHTML = `<div style="text-align:center; padding:16px; color:#94a3b8;">${dict.loadingHistory || 'Loading conversations...'}</div>`;
 
     const conversations = await Storage.getConversations();
     const { activeConversationId } = await Storage.get(['activeConversationId']);
@@ -702,7 +746,7 @@ class SidePanelController {
     if (conversations.length === 0) {
       body.innerHTML = `
         <div style="text-align:center; padding:32px 10px; color:#94a3b8; font-size:13px;">
-          Chưa có hội thoại nào được lưu.<br>Hãy tạo đoạn chat mới để bắt đầu!
+          ${dict.emptyHistory || 'No conversations saved yet.<br>Start a new chat to begin!'}
         </div>
       `;
       return;
@@ -753,11 +797,13 @@ class SidePanelController {
     const body = document.getElementById('spModalBody');
     modal.style.display = 'flex';
 
-    const { apiConfigs = [], rotationStrategy } = await Storage.getApiConfigs();
+    const { apiConfigs = [] } = await Storage.getApiConfigs();
+    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+    const isVi = uiLanguage === 'vi';
 
     body.innerHTML = `
       <div style="font-size:12px; color:var(--text-muted); line-height:1.4;">
-        Thêm một hoặc nhiều API Key. Tiện ích tự động xoay vòng cân bằng tải và chuyển sang key dự phòng khi gặp giới hạn Rate Limit.
+        ${isVi ? 'Thêm một hoặc nhiều API Key. Tiện ích tự động xoay vòng cân bằng tải và chuyển sang key dự phòng khi gặp giới hạn Rate Limit.' : 'Add one or more API Keys. The extension automatically load-balances and falls back to backup keys when hitting rate limits.'}
       </div>
 
       <!-- Chrome Built-in AI Gemini Nano Guide Section in Modal -->
@@ -766,28 +812,28 @@ class SidePanelController {
           ${Icons.cpu(14)} Chrome Gemini Nano (Local AI)
         </div>
         <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px; line-height:1.5;">
-          Mô hình AI nội bộ chạy Offline. Nhấn các liên kết bên dưới để mở trực tiếp:
+          ${isVi ? 'Mô hình AI nội bộ chạy Offline. Nhấn các liên kết bên dưới để mở trực tiếp:' : 'On-Device AI running offline. Click links below to open flags directly:'}
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
           <button class="sp-copy-btn" id="spModalBtnFlagPrompt" style="background:#0284c7; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} 1. Mở #prompt-api
+            ${Icons.externalLink(11)} ${isVi ? '1. Mở #prompt-api' : '1. Open #prompt-api'}
           </button>
           <button class="sp-copy-btn" id="spModalBtnFlagOptGuide" style="background:#0284c7; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} 2. Mở #optimization-guide
+            ${Icons.externalLink(11)} ${isVi ? '2. Mở #optimization-guide' : '2. Open #optimization-guide'}
           </button>
           <button class="sp-copy-btn" id="spModalBtnComponents" style="background:#0369a1; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} 3. Mở components
+            ${Icons.externalLink(11)} ${isVi ? '3. Mở components' : '3. Open components'}
           </button>
         </div>
       </div>
 
       <div id="spModalKeyList" style="display:flex; flex-direction:column; gap:10px; margin-top:8px;"></div>
 
-      <button class="sp-btn-add" id="spBtnAddKey">${Icons.plus(16)} Thêm Model & Key</button>
+      <button class="sp-btn-add" id="spBtnAddKey">${Icons.plus(16)} ${isVi ? 'Thêm Model & Key' : 'Add Model & Key'}</button>
 
       <div style="text-align:right; margin-top:6px;">
         <a href="#" id="spLinkFullOptions" style="font-size:12px; color:var(--accent); text-decoration:none;">
-          Xem hướng dẫn lấy Key miễn phí &rarr;
+          ${isVi ? 'Xem hướng dẫn lấy Key miễn phí →' : 'View free API key guide →'}
         </a>
       </div>
     `;
