@@ -519,15 +519,29 @@
         <div class="opt-section-header">
           <div>
             <h2 class="opt-heading" id="optHeadingPrompt">System Prompt & Phong cách Sư phạm</h2>
-            <p class="opt-subheading" id="optSubheadingPrompt">Tùy chỉnh hướng dẫn hệ thống để AI giải thích chi tiết từng bước, bọc công thức bằng $...$, hoặc trả lời ngắn gọn.</p>
+            <p class="opt-subheading" id="optSubheadingPrompt">Tùy chỉnh hướng dẫn hệ thống riêng biệt cho các mô hình Cloud lớn và mô hình On-Device cục bộ.</p>
           </div>
         </div>
 
-        <div class="opt-card">
-          <textarea id="optSystemPromptTextarea" class="opt-textarea" rows="9"></textarea>
+        <!-- 1. Cloud AI Models Prompt -->
+        <div class="opt-card" style="margin-bottom: 20px;">
+          <h3 class="opt-card-title" id="optCardCloudPromptTitle" style="margin-bottom: 6px;">1. System Prompt cho Cloud Models (Gemini, OpenAI, Claude, DeepSeek)</h3>
+          <p class="opt-setting-desc" id="optCardCloudPromptDesc" style="margin-bottom: 12px;">Dành cho các mô hình đám mây lớn (hàng trăm tỷ tham số), hỗ trợ phân tích sư phạm chuyên sâu, LaTeX và hình ảnh.</p>
+          <textarea id="optSystemPromptTextarea" class="opt-textarea" rows="7"></textarea>
           <div class="opt-card-footer">
             <button class="opt-btn-secondary" id="optBtnResetPrompt">Khôi phục mặc định</button>
-            <button class="opt-btn-primary" id="optBtnSavePrompt">Lưu Prompt</button>
+            <button class="opt-btn-primary" id="optBtnSavePrompt">Lưu Cloud Prompt</button>
+          </div>
+        </div>
+
+        <!-- 2. Chrome Gemini Nano Local AI Prompt -->
+        <div class="opt-card">
+          <h3 class="opt-card-title" id="optCardNanoPromptTitle" style="margin-bottom: 6px;">2. System Prompt cho Chrome Gemini Nano (On-Device Local AI)</h3>
+          <p class="opt-setting-desc" id="optCardNanoPromptDesc" style="margin-bottom: 12px;">Dành riêng cho mô hình nén chạy cục bộ trong Chrome (~3B tham số). Tinh gọn, ưu tiên xác thực dữ kiện thực tế trước khi chọn đáp án.</p>
+          <textarea id="optNanoPromptTextarea" class="opt-textarea" rows="6"></textarea>
+          <div class="opt-card-footer">
+            <button class="opt-btn-secondary" id="optBtnResetNanoPrompt">Khôi phục mặc định</button>
+            <button class="opt-btn-primary" id="optBtnSaveNanoPrompt">Lưu Nano Prompt</button>
           </div>
         </div>
       </section>

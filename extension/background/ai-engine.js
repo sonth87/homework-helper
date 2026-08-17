@@ -5,6 +5,7 @@
  */
 
 import { keyRotator } from './key-rotator.js';
+import { Storage, DEFAULT_NANO_SYSTEM_PROMPT } from '../shared/storage.js';
 
 export class AiEngine {
   /**
@@ -18,7 +19,7 @@ export class AiEngine {
    * @param {AbortSignal} [signal] - Abort signal
    */
   static async ask({ prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage = 'en' }, onChunk, signal) {
-    const { routingStrategy = 'prefer_nano', apiConfigs = [] } = await Storage.get(['routingStrategy', 'apiConfigs']);
+    const { routingStrategy = 'prefer_nano', apiConfigs = [], nanoSystemPrompt } = await Storage.get(['routingStrategy', 'apiConfigs', 'nanoSystemPrompt']);
     const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
 
     const langNames = {
@@ -38,10 +39,13 @@ export class AiEngine {
     const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Tiếng Việt (Vietnamese)';
     const finalSystemPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE REQUIREMENT]: You MUST provide your entire solution, explanations, step-by-step reasoning, and answer in ${targetLangName}. Do NOT use any other language unless explicitly requested.`.trim();
 
+    const nanoPromptBase = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
+    const nanoFinalSystemPrompt = `${nanoPromptBase}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`.trim();
+
     // 1. nano_only Strategy: 100% On-Device execution
     if (routingStrategy === 'nano_only') {
       onChunk('', { status: 'connecting', model: 'Gemini Nano (On-Device)', provider: 'chrome-builtin' });
-      await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
+      await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt }, onChunk, signal);
       return;
     }
 
@@ -49,7 +53,7 @@ export class AiEngine {
     if (routingStrategy === 'prefer_nano' && !imageBase64 && !preferredConfigId) {
       try {
         onChunk('', { status: 'connecting', model: 'Gemini Nano (On-Device)', provider: 'chrome-builtin' });
-        await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
+        await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt }, onChunk, signal);
         return;
       } catch (nanoErr) {
         if (enabledKeys.length === 0) throw nanoErr;
@@ -74,7 +78,7 @@ export class AiEngine {
           onChunk(`\n\n> *[Thông báo] Không có API Key khả dụng, tự động chuyển về Gemini Nano On-Device...*\n\n`, {
             status: 'switching',
           });
-          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
+          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt }, onChunk, signal);
           return;
         }
         throw new Error('Chưa có API Key nào được kích hoạt trong Cài đặt.');
@@ -84,7 +88,7 @@ export class AiEngine {
         onChunk('', { status: 'connecting', model: config.model, provider: config.provider, attempt: attempts });
 
         if (config.provider === 'chrome-builtin') {
-          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
+          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt }, onChunk, signal);
         } else if (config.provider === 'gemini') {
           await this.streamGemini(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
         } else if (config.provider === 'claude') {

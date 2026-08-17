@@ -1,4 +1,4 @@
-import { Storage, DEFAULT_SETTINGS } from '../../shared/storage.js';
+import { Storage, DEFAULT_SYSTEM_PROMPT, DEFAULT_NANO_SYSTEM_PROMPT } from '../../shared/storage.js';
 import { getOptionsI18n } from '../../shared/i18n.js';
 
 export class PromptTab {
@@ -7,30 +7,56 @@ export class PromptTab {
   }
 
   async init() {
-    await this.loadSystemPrompt();
+    await this.loadPrompts();
   }
 
-  async loadSystemPrompt() {
-    const { systemPrompt, uiLanguage = 'en' } = await Storage.get(['systemPrompt', 'uiLanguage']);
-    const textarea = document.getElementById('optSystemPromptTextarea');
-    if (!textarea) return;
+  async loadPrompts() {
+    const { systemPrompt, nanoSystemPrompt, uiLanguage = 'en' } = await Storage.get(['systemPrompt', 'nanoSystemPrompt', 'uiLanguage']);
+    const dict = getOptionsI18n(uiLanguage);
 
-    textarea.value = systemPrompt || DEFAULT_SETTINGS.systemPrompt;
+    // 1. Cloud AI System Prompt
+    const cloudTextarea = document.getElementById('optSystemPromptTextarea');
+    if (cloudTextarea) {
+      cloudTextarea.value = systemPrompt || DEFAULT_SYSTEM_PROMPT;
+    }
 
-    const btnSave = document.getElementById('optBtnSavePrompt');
-    if (btnSave) {
-      btnSave.onclick = async () => {
-        await Storage.set({ systemPrompt: textarea.value });
-        const dict = getOptionsI18n(uiLanguage);
-        this.controller.showToast(dict.toastPromptSaved || 'System prompt saved successfully!');
+    const btnSaveCloud = document.getElementById('optBtnSavePrompt');
+    if (btnSaveCloud && cloudTextarea) {
+      btnSaveCloud.onclick = async () => {
+        await Storage.set({ systemPrompt: cloudTextarea.value });
+        this.controller.showToast(dict.toastPromptSaved || 'Cloud System Prompt saved successfully!');
       };
     }
 
-    const btnReset = document.getElementById('optBtnResetPrompt');
-    if (btnReset) {
-      btnReset.onclick = async () => {
-        textarea.value = DEFAULT_SETTINGS.systemPrompt;
-        await Storage.set({ systemPrompt: DEFAULT_SETTINGS.systemPrompt });
+    const btnResetCloud = document.getElementById('optBtnResetPrompt');
+    if (btnResetCloud && cloudTextarea) {
+      btnResetCloud.onclick = async () => {
+        cloudTextarea.value = DEFAULT_SYSTEM_PROMPT;
+        await Storage.set({ systemPrompt: DEFAULT_SYSTEM_PROMPT });
+        this.controller.showToast('Đã khôi phục Cloud Prompt mặc định');
+      };
+    }
+
+    // 2. Chrome Gemini Nano Local AI Prompt
+    const nanoTextarea = document.getElementById('optNanoPromptTextarea');
+    if (nanoTextarea) {
+      nanoTextarea.value = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
+    }
+
+    const btnSaveNano = document.getElementById('optBtnSaveNanoPrompt');
+    if (btnSaveNano && nanoTextarea) {
+      btnSaveNano.onclick = async () => {
+        await Storage.set({ nanoSystemPrompt: nanoTextarea.value });
+        this.controller.showToast(dict.toastPromptSaved || 'Gemini Nano Prompt saved successfully!');
+      };
+    }
+
+    const btnResetNano = document.getElementById('optBtnResetNanoPrompt');
+    if (btnResetNano && nanoTextarea) {
+      btnResetNano.onclick = async () => {
+        nanoTextarea.value = DEFAULT_NANO_SYSTEM_PROMPT;
+        await Storage.set({ nanoSystemPrompt: DEFAULT_NANO_SYSTEM_PROMPT });
+        this.controller.showToast('Đã khôi phục Nano Prompt mặc định');
       };
     }
   }

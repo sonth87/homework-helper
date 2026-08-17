@@ -103,6 +103,18 @@ export const SUPPORTED_LANGUAGES = [
   { id: 'auto', name: 'Auto' },
 ];
 
+export const DEFAULT_SYSTEM_PROMPT = `You are an elite academic tutor and homework assistant AI.
+Your goal is to help students understand complex concepts and solve homework questions step-by-step.
+Always provide crystal clear, pedagogically sound, and mathematically rigorous explanations.
+Use LaTeX math formulas ($...$ for inline, $$...$$ for block formulas) wherever appropriate.
+Ensure maximum pedagogical clarity. If an image contains multiple questions, ask the student which one to solve first, or solve the primary highlighted question.`;
+
+export const DEFAULT_NANO_SYSTEM_PROMPT = `You are a factual, concise, and precise homework assistant.
+Strict Rules:
+1. For multiple-choice questions, verify the real-world fact or calculate step-by-step FIRST before selecting any option.
+2. Provide a clear, short explanation using LaTeX for formulas ($...$ or $$...$$).
+3. State the correct final answer or option letter clearly at the very end.`;
+
 export const DEFAULT_SETTINGS = {
   // Array of configured model keys:
   // [{ id, provider, model, apiKey, baseUrl, isEnabled, priority, failureCount, cooldownUntil }]
@@ -112,11 +124,8 @@ export const DEFAULT_SETTINGS = {
   studyMode: 'step-by-step', // 'step-by-step' | 'direct' | 'hint' | 'explain' | 'translate'
   uiLanguage: 'vi', // 'vi' | 'en' | 'th' | 'zh-CN' | 'zh-TW' | 'ja' | 'ko' | 'es' | 'fr' | 'de' | 'pt' | 'id' | 'ru'
   outputLanguage: 'en', // 'en' | 'vi' | 'es' | 'fr' | 'de' | 'zh-CN' | 'ja' | 'ko' | 'auto'
-  systemPrompt: `You are an elite academic tutor and homework assistant AI.
-Your goal is to help students understand complex concepts and solve homework questions step-by-step.
-Always provide crystal clear, pedagogically sound, and mathematically rigorous explanations.
-Use LaTeX math formulas ($...$ for inline, $$...$$ for block formulas) wherever appropriate.
-Ensure maximum pedagogical clarity. If an image contains multiple questions, ask the student which one to solve first, or solve the primary highlighted question.`,
+  systemPrompt: DEFAULT_SYSTEM_PROMPT,
+  nanoSystemPrompt: DEFAULT_NANO_SYSTEM_PROMPT,
   enableFormsAdapter: true,
   enableTextTooltip: true,
   enableFloatingButton: true,

@@ -1,28 +1,69 @@
 /**
  * Google Forms Smart Adapter (Content Script)
  * Deeply integrates with Google Forms DOM and serialized data-params.
+ * Renders compact Liquid Glass buttons with icon-first & smooth slide-out text on hover.
  */
 
 import { Icons } from '../shared/icons.js';
+import { Storage } from '../shared/storage.js';
 
 class GoogleFormsAdapter {
   constructor() {
     this.observer = null;
+    this.uiLanguage = 'vi';
+
     if (window.location.href.includes('docs.google.com/forms')) {
       this.init();
     }
   }
 
-  init() {
-    console.log('[HomeworkAI] Google Forms Adapter initialized');
+  async init() {
+    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+    this.uiLanguage = uiLanguage;
+
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && changes.uiLanguage) {
+          this.uiLanguage = changes.uiLanguage.newValue;
+          this.updateAllButtonLabels();
+        }
+      });
+    }
+
     this.scanAndInject();
 
-    // Observe DOM mutations for dynamic question loading
+    // Observe DOM mutations for multi-page or dynamic question rendering
     this.observer = new MutationObserver(() => {
       this.scanAndInject();
     });
 
     this.observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  getButtonText() {
+    const labels = {
+      vi: 'Giải bằng AI',
+      en: 'AI Solve',
+      th: 'เฉลยด้วย AI',
+      'zh-CN': 'AI 解答',
+      'zh-TW': 'AI 解答',
+      ja: 'AIで解答',
+      ko: 'AI 풀이',
+      es: 'Resolver con IA',
+      fr: 'Résoudre avec l\'IA',
+      de: 'Mit KI lösen',
+      pt: 'Resolver com IA',
+      id: 'Selesaikan dg AI',
+      ru: 'Решить с ИИ',
+    };
+    return labels[this.uiLanguage] || labels.en;
+  }
+
+  updateAllButtonLabels() {
+    const label = this.getButtonText();
+    document.querySelectorAll('.hw-form-btn-label').forEach((span) => {
+      span.textContent = label;
+    });
   }
 
   scanAndInject() {
@@ -35,53 +76,92 @@ class GoogleFormsAdapter {
       const qData = this.extractQuestionData(card);
       if (!qData || !qData.title) return;
 
-      // Inject floating helper button inside question card
+      // Target the INNER white card container (.geS5n) so button stays INSIDE the question card
+      const innerCard = card.querySelector('.geS5n, .I30Rdf, .m7w29c, .zfd2tb') || card.firstElementChild || card;
+
+      // Inject compact Liquid Glass helper button inside question card
       const btnWrapper = document.createElement('div');
       btnWrapper.className = 'hw-form-ai-wrapper';
       btnWrapper.style.cssText = `
         display: flex;
         justify-content: flex-end;
+        align-items: center;
         margin-top: 8px;
-        margin-bottom: 4px;
+        margin-bottom: 0px;
+        padding-top: 2px;
+        width: 100%;
+        box-sizing: border-box;
       `;
 
       const aiBtn = document.createElement('button');
       aiBtn.className = 'hw-form-ai-btn';
+      aiBtn.type = 'button';
+      aiBtn.title = this.getButtonText();
       aiBtn.style.cssText = `
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 5px 12px;
-        background: #3b82f6;
-        color: #ffffff;
-        border: none;
-        border-radius: 16px;
-        font-size: 12px;
+        justify-content: center;
+        padding: 4px 7px;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px) saturate(180%);
+        -webkit-backdrop-filter: blur(12px) saturate(180%);
+        color: #0284c7;
+        border: 1px solid rgba(2, 132, 199, 0.32);
+        border-radius: 14px;
+        font-size: 11px;
         font-weight: 600;
         cursor: pointer;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
-        transition: transform 0.1s ease, background 0.15s ease;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.12), inset 0 1px 0.5px rgba(255, 255, 255, 0.95);
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        user-select: none;
+        outline: none;
+        overflow: hidden;
       `;
-      aiBtn.innerHTML = `${Icons.sparkles(14)} AI Solve Question`;
+      aiBtn.innerHTML = `
+        ${Icons.sparkles(13)}
+        <span class="hw-form-btn-label" style="max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; margin-left: 0; transition: max-width 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, margin-left 0.25s ease;">${this.getButtonText()}</span>
+      `;
+
+      const labelSpan = aiBtn.querySelector('.hw-form-btn-label');
 
       aiBtn.addEventListener('mouseenter', () => {
-        aiBtn.style.background = '#2563eb';
+        aiBtn.style.background = 'rgba(2, 132, 199, 0.12)';
+        aiBtn.style.borderColor = '#0284c7';
+        aiBtn.style.color = '#0369a1';
+        aiBtn.style.boxShadow = '0 4px 12px rgba(2, 132, 199, 0.22), inset 0 1px 0.5px rgba(255, 255, 255, 0.95)';
         aiBtn.style.transform = 'translateY(-1px)';
+        aiBtn.style.padding = '4px 10px';
+        if (labelSpan) {
+          labelSpan.style.maxWidth = '140px';
+          labelSpan.style.opacity = '1';
+          labelSpan.style.marginLeft = '4.5px';
+        }
       });
+
       aiBtn.addEventListener('mouseleave', () => {
-        aiBtn.style.background = '#3b82f6';
+        if (aiBtn.disabled) return;
+        aiBtn.style.background = 'rgba(255, 255, 255, 0.85)';
+        aiBtn.style.borderColor = 'rgba(2, 132, 199, 0.32)';
+        aiBtn.style.color = '#0284c7';
+        aiBtn.style.boxShadow = '0 2px 6px rgba(2, 132, 199, 0.12), inset 0 1px 0.5px rgba(255, 255, 255, 0.95)';
         aiBtn.style.transform = 'translateY(0)';
+        aiBtn.style.padding = '4px 7px';
+        if (labelSpan) {
+          labelSpan.style.maxWidth = '0';
+          labelSpan.style.opacity = '0';
+          labelSpan.style.marginLeft = '0';
+        }
       });
 
       aiBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.solveQuestion(qData, card, aiBtn);
+        this.solveQuestion(qData, innerCard, aiBtn);
       });
 
       btnWrapper.appendChild(aiBtn);
-      card.appendChild(btnWrapper);
+      innerCard.appendChild(btnWrapper);
     });
   }
 
@@ -124,27 +204,48 @@ class GoogleFormsAdapter {
     }
   }
 
-  async solveQuestion(qData, card, btn) {
-    btn.innerHTML = `${Icons.refresh(14)} Solving...`;
+  async solveQuestion(qData, targetCard, btn) {
+    const isVi = this.uiLanguage === 'vi';
+    const solvingText = isVi ? 'Đang giải...' : 'Solving...';
+    btn.innerHTML = `${Icons.refresh(12)} <span class="hw-form-btn-label" style="max-width: 140px; opacity: 1; margin-left: 4.5px;">${solvingText}</span>`;
     btn.disabled = true;
+    btn.style.padding = '4px 10px';
 
     let prompt = `Solve this Google Forms question and identify the single best option:\n\n**Question:** ${qData.title}\n\n`;
     if (qData.options && qData.options.length > 0) {
       prompt += `**Options:**\n` + qData.options.map((opt, i) => `${String.fromCharCode(65 + i)}. ${opt}`).join('\n');
     }
 
-    // Open side panel or overlay with solving prompt
-    window.dispatchEvent(new CustomEvent('HOMEWORK_AI_ASK', {
-      detail: { prompt, studyMode: 'step-by-step' }
+    const rect = targetCard.getBoundingClientRect();
+
+    // Trigger in-page floating solution card right next to question
+    window.dispatchEvent(new CustomEvent('HOMEWORK_AI_OPEN_POPUP', {
+      detail: {
+        type: 'answer',
+        text: prompt,
+        rect: {
+          top: rect.top,
+          bottom: rect.bottom,
+          left: rect.left,
+          right: rect.right,
+          width: rect.width,
+          height: rect.height,
+        }
+      }
     }));
 
     setTimeout(() => {
-      btn.innerHTML = `${Icons.check(14)} Sent to AI`;
+      const sentText = isVi ? 'Đã gửi' : 'Sent';
+      btn.innerHTML = `${Icons.check(12)} <span class="hw-form-btn-label" style="max-width: 140px; opacity: 1; margin-left: 4.5px;">${sentText}</span>`;
       btn.disabled = false;
       setTimeout(() => {
-        btn.innerHTML = `${Icons.sparkles(14)} AI Solve Question`;
-      }, 3000);
-    }, 800);
+        btn.innerHTML = `
+          ${Icons.sparkles(13)}
+          <span class="hw-form-btn-label" style="max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; margin-left: 0; transition: max-width 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, margin-left 0.25s ease;">${this.getButtonText()}</span>
+        `;
+        btn.style.padding = '4px 7px';
+      }, 2000);
+    }, 600);
   }
 }
 

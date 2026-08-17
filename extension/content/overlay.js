@@ -285,6 +285,20 @@ class InPageOverlay {
       }
     });
 
+    // 3. Direct AI question solver trigger (e.g. Google Forms)
+    window.addEventListener('HOMEWORK_AI_ASK', (e) => {
+      const { prompt, text, rect, studyMode = 'step-by-step' } = e.detail || {};
+      const query = prompt || text;
+      if (query) {
+        if (rect) {
+          this.floatingCard.openActionPopup('answer', query, rect);
+        } else {
+          this.drawer.toggle(true);
+          this.drawer.askAi({ prompt: query });
+        }
+      }
+    });
+
     // Stream chunk listener from background
     chrome.runtime.onMessage.addListener((msg) => {
       if (msg.action === 'AI_STREAM_CHUNK' && msg.requestId === this.drawer.activeRequestId) {
@@ -473,6 +487,29 @@ class InPageOverlay {
 
       s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-title', t.capture?.title || 'Chụp màn hình (Alt+C)');
       s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-desc', t.capture?.desc || 'Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.');
+
+      // Floating Solution Card Popups Tooltips
+      s.getElementById('hwBtnCardHistory')?.setAttribute('data-tooltip-title', cardDict.historyTitle || 'Lịch sử các câu hỏi');
+      s.getElementById('hwBtnCardHistory')?.setAttribute('data-tooltip-desc', cardDict.historyDesc || 'Xem lại các câu hỏi hoặc bài tập đã giải gần đây.');
+
+      s.getElementById('hwBtnCloseCard')?.setAttribute('data-tooltip-title', cardDict.closeTitle || 'Đóng cửa sổ');
+      s.getElementById('hwBtnCloseCard')?.setAttribute('data-tooltip-desc', cardDict.closeDesc || 'Tắt popup giải bài');
+
+      s.getElementById('hwBtnCardAddConv')?.setAttribute('data-tooltip-title', cardDict.addConvTitle || 'Đoạn chat mới');
+      s.getElementById('hwBtnCardAddConv')?.setAttribute('data-tooltip-desc', cardDict.addConvDesc || 'Bắt đầu một phiên hội thoại bài tập mới.');
+
+      s.getElementById('hwBtnCloseCardHistory')?.setAttribute('data-tooltip-title', cardDict.closeHistoryTitle || 'Đóng lịch sử');
+      s.getElementById('hwBtnCloseCardHistory')?.setAttribute('data-tooltip-desc', cardDict.closeHistoryDesc || 'Đóng bảng lịch sử.');
+
+      const btnCardOpenDrawer = s.getElementById('hwBtnCardOpenDrawer');
+      if (btnCardOpenDrawer) {
+        btnCardOpenDrawer.innerHTML = `${Icons.messageCircle(12)} ${cardDict.openInDrawerBtn || 'Mở toàn bộ trong Khung Chat'}`;
+      }
+
+      const cardHistHeader = s.getElementById('hwCardHistoryPanel')?.querySelector('.hw-card-history-header > span');
+      if (cardHistHeader) {
+        cardHistHeader.innerHTML = `${Icons.history(14)} ${cardDict.historyTitle || 'Lịch sử các câu hỏi'}`;
+      }
 
       s.getElementById('hwBtnUploadImg')?.setAttribute('data-tooltip-title', t.upload?.title || 'Tải ảnh bài tập');
       s.getElementById('hwBtnUploadImg')?.setAttribute('data-tooltip-desc', t.upload?.desc || 'Đính kèm file hình ảnh bài tập từ máy tính.');

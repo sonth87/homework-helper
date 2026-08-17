@@ -247,8 +247,14 @@ export class OptionsController {
     // Prompt Tab
     setText('optHeadingPrompt', dict.headingPrompt);
     setText('optSubheadingPrompt', dict.subheadingPrompt);
+    setText('optCardCloudPromptTitle', dict.cardCloudPromptTitle);
+    setText('optCardCloudPromptDesc', dict.cardCloudPromptDesc);
     setText('optBtnResetPrompt', dict.btnResetPrompt);
     setText('optBtnSavePrompt', dict.btnSavePrompt);
+    setText('optCardNanoPromptTitle', dict.cardNanoPromptTitle);
+    setText('optCardNanoPromptDesc', dict.cardNanoPromptDesc);
+    setText('optBtnResetNanoPrompt', dict.btnResetNanoPrompt);
+    setText('optBtnSaveNanoPrompt', dict.btnSaveNanoPrompt);
 
     // General Tab
     setText('optHeadingGeneral', dict.headingGeneral);

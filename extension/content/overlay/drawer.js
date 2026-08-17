@@ -3,7 +3,7 @@
  */
 
 import { Icons } from '../../shared/icons.js';
-import { Storage } from '../../shared/storage.js';
+import { Storage, DEFAULT_NANO_SYSTEM_PROMPT } from '../../shared/storage.js';
 import { formatMarkdownAndMath } from '../../shared/markdown-katex.js';
 import { getI18n } from '../../shared/i18n.js';
 
@@ -251,7 +251,7 @@ export class OverlayDrawer {
     const btnSend = this.shadow.getElementById('hwBtnSend');
     if (btnSend) btnSend.disabled = true;
 
-    const { apiConfigs = [], systemPrompt, outputLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'outputLanguage']);
+    const { apiConfigs = [], systemPrompt, nanoSystemPrompt, outputLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'outputLanguage']);
     const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
 
     if (enabledKeys.length === 0) {
@@ -270,7 +270,8 @@ export class OverlayDrawer {
         ru: 'Russian (Русский)',
       };
       const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'English';
-      const nanoSysPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE]: You MUST reply in ${targetLangName}.`.trim();
+      const promptToUse = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
+      const nanoSysPrompt = `${promptToUse}\n\n[STRICT LANGUAGE]: You MUST reply in ${targetLangName}.`.trim();
       const nanoPrompt = `${prompt}\n\n[Output entirely in ${targetLangName}]`;
 
       window.dispatchEvent(

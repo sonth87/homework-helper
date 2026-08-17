@@ -3,7 +3,7 @@
  */
 
 import { Icons } from '../../shared/icons.js';
-import { Storage, SUPPORTED_LANGUAGES } from '../../shared/storage.js';
+import { Storage, SUPPORTED_LANGUAGES, DEFAULT_NANO_SYSTEM_PROMPT } from '../../shared/storage.js';
 import { formatMarkdownAndMath } from '../../shared/markdown-katex.js';
 import { getFloatingPopupI18n, getI18n } from '../../shared/i18n.js';
 
@@ -193,7 +193,7 @@ export class OverlayFloatingCard {
       image: imageBase64,
     });
 
-    const { apiConfigs = [], systemPrompt, routingStrategy = 'prefer_nano' } = await Storage.get(['apiConfigs', 'systemPrompt', 'routingStrategy']);
+    const { apiConfigs = [], systemPrompt, nanoSystemPrompt, routingStrategy = 'prefer_nano' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'routingStrategy']);
     const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
 
     // If running in Gemini Nano mode (no keys or nano_only), run Local OCR first!
@@ -209,7 +209,8 @@ export class OverlayFloatingCard {
         const targetLangName = targetLangObj ? targetLangObj.name : 'English';
 
         const nanoPrompt = `${prompt}\n\n[OCR Text]:\n${ocrText || '(No text extracted)'}\n\n[Strict Output Language]: ${targetLangName}`;
-        const nanoSysPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;
+        const promptToUse = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
+        const nanoSysPrompt = `${promptToUse}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;
 
         window.dispatchEvent(
           new CustomEvent('HOMEWORK_AI_NANO_EXEC', {
@@ -318,7 +319,7 @@ export class OverlayFloatingCard {
     let userLabel = text;
 
     if (type === 'translate') {
-      const targetLangName = LANGUAGE_OPTIONS.find((l) => l.id === this.targetLang)?.name || 'English';
+      const targetLangName = SUPPORTED_LANGUAGES.find((l) => l.id === this.targetLang)?.name || 'English';
       prompt = `Translate the following text accurately into ${targetLangName}:\n\n${text}`;
       studyMode = 'translate';
       userLabel = `[Translate to ${targetLangName}]: ${text}`;
@@ -345,7 +346,7 @@ export class OverlayFloatingCard {
       content: userLabel,
     });
 
-    const { apiConfigs = [], systemPrompt, outputLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'outputLanguage']);
+    const { apiConfigs = [], systemPrompt, nanoSystemPrompt, outputLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'outputLanguage']);
     const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
 
     if (enabledKeys.length === 0) {
@@ -364,7 +365,8 @@ export class OverlayFloatingCard {
         ru: 'Russian (Русский)',
       };
       const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'English';
-      const nanoSysPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE]: You MUST reply in ${targetLangName}.`.trim();
+      const promptToUse = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
+      const nanoSysPrompt = `${promptToUse}\n\n[STRICT LANGUAGE]: You MUST reply in ${targetLangName}.`.trim();
       const nanoPrompt = `${prompt}\n\n[Output entirely in ${targetLangName}]`;
 
       window.dispatchEvent(

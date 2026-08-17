@@ -53,8 +53,8 @@
     try {
       const session = await aiModel.create({
         systemPrompt: systemPrompt || undefined,
-        temperature: 0.4,
-        topK: 3,
+        temperature: 0.1,
+        topK: 1,
       });
 
       if (typeof session.promptStreaming === 'function') {
