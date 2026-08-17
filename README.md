@@ -1,6 +1,6 @@
 # Homework Helper
 
-> **Zero-Login AI Homework Solver & Academic Assistant for Chrome**
+> **Zero-Fee AI Homework Solver & Academic Assistant for Chrome**
 
 Homework Helper is a fast, privacy-focused Chrome Extension (Manifest V3) that helps students and educators solve homework questions, understand complex math/science formulas with step-by-step KaTeX reasoning, and run on-device AI with Chrome Gemini Nano and offline WebAssembly OCR.
 
@@ -17,7 +17,7 @@ Homework Helper is a fast, privacy-focused Chrome Extension (Manifest V3) that h
 
 ## 🚀 Key Highlights
 
-- **Dual Engine AI Execution**: Run 100% offline via **Chrome Gemini Nano** or route complex visual questions through **Cloud Vision AI** (Gemini 2.5 Flash, GPT-4o, Claude 3.5 Sonnet, DeepSeek R1).
+- **Dual Engine AI Execution**: Run 100% offline via **Chrome Gemini Nano** or route complex visual questions through **Cloud Vision AI** (Gemini, chatGPT, Claude, DeepSeek R1).
 - **Offline WebAssembly OCR**: Pre-bundled with Vietnamese, English, and Mathematical formula models (`.traineddata`) for instant offline recognition.
 - **KaTeX Step-by-Step Solutions**: High-clarity mathematical rendering with boxed final answers.
 - **Floating Study Drawer & Toolbars**: Seamless in-page experience with multi-session chat history, prompt study modes, and online quiz auto-solving.
@@ -45,6 +45,7 @@ homework-ai-extension/
 Toàn bộ tài liệu kỹ thuật và hướng dẫn sử dụng chuyên sâu nằm trong thư mục `docs/`:
 
 ### 🚀 Hướng Dẫn Tính Năng Chi Tiết:
+
 - [01. Khoanh Vùng Chụp Ảnh & Giải Bài Tập (Crop & Solve)](docs/01-crop-and-solve.md)
 - [02. Ngăn Kéo Chat Học Tập Nổi (Floating Study Drawer)](docs/02-floating-chat-drawer.md)
 - [03. Thanh Công Cụ Bôi Đen Văn Bản (Selection Quick Toolbar)](docs/03-selection-toolbar.md)
@@ -55,6 +56,7 @@ Toàn bộ tài liệu kỹ thuật và hướng dẫn sử dụng chuyên sâu 
 - [08. Cưỡng Chế Đa Ngôn Ngữ & Bản Địa Hóa (Multilingual Output Engine)](docs/08-multi-language-support.md)
 
 ### 🏛️ Kiến Trúc, Cấu Hình & Phát Triển:
+
 - [Kiến trúc Kỹ thuật Toàn diện (System Architecture)](docs/architecture.md)
 - [Hướng dẫn Cấu hình API & Bật Gemini Nano (API Setup & Config)](docs/api-setup.md)
 - [Quyền Riêng tư & Lưu trữ Dữ liệu (Privacy & Storage)](docs/storage-and-privacy.md)
@@ -65,4 +67,3 @@ Toàn bộ tài liệu kỹ thuật và hướng dẫn sử dụng chuyên sâu 
 ## 📜 License
 
 MIT License.
-

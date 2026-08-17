@@ -62,6 +62,8 @@ export default {
     modalBtnAddKey: "添加模型与密钥",
     modalLinkGuide: "查看免费获取 Key 指南 →",
     modalKeyPlaceholder: "输入 API Key (sk-... / AIza...)",
+    customModelOption: "自定义模型名称 (手动输入)...",
+    customModelPlaceholder: "输入模型ID (例如: gemini-2.5-pro, gpt-5, claude-4...)",
     tooltips: {
       newChat: {
         title: "新建对话",
@@ -188,9 +190,10 @@ export default {
     strategyTitle: "智能负载均衡与故障转移机制",
     strategyDesc:
       "系统自动将请求均匀分配到当前可用的 Key。若某 Key 达到速率限制 (HTTP 429)，将自动进入 60 秒冷却，并立即切换到下一个 Key，解答不中断。",
-    stratPreferNanoTitle: "优先 Gemini Nano (推荐)",
-    stratPreferNanoDesc:
-      "可用时优先使用本地 Gemini Nano，复杂多模态或超长题目自动切换至云端 API。",
+    stratPreferNanoTitle: "优先使用 Gemini Nano",
+    stratPreferNanoDesc: "文本使用本地 Gemini Nano；图片自动转为 Vision API 或 OCR。",
+    stratPreferConfigTitle: "优先使用已配置的模型 (推荐)",
+    stratPreferConfigDesc: "使用云端 API 密钥；在额度用尽或网络异常时自动回退至 Gemini Nano。",
     stratNanoOnlyTitle: "仅使用 Gemini Nano",
     stratNanoOnlyDesc: "100% 本地离线运行，零网络请求，完全免费。",
     stratConfigOnlyTitle: "仅使用云端 API",

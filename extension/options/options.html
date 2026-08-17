@@ -68,19 +68,19 @@
               </p>
               
               <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-top:12px;">
-                <label class="opt-routing-option" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; display:flex; gap:8px; align-items:flex-start; cursor:pointer; background:#fff;">
-                  <input type="radio" name="optRoutingStrategy" value="prefer_nano" checked style="margin-top:2px;">
+                <label class="opt-routing-option" style="padding:10px 12px; border:1px solid #0284c7; border-radius:8px; display:flex; gap:8px; align-items:flex-start; cursor:pointer; background:#f0f9ff;">
+                  <input type="radio" name="optRoutingStrategy" value="prefer_config" checked style="margin-top:2px;">
                   <div>
-                    <div id="optRoutingOpt1Title" style="font-weight:700; font-size:13px; color:#0f172a;">Ưu tiên Gemini Nano (Mặc định)</div>
-                    <div id="optRoutingOpt1Desc" style="font-size:11.5px; color:#64748b; margin-top:2px;">Văn bản dùng Nano On-Device; Chụp ảnh tự động chuyển Vision API hoặc OCR.</div>
+                    <div id="optRoutingOpt2Title" style="font-weight:700; font-size:13px; color:#0369a1;">Ưu tiên Model đã cấu hình (Khuyên dùng)</div>
+                    <div id="optRoutingOpt2Desc" style="font-size:11.5px; color:#64748b; margin-top:2px;">Dùng Key đám mây; Tự động fallback về Gemini Nano khi hết quota hoặc lỗi mạng.</div>
                   </div>
                 </label>
-                
+
                 <label class="opt-routing-option" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; display:flex; gap:8px; align-items:flex-start; cursor:pointer; background:#fff;">
-                  <input type="radio" name="optRoutingStrategy" value="prefer_config" style="margin-top:2px;">
+                  <input type="radio" name="optRoutingStrategy" value="prefer_nano" style="margin-top:2px;">
                   <div>
-                    <div id="optRoutingOpt2Title" style="font-weight:700; font-size:13px; color:#0f172a;">Ưu tiên Model đã cấu hình</div>
-                    <div id="optRoutingOpt2Desc" style="font-size:11.5px; color:#64748b; margin-top:2px;">Dùng Key đám mây; Tự động fallback về Gemini Nano khi hết quota hoặc lỗi mạng.</div>
+                    <div id="optRoutingOpt1Title" style="font-weight:700; font-size:13px; color:#0f172a;">Ưu tiên Gemini Nano</div>
+                    <div id="optRoutingOpt1Desc" style="font-size:11.5px; color:#64748b; margin-top:2px;">Văn bản dùng Nano On-Device; Chụp ảnh tự động chuyển Vision API hoặc OCR.</div>
                   </div>
                 </label>
 

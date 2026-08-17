@@ -53,7 +53,7 @@ export class KeysTab {
           id: `cfg_${Date.now()}`,
           provider: 'gemini',
           name: 'Google Gemini',
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.7-flash',
           apiKey: '',
           baseUrl: '',
           isEnabled: true,
@@ -75,9 +75,18 @@ export class KeysTab {
     ).join('');
 
     const providerObj = DEFAULT_PROVIDERS.find((p) => p.id === cfg.provider) || DEFAULT_PROVIDERS[0];
-    const modelOptions = providerObj.models.map(
-      (m) => `<option value="${m.id}" ${cfg.model === m.id ? 'selected' : ''}>${m.name}</option>`
-    ).join('');
+    
+    const isCustomModel =
+      !providerObj.models.some((m) => m.id === cfg.model) ||
+      cfg.model === '__custom__';
+
+    const modelOptions =
+      providerObj.models
+        .map(
+          (m) => `<option value="${m.id}" ${cfg.model === m.id ? 'selected' : ''}>${m.name}</option>`
+        )
+        .join('') +
+      `<option value="__custom__" ${isCustomModel ? 'selected' : ''}>✏️ ${d.customModelOption || 'Tự điền model (Custom)...'}</option>`;
 
     card.innerHTML = `
       <div class="opt-key-header">
@@ -96,6 +105,8 @@ export class KeysTab {
         <input type="password" class="opt-input card-key" placeholder="${d.keyPlaceholder || 'Enter API Key'} (sk-... / AIza...)" value="${cfg.apiKey || ''}">
       </div>
 
+      <input type="text" class="opt-input card-custom-model" placeholder="${d.customModelPlaceholder || 'Nhập tên/mã model (vd: gemini-3.5-pro, gpt-5, claude-4...)'}" value="${isCustomModel && cfg.model !== '__custom__' ? cfg.model : ''}" style="margin-top:6px; ${isCustomModel ? 'display:block;' : 'display:none;'}">
+
       <div class="opt-key-actions">
         <div style="font-size:12px; color:#64748b;" class="card-status">
           ${cfg.cooldownUntil && cfg.cooldownUntil > Date.now() ? `${Icons.alertCircle(12)} Cooling down (${new Date(cfg.cooldownUntil).toLocaleTimeString()})` : (d.statusReady || 'Status: Ready')}
@@ -108,28 +119,53 @@ export class KeysTab {
 
     const providerSelect = card.querySelector('.card-provider');
     const modelSelect = card.querySelector('.card-model');
+    const customModelInput = card.querySelector('.card-custom-model');
     const keyInput = card.querySelector('.card-key');
     const enabledCheck = card.querySelector('.card-enabled');
     const testBtn = card.querySelector('.card-test');
     const statusText = card.querySelector('.card-status');
 
+    const getSelectedModel = () => {
+      if (modelSelect.value === '__custom__') {
+        return customModelInput.value.trim() || '__custom__';
+      }
+      return modelSelect.value;
+    };
+
     const save = async () => {
       await Storage.saveApiConfig({
         id: cfg.id,
         provider: providerSelect.value,
-        model: modelSelect.value,
+        model: getSelectedModel(),
         apiKey: keyInput.value.trim(),
         isEnabled: enabledCheck.checked,
       });
     };
 
+    const updateCustomModelVisibility = () => {
+      if (modelSelect.value === '__custom__') {
+        customModelInput.style.display = 'block';
+        customModelInput.focus();
+      } else {
+        customModelInput.style.display = 'none';
+      }
+    };
+
     providerSelect.addEventListener('change', () => {
       const pObj = DEFAULT_PROVIDERS.find((p) => p.id === providerSelect.value) || DEFAULT_PROVIDERS[0];
-      modelSelect.innerHTML = pObj.models.map((m) => `<option value="${m.id}">${m.name}</option>`).join('');
+      modelSelect.innerHTML =
+        pObj.models.map((m) => `<option value="${m.id}">${m.name}</option>`).join('') +
+        `<option value="__custom__">✏️ ${d.customModelOption || 'Tự điền model (Custom)...'}</option>`;
+      updateCustomModelVisibility();
       save();
     });
 
-    modelSelect.addEventListener('change', save);
+    modelSelect.addEventListener('change', () => {
+      updateCustomModelVisibility();
+      save();
+    });
+
+    customModelInput.addEventListener('input', save);
     keyInput.addEventListener('input', save);
     enabledCheck.addEventListener('change', save);
 
@@ -143,7 +179,7 @@ export class KeysTab {
       try {
         const testPayload = {
           provider: providerSelect.value,
-          model: modelSelect.value,
+          model: getSelectedModel(),
           apiKey: keyInput.value.trim(),
         };
 

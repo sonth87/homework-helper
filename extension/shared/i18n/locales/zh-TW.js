@@ -108,6 +108,8 @@ export default {
     modalBtnAddKey: "新增模型與金鑰",
     modalLinkGuide: "查看免費 API Key 獲取指南 →",
     modalKeyPlaceholder: "輸入 API Key (sk-... / AIza...)",
+    customModelOption: "自訂模型名稱 (手動輸入)...",
+    customModelPlaceholder: "輸入模型ID (例如: gemini-2.5-pro, gpt-5, claude-4...)",
   },
   selectionTooltip: {
     answer: "解答",
@@ -275,9 +277,10 @@ export default {
     toastLangUpdated: "介面顯示語言已成功更新！",
     toastPromptSaved: "系統指令已成功儲存！",
     toastDataCleared: "所有對話歷史記錄已清空！",
-    stratPreferNanoTitle: "優先使用 Gemini Nano 本地模型（推薦）",
-    stratPreferNanoDesc:
-      "可用時優先調用本機端 Gemini Nano，遇到複雜圖像或重度任務時無縫切換至雲端 API。",
+    stratPreferNanoTitle: "優先使用 Gemini Nano",
+    stratPreferNanoDesc: "文本使用本地 Gemini Nano；圖片自動轉為 Vision API 或 OCR。",
+    stratPreferConfigTitle: "優先使用已配置的模型 (推薦)",
+    stratPreferConfigDesc: "使用雲端 API 金鑰；在額度用盡或網路異常時自動回退至 Gemini Nano。",
     stratNanoOnlyTitle: "僅使用 Gemini Nano 本地模型",
     stratNanoOnlyDesc: "100% 免費且離線運作，絕不發送網路請求至外部雲端 API。",
     stratConfigOnlyTitle: "僅使用雲端配置 API Key",

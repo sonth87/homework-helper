@@ -166,6 +166,8 @@ export class OptionsController {
     // Strategy Options
     setText('optRoutingOpt1Title', dict.stratPreferNanoTitle);
     setText('optRoutingOpt1Desc', dict.stratPreferNanoDesc);
+    setText('optRoutingOpt2Title', dict.stratPreferConfigTitle);
+    setText('optRoutingOpt2Desc', dict.stratPreferConfigDesc);
     setText('optRoutingOpt3Title', dict.stratNanoOnlyTitle);
     setText('optRoutingOpt3Desc', dict.stratNanoOnlyDesc);
     setText('optRoutingOpt4Title', dict.stratConfigOnlyTitle);

@@ -111,6 +111,8 @@ export default {
     modalBtnAddKey: "Ajouter modèle et clé",
     modalLinkGuide: "Voir le guide des clés API gratuites →",
     modalKeyPlaceholder: "Entrez la clé API (sk-... / AIza...)",
+    customModelOption: "Modèle personnalisé (Saisir le nom)...",
+    customModelPlaceholder: "Saisir l'ID du modèle (ex: gemini-2.5-pro, gpt-5, claude-4...)",
   },
   selectionTooltip: {
     answer: "Résoudre",
@@ -300,9 +302,10 @@ export default {
     toastLangUpdated: "Langue d’affichage mise à jour avec succès !",
     toastPromptSaved: "Instructions système enregistrées avec succès !",
     toastDataCleared: "Tout l’historique des discussions a été supprimé !",
-    stratPreferNanoTitle: "Préférer Gemini Nano (Recommandé)",
-    stratPreferNanoDesc:
-      "Utilise Gemini Nano local dès qu’il est disponible et bascule en toute fluidité sur le cloud pour les tâches complexes.",
+    stratPreferNanoTitle: "Préférer Gemini Nano",
+    stratPreferNanoDesc: "Utilise Nano sur l'appareil pour le texte ; bascule automatiquement sur l'API Vision ou l'OCR pour les images.",
+    stratPreferConfigTitle: "Préférer les modèles configurés (Recommandé)",
+    stratPreferConfigDesc: "Utilise les clés API cloud ; bascule automatiquement sur Gemini Nano en cas de dépassement de quota ou d'erreur réseau.",
     stratNanoOnlyTitle: "Gemini Nano uniquement",
     stratNanoOnlyDesc:
       "100% gratuit et hors ligne, n’effectue aucun appel vers des API cloud externes.",

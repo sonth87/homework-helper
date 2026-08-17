@@ -62,6 +62,8 @@ export default {
     modalBtnAddKey: "Add Model & Key",
     modalLinkGuide: "View free API key guide →",
     modalKeyPlaceholder: "Enter API Key (sk-... / AIza...)",
+    customModelOption: "Custom model (Enter name)...",
+    customModelPlaceholder: "Enter model ID (e.g. gemini-2.5-pro, gpt-5, claude-4...)",
     tooltips: {
       newChat: {
         title: "New Chat",
@@ -188,9 +190,10 @@ export default {
     strategyTitle: "Smart Load Balancing & Fallback Strategy",
     strategyDesc:
       "The system automatically distributes questions across active keys (Round-Robin). If a key encounters Rate Limit (HTTP 429), it cools down for 60s and immediately rotates to the next key without interruption.",
-    stratPreferNanoTitle: "Prefer Gemini Nano (Recommended)",
-    stratPreferNanoDesc:
-      "Use On-Device Gemini Nano when available, seamlessly fall back to Cloud APIs for complex vision or heavy tasks.",
+    stratPreferNanoTitle: "Prefer Gemini Nano",
+    stratPreferNanoDesc: "Use Nano On-Device for text; auto-switch to Vision API or OCR for images.",
+    stratPreferConfigTitle: "Prefer Configured Models (Recommended)",
+    stratPreferConfigDesc: "Use cloud API keys; auto-fallback to Gemini Nano if out of quota or on network errors.",
     stratNanoOnlyTitle: "Gemini Nano Only",
     stratNanoOnlyDesc:
       "100% Free & Offline, never calls any external cloud APIs.",

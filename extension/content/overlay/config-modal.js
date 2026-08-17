@@ -92,7 +92,7 @@ export class OverlayConfigModal {
         id: `cfg_${Date.now()}`,
         provider: 'gemini',
         name: 'Google Gemini',
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.7-flash',
         apiKey: '',
         isEnabled: true,
       };
@@ -115,9 +115,18 @@ export class OverlayConfigModal {
     ).join('');
 
     const providerObj = DEFAULT_PROVIDERS.find((p) => p.id === cfg.provider) || DEFAULT_PROVIDERS[0];
-    const modelOptions = providerObj.models.map(
-      (m) => `<option value="${m.id}" ${cfg.model === m.id ? 'selected' : ''}>${m.name}</option>`
-    ).join('');
+    
+    const isCustomModel =
+      !providerObj.models.some((m) => m.id === cfg.model) ||
+      cfg.model === '__custom__';
+
+    const modelOptions =
+      providerObj.models
+        .map(
+          (m) => `<option value="${m.id}" ${cfg.model === m.id ? 'selected' : ''}>${m.name}</option>`
+        )
+        .join('') +
+      `<option value="__custom__" ${isCustomModel ? 'selected' : ''}>✏️ ${d.customModelOption || 'Tự điền model (Custom)...'}</option>`;
 
     el.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -133,32 +142,59 @@ export class OverlayConfigModal {
         <select class="hw-select cfg-model">${modelOptions}</select>
       </div>
 
+      <input type="text" class="hw-input cfg-custom-model" placeholder="${d.customModelPlaceholder || 'Nhập tên/mã model (vd: gemini-3.5-pro, gpt-5, claude-4...)'}" value="${isCustomModel && cfg.model !== '__custom__' ? cfg.model : ''}" style="margin-top:2px; ${isCustomModel ? 'display:block;' : 'display:none;'}">
+
       <input type="password" class="hw-input cfg-key" placeholder="${d.modalKeyPlaceholder || 'Enter API Key (sk-... / AIza...)'}" value="${cfg.apiKey || ''}">
     `;
 
     const providerSelect = el.querySelector('.cfg-provider');
     const modelSelect = el.querySelector('.cfg-model');
+    const customModelInput = el.querySelector('.cfg-custom-model');
     const keyInput = el.querySelector('.cfg-key');
     const enabledInput = el.querySelector('.cfg-enabled');
+
+    const getSelectedModel = () => {
+      if (modelSelect.value === '__custom__') {
+        return customModelInput.value.trim() || '__custom__';
+      }
+      return modelSelect.value;
+    };
 
     const save = async () => {
       await Storage.saveApiConfig({
         id: cfg.id,
         provider: providerSelect.value,
-        model: modelSelect.value,
+        model: getSelectedModel(),
         apiKey: keyInput.value.trim(),
         isEnabled: enabledInput.checked,
       });
       this.overlay.drawer.updateActiveModelBadge();
     };
 
+    const updateCustomModelVisibility = () => {
+      if (modelSelect.value === '__custom__') {
+        customModelInput.style.display = 'block';
+        customModelInput.focus();
+      } else {
+        customModelInput.style.display = 'none';
+      }
+    };
+
     providerSelect.addEventListener('change', () => {
       const pObj = DEFAULT_PROVIDERS.find((p) => p.id === providerSelect.value) || DEFAULT_PROVIDERS[0];
-      modelSelect.innerHTML = pObj.models.map((m) => `<option value="${m.id}">${m.name}</option>`).join('');
+      modelSelect.innerHTML =
+        pObj.models.map((m) => `<option value="${m.id}">${m.name}</option>`).join('') +
+        `<option value="__custom__">✏️ ${d.customModelOption || 'Tự điền model (Custom)...'}</option>`;
+      updateCustomModelVisibility();
       save();
     });
 
-    modelSelect.addEventListener('change', save);
+    modelSelect.addEventListener('change', () => {
+      updateCustomModelVisibility();
+      save();
+    });
+
+    customModelInput.addEventListener('input', save);
     keyInput.addEventListener('input', save);
     enabledInput.addEventListener('change', save);
 

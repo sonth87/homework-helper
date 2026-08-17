@@ -63,6 +63,8 @@ export default {
     modalBtnAddKey: "เพิ่มโมเดลและคีย์",
     modalLinkGuide: "ดูวิธีขอรับ API Key ฟรี →",
     modalKeyPlaceholder: "ป้อน API Key (sk-... / AIza...)",
+    customModelOption: "ระบุชื่อโมเดลเอง (กำหนดเอง)...",
+    customModelPlaceholder: "ป้อนชื่อรหัสโมเดล (เช่น gemini-2.5-pro, gpt-5, claude-4...)",
     tooltips: {
       newChat: {
         title: "แชทใหม่",
@@ -189,9 +191,10 @@ export default {
     strategyTitle: "กลยุทธ์การกระจายโหลดและสลับคีย์อัจฉริยะ",
     strategyDesc:
       "ระบบจะกระจายคำถามไปยังคีย์ที่พร้อมใช้งานอย่างสม่ำเสมอ หากคีย์ใดติด Rate Limit ระบบจะพักคีย์นั้น 60 วินาทีและสลับไปยังคีย์ถัดไปทันที",
-    stratPreferNanoTitle: "แนะนำ Gemini Nano (แนะนำ)",
-    stratPreferNanoDesc:
-      "ใช้ Gemini Nano ในเครื่องเมื่อพร้อมใช้งาน สลับไปยัง Cloud API อัตโนมัติเมื่อต้องการโมเดลขนาดใหญ่",
+    stratPreferNanoTitle: "จัดลำดับความสำคัญ Gemini Nano",
+    stratPreferNanoDesc: "ใช้ Nano บนอุปกรณ์สำหรับข้อความ; สลับเป็น Vision API หรือ OCR อัตโนมัติสำหรับรูปภาพ",
+    stratPreferConfigTitle: "จัดลำดับความสำคัญโมเดลที่กำหนดค่า (แนะนำ)",
+    stratPreferConfigDesc: "ใช้คีย์ API บนคลาวด์; สลับไปใช้ Gemini Nano อัตโนมัติเมื่อโควตาหมดหรือเกิดข้อผิดพลาดเครือข่าย",
     stratNanoOnlyTitle: "ใช้ Gemini Nano เท่านั้น",
     stratNanoOnlyDesc: "ฟรี 100% และออฟไลน์ ไม่ใช้ Cloud API ใดๆ",
     stratConfigOnlyTitle: "ใช้ Cloud API เท่านั้น",

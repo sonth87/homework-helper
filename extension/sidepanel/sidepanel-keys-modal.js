@@ -2,9 +2,9 @@
  * Model & API Key Configuration Modal for SidePanel
  */
 
-import { Icons } from '../shared/icons.js';
-import { Storage, DEFAULT_PROVIDERS } from '../shared/storage.js';
-import { getI18n } from '../shared/i18n.js';
+import { Icons } from "../shared/icons.js";
+import { Storage, DEFAULT_PROVIDERS } from "../shared/storage.js";
+import { getI18n } from "../shared/i18n.js";
 
 export class SidePanelKeysModal {
   constructor(controller) {
@@ -12,81 +12,98 @@ export class SidePanelKeysModal {
   }
 
   async open() {
-    const modal = document.getElementById('spModal');
-    const body = document.getElementById('spModalBody');
+    const modal = document.getElementById("spModal");
+    const body = document.getElementById("spModalBody");
     if (!modal || !body) return;
 
-    modal.style.display = 'flex';
+    modal.style.display = "flex";
 
     const { apiConfigs = [] } = await Storage.getApiConfigs();
-    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const { uiLanguage = "en" } = await Storage.get(["uiLanguage"]);
     const dict = getI18n(uiLanguage);
 
     body.innerHTML = `
       <div style="font-size:12px; color:var(--text-muted); line-height:1.4;">
-        ${dict.modalConfigDesc || 'Add one or more API Keys. The extension automatically load-balances and falls back to backup keys when hitting rate limits.'}
+        ${dict.modalConfigDesc || "Add one or more API Keys. The extension automatically load-balances and falls back to backup keys when hitting rate limits."}
       </div>
 
       <!-- Chrome Built-in AI Gemini Nano Guide Section in Modal -->
       <div style="margin-top: 8px; padding: 10px; background: rgba(2, 132, 199, 0.08); border-radius: 8px; border: 1px solid rgba(2, 132, 199, 0.25);">
         <div style="font-weight: 700; font-size: 12.5px; color: #0284c7; display:flex; align-items:center; gap:6px;">
-          ${Icons.cpu(14)} ${dict.modalNanoTitle || 'Chrome Gemini Nano (Local AI)'}
+          ${Icons.cpu(14)} ${dict.modalNanoTitle || "Chrome Gemini Nano (Local AI)"}
         </div>
         <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px; line-height:1.5;">
-          ${dict.modalNanoDesc || 'On-Device AI running offline. Click links below to open flags directly:'}
+          ${dict.modalNanoDesc || "On-Device AI running offline. Click links below to open flags directly:"}
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
           <button class="sp-copy-btn" id="spModalBtnFlagPrompt" style="background:#0284c7; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} ${dict.modalBtnFlagPrompt || '1. Open #prompt-api'}
+            ${Icons.externalLink(11)} ${dict.modalBtnFlagPrompt || "1. Open #prompt-api"}
           </button>
           <button class="sp-copy-btn" id="spModalBtnFlagOptGuide" style="background:#0284c7; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} ${dict.modalBtnFlagOptGuide || '2. Open #optimization-guide'}
+            ${Icons.externalLink(11)} ${dict.modalBtnFlagOptGuide || "2. Open #optimization-guide"}
           </button>
           <button class="sp-copy-btn" id="spModalBtnComponents" style="background:#0369a1; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} ${dict.modalBtnComponents || '3. Open components'}
+            ${Icons.externalLink(11)} ${dict.modalBtnComponents || "3. Open components"}
           </button>
         </div>
       </div>
 
       <div id="spModalKeyList" style="display:flex; flex-direction:column; gap:10px; margin-top:8px;"></div>
 
-      <button class="sp-btn-add" id="spBtnAddKey">${Icons.plus(16)} ${dict.modalBtnAddKey || 'Add Model & Key'}</button>
+      <button class="sp-btn-add" id="spBtnAddKey">${Icons.plus(16)} ${dict.modalBtnAddKey || "Add Model & Key"}</button>
 
       <div style="text-align:right; margin-top:6px;">
         <a href="#" id="spLinkFullOptions" style="font-size:12px; color:var(--accent); text-decoration:none;">
-          ${dict.modalLinkGuide || 'View free API key guide →'}
+          ${dict.modalLinkGuide || "View free API key guide →"}
         </a>
       </div>
     `;
 
-    body.querySelector('#spModalBtnFlagPrompt')?.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://flags/#prompt-api-for-gemini-nano' });
-    });
+    body
+      .querySelector("#spModalBtnFlagPrompt")
+      ?.addEventListener("click", () => {
+        chrome.runtime.sendMessage({
+          action: "OPEN_CHROME_FLAGS",
+          url: "chrome://flags/#prompt-api-for-gemini-nano",
+        });
+      });
 
-    body.querySelector('#spModalBtnFlagOptGuide')?.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://flags/#optimization-guide-on-device-model' });
-    });
+    body
+      .querySelector("#spModalBtnFlagOptGuide")
+      ?.addEventListener("click", () => {
+        chrome.runtime.sendMessage({
+          action: "OPEN_CHROME_FLAGS",
+          url: "chrome://flags/#optimization-guide-on-device-model",
+        });
+      });
 
-    body.querySelector('#spModalBtnComponents')?.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://components' });
-    });
+    body
+      .querySelector("#spModalBtnComponents")
+      ?.addEventListener("click", () => {
+        chrome.runtime.sendMessage({
+          action: "OPEN_CHROME_FLAGS",
+          url: "chrome://components",
+        });
+      });
 
-    const list = body.querySelector('#spModalKeyList');
-    apiConfigs.forEach((cfg) => list.appendChild(this.renderKeyItem(cfg, false, dict)));
+    const list = body.querySelector("#spModalKeyList");
+    apiConfigs.forEach((cfg) =>
+      list.appendChild(this.renderKeyItem(cfg, false, dict)),
+    );
 
-    body.querySelector('#spBtnAddKey').addEventListener('click', () => {
+    body.querySelector("#spBtnAddKey").addEventListener("click", () => {
       const newCfg = {
         id: `cfg_${Date.now()}`,
-        provider: 'gemini',
-        name: 'Google Gemini',
-        model: 'gemini-2.5-flash',
-        apiKey: '',
+        provider: "gemini",
+        name: "Google Gemini",
+        model: "gemini-3.7-flash",
+        apiKey: "",
         isEnabled: true,
       };
       list.appendChild(this.renderKeyItem(newCfg, true, dict));
     });
 
-    body.querySelector('#spLinkFullOptions').addEventListener('click', (e) => {
+    body.querySelector("#spLinkFullOptions").addEventListener("click", (e) => {
       e.preventDefault();
       chrome.runtime.openOptionsPage();
     });
@@ -94,22 +111,36 @@ export class SidePanelKeysModal {
 
   renderKeyItem(cfg, isNew = false, dict = null) {
     const d = dict || getI18n();
-    const el = document.createElement('div');
-    el.style.cssText = 'border:1px solid var(--border-color); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:6px; background:var(--bg-secondary);';
+    const el = document.createElement("div");
+    el.style.cssText =
+      "border:1px solid var(--border-color); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:6px; background:var(--bg-secondary);";
 
     const providerOptions = DEFAULT_PROVIDERS.map(
-      (p) => `<option value="${p.id}" ${cfg.provider === p.id ? 'selected' : ''}>${p.name}</option>`
-    ).join('');
+      (p) =>
+        `<option value="${p.id}" ${cfg.provider === p.id ? "selected" : ""}>${p.name}</option>`,
+    ).join("");
 
-    const providerObj = DEFAULT_PROVIDERS.find((p) => p.id === cfg.provider) || DEFAULT_PROVIDERS[0];
-    const modelOptions = providerObj.models.map(
-      (m) => `<option value="${m.id}" ${cfg.model === m.id ? 'selected' : ''}>${m.name}</option>`
-    ).join('');
+    const providerObj =
+      DEFAULT_PROVIDERS.find((p) => p.id === cfg.provider) ||
+      DEFAULT_PROVIDERS[0];
+    
+    const isCustomModel =
+      !providerObj.models.some((m) => m.id === cfg.model) ||
+      cfg.model === "__custom__";
+
+    const modelOptions =
+      providerObj.models
+        .map(
+          (m) =>
+            `<option value="${m.id}" ${cfg.model === m.id ? "selected" : ""}>${m.name}</option>`,
+        )
+        .join("") +
+      `<option value="__custom__" ${isCustomModel ? "selected" : ""}>✏️ ${d.customModelOption || "Tự điền model (Custom)..."}</option>`;
 
     el.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <label style="display:flex; align-items:center; gap:6px; font-weight:600; font-size:13px;">
-          <input type="checkbox" class="cfg-enabled" ${cfg.isEnabled ? 'checked' : ''}>
+          <input type="checkbox" class="cfg-enabled" ${cfg.isEnabled ? "checked" : ""}>
           <span>${providerObj.name}</span>
         </label>
         <button class="sp-icon-btn cfg-delete" style="color:#ef4444;">${Icons.trash(14)}</button>
@@ -120,36 +151,68 @@ export class SidePanelKeysModal {
         <select class="sp-field cfg-model">${modelOptions}</select>
       </div>
 
-      <input type="password" class="sp-field cfg-key" placeholder="${d.modalKeyPlaceholder || 'Enter API Key'}" value="${cfg.apiKey || ''}">
+      <input type="text" class="sp-field cfg-custom-model" placeholder="${d.customModelPlaceholder || "Nhập tên/mã model (vd: gemini-3.5-pro, gpt-5, claude-4...)"}" value="${isCustomModel && cfg.model !== "__custom__" ? cfg.model : ""}" style="margin-top:2px; ${isCustomModel ? "display:block;" : "display:none;"}">
+
+      <input type="password" class="sp-field cfg-key" placeholder="${d.modalKeyPlaceholder || "Enter API Key"}" value="${cfg.apiKey || ""}">
     `;
 
-    const providerSelect = el.querySelector('.cfg-provider');
-    const modelSelect = el.querySelector('.cfg-model');
-    const keyInput = el.querySelector('.cfg-key');
-    const enabledInput = el.querySelector('.cfg-enabled');
+    const providerSelect = el.querySelector(".cfg-provider");
+    const modelSelect = el.querySelector(".cfg-model");
+    const customModelInput = el.querySelector(".cfg-custom-model");
+    const keyInput = el.querySelector(".cfg-key");
+    const enabledInput = el.querySelector(".cfg-enabled");
+
+    const getSelectedModel = () => {
+      if (modelSelect.value === "__custom__") {
+        return customModelInput.value.trim() || "__custom__";
+      }
+      return modelSelect.value;
+    };
 
     const save = async () => {
       await Storage.saveApiConfig({
         id: cfg.id,
         provider: providerSelect.value,
-        model: modelSelect.value,
+        model: getSelectedModel(),
         apiKey: keyInput.value.trim(),
         isEnabled: enabledInput.checked,
       });
       this.controller.updateModelBadge();
     };
 
-    providerSelect.addEventListener('change', () => {
-      const pObj = DEFAULT_PROVIDERS.find((p) => p.id === providerSelect.value) || DEFAULT_PROVIDERS[0];
-      modelSelect.innerHTML = pObj.models.map((m) => `<option value="${m.id}">${m.name}</option>`).join('');
+    const updateCustomModelVisibility = () => {
+      if (modelSelect.value === "__custom__") {
+        customModelInput.style.display = "block";
+        customModelInput.focus();
+      } else {
+        customModelInput.style.display = "none";
+      }
+    };
+
+    providerSelect.addEventListener("change", () => {
+      const pObj =
+        DEFAULT_PROVIDERS.find((p) => p.id === providerSelect.value) ||
+        DEFAULT_PROVIDERS[0];
+      modelSelect.innerHTML =
+        pObj.models
+          .map((m) => `<option value="${m.id}">${m.name}</option>`)
+          .join("") +
+        `<option value="__custom__">✏️ ${d.customModelOption || "Tự điền model (Custom)..."}</option>`;
+      
+      updateCustomModelVisibility();
       save();
     });
 
-    modelSelect.addEventListener('change', save);
-    keyInput.addEventListener('input', save);
-    enabledInput.addEventListener('change', save);
+    modelSelect.addEventListener("change", () => {
+      updateCustomModelVisibility();
+      save();
+    });
 
-    el.querySelector('.cfg-delete').addEventListener('click', async () => {
+    customModelInput.addEventListener("input", save);
+    keyInput.addEventListener("input", save);
+    enabledInput.addEventListener("change", save);
+
+    el.querySelector(".cfg-delete").addEventListener("click", async () => {
       await Storage.removeApiConfig(cfg.id);
       el.remove();
       this.controller.updateModelBadge();

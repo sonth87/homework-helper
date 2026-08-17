@@ -112,6 +112,8 @@ export default {
     modalBtnAddKey: "Tambah Model & Kunci",
     modalLinkGuide: "Lihat panduan kunci API gratis →",
     modalKeyPlaceholder: "Masukkan Kunci API (sk-... / AIza...)",
+    customModelOption: "Model kustom (Ketik nama)...",
+    customModelPlaceholder: "Masukkan ID model (contoh: gemini-2.5-pro, gpt-5, claude-4...)",
   },
   selectionTooltip: {
     answer: "Selesaikan",
@@ -305,9 +307,10 @@ export default {
     toastLangUpdated: "Bahasa tampilan berhasil diperbarui!",
     toastPromptSaved: "Instruksi sistem berhasil disimpan!",
     toastDataCleared: "Semua riwayat obrolan telah dibersihkan!",
-    stratPreferNanoTitle: "Utamakan Gemini Nano (Disarankan)",
-    stratPreferNanoDesc:
-      "Gunakan Gemini Nano lokal jika tersedia, dan beralih secara mulus ke API Cloud untuk soal visual yang kompleks.",
+    stratPreferNanoTitle: "Utamakan Gemini Nano",
+    stratPreferNanoDesc: "Gunakan Nano di perangkat untuk teks; otomatis beralih ke Vision API atau OCR untuk gambar.",
+    stratPreferConfigTitle: "Utamakan Model yang Dikonfigurasi (Disarankan)",
+    stratPreferConfigDesc: "Gunakan API Key cloud; otomatis beralih ke Gemini Nano jika kuota habis atau terjadi kesalahan jaringan.",
     stratNanoOnlyTitle: "Hanya Gemini Nano",
     stratNanoOnlyDesc:
       "100% Gratis & Luring, tidak pernah mengirim data ke API cloud luar.",

@@ -110,6 +110,8 @@ export default {
     modalBtnAddKey: "モデルとキーを追加",
     modalLinkGuide: "無料APIキー取得ガイドを見る →",
     modalKeyPlaceholder: "APIキーを入力 (sk-... / AIza...)",
+    customModelOption: "モデル名を手動入力 (カスタム)...",
+    customModelPlaceholder: "モデルIDを入力 (例: gemini-2.5-pro, gpt-5, claude-4...)",
   },
   selectionTooltip: {
     answer: "解答",
@@ -288,9 +290,10 @@ export default {
     toastLangUpdated: "表示言語を更新しました！",
     toastPromptSaved: "システムプロンプトを保存しました！",
     toastDataCleared: "すべてのチャット履歴を消去しました！",
-    stratPreferNanoTitle: "Gemini Nanoを優先（推奨）",
-    stratPreferNanoDesc:
-      "利用可能な場合は端末内のGemini Nanoを優先し、複雑な画像や高度な問題はクラウドAPIへシームレスに切り替えます。",
+    stratPreferNanoTitle: "Gemini Nanoを優先",
+    stratPreferNanoDesc: "テキストは端末内Nanoを使用。画像はVision APIまたはOCRへ自動切り替え。",
+    stratPreferConfigTitle: "設定済みモデルを優先 (推奨)",
+    stratPreferConfigDesc: "クラウドAPIキーを使用。クォータ不足やネットワーク障害時はGemini Nanoに自動フォールバック。",
     stratNanoOnlyTitle: "Gemini Nanoのみ使用",
     stratNanoOnlyDesc:
       "100%完全無料＆オフライン動作。外部クラウドAPIへの通信は一切行いません。",

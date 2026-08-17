@@ -5,144 +5,189 @@
 
 export const DEFAULT_PROVIDERS = [
   {
-    id: 'chrome-builtin',
-    name: 'Chrome Built-in AI (Gemini Nano)',
-    description: 'Mô hình cục bộ On-Device tích hợp sẵn trong Chrome (Miễn phí, Offline, Không cần Key)',
-    models: [
-      { id: 'gemini-nano', name: 'Gemini Nano (Local On-Device)' },
-    ],
-    defaultBaseUrl: '',
+    id: "chrome-builtin",
+    name: "Chrome Built-in AI (Gemini Nano)",
+    description:
+      "Mô hình cục bộ On-Device tích hợp sẵn trong Chrome (Miễn phí, Offline, Không cần Key)",
+    models: [{ id: "gemini-nano", name: "Gemini Nano (Local On-Device)" }],
+    defaultBaseUrl: "",
     requiresBaseUrl: false,
     requiresKey: false,
   },
   {
-    id: 'gemini',
-    name: 'Google Gemini',
+    id: "gemini",
+    name: "Google Gemini",
     models: [
-      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Fastest & Multimodal)' },
-      { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Best Reasoning)' },
-      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
-      { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash Exp' },
+      { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash (Workhorse mới nhất)" },
+      { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash (Nhanh & Mạnh)" },
+      { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash (Flash thế hệ trước)" },
+      { id: "gemini-3.1-pro-preview", name: "Gemini 3.1 Pro (Reasoning / Flagship)" },
+      { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash Lite (Rẻ & Nhanh)" },
+      { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
+      { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro" },
     ],
-    defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta",
     requiresBaseUrl: false,
-    authHeader: 'x-goog-api-key',
+    authHeader: "x-goog-api-key",
   },
   {
-    id: 'openai',
-    name: 'OpenAI',
+    id: "openai",
+    name: "OpenAI",
     models: [
-      { id: 'gpt-4o', name: 'GPT-4o (Vision & Math)' },
-      { id: 'gpt-4o-mini', name: 'GPT-4o Mini (Ultra Fast)' },
-      { id: 'o3-mini', name: 'o3 Mini (Deep Reasoning)' },
+      { id: "gpt-5.6-sol", name: "GPT-5.6 Sol (Flagship, Reasoning & Coding)" },
+      { id: "gpt-5.6-terra", name: "GPT-5.6 Terra (Cân bằng chất lượng/chi phí)" },
+      { id: "gpt-5.6-luna", name: "GPT-5.6 Luna (Nhanh & Rẻ)" },
+      { id: "gpt-4o", name: "GPT-4o (Vision & Math)" },
+      { id: "gpt-4o-mini", name: "GPT-4o Mini (Ultra Fast)" },
+      { id: "o3-mini", name: "o3 Mini (Deep Reasoning)" },
+      { id: "o1", name: "o1 (Full Reasoning)" },
     ],
-    defaultBaseUrl: 'https://api.openai.com/v1',
+    defaultBaseUrl: "https://api.openai.com/v1",
     requiresBaseUrl: false,
-    authHeader: 'Bearer',
+    authHeader: "Bearer",
   },
   {
-    id: 'claude',
-    name: 'Anthropic Claude',
+    id: "claude",
+    name: "Anthropic Claude",
     models: [
-      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet (State of the Art)' },
-      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku (Lightning Fast)' },
+      { id: "claude-fable-5", name: "Claude Fable 5 (Agent / Long-running)" },
+      { id: "claude-opus-5", name: "Claude Opus 5 (Mạnh nhất Coding & Complex work)" },
+      { id: "claude-sonnet-5", name: "Claude Sonnet 5 (Cân bằng)" },
+      { id: "claude-haiku-4-5", name: "Claude Haiku 4.5 (Nhanh & Rẻ)" },
+      { id: "claude-3-7-sonnet-20250219", name: "Claude 3.7 Sonnet" },
+      { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet" },
     ],
-    defaultBaseUrl: 'https://api.anthropic.com/v1',
+    defaultBaseUrl: "https://api.anthropic.com/v1",
     requiresBaseUrl: false,
-    authHeader: 'x-api-key',
+    authHeader: "x-api-key",
   },
   {
-    id: 'deepseek',
-    name: 'DeepSeek',
+    id: "deepseek",
+    name: "DeepSeek",
     models: [
-      { id: 'deepseek-chat', name: 'DeepSeek V3' },
-      { id: 'deepseek-reasoner', name: 'DeepSeek R1 (Math & Reasoning)' },
+      { id: "deepseek-v4-pro", name: "DeepSeek V4 Pro (Flagship Reasoning)" },
+      { id: "deepseek-v4-flash", name: "DeepSeek V4 Flash (Nhanh & Rẻ)" },
+      { id: "deepseek-chat", name: "DeepSeek V3" },
+      { id: "deepseek-reasoner", name: "DeepSeek R1 (Math & Reasoning)" },
     ],
-    defaultBaseUrl: 'https://api.deepseek.com/v1',
+    defaultBaseUrl: "https://api.deepseek.com/v1",
     requiresBaseUrl: false,
-    authHeader: 'Bearer',
+    authHeader: "Bearer",
   },
   {
-    id: 'groq',
-    name: 'Groq',
+    id: "groq",
+    name: "Groq",
     models: [
-      { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B' },
-      { id: 'llama-3.2-11b-vision-preview', name: 'Llama 3.2 11B Vision' },
-      { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' },
+      { id: "openai/gpt-oss-120b", name: "GPT-OSS 120B (Open-weight Reasoning)" },
+      { id: "openai/gpt-oss-20b", name: "GPT-OSS 20B (Rất nhanh & Rẻ)" },
+      { id: "qwen/qwen3.6-27b", name: "Qwen 3.6 27B (Multimodal)" },
+      { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B (Production & General)" },
+      { id: "llama-3.1-8b-instant", name: "Llama 3.1 8B Instant" },
     ],
-    defaultBaseUrl: 'https://api.groq.com/openai/v1',
+    defaultBaseUrl: "https://api.groq.com/openai/v1",
     requiresBaseUrl: false,
-    authHeader: 'Bearer',
+    authHeader: "Bearer",
   },
   {
-    id: 'custom',
-    name: 'Custom / OpenRouter / Local Endpoint',
+    id: "custom",
+    name: "Custom / OpenRouter / Local Endpoint",
     models: [
-      { id: 'custom-model', name: 'Custom Model' },
+      { id: "custom-model", name: "Custom Model" },
+      { id: "google/gemini-3.7-flash", name: "google/gemini-3.7-flash (OpenRouter)" },
+      { id: "openai/gpt-5.6-sol", name: "openai/gpt-5.6-sol (OpenRouter)" },
+      { id: "anthropic/claude-sonnet-5", name: "anthropic/claude-sonnet-5 (OpenRouter)" },
+      { id: "deepseek/deepseek-v4-pro", name: "deepseek/deepseek-v4-pro (OpenRouter)" },
     ],
-    defaultBaseUrl: 'https://openrouter.ai/api/v1',
+    defaultBaseUrl: "https://openrouter.ai/api/v1",
     requiresBaseUrl: true,
-    authHeader: 'Bearer',
+    authHeader: "Bearer",
   },
 ];
 
 export const SUPPORTED_LANGUAGES = [
-  { id: 'vi', name: 'Tiếng Việt' },
-  { id: 'en', name: 'English' },
-  { id: 'th', name: 'ไทย' },
-  { id: 'zh-CN', name: '简体中文' },
-  { id: 'zh-TW', name: '繁體中文' },
-  { id: 'ja', name: '日本語' },
-  { id: 'ko', name: '한국어' },
-  { id: 'es', name: 'Español' },
-  { id: 'fr', name: 'Français' },
-  { id: 'de', name: 'Deutsch' },
-  { id: 'pt', name: 'Português' },
-  { id: 'id', name: 'Bahasa Indonesia' },
-  { id: 'ru', name: 'Русский' },
-  { id: 'auto', name: 'Auto' },
+  { id: "vi", name: "Tiếng Việt" },
+  { id: "en", name: "English" },
+  { id: "th", name: "ไทย" },
+  { id: "zh-CN", name: "简体中文" },
+  { id: "zh-TW", name: "繁體中文" },
+  { id: "ja", name: "日本語" },
+  { id: "ko", name: "한국어" },
+  { id: "es", name: "Español" },
+  { id: "fr", name: "Français" },
+  { id: "de", name: "Deutsch" },
+  { id: "pt", name: "Português" },
+  { id: "id", name: "Bahasa Indonesia" },
+  { id: "ru", name: "Русский" },
+  { id: "auto", name: "Auto" },
 ];
 
 export const DEFAULT_SYSTEM_PROMPT = `You are an elite academic tutor and homework assistant AI.
-Your goal is to help students understand complex concepts and solve homework questions step-by-step.
-Always provide crystal clear, pedagogically sound, and mathematically rigorous explanations.
-Use LaTeX math formulas ($...$ for inline, $$...$$ for block formulas) wherever appropriate.
-Ensure maximum pedagogical clarity. If an image contains multiple questions, ask the student which one to solve first, or solve the primary highlighted question.`;
+Your goal is to solve academic exercises, quizzes, exams, and homework questions with extreme mathematical rigor and maximum pedagogical clarity.
 
-export const DEFAULT_NANO_SYSTEM_PROMPT = `You are a factual, concise, and precise homework assistant.
-Strict Rules:
-1. For multiple-choice questions, verify the real-world fact or calculate step-by-step FIRST before selecting any option.
-2. Provide a clear, short explanation using LaTeX for formulas ($...$ or $$...$$).
-3. State the correct final answer or option letter clearly at the very end.`;
+Core Guidelines:
+1. Always analyze the full context of the problem, including text, math formulas, and any attached images or diagrams.
+2. For multiple-choice questions: Identify the single correct answer letter (A, B, C, or D), clearly display it, and provide rigorous step-by-step reasoning explaining why it is correct and why other options are incorrect.
+3. For mathematical & scientific equations: Format all mathematical notations, equations, variables, and expressions using standard LaTeX syntax enclosed in single dollar signs for inline math ($x^2 + y^2 = r^2$) and double dollar signs for block math ($$\\int f(x) dx$$).
+4. For step-by-step solutions: Break down the explanation logically into numbered steps (Step 1, Step 2, ...). Highlight key definitions, formulas applied, intermediate results, and the final boxed/bolded answer.
+5. Tone & Style: Be encouraging, precise, intellectually rigorous, and crystal clear. Avoid unnecessary fluff.`;
+
+export const DEFAULT_NANO_SYSTEM_PROMPT = `You are a helpful, precise academic tutor AI.
+Your task is to solve homework questions and quizzes clearly and accurately.
+
+Instructions:
+1. For multiple-choice questions: Identify the correct option and give a concise step-by-step explanation.
+2. For math & science problems: Show step-by-step reasoning with formulas in LaTeX ($...$) and clearly state the final answer.
+3. Keep explanations structured, concise, and easy to understand.`;
 
 export const DEFAULT_SETTINGS = {
   // Array of configured model keys:
   // [{ id, provider, model, apiKey, baseUrl, isEnabled, priority, failureCount, cooldownUntil }]
   apiConfigs: [],
-  activeConfigId: 'auto', // 'auto' (round-robin active) or specific config id
-  rotationStrategy: 'round-robin', // 'round-robin' | 'random' | 'fallback-on-error'
-  studyMode: 'step-by-step', // 'step-by-step' | 'direct' | 'hint' | 'explain' | 'translate'
-  uiLanguage: 'vi', // 'vi' | 'en' | 'th' | 'zh-CN' | 'zh-TW' | 'ja' | 'ko' | 'es' | 'fr' | 'de' | 'pt' | 'id' | 'ru'
-  outputLanguage: 'en', // 'en' | 'vi' | 'es' | 'fr' | 'de' | 'zh-CN' | 'ja' | 'ko' | 'auto'
+  activeConfigId: "auto", // 'auto' (round-robin active) or specific config id
+  rotationStrategy: "round-robin", // 'round-robin' | 'random' | 'fallback-on-error'
+  studyMode: "step-by-step", // 'step-by-step' | 'direct' | 'hint' | 'explain' | 'translate'
+  uiLanguage: "vi", // 'vi' | 'en' | 'th' | 'zh-CN' | 'zh-TW' | 'ja' | 'ko' | 'es' | 'fr' | 'de' | 'pt' | 'id' | 'ru'
+  outputLanguage: "en", // 'en' | 'vi' | 'es' | 'fr' | 'de' | 'zh-CN' | 'ja' | 'ko' | 'auto'
   systemPrompt: DEFAULT_SYSTEM_PROMPT,
   nanoSystemPrompt: DEFAULT_NANO_SYSTEM_PROMPT,
   enableFormsAdapter: true,
   enableTextTooltip: true,
   enableFloatingButton: true,
-  fabSize: 'normal', // 'small' | 'normal' | 'large'
+  fabSize: "normal", // 'small' | 'normal' | 'large'
   popupOpacity: 92, // 40 - 100% (Liquid Glass background alpha)
   popupBlur: 16, // 0 - 30px
   toolbarOpacity: 90, // 40 - 100%
-  toolbarBlur: 14, // 0 - 30px
+  toolbarBlur: 16,
   toolbarShowText: true, // true: icon + label, false: icon only
-  toolbarSize: 'normal', // 'compact' | 'normal' | 'large'
-  toolbarTheme: 'glass-light', // 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple'
-  toolbarCustomColor: '#0284c7',
-  routingStrategy: 'prefer_nano', // 'prefer_nano' | 'prefer_config' | 'nano_only' | 'config_only'
+  toolbarSize: "normal", // 'compact' | 'normal' | 'large'
+  toolbarTheme: "glass-light", // 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple'
+  toolbarCustomColor: "#0284c7",
+  routingStrategy: "prefer_config", // 'prefer_config' (recommended) | 'prefer_nano' | 'nano_only' | 'config_only'
   installedOcrModels: {
-    vie: { lang: 'vie', name: 'Tiếng Việt', size: '1.9 MB', version: '1.0.0', isBundled: true, isInstalled: true },
-    eng: { lang: 'eng', name: 'English', size: '4.1 MB', version: '1.0.0', isBundled: true, isInstalled: true },
-    equ: { lang: 'equ', name: 'Toán học & Ký hiệu', size: '2.3 MB', version: '1.0.0', isBundled: true, isInstalled: true },
+    vie: {
+      lang: "vie",
+      name: "Tiếng Việt",
+      size: "1.9 MB",
+      version: "1.0.0",
+      isBundled: true,
+      isInstalled: true,
+    },
+    eng: {
+      lang: "eng",
+      name: "English",
+      size: "4.1 MB",
+      version: "1.0.0",
+      isBundled: true,
+      isInstalled: true,
+    },
+    equ: {
+      lang: "equ",
+      name: "Toán học & Ký hiệu",
+      size: "2.3 MB",
+      version: "1.0.0",
+      isBundled: true,
+      isInstalled: true,
+    },
   },
   chatHistory: [],
   conversations: [], // [{ id, title, createdAt, updatedAt, thumbnail, messages: [] }]
@@ -152,7 +197,7 @@ export const DEFAULT_SETTINGS = {
 export const Storage = {
   async get(keys = null) {
     return new Promise((resolve) => {
-      if (typeof chrome === 'undefined' || !chrome.storage?.local) {
+      if (typeof chrome === "undefined" || !chrome.storage?.local) {
         resolve({ ...DEFAULT_SETTINGS });
         return;
       }
@@ -166,7 +211,7 @@ export const Storage = {
             filtered[k] = merged[k];
           });
           resolve(filtered);
-        } else if (typeof keys === 'string') {
+        } else if (typeof keys === "string") {
           resolve({ [keys]: merged[keys] });
         } else {
           resolve(merged);
@@ -182,30 +227,42 @@ export const Storage = {
   },
 
   async getApiConfigs() {
-    const data = await this.get(['apiConfigs', 'activeConfigId', 'rotationStrategy']);
+    const data = await this.get([
+      "apiConfigs",
+      "activeConfigId",
+      "rotationStrategy",
+    ]);
     return {
       apiConfigs: data.apiConfigs || [],
-      activeConfigId: data.activeConfigId || 'auto',
-      rotationStrategy: data.rotationStrategy || 'round-robin',
+      activeConfigId: data.activeConfigId || "auto",
+      rotationStrategy: data.rotationStrategy || "round-robin",
     };
   },
 
   async saveApiConfig(config) {
-    const { apiConfigs = [] } = await this.get('apiConfigs');
+    const { apiConfigs = [] } = await this.get("apiConfigs");
     const existingIdx = apiConfigs.findIndex((c) => c.id === config.id);
     let updated;
     if (existingIdx >= 0) {
       updated = [...apiConfigs];
       updated[existingIdx] = { ...updated[existingIdx], ...config };
     } else {
-      updated = [...apiConfigs, { ...config, id: config.id || `cfg_${Date.now()}_${Math.random().toString(36).substr(2, 6)}` }];
+      updated = [
+        ...apiConfigs,
+        {
+          ...config,
+          id:
+            config.id ||
+            `cfg_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        },
+      ];
     }
     await this.set({ apiConfigs: updated });
     return updated;
   },
 
   async removeApiConfig(id) {
-    const { apiConfigs = [] } = await this.get('apiConfigs');
+    const { apiConfigs = [] } = await this.get("apiConfigs");
     const updated = apiConfigs.filter((c) => c.id !== id);
     await this.set({ apiConfigs: updated });
     return updated;
@@ -215,13 +272,18 @@ export const Storage = {
   // Multi-Session Conversation Management
   // =======================================================
   async getConversations() {
-    const { conversations = [], chatHistory = [] } = await this.get(['conversations', 'chatHistory']);
+    const { conversations = [], chatHistory = [] } = await this.get([
+      "conversations",
+      "chatHistory",
+    ]);
     if (conversations.length === 0 && chatHistory.length > 0) {
       // Automatic migration from flat chatHistory to first conversation
-      const firstUserMsg = chatHistory.find((m) => m.role === 'user');
+      const firstUserMsg = chatHistory.find((m) => m.role === "user");
       const conv = {
         id: `conv_${Date.now()}`,
-        title: firstUserMsg?.content ? firstUserMsg.content.slice(0, 50) : 'Cuộc trò chuyện trước',
+        title: firstUserMsg?.content
+          ? firstUserMsg.content.slice(0, 50)
+          : "Cuộc trò chuyện trước",
         createdAt: firstUserMsg?.timestamp || Date.now(),
         updatedAt: Date.now(),
         thumbnail: chatHistory.find((m) => m.image)?.image || null,
@@ -235,7 +297,7 @@ export const Storage = {
 
   async getActiveConversation() {
     const conversations = await this.getConversations();
-    const { activeConversationId } = await this.get(['activeConversationId']);
+    const { activeConversationId } = await this.get(["activeConversationId"]);
     if (activeConversationId) {
       const found = conversations.find((c) => c.id === activeConversationId);
       if (found) return found;
@@ -246,9 +308,9 @@ export const Storage = {
     return null;
   },
 
-  async createNewConversation(title = 'Đoạn chat mới') {
+  async createNewConversation(title = "Đoạn chat mới") {
     const conversations = await this.getConversations();
-    const { activeConversationId } = await this.get(['activeConversationId']);
+    const { activeConversationId } = await this.get(["activeConversationId"]);
     const active = conversations.find((c) => c.id === activeConversationId);
 
     // If current active conversation is already empty, reuse it
@@ -285,7 +347,7 @@ export const Storage = {
     const active = conversations.find((c) => c.id === convId) || null;
     await this.set({
       activeConversationId: convId,
-      chatHistory: active ? (active.messages || []) : [],
+      chatHistory: active ? active.messages || [] : [],
     });
     return active;
   },
@@ -293,7 +355,7 @@ export const Storage = {
   async deleteConversation(convId) {
     const conversations = await this.getConversations();
     const updated = conversations.filter((c) => c.id !== convId);
-    const { activeConversationId } = await this.get(['activeConversationId']);
+    const { activeConversationId } = await this.get(["activeConversationId"]);
     let nextActiveId = activeConversationId;
     let nextMessages = [];
 
@@ -325,7 +387,7 @@ export const Storage = {
 
   async addChatMessage(msg) {
     const conversations = await this.getConversations();
-    const { activeConversationId } = await this.get(['activeConversationId']);
+    const { activeConversationId } = await this.get(["activeConversationId"]);
     let activeConv = conversations.find((c) => c.id === activeConversationId);
 
     const messageWithTime = { ...msg, timestamp: Date.now() };
@@ -333,7 +395,11 @@ export const Storage = {
     if (!activeConv) {
       activeConv = {
         id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-        title: msg.content ? msg.content.slice(0, 50) : (msg.image ? 'Giải bài tập qua ảnh' : 'Bài tập mới'),
+        title: msg.content
+          ? msg.content.slice(0, 50)
+          : msg.image
+            ? "Giải bài tập qua ảnh"
+            : "Bài tập mới",
         createdAt: Date.now(),
         updatedAt: Date.now(),
         thumbnail: msg.image || null,
@@ -341,10 +407,16 @@ export const Storage = {
       };
       conversations.push(activeConv);
     } else {
-      activeConv.messages = [...activeConv.messages, messageWithTime].slice(-50);
+      activeConv.messages = [...activeConv.messages, messageWithTime].slice(
+        -50,
+      );
       activeConv.updatedAt = Date.now();
-      if (activeConv.messages.length <= 2 && msg.role === 'user') {
-        activeConv.title = msg.content ? msg.content.slice(0, 50) : (msg.image ? 'Giải bài tập qua ảnh' : activeConv.title);
+      if (activeConv.messages.length <= 2 && msg.role === "user") {
+        activeConv.title = msg.content
+          ? msg.content.slice(0, 50)
+          : msg.image
+            ? "Giải bài tập qua ảnh"
+            : activeConv.title;
       }
       if (msg.image && !activeConv.thumbnail) {
         activeConv.thumbnail = msg.image;
@@ -363,7 +435,7 @@ export const Storage = {
   },
 
   async clearChatHistory() {
-    const { activeConversationId } = await this.get(['activeConversationId']);
+    const { activeConversationId } = await this.get(["activeConversationId"]);
     if (activeConversationId) {
       await this.deleteConversation(activeConversationId);
     } else {
@@ -375,7 +447,9 @@ export const Storage = {
   // AI Routing Strategy & OCR Models Management
   // =======================================================
   async getRoutingStrategy() {
-    const { routingStrategy = 'prefer_nano' } = await this.get(['routingStrategy']);
+    const { routingStrategy = "prefer_nano" } = await this.get([
+      "routingStrategy",
+    ]);
     return routingStrategy;
   },
 
@@ -385,7 +459,8 @@ export const Storage = {
   },
 
   async getInstalledOcrModels() {
-    const { installedOcrModels = DEFAULT_SETTINGS.installedOcrModels } = await this.get(['installedOcrModels']);
+    const { installedOcrModels = DEFAULT_SETTINGS.installedOcrModels } =
+      await this.get(["installedOcrModels"]);
     return installedOcrModels;
   },
 
@@ -407,11 +482,14 @@ export const Storage = {
     const updated = { ...models };
     if (updated[lang]?.isBundled) {
       // If bundled, reset version and mark as not custom updated
-      updated[lang] = { ...DEFAULT_SETTINGS.installedOcrModels[lang], isInstalled: true };
+      updated[lang] = {
+        ...DEFAULT_SETTINGS.installedOcrModels[lang],
+        isInstalled: true,
+      };
     } else {
       delete updated[lang];
     }
     await this.set({ installedOcrModels: updated });
     return updated;
-  }
+  },
 };

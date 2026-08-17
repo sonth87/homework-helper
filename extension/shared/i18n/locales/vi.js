@@ -65,6 +65,8 @@ export default {
     modalBtnAddKey: "Thêm Model & Key",
     modalLinkGuide: "Xem hướng dẫn lấy Key miễn phí →",
     modalKeyPlaceholder: "Nhập API Key (sk-... / AIza...)",
+    customModelOption: "Tự điền model (Custom)...",
+    customModelPlaceholder: "Nhập tên/mã model (vd: gemini-2.5-pro, gpt-5, claude-4...)",
     tooltips: {
       newChat: {
         title: "Đoạn chat mới",
@@ -192,9 +194,10 @@ export default {
       "Cơ chế xoay vòng thông minh (Smart Load Balancing & Fallback)",
     strategyDesc:
       "Hệ thống tự động phân phối đều câu hỏi qua các key đang hoạt động (Round-Robin). Nếu 1 key gặp lỗi Rate Limit (HTTP 429) hoặc tạm quá tải, hệ thống tự động đưa key đó vào hàng chờ nghỉ 60 giây và ngay lập tức chuyển sang Key kế tiếp mà không làm gián đoạn câu trả lời.",
-    stratPreferNanoTitle: "Ưu tiên Gemini Nano (Khuyên dùng)",
-    stratPreferNanoDesc:
-      "Sử dụng Gemini Nano On-Device khi khả dụng, tự động chuyển sang API Cloud khi cần vision hoặc mô hình lớn.",
+    stratPreferNanoTitle: "Ưu tiên Gemini Nano",
+    stratPreferNanoDesc: "Văn bản dùng Nano On-Device; Chụp ảnh tự động chuyển Vision API hoặc OCR.",
+    stratPreferConfigTitle: "Ưu tiên Model đã cấu hình (Khuyên dùng)",
+    stratPreferConfigDesc: "Dùng Key đám mây; Tự động fallback về Gemini Nano khi hết quota hoặc lỗi mạng.",
     stratNanoOnlyTitle: "Chỉ dùng Gemini Nano",
     stratNanoOnlyDesc:
       "Hoàn toàn miễn phí & Offline 100%, không sử dụng bất kỳ API đám mây nào.",
