@@ -3,15 +3,15 @@
  * Encapsulates UI inside Shadow DOM and orchestrates modular subcomponents.
  */
 
-import { Icons } from "../shared/icons.js";
-import { Storage } from "../shared/storage.js";
-import { getI18n, getFloatingPopupI18n } from "../shared/i18n.js";
-import { OverlayFabs } from "./overlay/fabs.js";
-import { OverlayDrawer } from "./overlay/drawer.js";
-import { OverlayDrawerHistory } from "./overlay/drawer-history.js";
-import { OverlayFloatingCard } from "./overlay/floating-card.js";
-import { OverlayConfigModal } from "./overlay/config-modal.js";
-import { OverlayRichTooltips } from "./overlay/rich-tooltips.js";
+import { Icons } from '../shared/icons.js';
+import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
+import { getI18n, getFloatingPopupI18n } from '../shared/i18n.js';
+import { OverlayFabs } from './overlay/fabs.js';
+import { OverlayDrawer } from './overlay/drawer.js';
+import { OverlayDrawerHistory } from './overlay/drawer-history.js';
+import { OverlayFloatingCard } from './overlay/floating-card.js';
+import { OverlayConfigModal } from './overlay/config-modal.js';
+import { OverlayRichTooltips } from './overlay/rich-tooltips.js';
 
 class InPageOverlay {
   constructor() {
@@ -30,28 +30,28 @@ class InPageOverlay {
   }
 
   createShadowDOM() {
-    this.host = document.createElement("div");
-    this.host.id = "homework-ai-root";
-    this.host.style.position = "absolute";
-    this.host.style.top = "0";
-    this.host.style.left = "0";
-    this.host.style.zIndex = "2147483640";
+    this.host = document.createElement('div');
+    this.host.id = 'homework-ai-root';
+    this.host.style.position = 'absolute';
+    this.host.style.top = '0';
+    this.host.style.left = '0';
+    this.host.style.zIndex = '2147483640';
     document.documentElement.appendChild(this.host);
 
-    this.shadow = this.host.attachShadow({ mode: "open" });
+    this.shadow = this.host.attachShadow({ mode: 'open' });
 
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = chrome.runtime.getURL("content/styles/overlay.css");
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = chrome.runtime.getURL('content/styles/overlay.css');
     this.shadow.appendChild(link);
 
-    const katexLink = document.createElement("link");
-    katexLink.rel = "stylesheet";
-    katexLink.href = chrome.runtime.getURL("shared/katex/katex.min.css");
+    const katexLink = document.createElement('link');
+    katexLink.rel = 'stylesheet';
+    katexLink.href = chrome.runtime.getURL('shared/katex/katex.min.css');
     this.shadow.appendChild(katexLink);
 
-    const container = document.createElement("div");
-    container.className = "hw-overlay-wrapper";
+    const container = document.createElement('div');
+    container.className = 'hw-overlay-wrapper';
 
     container.innerHTML = `
       <!-- Jitter-free Slide-out FAB Container -->
@@ -60,7 +60,7 @@ class InPageOverlay {
           <button class="hw-fab-btn" id="hwFabCrop" data-tooltip-title="Chụp màn hình (Alt+C)" data-tooltip-desc="Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.">
             ${Icons.scissors(15)}
           </button>
-          <button class="hw-fab-btn hw-fab-primary" id="hwFabToggle" data-tooltip-title="Mở Bảng Giải Bài (Alt+K)" data-tooltip-desc="Mở ngăn kéo AI hỗ trợ giải bài tập chi tiết và đặt câu hỏi.">
+          <button class="hw-fab-btn hw-fab-primary" id="hwFabToggle" data-tooltip-title="Mở chat panel (Alt+K)" data-tooltip-desc="Mở ngăn kéo AI hỗ trợ giải bài tập chi tiết và đặt câu hỏi.">
             ${Icons.sparkles(16)}
           </button>
         </div>
@@ -102,17 +102,7 @@ class InPageOverlay {
         <!-- Secondary Translate Target Language Bar -->
         <div class="hw-translate-bar" id="hwTranslateBar" style="display: none;">
           <span>Dịch sang:</span>
-          <select class="hw-lang-target" id="hwLangTarget">
-            <option value="vi">Tiếng Việt</option>
-            <option value="en" selected>English</option>
-            <option value="th">ไทย (Thai)</option>
-            <option value="zh">Chinese (中文)</option>
-            <option value="es">Spanish (Español)</option>
-            <option value="fr">French (Français)</option>
-            <option value="de">German (Deutsch)</option>
-            <option value="ja">Japanese (日本語)</option>
-            <option value="ko">Korean (한국어)</option>
-          </select>
+          <select class="hw-lang-target" id="hwLangTarget"></select>
         </div>
 
         <!-- Body & Output Content -->
@@ -131,10 +121,10 @@ class InPageOverlay {
         <div class="hw-card-footer">
           <div class="hw-card-actions-left">
             <button class="hw-btn-card-action" id="hwBtnCardCopy">
-              ${Icons.copy(14)} Copy
+              ${Icons.copy(14)} <span id="hwBtnCardCopyLabel">Sao chép</span>
             </button>
             <button class="hw-btn-card-action" id="hwBtnCardRetry">
-              ${Icons.refresh(14)} Retry
+              ${Icons.refresh(14)} <span id="hwBtnCardRetryLabel">Thử lại</span>
             </button>
           </div>
           <button class="hw-btn-card-primary" id="hwBtnCardPrimary">
@@ -149,7 +139,7 @@ class InPageOverlay {
       <!-- Slide-over Drawer Assistant -->
       <div class="hw-drawer" id="hwDrawer">
         <!-- Edge Collapse Handle -->
-        <button class="hw-drawer-edge-close" id="hwDrawerEdgeClose" data-tooltip-title="Đóng bảng giải bài" data-tooltip-desc="Thu gọn ngăn kéo vào cạnh màn hình (Alt+K)">
+        <button class="hw-drawer-edge-close" id="hwDrawerEdgeClose" data-tooltip-title="Đóng chat panel (Alt+K)" data-tooltip-desc="Thu gọn ngăn kéo vào cạnh màn hình.">
           ${Icons.chevronRight(18)}
         </button>
 
@@ -168,7 +158,7 @@ class InPageOverlay {
             <button class="hw-icon-btn" id="hwBtnSettings" data-tooltip-title="Cài đặt Key & Model" data-tooltip-desc="Quản lý danh sách API Key và cơ chế xoay vòng thông minh.">${Icons.settings(16)}</button>
             <button class="hw-icon-btn" id="hwBtnClear" data-tooltip-title="Xóa đoạn chat" data-tooltip-desc="Xóa toàn bộ tin nhắn trong phiên trò chuyện hiện tại.">${Icons.trash(16)}</button>
             <button class="hw-icon-btn" id="hwBtnSidePanel" data-tooltip-title="Trang Cài đặt & Cấu hình" data-tooltip-desc="Mở trang cài đặt chi tiết để quản lý API Key, bật AI nội bộ và tùy biến giao diện.">${Icons.externalLink(16)}</button>
-            <button class="hw-icon-btn" id="hwBtnClose" data-tooltip-title="Đóng bảng giải bài" data-tooltip-desc="Thu gọn ngăn kéo vào cạnh màn hình.">${Icons.x(16)}</button>
+            <button class="hw-icon-btn" id="hwBtnClose" data-tooltip-title="Đóng chat panel" data-tooltip-desc="Thu gọn ngăn kéo vào cạnh màn hình.">${Icons.x(16)}</button>
           </div>
         </div>
 
@@ -221,18 +211,7 @@ class InPageOverlay {
               <input type="file" id="hwImgFileInput" accept="image/*" style="display: none;">
             </div>
             <div class="hw-tools-right">
-              <select class="hw-select-mode" id="hwLangSelect" data-tooltip-title="Ngôn ngữ Phản hồi" data-tooltip-desc="AI sẽ tự động giải bài, giải thích các bước và đưa ra đáp án bằng ngôn ngữ này.">
-                <option value="en">English</option>
-                <option value="vi" selected>Tiếng Việt</option>
-                <option value="th">ไทย (Thai)</option>
-                <option value="zh-CN">中文</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-                <option value="ja">日本語</option>
-                <option value="ko">한국어</option>
-                <option value="auto">Auto</option>
-              </select>
+              <select class="hw-select-mode" id="hwLangSelect" data-tooltip-title="Ngôn ngữ Phản hồi" data-tooltip-desc="AI sẽ tự động giải bài, giải thích các bước và đưa ra đáp án bằng ngôn ngữ này."></select>
               <select class="hw-select-mode" id="hwModeSelect" data-tooltip-title="Chế độ Giải bài" data-tooltip-desc="Chọn kiểu phản hồi: Từng bước (Step-by-Step), Đáp án ngay (Direct), Gợi ý (Hint), hoặc Giải thích sâu lý thuyết.">
                 <option value="step-by-step">Giải từng bước</option>
                 <option value="direct">Đáp án ngay</option>
@@ -265,7 +244,7 @@ class InPageOverlay {
           <div class="hw-modal-content">
             <div class="hw-modal-header">
               <div style="font-weight: 700; display:flex; align-items:center; gap:6px;">
-                ${Icons.settings(16)} Cấu hình AI Models & API Keys
+                ${Icons.settings(16)} <span id="hwConfigModalTitle">Cấu hình AI Models & API Keys</span>
               </div>
               <button class="hw-icon-btn" id="hwBtnCloseModal">${Icons.x(16)}</button>
             </div>
@@ -291,7 +270,7 @@ class InPageOverlay {
 
   setupGlobalListeners() {
     // 1. Screenshot cropped -> Show Homework Helper Solution Popup
-    window.addEventListener("HOMEWORK_AI_SOLVE_IMAGE", (e) => {
+    window.addEventListener('HOMEWORK_AI_SOLVE_IMAGE', (e) => {
       const { imageBase64 } = e.detail || {};
       if (imageBase64) {
         this.floatingCard.showSolutionCard(imageBase64);
@@ -299,7 +278,7 @@ class InPageOverlay {
     });
 
     // 2. Toolbar action clicked -> Open Homework Helper Popup directly
-    window.addEventListener("HOMEWORK_AI_OPEN_POPUP", (e) => {
+    window.addEventListener('HOMEWORK_AI_OPEN_POPUP', (e) => {
       const { type, text, rect } = e.detail || {};
       if (text) {
         this.floatingCard.openActionPopup(type, text, rect);
@@ -308,73 +287,44 @@ class InPageOverlay {
 
     // Stream chunk listener from background
     chrome.runtime.onMessage.addListener((msg) => {
-      if (
-        msg.action === "AI_STREAM_CHUNK" &&
-        msg.requestId === this.drawer.activeRequestId
-      ) {
+      if (msg.action === 'AI_STREAM_CHUNK' && msg.requestId === this.drawer.activeRequestId) {
         this.drawer.appendStreamChunk(msg.chunk, msg.meta);
-      } else if (
-        msg.action === "AI_STREAM_COMPLETE" &&
-        msg.requestId === this.drawer.activeRequestId
-      ) {
+      } else if (msg.action === 'AI_STREAM_COMPLETE' && msg.requestId === this.drawer.activeRequestId) {
         this.drawer.finalizeStream();
-      } else if (
-        msg.action === "AI_STREAM_ERROR" &&
-        msg.requestId === this.drawer.activeRequestId
-      ) {
+      } else if (msg.action === 'AI_STREAM_ERROR' && msg.requestId === this.drawer.activeRequestId) {
         this.drawer.handleStreamError(msg.error);
-      } else if (msg.action === "CLOSE_DRAWER") {
+      } else if (msg.action === 'CLOSE_DRAWER') {
         this.drawer.toggle(false);
       }
     });
 
     // Main World Bridge Nano Listeners
-    window.addEventListener("HOMEWORK_AI_NANO_CHUNK", (e) => {
+    window.addEventListener('HOMEWORK_AI_NANO_CHUNK', (e) => {
       const { requestId, chunk } = e.detail || {};
-      if (
-        this.drawer.isStreaming &&
-        (!this.drawer.activeRequestId ||
-          this.drawer.activeRequestId === requestId)
-      ) {
-        this.drawer.appendStreamChunk(chunk, {
-          model: "Gemini Nano (On-Device)",
-          isBuiltin: true,
-        });
+      if (this.drawer.isStreaming && (!this.drawer.activeRequestId || this.drawer.activeRequestId === requestId)) {
+        this.drawer.appendStreamChunk(chunk, { model: 'Gemini Nano (On-Device)', isBuiltin: true });
       }
     });
 
-    window.addEventListener("HOMEWORK_AI_NANO_FINISH", (e) => {
+    window.addEventListener('HOMEWORK_AI_NANO_FINISH', (e) => {
       const { requestId } = e.detail || {};
-      if (
-        this.drawer.isStreaming &&
-        (!this.drawer.activeRequestId ||
-          this.drawer.activeRequestId === requestId)
-      ) {
+      if (this.drawer.isStreaming && (!this.drawer.activeRequestId || this.drawer.activeRequestId === requestId)) {
         this.drawer.finalizeStream();
       }
     });
 
-    window.addEventListener("HOMEWORK_AI_NANO_ERROR", (e) => {
+    window.addEventListener('HOMEWORK_AI_NANO_ERROR', (e) => {
       const { requestId, error } = e.detail || {};
-      if (
-        this.drawer.isStreaming &&
-        (!this.drawer.activeRequestId ||
-          this.drawer.activeRequestId === requestId)
-      ) {
+      if (this.drawer.isStreaming && (!this.drawer.activeRequestId || this.drawer.activeRequestId === requestId)) {
         this.drawer.handleStreamError(error);
       }
     });
 
     // Listen for real-time setting updates from options page
-    if (typeof chrome !== "undefined" && chrome.storage?.onChanged) {
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
-        if (area === "local") {
-          if (
-            changes.enableFloatingButton ||
-            changes.fabSize ||
-            changes.popupOpacity ||
-            changes.popupBlur
-          ) {
+        if (area === 'local') {
+          if (changes.enableFloatingButton || changes.fabSize || changes.popupOpacity || changes.popupBlur) {
             this.applyAppearanceSettings();
           }
           if (changes.uiLanguage) {
@@ -383,13 +333,7 @@ class InPageOverlay {
           if (changes.isNanoReady || changes.apiConfigs) {
             this.drawer.updateActiveModelBadge();
           }
-          if (
-            (changes.chatHistory ||
-              changes.activeConversationId ||
-              changes.conversations) &&
-            this.drawer.isOpen &&
-            !this.drawer.isStreaming
-          ) {
+          if ((changes.chatHistory || changes.activeConversationId || changes.conversations) && this.drawer.isOpen && !this.drawer.isStreaming) {
             this.drawer.loadInitialHistory();
           }
         }
@@ -398,25 +342,25 @@ class InPageOverlay {
   }
 
   showToast(msg) {
-    let toast = this.shadow.getElementById("hwToast");
+    let toast = this.shadow.getElementById('hwToast');
     if (!toast) {
-      toast = document.createElement("div");
-      toast.id = "hwToast";
-      toast.className = "hw-toast";
+      toast = document.createElement('div');
+      toast.id = 'hwToast';
+      toast.className = 'hw-toast';
       this.shadow.appendChild(toast);
     }
     toast.innerHTML = `<span style="display:flex;align-items:center;gap:6px;">${Icons.checkCircle(14)} <span>${msg}</span></span>`;
-    toast.classList.add("show");
+    toast.classList.add('show');
     clearTimeout(this._toastTimer);
     this._toastTimer = setTimeout(() => {
-      toast.classList.remove("show");
+      toast.classList.remove('show');
     }, 2000);
   }
 
   async applyAppearanceSettings() {
     const {
       enableFloatingButton = true,
-      fabSize = "normal",
+      fabSize = 'normal',
       popupOpacity = 92,
       popupBlur = 16,
     } = await Storage.get();
@@ -433,159 +377,111 @@ class InPageOverlay {
   }
 
   async applyLanguageI18n(lang = null) {
-    const { uiLanguage = "vi" } = await Storage.get(["uiLanguage"]);
+    const { uiLanguage = 'vi', outputLanguage = 'en' } = await Storage.get(['uiLanguage', 'outputLanguage']);
     const currentLang = lang || uiLanguage;
     const dict = getI18n(currentLang);
     const cardDict = getFloatingPopupI18n(currentLang);
     const s = this.shadow;
 
-    const textarea = s.getElementById("hwTextarea");
-    const sendBtnLabel = s.getElementById("hwSendBtnLabel");
-    const captureBtnLabel = s.getElementById("hwCaptureBtnLabel");
-    const hintText = s.getElementById("hwHintText");
-    const welcomeText = s.getElementById("hwWelcomeText");
-    const chipsContainer = s.getElementById("hwChipsContainer");
-    const modeSelect = s.getElementById("hwModeSelect");
-    const activeConvTitle = s.getElementById("hwActiveConvTitle");
-    const btnDrawerAddConv = s.getElementById("hwBtnDrawerAddConv");
-    const btnCardCopy = s.getElementById("hwBtnCardCopy");
-    const btnCardRetry = s.getElementById("hwBtnCardRetry");
+    const textarea = s.getElementById('hwTextarea');
+    const sendBtnLabel = s.getElementById('hwSendBtnLabel');
+    const captureBtnLabel = s.getElementById('hwCaptureBtnLabel');
+    const hintText = s.getElementById('hwHintText');
+    const welcomeText = s.getElementById('hwWelcomeText');
+    const chipsContainer = s.getElementById('hwChipsContainer');
+    const modeSelect = s.getElementById('hwModeSelect');
+    const langSelect = s.getElementById('hwLangSelect');
+    const targetLangSelect = s.getElementById('hwLangTarget');
+    const activeConvTitle = s.getElementById('hwActiveConvTitle');
+    const btnDrawerAddConv = s.getElementById('hwBtnDrawerAddConv');
+    const btnCardCopyLabel = s.getElementById('hwBtnCardCopyLabel');
+    const btnCardRetryLabel = s.getElementById('hwBtnCardRetryLabel');
+    const configModalTitle = s.getElementById('hwConfigModalTitle');
 
     if (textarea) textarea.placeholder = dict.placeholder;
     if (sendBtnLabel) sendBtnLabel.textContent = dict.askAiBtn;
     if (captureBtnLabel) captureBtnLabel.textContent = dict.captureBtn;
     if (hintText) hintText.textContent = dict.shiftEnterHint;
     if (welcomeText) welcomeText.textContent = dict.welcomeText;
-    if (
-      activeConvTitle &&
-      (!activeConvTitle.textContent ||
-        activeConvTitle.textContent === "Đoạn chat mới" ||
-        activeConvTitle.textContent === "New Chat")
-    ) {
+    if (configModalTitle) configModalTitle.textContent = dict.modalConfigTitle || 'Cấu hình AI Models & API Keys';
+
+    if (activeConvTitle && (!activeConvTitle.textContent || activeConvTitle.textContent === 'Đoạn chat mới' || activeConvTitle.textContent === 'New Chat')) {
       activeConvTitle.textContent = dict.newChat;
     }
-    if (btnDrawerAddConv)
-      btnDrawerAddConv.innerHTML = `${Icons.plus(13)} ${dict.newChat}`;
-    if (btnCardCopy)
-      btnCardCopy.innerHTML = `${Icons.copy(14)} ${cardDict.copy}`;
-    if (btnCardRetry)
-      btnCardRetry.innerHTML = `${Icons.refresh(14)} ${cardDict.retry}`;
+    if (btnDrawerAddConv) btnDrawerAddConv.innerHTML = `${Icons.plus(13)} ${dict.newChat}`;
+    if (btnCardCopyLabel) btnCardCopyLabel.textContent = cardDict.copy || 'Copy';
+    if (btnCardRetryLabel) btnCardRetryLabel.textContent = cardDict.retry || 'Retry';
+
+    // Populate native language options
+    if (langSelect) {
+      const curVal = langSelect.value || outputLanguage;
+      langSelect.innerHTML = SUPPORTED_LANGUAGES.map(
+        (l) => `<option value="${l.id}" ${l.id === curVal ? 'selected' : ''}>${l.name}</option>`
+      ).join('');
+    }
+
+    if (targetLangSelect) {
+      const curTarget = targetLangSelect.value || 'en';
+      const targetLangs = SUPPORTED_LANGUAGES.filter((l) => l.id !== 'auto');
+      targetLangSelect.innerHTML = targetLangs.map(
+        (l) => `<option value="${l.id}" ${l.id === curTarget ? 'selected' : ''}>${l.name}</option>`
+      ).join('');
+    }
 
     if (chipsContainer && dict.chips) {
-      chipsContainer.innerHTML = dict.chips
-        .map(
-          (c) =>
-            `<button class="hw-chip" data-query="${c.query}">${c.label}</button>`,
-        )
-        .join("");
+      chipsContainer.innerHTML = dict.chips.map(
+        (c) => `<button class="hw-chip" data-query="${c.query}">${c.label}</button>`
+      ).join('');
     }
 
     if (modeSelect && dict.modes) {
       const currentVal = modeSelect.value;
-      modeSelect.innerHTML = Object.entries(dict.modes)
-        .map(
-          ([k, v]) =>
-            `<option value="${k}" ${k === currentVal ? "selected" : ""}>${v}</option>`,
-        )
-        .join("");
+      modeSelect.innerHTML = Object.entries(dict.modes).map(
+        ([k, v]) => `<option value="${k}" ${k === currentVal ? 'selected' : ''}>${v}</option>`
+      ).join('');
     }
 
-    // Update tooltips
+    // Update tooltips with refined strings
     if (dict.tooltips) {
       const t = dict.tooltips;
-      s.getElementById("hwBtnDrawerNewChat")?.setAttribute(
-        "data-tooltip-title",
-        t.newChat?.title || dict.newChat,
-      );
-      s.getElementById("hwBtnDrawerNewChat")?.setAttribute(
-        "data-tooltip-desc",
-        t.newChat?.desc || "",
-      );
+      s.getElementById('hwFabToggle')?.setAttribute('data-tooltip-title', t.open?.title || 'Mở chat panel (Alt+K)');
+      s.getElementById('hwFabToggle')?.setAttribute('data-tooltip-desc', t.open?.desc || '');
 
-      s.getElementById("hwBtnDrawerHistory")?.setAttribute(
-        "data-tooltip-title",
-        t.history?.title || dict.historyTitle,
-      );
-      s.getElementById("hwBtnDrawerHistory")?.setAttribute(
-        "data-tooltip-desc",
-        t.history?.desc || "",
-      );
+      s.getElementById('hwFabCrop')?.setAttribute('data-tooltip-title', t.capture?.title || 'Chụp màn hình (Alt+C)');
+      s.getElementById('hwFabCrop')?.setAttribute('data-tooltip-desc', t.capture?.desc || '');
 
-      s.getElementById("hwBtnSettings")?.setAttribute(
-        "data-tooltip-title",
-        t.settings?.title || "Cài đặt Key & Model",
-      );
-      s.getElementById("hwBtnSettings")?.setAttribute(
-        "data-tooltip-desc",
-        t.settings?.desc ||
-          "Quản lý danh sách API Key và cơ chế xoay vòng thông minh.",
-      );
+      s.getElementById('hwDrawerEdgeClose')?.setAttribute('data-tooltip-title', t.close?.title || 'Đóng chat panel');
+      s.getElementById('hwDrawerEdgeClose')?.setAttribute('data-tooltip-desc', t.close?.desc || '');
 
-      s.getElementById("hwBtnClear")?.setAttribute(
-        "data-tooltip-title",
-        t.clear?.title || "Xóa đoạn chat",
-      );
-      s.getElementById("hwBtnClear")?.setAttribute(
-        "data-tooltip-desc",
-        t.clear?.desc || "Xóa hội thoại hiện tại.",
-      );
+      s.getElementById('hwBtnClose')?.setAttribute('data-tooltip-title', t.close?.title || 'Đóng chat panel');
+      s.getElementById('hwBtnClose')?.setAttribute('data-tooltip-desc', t.close?.desc || '');
 
-      s.getElementById("hwBtnSidePanel")?.setAttribute(
-        "data-tooltip-title",
-        t.options?.title || "Trang Cài đặt & Cấu hình",
-      );
-      s.getElementById("hwBtnSidePanel")?.setAttribute(
-        "data-tooltip-desc",
-        t.options?.desc ||
-          "Mở trang cài đặt chi tiết để quản lý API Key, bật AI nội bộ và tùy biến giao diện.",
-      );
+      s.getElementById('hwBtnDrawerNewChat')?.setAttribute('data-tooltip-title', t.newChat?.title || dict.newChat);
+      s.getElementById('hwBtnDrawerNewChat')?.setAttribute('data-tooltip-desc', t.newChat?.desc || '');
 
-      s.getElementById("hwBtnClose")?.setAttribute(
-        "data-tooltip-title",
-        t.close?.title || "Đóng bảng giải bài",
-      );
-      s.getElementById("hwBtnClose")?.setAttribute(
-        "data-tooltip-desc",
-        t.close?.desc || "Thu gọn ngăn kéo vào cạnh màn hình.",
-      );
+      s.getElementById('hwBtnDrawerHistory')?.setAttribute('data-tooltip-title', t.history?.title || dict.historyTitle);
+      s.getElementById('hwBtnDrawerHistory')?.setAttribute('data-tooltip-desc', t.history?.desc || '');
 
-      s.getElementById("hwBtnCapture")?.setAttribute(
-        "data-tooltip-title",
-        t.capture?.title || "Chụp màn hình (Alt+C)",
-      );
-      s.getElementById("hwBtnCapture")?.setAttribute(
-        "data-tooltip-desc",
-        t.capture?.desc ||
-          "Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.",
-      );
+      s.getElementById('hwBtnSettings')?.setAttribute('data-tooltip-title', t.settings?.title || 'Cài đặt Key & Model');
+      s.getElementById('hwBtnSettings')?.setAttribute('data-tooltip-desc', t.settings?.desc || 'Quản lý danh sách API Key và cơ chế xoay vòng thông minh.');
 
-      s.getElementById("hwBtnUploadImg")?.setAttribute(
-        "data-tooltip-title",
-        t.upload?.title || "Tải ảnh bài tập",
-      );
-      s.getElementById("hwBtnUploadImg")?.setAttribute(
-        "data-tooltip-desc",
-        t.upload?.desc || "Đính kèm file hình ảnh bài tập từ máy tính.",
-      );
+      s.getElementById('hwBtnClear')?.setAttribute('data-tooltip-title', t.clear?.title || 'Xóa đoạn chat');
+      s.getElementById('hwBtnClear')?.setAttribute('data-tooltip-desc', t.clear?.desc || 'Xóa hội thoại hiện tại.');
 
-      s.getElementById("hwLangSelect")?.setAttribute(
-        "data-tooltip-title",
-        t.lang?.title || "Ngôn ngữ phản hồi",
-      );
-      s.getElementById("hwLangSelect")?.setAttribute(
-        "data-tooltip-desc",
-        t.lang?.desc || "AI sẽ tự động giải bài và trả lời bằng ngôn ngữ này.",
-      );
+      s.getElementById('hwBtnSidePanel')?.setAttribute('data-tooltip-title', t.options?.title || 'Trang Cài đặt & Cấu hình');
+      s.getElementById('hwBtnSidePanel')?.setAttribute('data-tooltip-desc', t.options?.desc || 'Mở trang cài đặt chi tiết để quản lý API Key, bật AI nội bộ và tùy biến giao diện.');
 
-      s.getElementById("hwModeSelect")?.setAttribute(
-        "data-tooltip-title",
-        t.mode?.title || "Chế độ giải bài",
-      );
-      s.getElementById("hwModeSelect")?.setAttribute(
-        "data-tooltip-desc",
-        t.mode?.desc ||
-          "Chọn kiểu phản hồi: Từng bước, Đáp án ngay, Gợi ý, hoặc Giải thích sâu lý thuyết.",
-      );
+      s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-title', t.capture?.title || 'Chụp màn hình (Alt+C)');
+      s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-desc', t.capture?.desc || 'Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.');
+
+      s.getElementById('hwBtnUploadImg')?.setAttribute('data-tooltip-title', t.upload?.title || 'Tải ảnh bài tập');
+      s.getElementById('hwBtnUploadImg')?.setAttribute('data-tooltip-desc', t.upload?.desc || 'Đính kèm file hình ảnh bài tập từ máy tính.');
+
+      s.getElementById('hwLangSelect')?.setAttribute('data-tooltip-title', t.lang?.title || 'Ngôn ngữ phản hồi');
+      s.getElementById('hwLangSelect')?.setAttribute('data-tooltip-desc', t.lang?.desc || 'AI sẽ tự động giải bài và trả lời bằng ngôn ngữ này.');
+
+      s.getElementById('hwModeSelect')?.setAttribute('data-tooltip-title', t.mode?.title || 'Chế độ giải bài');
+      s.getElementById('hwModeSelect')?.setAttribute('data-tooltip-desc', t.mode?.desc || 'Chọn kiểu phản hồi: Từng bước, Đáp án ngay, Gợi ý, hoặc Giải thích sâu lý thuyết.');
     }
   }
 }

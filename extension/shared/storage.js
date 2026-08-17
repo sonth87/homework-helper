@@ -87,20 +87,20 @@ export const DEFAULT_PROVIDERS = [
 ];
 
 export const SUPPORTED_LANGUAGES = [
+  { id: 'vi', name: 'Tiếng Việt' },
   { id: 'en', name: 'English' },
-  { id: 'vi', name: 'Tiếng Việt (Vietnamese)' },
-  { id: 'th', name: 'ไทย (Thai)' },
-  { id: 'es', name: 'Español (Spanish)' },
-  { id: 'fr', name: 'Français (French)' },
-  { id: 'de', name: 'Deutsch (German)' },
-  { id: 'zh-CN', name: '简体中文 (Simplified Chinese)' },
-  { id: 'zh-TW', name: '繁體中文 (Traditional Chinese)' },
-  { id: 'ja', name: '日本語 (Japanese)' },
-  { id: 'ko', name: '한국어 (Korean)' },
-  { id: 'pt', name: 'Português (Portuguese)' },
+  { id: 'th', name: 'ไทย' },
+  { id: 'zh-CN', name: '简体中文' },
+  { id: 'zh-TW', name: '繁體中文' },
+  { id: 'ja', name: '日本語' },
+  { id: 'ko', name: '한국어' },
+  { id: 'es', name: 'Español' },
+  { id: 'fr', name: 'Français' },
+  { id: 'de', name: 'Deutsch' },
+  { id: 'pt', name: 'Português' },
   { id: 'id', name: 'Bahasa Indonesia' },
-  { id: 'ru', name: 'Русский (Russian)' },
-  { id: 'auto', name: 'Auto (Same as Question)' },
+  { id: 'ru', name: 'Русский' },
+  { id: 'auto', name: 'Auto' },
 ];
 
 export const DEFAULT_SETTINGS = {

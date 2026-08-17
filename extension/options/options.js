@@ -156,12 +156,26 @@ export class OptionsController {
     const brandDesc = document.querySelector('.opt-brand-desc');
     if (brandDesc) brandDesc.textContent = dict.brandDesc;
 
-    // Providers Tab
+    // Providers Tab - Heading & Strategy
     setText('optHeadingProviders', dict.headingProviders);
     setText('optSubheadingProviders', dict.subheadingProviders);
     setText('optBtnAddKeyText', dict.btnAddKey);
     setText('optStrategyTitle', dict.strategyTitle);
     setText('optStrategyDesc', dict.strategyDesc);
+
+    // Strategy Options
+    setText('optRoutingOpt1Title', dict.stratPreferNanoTitle);
+    setText('optRoutingOpt1Desc', dict.stratPreferNanoDesc);
+    setText('optRoutingOpt3Title', dict.stratNanoOnlyTitle);
+    setText('optRoutingOpt3Desc', dict.stratNanoOnlyDesc);
+    setText('optRoutingOpt4Title', dict.stratConfigOnlyTitle);
+    setText('optRoutingOpt4Desc', dict.stratConfigOnlyDesc);
+
+    // Chrome Built-in AI Card
+    setText('builtinNanoTitle', dict.builtinNanoTitle);
+    setText('builtinNanoDesc', dict.builtinNanoDesc);
+    setText('btnOpenFlagsFromOptions', dict.btnOpenFlags);
+    setText('btnTestBuiltinAI', dict.btnTestBuiltinAI);
 
     // OCR Tab
     setText('optHeadingOcr', dict.headingOcr);
@@ -216,6 +230,19 @@ export class OptionsController {
     setText('optLinkSubOpenAI', dict.linkSubOpenAI);
     setText('optLinkSubDeepSeek', dict.linkSubDeepSeek);
     setText('optLinkSubClaude', dict.linkSubClaude);
+
+    // Get Key buttons in Guide Tab
+    const setBtnText = (id, text, iconFunc) => {
+      const el = document.getElementById(id);
+      if (el && text) {
+        el.innerHTML = `<span>${text}</span> <span>${iconFunc(12)}</span>`;
+      }
+    };
+    setBtnText('optLinkBtnGemini', dict.btnGetKeyGemini, Icons.externalLink);
+    setBtnText('optLinkBtnGroq', dict.btnGetKeyGroq, Icons.externalLink);
+    setBtnText('optLinkBtnOpenAI', dict.btnGetKeyOpenAI, Icons.externalLink);
+    setBtnText('optLinkBtnDeepSeek', dict.btnGetKeyDeepSeek, Icons.externalLink);
+    setBtnText('optLinkBtnClaude', dict.btnGetKeyClaude, Icons.externalLink);
 
     // Prompt Tab
     setText('optHeadingPrompt', dict.headingPrompt);

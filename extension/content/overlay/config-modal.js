@@ -4,6 +4,7 @@
 
 import { Icons } from '../../shared/icons.js';
 import { Storage, DEFAULT_PROVIDERS } from '../../shared/storage.js';
+import { getI18n } from '../../shared/i18n.js';
 
 export class OverlayConfigModal {
   constructor(overlay) {
@@ -27,45 +28,46 @@ export class OverlayConfigModal {
     const s = this.shadow;
     const modal = s.getElementById('hwConfigModal');
     const body = s.getElementById('hwModalBody');
+    if (!modal || !body) return;
     modal.style.display = 'flex';
 
-    const { apiConfigs = [], routingStrategy = 'prefer_nano' } = await Storage.getApiConfigs();
-    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
-    const isVi = uiLanguage === 'vi';
+    const { apiConfigs = [] } = await Storage.getApiConfigs();
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const dict = getI18n(uiLanguage);
 
     body.innerHTML = `
       <div style="font-size:12px; color:#64748b; line-height:1.4;">
-        ${isVi ? 'Thêm một hoặc nhiều API Key. Tiện ích tự động xoay vòng cân bằng tải và chuyển sang key dự phòng khi gặp giới hạn Rate Limit.' : 'Add one or more API Keys. The extension automatically load-balances and falls back to backup keys when hitting rate limits.'}
+        ${dict.modalConfigDesc || 'Add one or more API Keys. The extension automatically load-balances and falls back to backup keys when hitting rate limits.'}
       </div>
 
       <!-- Chrome Built-in AI Gemini Nano Guide Section in In-Page Modal -->
       <div style="margin-top: 8px; padding: 10px; background: rgba(2, 132, 199, 0.08); border-radius: 8px; border: 1px solid rgba(2, 132, 199, 0.25);">
         <div style="font-weight: 700; font-size: 12.5px; color: #0284c7; display:flex; align-items:center; gap:6px;">
-          ${Icons.cpu(14)} Chrome Gemini Nano (Local AI)
+          ${Icons.cpu(14)} ${dict.modalNanoTitle || 'Chrome Gemini Nano (Local AI)'}
         </div>
         <div style="font-size:11.5px; color:#64748b; margin-top:4px; line-height:1.5;">
-          ${isVi ? 'Mô hình AI nội bộ chạy Offline. Nhấn các liên kết bên dưới để mở trực tiếp:' : 'On-Device AI running offline. Click links below to open flags directly:'}
+          ${dict.modalNanoDesc || 'On-Device AI running offline. Click links below to open flags directly:'}
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
           <button class="hw-btn-copy" id="hwModalBtnFlagPrompt" style="background:#0284c7; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} ${isVi ? '1. Mở #prompt-api' : '1. Open #prompt-api'}
+            ${Icons.externalLink(11)} ${dict.modalBtnFlagPrompt || '1. Open #prompt-api'}
           </button>
           <button class="hw-btn-copy" id="hwModalBtnFlagOptGuide" style="background:#0284c7; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} ${isVi ? '2. Mở #optimization-guide' : '2. Open #optimization-guide'}
+            ${Icons.externalLink(11)} ${dict.modalBtnFlagOptGuide || '2. Open #optimization-guide'}
           </button>
           <button class="hw-btn-copy" id="hwModalBtnComponents" style="background:#0369a1; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} ${isVi ? '3. Mở components' : '3. Open components'}
+            ${Icons.externalLink(11)} ${dict.modalBtnComponents || '3. Open components'}
           </button>
         </div>
       </div>
 
       <div id="hwModalKeyList" style="display:flex; flex-direction:column; gap:10px; margin-top:8px;"></div>
 
-      <button class="hw-btn-add" id="hwBtnAddKey">${Icons.plus(16)} ${isVi ? 'Thêm Model & Key' : 'Add Model & Key'}</button>
+      <button class="hw-btn-add" id="hwBtnAddKey">${Icons.plus(16)} ${dict.modalBtnAddKey || 'Add Model & Key'}</button>
 
       <div style="text-align:right; margin-top:6px;">
         <a href="#" id="hwLinkFullOptions" style="font-size:12px; color:#0284c7; text-decoration:none;">
-          ${isVi ? 'Xem hướng dẫn lấy Key miễn phí →' : 'View free API key guide →'}
+          ${dict.modalLinkGuide || 'View free API key guide →'}
         </a>
       </div>
     `;
@@ -83,7 +85,7 @@ export class OverlayConfigModal {
     });
 
     const list = body.querySelector('#hwModalKeyList');
-    apiConfigs.forEach((cfg) => list.appendChild(this.renderKeyItem(cfg)));
+    apiConfigs.forEach((cfg) => list.appendChild(this.renderKeyItem(cfg, false, dict)));
 
     body.querySelector('#hwBtnAddKey').addEventListener('click', () => {
       const newCfg = {
@@ -94,7 +96,7 @@ export class OverlayConfigModal {
         apiKey: '',
         isEnabled: true,
       };
-      list.appendChild(this.renderKeyItem(newCfg, true));
+      list.appendChild(this.renderKeyItem(newCfg, true, dict));
     });
 
     body.querySelector('#hwLinkFullOptions').addEventListener('click', (e) => {
@@ -103,7 +105,8 @@ export class OverlayConfigModal {
     });
   }
 
-  renderKeyItem(cfg, isNew = false) {
+  renderKeyItem(cfg, isNew = false, dict = null) {
+    const d = dict || getI18n();
     const el = document.createElement('div');
     el.style.cssText = 'border:1px solid rgba(226, 232, 240, 0.9); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:6px; background:#f8fafc;';
 
@@ -130,7 +133,7 @@ export class OverlayConfigModal {
         <select class="hw-select cfg-model">${modelOptions}</select>
       </div>
 
-      <input type="password" class="hw-input cfg-key" placeholder="Nhập API Key (sk-... / AIza...)" value="${cfg.apiKey || ''}">
+      <input type="password" class="hw-input cfg-key" placeholder="${d.modalKeyPlaceholder || 'Enter API Key (sk-... / AIza...)'}" value="${cfg.apiKey || ''}">
     `;
 
     const providerSelect = el.querySelector('.cfg-provider');

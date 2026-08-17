@@ -39,9 +39,7 @@
         <div class="sp-msg-bubble" id="spWelcomeBubble">
           <p id="spWelcomeText">Xin chào! Tôi là trợ lý Homework Helper. Bạn cần giải bài tập nào hôm nay?</p>
           <div class="sp-chips" id="spChipsContainer">
-            <button class="sp-chip" data-query="Giải phương trình bậc hai $ax^2 + bx + c = 0$">Phương trình bậc 2</button>
-            <button class="sp-chip" data-query="Giải thích các định luật chuyển động của Newton">Định luật Newton</button>
-            <button class="sp-chip" data-query="Cân bằng phương trình hóa học và tính số mol">Cân bằng hóa học</button>
+            <!-- Rendered dynamically by i18n -->
           </div>
         </div>
       </div>
@@ -57,23 +55,8 @@
         </div>
         <div class="sp-tools-right" style="display:flex; gap:6px;">
           <select class="sp-select-mode" id="spSelectLang" data-tooltip-title="Ngôn ngữ phản hồi" data-tooltip-desc="AI sẽ tự động giải bài và trả lời bằng ngôn ngữ này.">
-            <option value="en">English</option>
-            <option value="vi" selected>Tiếng Việt</option>
-            <option value="th">ไทย (Thai)</option>
-            <option value="zh-CN">中文</option>
-            <option value="es">Español</option>
-            <option value="fr">Français</option>
-            <option value="de">Deutsch</option>
-            <option value="ja">日本語</option>
-            <option value="ko">한국어</option>
-            <option value="auto">Auto</option>
           </select>
           <select class="sp-select-mode" id="spSelectMode" data-tooltip-title="Chế độ giải bài" data-tooltip-desc="Chọn kiểu phản hồi: Từng bước (Step-by-Step), Đáp án ngay (Direct), Gợi ý (Hint), hoặc Giải thích sâu lý thuyết.">
-            <option value="step-by-step">Giải từng bước</option>
-            <option value="direct">Đáp án trực tiếp</option>
-            <option value="hint">Gợi ý & Hướng dẫn</option>
-            <option value="explain">Giải thích sâu</option>
-            <option value="translate">Dịch thuật</option>
           </select>
         </div>
       </div>
@@ -81,7 +64,7 @@
       <div class="sp-input-box">
         <div id="spImgPreview" class="sp-img-preview" style="display: none;">
           <img id="spThumb" src="" alt="Thumbnail">
-          <span>Image Attached</span>
+          <span id="spAttachedLabel">Image Attached</span>
           <button class="sp-icon-btn" id="spBtnRemoveThumb" style="width:20px;height:20px;"></button>
         </div>
         <textarea id="spTextarea" class="sp-textarea" placeholder="Enter your homework question here..."></textarea>

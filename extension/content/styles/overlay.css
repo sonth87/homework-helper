@@ -8,7 +8,9 @@
   box-sizing: border-box;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: inherit;
 }
 
@@ -82,6 +84,7 @@
   width: 28px;
   height: 28px;
 }
+
 .hw-fab-container.hw-fab-size-large .hw-fab-btn {
   width: 42px;
   height: 42px;
@@ -408,8 +411,8 @@
 .hw-drawer {
   position: fixed;
   top: 0;
-  right: -450px;
-  width: 430px;
+  right: -500px;
+  width: 480px;
   height: 100vh;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px) saturate(180%);
@@ -424,6 +427,10 @@
 
 .hw-drawer.open {
   right: 0;
+}
+
+.hw-drawer:not(.open) .hw-drawer-edge-close {
+  display: none;
 }
 
 /* Edge Collapse Handle on Drawer Left */
@@ -630,8 +637,15 @@
 }
 
 @keyframes hwMsgFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hw-msg-user {
@@ -801,7 +815,8 @@
   transition: border-color 0.15s ease;
 }
 
-.hw-select-mode:hover, .hw-select-mode:focus {
+.hw-select-mode:hover,
+.hw-select-mode:focus {
   border-color: #0284c7;
 }
 
@@ -1004,7 +1019,8 @@
   outline: none;
 }
 
-.hw-input:focus, .hw-select:focus {
+.hw-input:focus,
+.hw-select:focus {
   border-color: #0284c7;
 }
 
@@ -1076,11 +1092,23 @@
 }
 
 @keyframes hwFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes hwCardPop {
-  from { opacity: 0; transform: scale(0.96) translateY(8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }

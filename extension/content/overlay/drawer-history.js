@@ -17,24 +17,28 @@ export class OverlayDrawerHistory {
     const s = this.shadow;
 
     s.getElementById('hwBtnDrawerNewChat')?.addEventListener('click', async () => {
-      await Storage.createNewConversation('Đoạn chat mới');
+      const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+      const dict = getI18n(uiLanguage);
+      await Storage.createNewConversation(dict.newChat || 'Đoạn chat mới');
       s.getElementById('hwDrawerHistoryPanel').style.display = 'none';
       s.getElementById('hwTextarea').value = '';
       this.overlay.drawer.attachedImageBase64 = null;
       s.getElementById('hwImgPreviewRow').style.display = 'none';
       await this.overlay.drawer.loadInitialHistory();
-      this.overlay.showToast('Đã bắt đầu đoạn chat mới');
+      this.overlay.showToast(dict.toastNewChat || 'Đã bắt đầu đoạn chat mới');
       setTimeout(() => s.getElementById('hwTextarea').focus(), 100);
     });
 
     s.getElementById('hwBtnDrawerAddConv')?.addEventListener('click', async () => {
-      await Storage.createNewConversation('Đoạn chat mới');
+      const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+      const dict = getI18n(uiLanguage);
+      await Storage.createNewConversation(dict.newChat || 'Đoạn chat mới');
       s.getElementById('hwDrawerHistoryPanel').style.display = 'none';
       s.getElementById('hwTextarea').value = '';
       this.overlay.drawer.attachedImageBase64 = null;
       s.getElementById('hwImgPreviewRow').style.display = 'none';
       await this.overlay.drawer.loadInitialHistory();
-      this.overlay.showToast('Đã bắt đầu đoạn chat mới');
+      this.overlay.showToast(dict.toastNewChat || 'Đã bắt đầu đoạn chat mới');
       setTimeout(() => s.getElementById('hwTextarea').focus(), 100);
     });
 

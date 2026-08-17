@@ -30,9 +30,9 @@ export class SidePanelController {
     this.populateStaticIcons();
     this.setupEventListeners();
     SidePanelTooltips.init();
+    await this.loadChatHistory();
     await this.applyLanguageI18n();
     await this.updateModelBadge();
-    await this.loadChatHistory();
 
     // Mutual exclusivity: Close in-page drawer if sidepanel is open
     chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
@@ -115,14 +115,20 @@ export class SidePanelController {
     // Header buttons
     document.getElementById('spBtnClear')?.addEventListener('click', async () => {
       await Storage.clearChatHistory();
-      const { outputLanguage = 'en' } = await Storage.get(['outputLanguage']);
-      const dict = getI18n(outputLanguage);
+      const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+      const dict = getI18n(uiLanguage);
       const chatBody = document.getElementById('spChatBody');
       if (chatBody) {
+        const chipsHtml = (dict.chips || []).map(
+          (c) => `<button class="sp-chip" data-query="${c.query}">${c.label}</button>`
+        ).join('');
         chatBody.innerHTML = `
           <div class="sp-msg sp-msg-ai">
             <div class="sp-msg-bubble">
-              ${dict.chatCleared}
+              <div id="spWelcomeText">${dict.welcomeText}</div>
+              <div class="sp-chips" id="spChipsContainer">
+                ${chipsHtml}
+              </div>
             </div>
           </div>
         `;
@@ -348,9 +354,9 @@ export class SidePanelController {
 
     msgEl.innerHTML = `
       <div class="sp-msg-bubble">
-        <div class="sp-ai-content" style="color:var(--text-muted);">${Icons.sparkles(14)} Solving & Analyzing...</div>
+        <div class="sp-ai-content" style="color:var(--text-muted);">${Icons.sparkles(14)} Đang suy nghĩ & giải bài...</div>
         <div class="sp-msg-footer" style="display:none;">
-          <button class="sp-copy-btn">${Icons.copy(12)} Copy</button>
+          <button class="sp-copy-btn">${Icons.copy(12)} <span>Sao chép</span></button>
         </div>
       </div>
     `;
@@ -374,7 +380,7 @@ export class SidePanelController {
     if (body) body.scrollTop = body.scrollHeight;
   }
 
-  finalizeStream() {
+  async finalizeStream() {
     this.isStreaming = false;
     const btnSend = document.getElementById('spBtnSend');
     if (btnSend) btnSend.disabled = false;
@@ -382,24 +388,29 @@ export class SidePanelController {
     this.updateModelBadge();
 
     if (this.activeAiBubble) {
+      const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+      const dict = getI18n(uiLanguage);
       const footer = this.activeAiBubble.querySelector('.sp-msg-footer');
       if (footer) footer.style.display = 'flex';
 
       const copyBtn = this.activeAiBubble.querySelector('.sp-copy-btn');
-      copyBtn?.addEventListener('click', () => {
-        navigator.clipboard.writeText(this.currentResponseText);
-        copyBtn.innerHTML = `${Icons.check(12)} Copied!`;
-        setTimeout(() => {
-          copyBtn.innerHTML = `${Icons.copy(12)} Copy`;
-        }, 2000);
-      });
+      if (copyBtn) {
+        copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(this.currentResponseText);
+          copyBtn.innerHTML = `${Icons.check(12)} <span>${dict.copiedBtn || 'Đã sao chép!'}</span>`;
+          setTimeout(() => {
+            copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
+          }, 2000);
+        };
+      }
 
       Storage.addChatMessage({ role: 'assistant', content: this.currentResponseText });
     }
   }
 
   async applyLanguageI18n(lang = null) {
-    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+    const { uiLanguage = 'vi', outputLanguage = 'en' } = await Storage.get(['uiLanguage', 'outputLanguage']);
     const currentLang = lang || uiLanguage;
     const dict = getI18n(currentLang);
 
@@ -410,12 +421,20 @@ export class SidePanelController {
     const welcomeText = document.getElementById('spWelcomeText');
     const chipsContainer = document.getElementById('spChipsContainer');
     const modeSelect = document.getElementById('spSelectMode');
+    const langSelect = document.getElementById('spSelectLang');
 
     if (textarea) textarea.placeholder = dict.placeholder;
     if (sendBtn) sendBtn.innerHTML = `<span>${dict.askAiBtn}</span> ${Icons.send(13)}`;
     if (captureBtn) captureBtn.innerHTML = `${Icons.scissors(14)} ${dict.captureBtn}`;
     if (hintSpan) hintSpan.textContent = dict.shiftEnterHint;
     if (welcomeText) welcomeText.textContent = dict.welcomeText;
+
+    if (langSelect) {
+      const curVal = langSelect.value || outputLanguage;
+      langSelect.innerHTML = SUPPORTED_LANGUAGES.map(
+        (l) => `<option value="${l.id}" ${l.id === curVal ? 'selected' : ''}>${l.name}</option>`
+      ).join('');
+    }
 
     if (chipsContainer && dict.chips) {
       chipsContainer.innerHTML = dict.chips.map(
@@ -437,9 +456,9 @@ export class SidePanelController {
 
     // Modal titles
     const modalTitle = document.getElementById('spModalTitle');
-    if (modalTitle) modalTitle.innerHTML = `${Icons.settings(16)} ${dict.tooltips?.settings?.title || 'Model & API Key Configuration'}`;
+    if (modalTitle) modalTitle.innerHTML = `${Icons.settings(16)} ${dict.modalConfigTitle || 'Cấu hình AI Models & API Keys'}`;
     const historyModalTitle = document.getElementById('spHistoryModalTitle');
-    if (historyModalTitle) historyModalTitle.innerHTML = `${Icons.history(16)} ${dict.historyTitle || 'Chat History'}`;
+    if (historyModalTitle) historyModalTitle.innerHTML = `${Icons.history(16)} ${dict.historyTitle || 'Lịch sử các hội thoại'}`;
 
     // Update tooltips
     if (dict.tooltips) {
@@ -517,6 +536,8 @@ export class SidePanelController {
     const { activeConversationId } = await Storage.get(['activeConversationId']);
     const convs = await Storage.getConversations();
     const activeConv = convs.find((c) => c.id === activeConversationId);
+    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+    const dict = getI18n(uiLanguage);
 
     const titleEl = document.getElementById('spActiveConvTitle');
     if (titleEl) {
@@ -531,7 +552,7 @@ export class SidePanelController {
         let imgHtml = msg.image ? `<img src="${msg.image}" class="sp-msg-img" alt="Attached">` : '';
         let footerHtml =
           msg.role === 'assistant'
-            ? `<div class="sp-msg-footer"><button class="sp-copy-btn">${Icons.copy(12)} Copy</button></div>`
+            ? `<div class="sp-msg-footer"><button class="sp-copy-btn">${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span></button></div>`
             : '';
 
         el.innerHTML = `
@@ -546,9 +567,9 @@ export class SidePanelController {
           const copyBtn = el.querySelector('.sp-copy-btn');
           copyBtn?.addEventListener('click', () => {
             navigator.clipboard.writeText(msg.content);
-            copyBtn.innerHTML = `${Icons.check(12)} Copied!`;
+            copyBtn.innerHTML = `${Icons.check(12)} <span>${dict.copiedBtn || 'Đã sao chép!'}</span>`;
             setTimeout(() => {
-              copyBtn.innerHTML = `${Icons.copy(12)} Copy`;
+              copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
             }, 2000);
           });
         }
@@ -557,8 +578,6 @@ export class SidePanelController {
       });
       body.scrollTop = body.scrollHeight;
     } else {
-      const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
-      const dict = getI18n(uiLanguage);
       const chipsHtml = (dict.chips || []).map(
         (c) => `<button class="sp-chip" data-query="${c.query}">${c.label}</button>`
       ).join('');
@@ -567,7 +586,7 @@ export class SidePanelController {
         <div class="sp-msg sp-msg-ai">
           <div class="sp-msg-bubble">
             <div id="spWelcomeText">${dict.welcomeText}</div>
-            <div class="sp-chips-row" id="spChipsContainer">
+            <div class="sp-chips" id="spChipsContainer">
               ${chipsHtml}
             </div>
           </div>

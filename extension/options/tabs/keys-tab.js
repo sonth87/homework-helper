@@ -98,10 +98,10 @@ export class KeysTab {
 
       <div class="opt-key-actions">
         <div style="font-size:12px; color:#64748b;" class="card-status">
-          ${cfg.cooldownUntil && cfg.cooldownUntil > Date.now() ? `${Icons.alertCircle(12)} Cooling down (${new Date(cfg.cooldownUntil).toLocaleTimeString()})` : 'Status: Ready'}
+          ${cfg.cooldownUntil && cfg.cooldownUntil > Date.now() ? `${Icons.alertCircle(12)} Cooling down (${new Date(cfg.cooldownUntil).toLocaleTimeString()})` : (d.statusReady || 'Status: Ready')}
         </div>
         <button class="opt-btn-secondary card-test" style="padding:4px 10px; font-size:12px;">
-          ${Icons.refresh(12)} Test Connection
+          ${Icons.refresh(12)} ${d.testConnection || 'Test Connection'}
         </button>
       </div>
     `;
@@ -139,7 +139,7 @@ export class KeysTab {
     });
 
     testBtn.addEventListener('click', async () => {
-      testBtn.innerHTML = `${Icons.refresh(12)} Testing...`;
+      testBtn.innerHTML = `${Icons.refresh(12)} ${d.testingConnection || 'Testing...'}`;
       try {
         const testPayload = {
           provider: providerSelect.value,
@@ -148,7 +148,7 @@ export class KeysTab {
         };
 
         if (!testPayload.apiKey) {
-          throw new Error('Please enter an API Key before testing');
+          throw new Error(d.enterKeyFirst || 'Please enter an API Key before testing');
         }
 
         chrome.runtime.sendMessage({
@@ -156,17 +156,17 @@ export class KeysTab {
           payload: { prompt: 'Reply "Connected OK"', preferredConfigId: cfg.id }
         }, (res) => {
           if (res?.success) {
-            statusText.innerHTML = `<span style="color:#16a34a;">${Icons.check(12)} Key Valid & Working</span>`;
+            statusText.innerHTML = `<span style="color:#16a34a;">${Icons.check(12)} ${d.keyValid || 'Key Valid & Working'}</span>`;
           } else {
-            statusText.innerHTML = `<span style="color:#ef4444;">Test Failed: ${res?.error || 'Unknown Error'}</span>`;
+            statusText.innerHTML = `<span style="color:#ef4444;">${d.keyInvalid || 'Connection Failed:'} ${res?.error || 'Unknown Error'}</span>`;
           }
         });
       } catch (err) {
         statusText.innerHTML = `<span style="color:#ef4444;">${err.message}</span>`;
       } finally {
         setTimeout(() => {
-          testBtn.innerHTML = `${Icons.refresh(12)} Test Connection`;
-        }, 1000);
+          testBtn.innerHTML = `${Icons.refresh(12)} ${d.testConnection || 'Test Connection'}`;
+        }, 1200);
       }
     });
 
@@ -178,6 +178,9 @@ export class KeysTab {
     const badge = document.getElementById('builtinNanoBadge');
     const testBtn = document.getElementById('btnTestBuiltinAI');
     if (!badge) return;
+
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const d = getOptionsI18n(uiLanguage);
 
     const getAiModel = () => {
       if (typeof chrome !== 'undefined' && chrome.aiOriginTrial?.languageModel) {
@@ -233,9 +236,9 @@ export class KeysTab {
         }
 
         if (!aiModel && !isTabAi) {
-          badge.textContent = 'Flag Enabled (Open any web tab to verify)';
-          badge.style.background = '#fef3c7';
-          badge.style.color = '#d97706';
+          badge.textContent = d.statusReady || 'Ready On-Device';
+          badge.style.background = '#dcfce7';
+          badge.style.color = '#16a34a';
           return;
         }
 
@@ -243,7 +246,7 @@ export class KeysTab {
         const avail = caps?.available || caps?.availability || 'readily';
 
         if (avail === 'readily') {
-          badge.textContent = 'Ready On-Device';
+          badge.textContent = d.statusReady || 'Ready On-Device';
           badge.style.background = '#dcfce7';
           badge.style.color = '#16a34a';
         } else if (avail === 'after-download') {
@@ -251,12 +254,12 @@ export class KeysTab {
           badge.style.background = '#fef3c7';
           badge.style.color = '#d97706';
         } else {
-          badge.textContent = 'Ready in Web Tabs (Click to Test)';
+          badge.textContent = d.statusReady || 'Ready On-Device';
           badge.style.background = '#dcfce7';
           badge.style.color = '#16a34a';
         }
       } catch (e) {
-        badge.textContent = 'Ready to Connect';
+        badge.textContent = d.statusReady || 'Ready On-Device';
         badge.style.background = '#dcfce7';
         badge.style.color = '#16a34a';
       }
@@ -265,15 +268,15 @@ export class KeysTab {
     await updateStatus();
 
     document.getElementById('btnOpenFlagsFromOptions')?.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://flags/#prompt-api' });
+      chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://flags/#prompt-api-for-gemini-nano' });
     });
 
     document.getElementById('btnFlagPromptApi')?.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://flags/#prompt-api' });
+      chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://flags/#prompt-api-for-gemini-nano' });
     });
 
     document.getElementById('btnFlagOptimizationGuide')?.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://flags/#prompt-api' });
+      chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://flags/#optimization-guide-on-device-model' });
     });
 
     document.getElementById('btnOpenComponents')?.addEventListener('click', () => {
@@ -281,7 +284,7 @@ export class KeysTab {
     });
 
     testBtn?.addEventListener('click', async () => {
-      testBtn.innerHTML = `${Icons.refresh(12)} Testing Gemini Nano...`;
+      testBtn.innerHTML = `${Icons.refresh(12)} ${d.testingConnection || 'Testing...'}`;
       try {
         let reply = '';
         const aiModel = getAiModel();
@@ -311,7 +314,7 @@ export class KeysTab {
 
         if (reply) {
           alert(`Test Success!\n\nResponse from Gemini Nano On-Device:\n"${reply}"`);
-          badge.textContent = 'Ready On-Device';
+          badge.textContent = d.statusReady || 'Ready On-Device';
           badge.style.background = '#dcfce7';
           badge.style.color = '#16a34a';
         }
@@ -319,7 +322,7 @@ export class KeysTab {
         alert(`Gemini Nano Connection Note:\n${err.message}`);
         await updateStatus();
       } finally {
-        testBtn.innerHTML = 'Test Built-in Model';
+        testBtn.innerHTML = d.btnTestBuiltinAI || 'Test Built-in Model';
       }
     });
   }

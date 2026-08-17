@@ -46,14 +46,20 @@ export class OverlayDrawer {
     // Clear Chat
     s.getElementById('hwBtnClear')?.addEventListener('click', async () => {
       await Storage.clearChatHistory();
-      const { outputLanguage = 'en' } = await Storage.get(['outputLanguage']);
-      const dict = getI18n(outputLanguage);
+      const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+      const dict = getI18n(uiLanguage);
       const body = s.getElementById('hwChatBody');
       if (body) {
+        const chipsHtml = (dict.chips || []).map(
+          (c) => `<button class="hw-chip" data-query="${c.query}">${c.label}</button>`
+        ).join('');
         body.innerHTML = `
           <div class="hw-msg hw-msg-ai">
             <div class="hw-msg-bubble">
-              ${dict.chatCleared}
+              <div id="hwWelcomeText">${dict.welcomeText}</div>
+              <div class="hw-chips-container" id="hwChipsContainer">
+                ${chipsHtml}
+              </div>
             </div>
           </div>
         `;
@@ -319,9 +325,9 @@ export class OverlayDrawer {
 
     msgEl.innerHTML = `
       <div class="hw-msg-bubble">
-        <div class="hw-ai-content" style="color:#94a3b8;">${Icons.sparkles(14)} Solving & Analyzing...</div>
+        <div class="hw-ai-content" style="color:#94a3b8;">${Icons.sparkles(14)} Đang suy nghĩ & giải bài...</div>
         <div class="hw-msg-footer" style="display:none;">
-          <button class="hw-copy-btn">${Icons.copy(12)} Copy</button>
+          <button class="hw-copy-btn">${Icons.copy(12)} <span>Sao chép</span></button>
         </div>
       </div>
     `;
@@ -354,7 +360,7 @@ export class OverlayDrawer {
     if (body) body.scrollTop = body.scrollHeight;
   }
 
-  finalizeStream() {
+  async finalizeStream() {
     this.isStreaming = false;
     const btnSend = this.shadow.getElementById('hwBtnSend');
     if (btnSend) btnSend.disabled = false;
@@ -367,17 +373,22 @@ export class OverlayDrawer {
     }
 
     if (this.activeAiBubble) {
+      const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+      const dict = getI18n(uiLanguage);
       const footer = this.activeAiBubble.querySelector('.hw-msg-footer');
       if (footer) footer.style.display = 'flex';
 
       const copyBtn = this.activeAiBubble.querySelector('.hw-copy-btn');
-      copyBtn?.addEventListener('click', () => {
-        navigator.clipboard.writeText(this.currentDrawerResponseText);
-        copyBtn.innerHTML = `${Icons.check(12)} Copied!`;
-        setTimeout(() => {
-          copyBtn.innerHTML = `${Icons.copy(12)} Copy`;
-        }, 2000);
-      });
+      if (copyBtn) {
+        copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(this.currentDrawerResponseText);
+          copyBtn.innerHTML = `${Icons.check(12)} <span>${dict.copiedBtn || 'Đã sao chép!'}</span>`;
+          setTimeout(() => {
+            copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
+          }, 2000);
+        };
+      }
 
       Storage.addChatMessage({ role: 'assistant', content: this.currentDrawerResponseText });
     }
@@ -449,6 +460,9 @@ export class OverlayDrawer {
       titleEl.textContent = activeConv?.title || 'New Chat';
     }
 
+    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+    const dict = getI18n(uiLanguage);
+
     if (history.length > 0) {
       history.forEach((msg) => {
         const el = document.createElement('div');
@@ -457,7 +471,7 @@ export class OverlayDrawer {
         let imgHtml = msg.image ? `<img src="${msg.image}" class="hw-msg-img" alt="Attached">` : '';
         let footerHtml =
           msg.role === 'assistant'
-            ? `<div class="hw-msg-footer"><button class="hw-copy-btn">${Icons.copy(12)} Copy</button></div>`
+            ? `<div class="hw-msg-footer"><button class="hw-copy-btn">${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span></button></div>`
             : '';
 
         el.innerHTML = `
@@ -472,9 +486,9 @@ export class OverlayDrawer {
           const copyBtn = el.querySelector('.hw-copy-btn');
           copyBtn?.addEventListener('click', () => {
             navigator.clipboard.writeText(msg.content);
-            copyBtn.innerHTML = `${Icons.check(12)} Copied!`;
+            copyBtn.innerHTML = `${Icons.check(12)} <span>${dict.copiedBtn || 'Đã sao chép!'}</span>`;
             setTimeout(() => {
-              copyBtn.innerHTML = `${Icons.copy(12)} Copy`;
+              copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
             }, 2000);
           });
         }
@@ -483,8 +497,6 @@ export class OverlayDrawer {
       });
       body.scrollTop = body.scrollHeight;
     } else {
-      const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
-      const dict = getI18n(uiLanguage);
       const chipsHtml = (dict.chips || []).map(
         (c) => `<button class="hw-chip" data-query="${c.query}">${c.label}</button>`
       ).join('');

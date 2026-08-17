@@ -4,6 +4,7 @@
 
 import { Icons } from '../shared/icons.js';
 import { Storage, DEFAULT_PROVIDERS } from '../shared/storage.js';
+import { getI18n } from '../shared/i18n.js';
 
 export class SidePanelKeysModal {
   constructor(controller) {
@@ -19,41 +20,41 @@ export class SidePanelKeysModal {
 
     const { apiConfigs = [] } = await Storage.getApiConfigs();
     const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
-    const isVi = uiLanguage === 'vi';
+    const dict = getI18n(uiLanguage);
 
     body.innerHTML = `
       <div style="font-size:12px; color:var(--text-muted); line-height:1.4;">
-        ${isVi ? 'Thêm một hoặc nhiều API Key. Tiện ích tự động xoay vòng cân bằng tải và chuyển sang key dự phòng khi gặp giới hạn Rate Limit.' : 'Add one or more API Keys. The extension automatically load-balances and falls back to backup keys when hitting rate limits.'}
+        ${dict.modalConfigDesc || 'Add one or more API Keys. The extension automatically load-balances and falls back to backup keys when hitting rate limits.'}
       </div>
 
       <!-- Chrome Built-in AI Gemini Nano Guide Section in Modal -->
       <div style="margin-top: 8px; padding: 10px; background: rgba(2, 132, 199, 0.08); border-radius: 8px; border: 1px solid rgba(2, 132, 199, 0.25);">
         <div style="font-weight: 700; font-size: 12.5px; color: #0284c7; display:flex; align-items:center; gap:6px;">
-          ${Icons.cpu(14)} Chrome Gemini Nano (Local AI)
+          ${Icons.cpu(14)} ${dict.modalNanoTitle || 'Chrome Gemini Nano (Local AI)'}
         </div>
         <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px; line-height:1.5;">
-          ${isVi ? 'Mô hình AI nội bộ chạy Offline. Nhấn các liên kết bên dưới để mở trực tiếp:' : 'On-Device AI running offline. Click links below to open flags directly:'}
+          ${dict.modalNanoDesc || 'On-Device AI running offline. Click links below to open flags directly:'}
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
           <button class="sp-copy-btn" id="spModalBtnFlagPrompt" style="background:#0284c7; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} ${isVi ? '1. Mở #prompt-api' : '1. Open #prompt-api'}
+            ${Icons.externalLink(11)} ${dict.modalBtnFlagPrompt || '1. Open #prompt-api'}
           </button>
           <button class="sp-copy-btn" id="spModalBtnFlagOptGuide" style="background:#0284c7; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} ${isVi ? '2. Mở #optimization-guide' : '2. Open #optimization-guide'}
+            ${Icons.externalLink(11)} ${dict.modalBtnFlagOptGuide || '2. Open #optimization-guide'}
           </button>
           <button class="sp-copy-btn" id="spModalBtnComponents" style="background:#0369a1; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} ${isVi ? '3. Mở components' : '3. Open components'}
+            ${Icons.externalLink(11)} ${dict.modalBtnComponents || '3. Open components'}
           </button>
         </div>
       </div>
 
       <div id="spModalKeyList" style="display:flex; flex-direction:column; gap:10px; margin-top:8px;"></div>
 
-      <button class="sp-btn-add" id="spBtnAddKey">${Icons.plus(16)} ${isVi ? 'Thêm Model & Key' : 'Add Model & Key'}</button>
+      <button class="sp-btn-add" id="spBtnAddKey">${Icons.plus(16)} ${dict.modalBtnAddKey || 'Add Model & Key'}</button>
 
       <div style="text-align:right; margin-top:6px;">
         <a href="#" id="spLinkFullOptions" style="font-size:12px; color:var(--accent); text-decoration:none;">
-          ${isVi ? 'Xem hướng dẫn lấy Key miễn phí →' : 'View free API key guide →'}
+          ${dict.modalLinkGuide || 'View free API key guide →'}
         </a>
       </div>
     `;
@@ -71,7 +72,7 @@ export class SidePanelKeysModal {
     });
 
     const list = body.querySelector('#spModalKeyList');
-    apiConfigs.forEach((cfg) => list.appendChild(this.renderKeyItem(cfg)));
+    apiConfigs.forEach((cfg) => list.appendChild(this.renderKeyItem(cfg, false, dict)));
 
     body.querySelector('#spBtnAddKey').addEventListener('click', () => {
       const newCfg = {
@@ -82,7 +83,7 @@ export class SidePanelKeysModal {
         apiKey: '',
         isEnabled: true,
       };
-      list.appendChild(this.renderKeyItem(newCfg, true));
+      list.appendChild(this.renderKeyItem(newCfg, true, dict));
     });
 
     body.querySelector('#spLinkFullOptions').addEventListener('click', (e) => {
@@ -91,7 +92,8 @@ export class SidePanelKeysModal {
     });
   }
 
-  renderKeyItem(cfg, isNew = false) {
+  renderKeyItem(cfg, isNew = false, dict = null) {
+    const d = dict || getI18n();
     const el = document.createElement('div');
     el.style.cssText = 'border:1px solid var(--border-color); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:6px; background:var(--bg-secondary);';
 
@@ -118,7 +120,7 @@ export class SidePanelKeysModal {
         <select class="sp-field cfg-model">${modelOptions}</select>
       </div>
 
-      <input type="password" class="sp-field cfg-key" placeholder="Enter API Key" value="${cfg.apiKey || ''}">
+      <input type="password" class="sp-field cfg-key" placeholder="${d.modalKeyPlaceholder || 'Enter API Key'}" value="${cfg.apiKey || ''}">
     `;
 
     const providerSelect = el.querySelector('.cfg-provider');

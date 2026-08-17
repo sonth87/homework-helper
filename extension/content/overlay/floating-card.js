@@ -3,21 +3,9 @@
  */
 
 import { Icons } from '../../shared/icons.js';
-import { Storage } from '../../shared/storage.js';
+import { Storage, SUPPORTED_LANGUAGES } from '../../shared/storage.js';
 import { formatMarkdownAndMath } from '../../shared/markdown-katex.js';
-import { getFloatingPopupI18n } from '../../shared/i18n.js';
-
-const LANGUAGE_OPTIONS = [
-  { id: 'en', name: 'English' },
-  { id: 'vi', name: 'Tiếng Việt' },
-  { id: 'th', name: 'ไทย (Thai)' },
-  { id: 'zh', name: 'Chinese (中文)' },
-  { id: 'es', name: 'Spanish (Español)' },
-  { id: 'fr', name: 'French (Français)' },
-  { id: 'de', name: 'German (Deutsch)' },
-  { id: 'ja', name: 'Japanese (日本語)' },
-  { id: 'ko', name: 'Korean (한국어)' },
-];
+import { getFloatingPopupI18n, getI18n } from '../../shared/i18n.js';
 
 export class OverlayFloatingCard {
   constructor(overlay) {
@@ -172,8 +160,8 @@ export class OverlayFloatingCard {
     this.popupImageBase64 = imageBase64;
 
     const { uiLanguage = 'en', outputLanguage = 'en' } = await Storage.get(['uiLanguage', 'outputLanguage']);
-    const isVi = outputLanguage === 'vi';
     const cardDict = getFloatingPopupI18n(uiLanguage);
+    const genDict = getI18n(uiLanguage);
 
     s.getElementById('hwPopupTitle').textContent = cardDict.helperTitle;
     s.getElementById('hwTranslateBar').style.display = 'none';
@@ -197,13 +185,11 @@ export class OverlayFloatingCard {
     this.overlay.drawer.activeTarget = 'card';
     this.overlay.drawer.activeRequestId = `req_${Date.now()}`;
 
-    const prompt = isVi
-      ? 'Vui lòng giải chi tiết từng bước bài tập trong hình ảnh này kèm công thức toán học LaTeX ($...$) và đóng khung đáp án cuối cùng:'
-      : 'Please solve this homework question with clear step-by-step reasoning, mathematical formulas in LaTeX ($...$), and highlight the final answer:';
+    const prompt = genDict.imagePromptHeader || 'Please solve this homework question with clear step-by-step reasoning, mathematical formulas in LaTeX ($...$), and highlight the final answer:';
 
     Storage.addChatMessage({
       role: 'user',
-      content: isVi ? 'Giải bài tập trong hình ảnh đã chụp' : 'Solve homework problem from captured image',
+      content: genDict.captureSolveText || 'Solve homework problem from captured image',
       image: imageBase64,
     });
 
@@ -219,11 +205,11 @@ export class OverlayFloatingCard {
         payload: { imageBase64, targetLang: outputLanguage }
       }, (res) => {
         const ocrText = res?.text || '';
-        const nanoPrompt = isVi
-          ? `Đề bài toán/bài tập trích xuất từ hình ảnh:\n${ocrText || '(Hình ảnh bài tập)'}\n\nVui lòng giải chi tiết từng bước bằng Tiếng Việt kèm công thức toán LaTeX ($...$) và đóng khung kết quả cuối cùng:`
-          : `Homework problem from image:\n${ocrText || '(Homework image)'}\n\nPlease solve this step-by-step with LaTeX formulas ($...$) and highlight the final answer:`;
+        const targetLangObj = SUPPORTED_LANGUAGES.find((l) => l.id === outputLanguage);
+        const targetLangName = targetLangObj ? targetLangObj.name : 'English';
 
-        const nanoSysPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${isVi ? 'Tiếng Việt (Vietnamese)' : outputLanguage}.`;
+        const nanoPrompt = `${prompt}\n\n[OCR Text]:\n${ocrText || '(No text extracted)'}\n\n[Strict Output Language]: ${targetLangName}`;
+        const nanoSysPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;
 
         window.dispatchEvent(
           new CustomEvent('HOMEWORK_AI_NANO_EXEC', {
