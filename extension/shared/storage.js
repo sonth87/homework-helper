@@ -139,6 +139,41 @@ Instructions:
 2. For math & science problems: Show step-by-step reasoning with formulas in LaTeX ($...$) and clearly state the final answer.
 3. Keep explanations structured, concise, and easy to understand.`;
 
+export function buildNanoPrompts(studyMode = 'step-by-step', prompt = '', ocrText = '', targetLangName = 'Tiếng Việt', customSysPrompt = '') {
+  const contentText = (ocrText && ocrText.trim())
+    ? (prompt && prompt.trim() ? `${prompt.trim()}\n\n[Nội dung câu hỏi từ ảnh]:\n${ocrText.trim()}` : ocrText.trim())
+    : prompt.trim();
+
+  let sysPrompt = customSysPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
+  let userPrompt = '';
+
+  if (studyMode === 'direct') {
+    sysPrompt = `You are a concise direct-answer AI.
+CRITICAL RULES:
+1. Provide ONLY the direct final answer.
+2. DO NOT output steps, reasoning, breakdown, analysis, or explanations.
+3. For multiple-choice questions: Output ONLY the correct option letter and/or answer text (e.g. "Đáp án: 2" or "D. 2").
+4. Keep the entire response under 1-2 lines.`;
+    userPrompt = `[Câu hỏi]:\n${contentText}\n\n[YÊU CẦU NGHIÊM NGẶT]: Chỉ trả lời đáp án trực tiếp ngắn nhất. Tuyệt đối KHÔNG giải thích, KHÔNG ghi Bước 1/Bước 2.\n[Ngôn ngữ]: ${targetLangName}`;
+  } else if (studyMode === 'hint') {
+    sysPrompt = `You are a pedagogical tutor AI. Do NOT give the final answer. Provide hints, key formulas, and guiding questions in ${targetLangName}.`;
+    userPrompt = `[Câu hỏi]:\n${contentText}\n\n[YÊU CẦU]: Đưa ra gợi ý và định hướng giúp học sinh tự giải bài, không đưa đáp án ngay.\n[Ngôn ngữ]: ${targetLangName}`;
+  } else if (studyMode === 'explain') {
+    sysPrompt = `You are an educator AI. Explain the underlying scientific/mathematical theory and principles clearly in ${targetLangName}.`;
+    userPrompt = `[Câu hỏi]:\n${contentText}\n\n[YÊU CẦU]: Giải thích sâu bản chất lý thuyết và kiến thức bài toán.\n[Ngôn ngữ]: ${targetLangName}`;
+  } else if (studyMode === 'translate') {
+    sysPrompt = `You are an academic translator. Translate the text accurately to ${targetLangName}.`;
+    userPrompt = `[Nội dung]:\n${contentText}\n\n[YÊU CẦU]: Dịch chính xác nội dung sang ${targetLangName}.`;
+  } else {
+    // step-by-step
+    sysPrompt = `${sysPrompt}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;
+    userPrompt = `[Nội dung bài tập]:\n${contentText}\n\n[Yêu cầu]: Hãy giải bài toán từng bước chi tiết (Bước 1, Bước 2...), trình bày công thức bằng LaTeX ($...$) và đóng khung đáp án cuối cùng.\n[Ngôn ngữ]: ${targetLangName}`;
+  }
+
+  const finalSysPrompt = `${sysPrompt}\n\n[LANGUAGE REQUIREMENT]: Reply in ${targetLangName}.`.trim();
+  return { sysPrompt: finalSysPrompt, userPrompt };
+}
+
 export const DEFAULT_SETTINGS = {
   // Array of configured model keys:
   // [{ id, provider, model, apiKey, baseUrl, isEnabled, priority, failureCount, cooldownUntil }]

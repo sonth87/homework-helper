@@ -3,7 +3,7 @@
  */
 
 import { Icons } from '../../shared/icons.js';
-import { Storage, DEFAULT_NANO_SYSTEM_PROMPT } from '../../shared/storage.js';
+import { Storage, DEFAULT_NANO_SYSTEM_PROMPT, buildNanoPrompts } from '../../shared/storage.js';
 import { formatMarkdownAndMath } from '../../shared/markdown-katex.js';
 import { getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
@@ -270,23 +270,24 @@ export class OverlayDrawer {
         id: 'Bahasa Indonesia',
         ru: 'Russian (Русский)',
       };
-      const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'English';
-      const promptToUse = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
-      const nanoSysPrompt = `${promptToUse}\n\n[STRICT LANGUAGE]: You MUST reply in ${targetLangName}.`.trim();
+      const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Tiếng Việt';
       
-      let nanoPromptText = prompt;
+      let ocrText = '';
       if (imageBase64) {
         try {
-          const ocrText = await OcrEngine.recognize(imageBase64, outputLanguage);
-          if (ocrText && ocrText.trim()) {
-            nanoPromptText = `${prompt}\n\n[Nội dung nhận diện từ ảnh]:\n${ocrText.trim()}`;
-          }
+          ocrText = await OcrEngine.recognize(imageBase64, outputLanguage);
         } catch (e) {
           console.warn('[Drawer] Nano OCR failed:', e);
         }
       }
 
-      const nanoPrompt = `${nanoPromptText}\n\n[Output entirely in ${targetLangName}]`;
+      const { sysPrompt: nanoSysPrompt, userPrompt: nanoPrompt } = buildNanoPrompts(
+        this.currentStudyMode || 'step-by-step',
+        prompt,
+        ocrText,
+        targetLangName,
+        nanoSystemPrompt
+      );
 
       window.dispatchEvent(
         new CustomEvent('HOMEWORK_AI_NANO_EXEC', {

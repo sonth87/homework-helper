@@ -37,10 +37,15 @@ export class AiEngine {
       ru: 'Russian (Русский)',
     };
     const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Tiếng Việt (Vietnamese)';
-    const finalSystemPrompt = `${systemPrompt || ''}\n\n[STRICT LANGUAGE REQUIREMENT]: You MUST provide your entire solution, explanations, step-by-step reasoning, and answer in ${targetLangName}. Do NOT use any other language unless explicitly requested.`.trim();
+    let directSysInstruction = '';
+    if (studyMode === 'direct') {
+      directSysInstruction = `\n\n[STRICT DIRECT-ANSWER INSTRUCTION]: You MUST output ONLY the direct final answer. DO NOT write steps, reasoning, breakdown, analysis, or explanations. For multiple-choice questions, output ONLY the correct option letter and/or answer text (e.g. "Đáp án: 2" or "D. 2"). Keep the response under 1-2 lines.`;
+    }
+
+    const finalSystemPrompt = `${systemPrompt || ''}${directSysInstruction}\n\n[STRICT LANGUAGE REQUIREMENT]: You MUST provide your entire solution, explanations, step-by-step reasoning, and answer in ${targetLangName}. Do NOT use any other language unless explicitly requested.`.trim();
 
     const nanoPromptBase = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
-    const nanoFinalSystemPrompt = `${nanoPromptBase}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`.trim();
+    const nanoFinalSystemPrompt = `${nanoPromptBase}${directSysInstruction}\n\n[STRICT LANGUAGE]: You MUST reply in ${targetLangName}.`.trim();
 
     // 1. nano_only Strategy: 100% On-Device execution
     if (routingStrategy === 'nano_only') {

@@ -3,7 +3,7 @@
  */
 
 import { Icons } from '../../shared/icons.js';
-import { Storage, SUPPORTED_LANGUAGES, DEFAULT_NANO_SYSTEM_PROMPT } from '../../shared/storage.js';
+import { Storage, SUPPORTED_LANGUAGES, DEFAULT_NANO_SYSTEM_PROMPT, buildNanoPrompts } from '../../shared/storage.js';
 import { formatMarkdownAndMath } from '../../shared/markdown-katex.js';
 import { getFloatingPopupI18n, getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
@@ -194,7 +194,7 @@ export class OverlayFloatingCard {
       image: imageBase64,
     });
 
-    const { apiConfigs = [], systemPrompt, nanoSystemPrompt, routingStrategy = 'prefer_config' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'routingStrategy']);
+    const { apiConfigs = [], systemPrompt, nanoSystemPrompt, routingStrategy = 'prefer_config', studyMode = 'step-by-step' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'routingStrategy', 'studyMode']);
     const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
 
     // If running in Gemini Nano mode (no keys or nano_only), run Local OCR first!
@@ -288,9 +288,13 @@ export class OverlayFloatingCard {
           const targetLangObj = SUPPORTED_LANGUAGES.find((l) => l.id === outputLanguage);
           const targetLangName = targetLangObj ? targetLangObj.name : 'English';
 
-          const nanoPrompt = `[Nội dung bài tập nhận diện từ ảnh]:\n${ocrText.trim()}\n\n[Yêu cầu]: Hãy giải bài toán trên từng bước chi tiết, trình bày công thức bằng LaTeX ($...$) và làm nổi bật đáp án cuối cùng.\n[Ngôn ngữ phản hồi]: Toàn bộ viết bằng ${targetLangName}.`;
-          const promptToUse = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
-          const nanoSysPrompt = `${promptToUse}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;
+          const { sysPrompt: nanoSysPrompt, userPrompt: nanoPrompt } = buildNanoPrompts(
+            studyMode,
+            prompt,
+            ocrText,
+            targetLangName,
+            nanoSystemPrompt
+          );
 
           window.dispatchEvent(
             new CustomEvent('HOMEWORK_AI_NANO_EXEC', {
@@ -311,7 +315,7 @@ export class OverlayFloatingCard {
       payload: {
         prompt,
         imageBase64,
-        studyMode: 'step-by-step',
+        studyMode,
         outputLanguage,
         requestId: this.overlay.drawer.activeRequestId,
       },
