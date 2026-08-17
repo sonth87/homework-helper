@@ -1,14 +1,17 @@
 /**
- * Native Side Panel Controller
- * Handles chat interactions, streaming responses, KaTeX math parsing, and key rotation config modal.
+ * Native Side Panel Controller (ES Module)
+ * Orchestrates chat interactions, streaming responses, KaTeX math rendering, and subcomponents.
  */
 
 import { Icons } from '../shared/icons.js';
-import { Storage, DEFAULT_PROVIDERS } from '../shared/storage.js';
+import { Storage } from '../shared/storage.js';
 import { formatMarkdownAndMath } from '../shared/markdown-katex.js';
 import { getI18n } from '../shared/i18n.js';
+import { SidePanelTooltips } from './sidepanel-tooltips.js';
+import { SidePanelKeysModal } from './sidepanel-keys-modal.js';
+import { SidePanelHistory } from './sidepanel-history.js';
 
-class SidePanelController {
+export class SidePanelController {
   constructor() {
     this.attachedImageBase64 = null;
     this.currentStudyMode = 'step-by-step';
@@ -17,13 +20,16 @@ class SidePanelController {
     this.activeAiBubble = null;
     this.currentResponseText = '';
 
+    this.keysModal = new SidePanelKeysModal(this);
+    this.historyModal = new SidePanelHistory(this);
+
     this.init();
   }
 
   async init() {
     this.populateStaticIcons();
     this.setupEventListeners();
-    this.setupRichTooltips();
+    SidePanelTooltips.init();
     await this.applyLanguageI18n();
     await this.updateModelBadge();
     await this.loadChatHistory();
@@ -37,20 +43,23 @@ class SidePanelController {
   }
 
   populateStaticIcons() {
-    document.getElementById('spLogo').innerHTML = Icons.appLogo(24);
-    document.getElementById('spBtnNewChat').innerHTML = Icons.plus(16);
-    document.getElementById('spBtnHistory').innerHTML = Icons.history(16);
-    document.getElementById('spBtnSettings').innerHTML = Icons.settings(16);
-    document.getElementById('spBtnClear').innerHTML = Icons.trash(16);
-    document.getElementById('spBtnOptions').innerHTML = Icons.externalLink(16);
-    document.getElementById('spBtnCapture').innerHTML = `${Icons.scissors(14)} Capture`;
-    document.getElementById('spBtnUpload').innerHTML = Icons.image(15);
-    document.getElementById('spBtnRemoveThumb').innerHTML = Icons.x(12);
-    document.getElementById('spBtnSend').innerHTML = `<span>Ask AI</span> ${Icons.send(13)}`;
-    document.getElementById('spModalTitle').innerHTML = `${Icons.settings(16)} Model & API Key Configuration`;
-    document.getElementById('spBtnCloseModal').innerHTML = Icons.x(16);
-    document.getElementById('spHistoryModalTitle').innerHTML = `${Icons.history(16)} Lịch sử các hội thoại`;
-    document.getElementById('spBtnCloseHistoryModal').innerHTML = Icons.x(16);
+    const setInner = (id, iconHtml) => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = iconHtml;
+    };
+
+    setInner('spLogo', Icons.appLogo(24));
+    setInner('spBtnNewChat', Icons.plus(16));
+    setInner('spBtnHistory', Icons.history(16));
+    setInner('spBtnSettings', Icons.settings(16));
+    setInner('spBtnClear', Icons.trash(16));
+    setInner('spBtnOptions', Icons.externalLink(16));
+    setInner('spBtnCapture', `${Icons.scissors(14)} Capture`);
+    setInner('spBtnUpload', Icons.image(15));
+    setInner('spBtnRemoveThumb', Icons.x(12));
+    setInner('spBtnSend', `<span>Ask AI</span> ${Icons.send(13)}`);
+    setInner('spBtnCloseModal', Icons.x(16));
+    setInner('spBtnCloseHistoryModal', Icons.x(16));
   }
 
   setupEventListeners() {
@@ -59,8 +68,8 @@ class SidePanelController {
     const fileInput = document.getElementById('spFileInput');
 
     // Send on button click or Enter key
-    sendBtn.addEventListener('click', () => this.handleSend());
-    textarea.addEventListener('keydown', (e) => {
+    sendBtn?.addEventListener('click', () => this.handleSend());
+    textarea?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         this.handleSend();
@@ -68,12 +77,12 @@ class SidePanelController {
     });
 
     // File input & drag-and-drop
-    document.getElementById('spBtnUpload').addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => this.handleFileUpload(e.target.files[0]));
-    document.getElementById('spBtnRemoveThumb').addEventListener('click', () => this.clearImagePreview());
+    document.getElementById('spBtnUpload')?.addEventListener('click', () => fileInput?.click());
+    fileInput?.addEventListener('change', (e) => this.handleFileUpload(e.target.files[0]));
+    document.getElementById('spBtnRemoveThumb')?.addEventListener('click', () => this.clearImagePreview());
 
     // Capture screenshot
-    document.getElementById('spBtnCapture').addEventListener('click', async () => {
+    document.getElementById('spBtnCapture')?.addEventListener('click', async () => {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (tab?.id) {
         chrome.tabs.sendMessage(tab.id, { action: 'START_CROP' }).catch(() => {});
@@ -104,106 +113,84 @@ class SidePanelController {
     }
 
     // Header buttons
-    document.getElementById('spBtnClear').addEventListener('click', async () => {
+    document.getElementById('spBtnClear')?.addEventListener('click', async () => {
       await Storage.clearChatHistory();
       const { outputLanguage = 'en' } = await Storage.get(['outputLanguage']);
       const dict = getI18n(outputLanguage);
-      document.getElementById('spChatBody').innerHTML = `
-        <div class="sp-msg sp-msg-ai">
-          <div class="sp-msg-bubble">
-            ${dict.chatCleared}
+      const chatBody = document.getElementById('spChatBody');
+      if (chatBody) {
+        chatBody.innerHTML = `
+          <div class="sp-msg sp-msg-ai">
+            <div class="sp-msg-bubble">
+              ${dict.chatCleared}
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      }
     });
 
     // New Chat button
-    document.getElementById('spBtnNewChat').addEventListener('click', async () => {
-      await Storage.createNewConversation('Đoạn chat mới');
-      document.getElementById('spHistoryModal').style.display = 'none';
-      document.getElementById('spTextarea').value = '';
-      this.clearImagePreview();
+    document.getElementById('spBtnNewChat')?.addEventListener('click', async () => {
+      await Storage.createNewConversation();
       await this.loadChatHistory();
-      this.showToast('Đã bắt đầu đoạn chat mới');
-      document.getElementById('spTextarea').focus();
+      await this.applyLanguageI18n();
     });
 
-    // History button -> Opens History Modal with past questions
-    document.getElementById('spBtnHistory').addEventListener('click', () => {
-      this.openHistoryModal();
+    // Modals
+    document.getElementById('spBtnSettings')?.addEventListener('click', () => this.keysModal.open());
+    document.getElementById('spBtnCloseModal')?.addEventListener('click', () => {
+      document.getElementById('spModal').style.display = 'none';
     });
 
-    document.getElementById('spBtnCloseHistoryModal').addEventListener('click', () => {
+    document.getElementById('spBtnHistory')?.addEventListener('click', () => this.historyModal.open());
+    document.getElementById('spBtnCloseHistoryModal')?.addEventListener('click', () => {
       document.getElementById('spHistoryModal').style.display = 'none';
     });
 
-    document.getElementById('spBtnOptions').addEventListener('click', () => {
-      chrome.runtime.openOptionsPage();
-    });
+    document.getElementById('spBtnOptions')?.addEventListener('click', () => chrome.runtime.openOptionsPage());
 
-    // Model bar / tag click -> Opens Model & Key Settings Modal
-    document.getElementById('spModelBar')?.addEventListener('click', () => this.openSettingsModal());
-
-    // Settings Modal
-    document.getElementById('spBtnSettings')?.addEventListener('click', () => this.openSettingsModal());
-    document.getElementById('spBtnCloseModal')?.addEventListener('click', () => {
-      const modal = document.getElementById('spModal');
-      if (modal) modal.style.display = 'none';
-      this.updateModelBadge();
-    });
-
-    // Close modal when clicking on backdrop
-    document.getElementById('spModal')?.addEventListener('click', (e) => {
-      if (e.target.id === 'spModal') {
-        document.getElementById('spModal').style.display = 'none';
-        this.updateModelBadge();
-      }
-    });
-
-    document.getElementById('spHistoryModal')?.addEventListener('click', (e) => {
-      if (e.target.id === 'spHistoryModal') {
-        document.getElementById('spHistoryModal').style.display = 'none';
-      }
-    });
-
-    // Chips delegation
-    document.getElementById('spChatBody').addEventListener('click', (e) => {
-      const chip = e.target.closest('.sp-chip');
-      if (chip) {
-        const q = chip.getAttribute('data-query');
-        if (q) {
-          textarea.value = q;
-          this.handleSend();
+    // Listen for AI responses from background worker
+    chrome.runtime.onMessage.addListener((msg) => {
+      if (msg.action === 'AI_STREAM_CHUNK') {
+        if (msg.payload?.requestId === this.activeRequestId) {
+          this.appendChunk(msg.payload.chunk, msg.payload.meta);
+        }
+      } else if (msg.action === 'AI_STREAM_END') {
+        if (msg.payload?.requestId === this.activeRequestId) {
+          this.finalizeStream();
+        }
+      } else if (msg.action === 'AI_STREAM_ERROR') {
+        if (msg.payload?.requestId === this.activeRequestId) {
+          this.handleError(msg.payload.error);
+        }
+      } else if (msg.action === 'OCR_RESULT') {
+        if (msg.payload?.text) {
+          const textareaEl = document.getElementById('spTextarea');
+          if (textareaEl) textareaEl.value = msg.payload.text;
         }
       }
     });
 
-    // Stream listener
-    chrome.runtime.onMessage.addListener((msg) => {
-      if (msg.action === 'AI_STREAM_CHUNK' && msg.requestId === this.activeRequestId) {
-        this.appendChunk(msg.chunk, msg.meta);
-      } else if (msg.action === 'AI_STREAM_COMPLETE' && msg.requestId === this.activeRequestId) {
-        this.finalizeStream();
-      } else if (msg.action === 'AI_STREAM_ERROR' && msg.requestId === this.activeRequestId) {
-        this.handleError(msg.error);
-      } else if (msg.action === 'QUICK_ASK_TEXT' && msg.text) {
-        textarea.value = msg.text;
-        this.handleSend();
+    // Delegate chip clicks
+    document.getElementById('spChatBody')?.addEventListener('click', (e) => {
+      const chip = e.target.closest('.sp-chip');
+      if (chip) {
+        const query = chip.getAttribute('data-query');
+        if (query) {
+          this.askAi({ prompt: query });
+        }
       }
     });
 
-    // Real-time sync with popup actions and options
+    // Listen for storage changes
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local') {
+          if (changes.apiConfigs || changes.activeConfigId || changes.isNanoReady) {
+            this.updateModelBadge();
+          }
           if (changes.uiLanguage) {
             this.applyLanguageI18n(changes.uiLanguage.newValue);
-          }
-          if ((changes.chatHistory || changes.activeConversationId || changes.conversations) && !this.isStreaming) {
-            this.loadChatHistory();
-          }
-          if (changes.isNanoReady || changes.apiConfigs) {
-            this.updateModelBadge();
           }
         }
       });
@@ -214,8 +201,11 @@ class SidePanelController {
     const { apiConfigs = [], activeConfigId, rotationStrategy } = await Storage.getApiConfigs();
     const { isNanoReady } = await Storage.get(['isNanoReady']);
     const tag = document.getElementById('spModelTag');
+    if (!tag) return;
+
     const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
     const dict = getI18n(uiLanguage);
+    const enabledCount = apiConfigs.filter((c) => c.isEnabled && c.apiKey).length;
 
     if (enabledCount === 0) {
       let isReady = !!isNanoReady;
@@ -225,22 +215,6 @@ class SidePanelController {
             isReady = true;
           } else if (typeof ai !== 'undefined' && ai?.languageModel) {
             isReady = true;
-          } else {
-            const tabs = await chrome.tabs.query({ url: ['https://*/*', 'http://*/*'] });
-            if (tabs && tabs.length > 0) {
-              const targetTab = tabs.find((t) => t.active) || tabs[0];
-              if (targetTab?.id) {
-                const results = await chrome.scripting.executeScript({
-                  target: { tabId: targetTab.id },
-                  world: 'MAIN',
-                  func: async () => {
-                    const g = typeof window !== 'undefined' ? window : (typeof self !== 'undefined' ? self : {});
-                    return !!(g.ai?.languageModel || g.ai?.assistant || (typeof ai !== 'undefined' ? (ai.languageModel || ai.assistant) : null));
-                  },
-                });
-                isReady = !!results?.[0]?.result;
-              }
-            }
           }
         }
       } catch (e) {
@@ -309,13 +283,13 @@ class SidePanelController {
 
   async handleSend() {
     const textarea = document.getElementById('spTextarea');
-    const text = textarea.value.trim();
+    const text = textarea?.value.trim() || '';
     const img = this.attachedImageBase64;
 
     if (!text && !img) return;
     if (this.isStreaming) return;
 
-    textarea.value = '';
+    if (textarea) textarea.value = '';
     this.attachedImageBase64 = null;
     document.getElementById('spImgPreview').style.display = 'none';
 
@@ -329,7 +303,8 @@ class SidePanelController {
     this.currentResponseText = '';
     this.isStreaming = true;
     this.activeRequestId = `req_${Date.now()}`;
-    document.getElementById('spBtnSend').disabled = true;
+    const btnSend = document.getElementById('spBtnSend');
+    if (btnSend) btnSend.disabled = true;
 
     const { outputLanguage = 'en' } = await Storage.get(['outputLanguage']);
 
@@ -347,6 +322,7 @@ class SidePanelController {
 
   appendUserMessage(text, imageBase64) {
     const body = document.getElementById('spChatBody');
+    if (!body) return;
     const msgEl = document.createElement('div');
     msgEl.className = 'sp-msg sp-msg-user';
 
@@ -366,6 +342,7 @@ class SidePanelController {
 
   createAiBubble() {
     const body = document.getElementById('spChatBody');
+    if (!body) return null;
     const msgEl = document.createElement('div');
     msgEl.className = 'sp-msg sp-msg-ai';
 
@@ -388,16 +365,19 @@ class SidePanelController {
 
     this.currentResponseText += chunk;
     const content = this.activeAiBubble.querySelector('.sp-ai-content');
-    content.style.color = 'inherit';
-    content.innerHTML = formatMarkdownAndMath(this.currentResponseText);
+    if (content) {
+      content.style.color = 'inherit';
+      content.innerHTML = formatMarkdownAndMath(this.currentResponseText);
+    }
 
     const body = document.getElementById('spChatBody');
-    body.scrollTop = body.scrollHeight;
+    if (body) body.scrollTop = body.scrollHeight;
   }
 
   finalizeStream() {
     this.isStreaming = false;
-    document.getElementById('spBtnSend').disabled = false;
+    const btnSend = document.getElementById('spBtnSend');
+    if (btnSend) btnSend.disabled = false;
     Storage.set({ isNanoReady: true });
     this.updateModelBadge();
 
@@ -418,81 +398,8 @@ class SidePanelController {
     }
   }
 
-  setupRichTooltips() {
-    let tooltipEl = document.getElementById('spTooltipPopup');
-    if (!tooltipEl) {
-      tooltipEl = document.createElement('div');
-      tooltipEl.id = 'spTooltipPopup';
-      tooltipEl.className = 'sp-rich-tooltip';
-      document.body.appendChild(tooltipEl);
-    }
-
-    const showTooltip = (el) => {
-      const title = el.getAttribute('data-tooltip-title') || el.getAttribute('title');
-      const desc = el.getAttribute('data-tooltip-desc') || '';
-      if (!title && !desc) return;
-
-      tooltipEl.innerHTML = `
-        ${title ? `<div class="sp-tooltip-title">${title}</div>` : ''}
-        ${desc ? `<div class="sp-tooltip-desc">${desc}</div>` : ''}
-      `;
-
-      tooltipEl.style.display = 'block';
-      tooltipEl.style.visibility = 'hidden';
-      tooltipEl.classList.remove('show');
-
-      const tooltipHeight = tooltipEl.offsetHeight || 44;
-      const tooltipWidth = Math.min(260, Math.max(160, tooltipEl.offsetWidth || 180));
-
-      const rect = el.getBoundingClientRect();
-      let top;
-      if (rect.top < 90) {
-        // Place BELOW
-        top = rect.bottom + 8;
-      } else {
-        // Place ABOVE
-        top = rect.top - tooltipHeight - 8;
-      }
-
-      let left = rect.left + rect.width / 2 - tooltipWidth / 2;
-      if (left + tooltipWidth > window.innerWidth - 12) {
-        left = window.innerWidth - tooltipWidth - 12;
-      }
-      if (left < 8) {
-        left = 8;
-      }
-
-      tooltipEl.style.top = `${top}px`;
-      tooltipEl.style.left = `${left}px`;
-      tooltipEl.style.visibility = 'visible';
-      tooltipEl.classList.add('show');
-    };
-
-    const hideTooltip = () => {
-      tooltipEl.classList.remove('show');
-    };
-
-    document.addEventListener('mouseover', (e) => {
-      const target = e.target.closest('[data-tooltip-title]');
-      if (target) {
-        showTooltip(target);
-      }
-    });
-
-    document.addEventListener('mouseout', (e) => {
-      const target = e.target.closest('[data-tooltip-title]');
-      const related = e.relatedTarget ? e.relatedTarget.closest('[data-tooltip-title]') : null;
-      if (target && target !== related) {
-        hideTooltip();
-      }
-    });
-
-    // Also hide on click
-    document.addEventListener('click', () => hideTooltip());
-  }
-
   async applyLanguageI18n(lang = null) {
-    const { uiLanguage = 'vi', outputLanguage = 'en' } = await Storage.get(['uiLanguage', 'outputLanguage']);
+    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
     const currentLang = lang || uiLanguage;
     const dict = getI18n(currentLang);
 
@@ -568,116 +475,84 @@ class SidePanelController {
 
   async handleError(err) {
     this.isStreaming = false;
-    document.getElementById('spBtnSend').disabled = false;
+    const btnSend = document.getElementById('spBtnSend');
+    if (btnSend) btnSend.disabled = false;
 
     if (!this.activeAiBubble) return;
     const content = this.activeAiBubble.querySelector('.sp-ai-content');
 
     const errStr = String(err || '');
-    const isNanoError = errStr.includes('Gemini Nano') || errStr.includes('prompt-api') || errStr.includes('Optimization Guide');
-    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
-    const isVi = uiLanguage === 'vi';
-
-    if (isNanoError) {
+    if (errStr.includes('NO_KEYS_NO_LOCAL_AI') || errStr.includes('CHROME_AI_UNAVAILABLE') || errStr.includes('QUOTA_EXHAUSTED')) {
       content.innerHTML = `
-        <div class="sp-nano-guide-card">
-          <div class="sp-nano-guide-header">
-            ${Icons.cpu(16)} <span>${isVi ? 'Hướng dẫn Kích hoạt Chrome Gemini Nano (Local AI)' : 'Chrome Gemini Nano Activation Guide (Local AI)'}</span>
+        <div style="background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.25); border-radius:8px; padding:10px; color:#ef4444; font-size:12px;">
+          <div style="font-weight:700; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+            ${Icons.alertCircle(14)} Chưa có AI Sẵn sàng
           </div>
-          <div class="sp-nano-steps">
-            <div class="sp-nano-step">
-              <span class="sp-step-num">1</span>
-              <div>${isVi ? 'Bật cờ' : 'Enable flag'} <strong>Prompt API</strong>:
-                <button class="sp-btn-mini-flags" id="spBtnFlagPromptApi">${Icons.externalLink(11)} ${isVi ? 'Mở #prompt-api' : 'Open #prompt-api'}</button>
-              </div>
-            </div>
-            <div class="sp-nano-step">
-              <span class="sp-step-num">2</span>
-              <div>${isVi ? 'Bật cờ' : 'Set flag'} <strong>Optimization Guide</strong> ${isVi ? 'sang' : 'to'} <em>Enabled BypassPerfRequirement</em>:
-                <button class="sp-btn-mini-flags" id="spBtnFlagOptGuide">${Icons.externalLink(11)} ${isVi ? 'Mở #optimization-guide' : 'Open #optimization-guide'}</button>
-              </div>
-            </div>
-            <div class="sp-nano-step">
-              <span class="sp-step-num">3</span>
-              <div>${isVi ? 'Nhấn <strong>Relaunch</strong> ở góc dưới để khởi động lại Chrome.' : 'Click <strong>Relaunch</strong> to restart Chrome.'}</div>
-            </div>
-            <div class="sp-nano-step">
-              <span class="sp-step-num">4</span>
-              <div>${isVi ? 'Tải model tại <strong>chrome://components</strong> (nhấn Check for update):' : 'Download model at <strong>chrome://components</strong> (Click Check for update):'}
-                <button class="sp-btn-mini-flags" id="spBtnOpenCompTab">${Icons.externalLink(11)} ${isVi ? 'Mở components' : 'Open components'}</button>
-              </div>
-            </div>
-          </div>
-          <div class="sp-nano-guide-footer">
-            <button class="sp-btn-mini-options" id="spBtnAddKeyFallback">
-              ${Icons.plus(12)} ${isVi ? 'Hoặc thêm API Key Miễn phí (Gemini / Groq)' : 'Or Add Free Cloud Key (Gemini / Groq)'}
+          <div>${errStr}</div>
+          <div style="margin-top:8px; display:flex; gap:6px;">
+            <button class="sp-copy-btn" id="spErrBtnOpenKeys" style="background:#ef4444; color:#fff; font-size:11px; padding:3px 8px;">
+              ${Icons.plus(11)} Thêm Key Miễn Phí
+            </button>
+            <button class="sp-copy-btn" id="spErrBtnOpenOptions" style="background:transparent; border:1px solid #ef4444; color:#ef4444; font-size:11px; padding:3px 8px;">
+              ${Icons.externalLink(11)} Xem Hướng Dẫn
             </button>
           </div>
         </div>
       `;
 
-      content.querySelector('#spBtnFlagPromptApi')?.addEventListener('click', () => {
-        chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://flags/#prompt-api-for-gemini-nano' });
-      });
-
-      content.querySelector('#spBtnFlagOptGuide')?.addEventListener('click', () => {
-        chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://flags/#optimization-guide-on-device-model' });
-      });
-
-      content.querySelector('#spBtnOpenCompTab')?.addEventListener('click', () => {
-        chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://components' });
-      });
-
-      content.querySelector('#spBtnAddKeyFallback')?.addEventListener('click', () => {
-        this.openSettingsModal();
-      });
+      content.querySelector('#spErrBtnOpenKeys')?.addEventListener('click', () => this.keysModal.open());
+      content.querySelector('#spErrBtnOpenOptions')?.addEventListener('click', () => chrome.runtime.openOptionsPage());
     } else {
-      content.innerHTML = `
-        <div style="color: #ef4444; display:flex; align-items:center; gap:6px;">
-          ${Icons.alertCircle(16)} <strong>Lỗi:</strong> ${err}
-        </div>
-        <div style="margin-top:8px; font-size:12px; color:var(--text-muted);">
-          Nhấn Cài đặt (${Icons.settings(12)}) để thêm hoặc kiểm tra lại các API Key.
-        </div>
-      `;
+      content.innerHTML = `<span style="color:#ef4444;">${Icons.alertCircle(14)} ${err}</span>`;
     }
-  }
-
-  showToast(msg) {
-    const toast = document.getElementById('spToast');
-    if (!toast) return;
-    toast.innerHTML = `<span style="display:flex;align-items:center;gap:6px;">${Icons.checkCircle(13)} ${msg}</span>`;
-    toast.classList.add('show');
-    clearTimeout(this._toastTimer);
-    this._toastTimer = setTimeout(() => {
-      toast.classList.remove('show');
-    }, 2200);
   }
 
   async loadChatHistory() {
-    const activeConv = await Storage.getActiveConversation();
-    const history = activeConv?.messages || [];
+    const history = await Storage.getChatHistory();
     const body = document.getElementById('spChatBody');
     if (!body) return;
 
+    body.innerHTML = '';
+
+    const { activeConversationId } = await Storage.get(['activeConversationId']);
+    const convs = await Storage.getConversations();
+    const activeConv = convs.find((c) => c.id === activeConversationId);
+
     const titleEl = document.getElementById('spActiveConvTitle');
     if (titleEl) {
-      titleEl.textContent = activeConv?.title || 'Đoạn chat mới';
-      titleEl.title = activeConv?.title || 'Đoạn chat mới';
+      titleEl.textContent = activeConv?.title || 'New Chat';
     }
 
-    body.innerHTML = '';
     if (history.length > 0) {
       history.forEach((msg) => {
         const el = document.createElement('div');
         el.className = `sp-msg ${msg.role === 'user' ? 'sp-msg-user' : 'sp-msg-ai'}`;
-        let imgHtml = msg.image ? `<img src="${msg.image}" class="sp-msg-img" alt="image">` : '';
+
+        let imgHtml = msg.image ? `<img src="${msg.image}" class="sp-msg-img" alt="Attached">` : '';
+        let footerHtml =
+          msg.role === 'assistant'
+            ? `<div class="sp-msg-footer"><button class="sp-copy-btn">${Icons.copy(12)} Copy</button></div>`
+            : '';
+
         el.innerHTML = `
           <div class="sp-msg-bubble">
             ${imgHtml}
-            <div>${formatMarkdownAndMath(msg.content)}</div>
+            <div class="${msg.role === 'assistant' ? 'sp-ai-content' : ''}">${formatMarkdownAndMath(msg.content)}</div>
+            ${footerHtml}
           </div>
         `;
+
+        if (msg.role === 'assistant') {
+          const copyBtn = el.querySelector('.sp-copy-btn');
+          copyBtn?.addEventListener('click', () => {
+            navigator.clipboard.writeText(msg.content);
+            copyBtn.innerHTML = `${Icons.check(12)} Copied!`;
+            setTimeout(() => {
+              copyBtn.innerHTML = `${Icons.copy(12)} Copy`;
+            }, 2000);
+          });
+        }
+
         body.appendChild(el);
       });
       body.scrollTop = body.scrollHeight;
@@ -699,242 +574,6 @@ class SidePanelController {
         </div>
       `;
     }
-  }
-
-  parseHistorySessions(history) {
-    const sessions = [];
-    let current = null;
-
-    for (let i = 0; i < history.length; i++) {
-      const msg = history[i];
-      if (msg.role === 'user') {
-        current = {
-          user: msg,
-          assistant: null,
-          timestamp: msg.timestamp || Date.now(),
-        };
-        sessions.push(current);
-      } else if (msg.role === 'assistant') {
-        if (current && !current.assistant) {
-          current.assistant = msg;
-        } else {
-          sessions.push({
-            user: { role: 'user', content: msg.content ? msg.content.slice(0, 60) : 'Bài tập đã giải' },
-            assistant: msg,
-            timestamp: msg.timestamp || Date.now(),
-          });
-        }
-      }
-    }
-    return sessions;
-  }
-
-  async openHistoryModal() {
-    const modal = document.getElementById('spHistoryModal');
-    const body = document.getElementById('spHistoryModalBody');
-    if (!modal || !body) return;
-
-    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
-    const dict = getI18n(uiLanguage);
-
-    modal.style.display = 'flex';
-    body.innerHTML = `<div style="text-align:center; padding:16px; color:#94a3b8;">${dict.loadingHistory || 'Loading conversations...'}</div>`;
-
-    const conversations = await Storage.getConversations();
-    const { activeConversationId } = await Storage.get(['activeConversationId']);
-
-    if (conversations.length === 0) {
-      body.innerHTML = `
-        <div style="text-align:center; padding:32px 10px; color:#94a3b8; font-size:13px;">
-          ${dict.emptyHistory || 'No conversations saved yet.<br>Start a new chat to begin!'}
-        </div>
-      `;
-      return;
-    }
-
-    body.innerHTML = '';
-    [...conversations].reverse().forEach((conv) => {
-      const el = document.createElement('div');
-      el.className = `sp-history-item ${conv.id === activeConversationId ? 'active' : ''}`;
-
-      let thumbHtml = conv.thumbnail
-        ? `<img src="${conv.thumbnail}" class="sp-history-thumb" alt="thumb">`
-        : `<div class="sp-history-thumb" style="display:flex;align-items:center;justify-content:center;color:#0284c7;background:#e0f2fe;">${Icons.fileText(20)}</div>`;
-
-      const dateStr = conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-      const msgCount = conv.messages?.length || 0;
-
-      el.innerHTML = `
-        ${thumbHtml}
-        <div class="sp-history-info">
-          <div class="sp-history-title">${conv.title || 'Hội thoại không tên'}</div>
-          <div class="sp-history-time">${Icons.clock(12)} ${dateStr} &bull; ${msgCount} tin nhắn</div>
-        </div>
-        <button class="sp-icon-btn sp-btn-del-conv" title="Xóa hội thoại này" style="width:26px;height:26px;color:#94a3b8;flex-shrink:0;">
-          ${Icons.trash(13)}
-        </button>
-      `;
-
-      el.querySelector('.sp-btn-del-conv').addEventListener('click', async (e) => {
-        e.stopPropagation();
-        await Storage.deleteConversation(conv.id);
-        this.openHistoryModal();
-        this.loadChatHistory();
-      });
-
-      el.addEventListener('click', async () => {
-        await Storage.switchConversation(conv.id);
-        modal.style.display = 'none';
-        this.loadChatHistory();
-      });
-
-      body.appendChild(el);
-    });
-  }
-
-  async openSettingsModal() {
-    const modal = document.getElementById('spModal');
-    const body = document.getElementById('spModalBody');
-    modal.style.display = 'flex';
-
-    const { apiConfigs = [] } = await Storage.getApiConfigs();
-    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
-    const isVi = uiLanguage === 'vi';
-
-    body.innerHTML = `
-      <div style="font-size:12px; color:var(--text-muted); line-height:1.4;">
-        ${isVi ? 'Thêm một hoặc nhiều API Key. Tiện ích tự động xoay vòng cân bằng tải và chuyển sang key dự phòng khi gặp giới hạn Rate Limit.' : 'Add one or more API Keys. The extension automatically load-balances and falls back to backup keys when hitting rate limits.'}
-      </div>
-
-      <!-- Chrome Built-in AI Gemini Nano Guide Section in Modal -->
-      <div style="margin-top: 8px; padding: 10px; background: rgba(2, 132, 199, 0.08); border-radius: 8px; border: 1px solid rgba(2, 132, 199, 0.25);">
-        <div style="font-weight: 700; font-size: 12.5px; color: #0284c7; display:flex; align-items:center; gap:6px;">
-          ${Icons.cpu(14)} Chrome Gemini Nano (Local AI)
-        </div>
-        <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px; line-height:1.5;">
-          ${isVi ? 'Mô hình AI nội bộ chạy Offline. Nhấn các liên kết bên dưới để mở trực tiếp:' : 'On-Device AI running offline. Click links below to open flags directly:'}
-        </div>
-        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
-          <button class="sp-copy-btn" id="spModalBtnFlagPrompt" style="background:#0284c7; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} ${isVi ? '1. Mở #prompt-api' : '1. Open #prompt-api'}
-          </button>
-          <button class="sp-copy-btn" id="spModalBtnFlagOptGuide" style="background:#0284c7; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} ${isVi ? '2. Mở #optimization-guide' : '2. Open #optimization-guide'}
-          </button>
-          <button class="sp-copy-btn" id="spModalBtnComponents" style="background:#0369a1; color:#fff; font-size:11px; padding:4px 8px;">
-            ${Icons.externalLink(11)} ${isVi ? '3. Mở components' : '3. Open components'}
-          </button>
-        </div>
-      </div>
-
-      <div id="spModalKeyList" style="display:flex; flex-direction:column; gap:10px; margin-top:8px;"></div>
-
-      <button class="sp-btn-add" id="spBtnAddKey">${Icons.plus(16)} ${isVi ? 'Thêm Model & Key' : 'Add Model & Key'}</button>
-
-      <div style="text-align:right; margin-top:6px;">
-        <a href="#" id="spLinkFullOptions" style="font-size:12px; color:var(--accent); text-decoration:none;">
-          ${isVi ? 'Xem hướng dẫn lấy Key miễn phí →' : 'View free API key guide →'}
-        </a>
-      </div>
-    `;
-
-    body.querySelector('#spModalBtnFlagPrompt')?.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://flags/#prompt-api-for-gemini-nano' });
-    });
-
-    body.querySelector('#spModalBtnFlagOptGuide')?.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://flags/#optimization-guide-on-device-model' });
-    });
-
-    body.querySelector('#spModalBtnComponents')?.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://components' });
-    });
-
-    const list = body.querySelector('#spModalKeyList');
-    apiConfigs.forEach((cfg) => list.appendChild(this.renderKeyItem(cfg)));
-
-    body.querySelector('#spBtnAddKey').addEventListener('click', () => {
-      const newCfg = {
-        id: `cfg_${Date.now()}`,
-        provider: 'gemini',
-        name: 'Google Gemini',
-        model: 'gemini-2.5-flash',
-        apiKey: '',
-        isEnabled: true,
-      };
-      list.appendChild(this.renderKeyItem(newCfg, true));
-    });
-
-    body.querySelector('#spLinkFullOptions').addEventListener('click', (e) => {
-      e.preventDefault();
-      chrome.runtime.openOptionsPage();
-    });
-  }
-
-  renderKeyItem(cfg, isNew = false) {
-    const el = document.createElement('div');
-    el.style.cssText = 'border:1px solid var(--border-color); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:6px; background:var(--bg-secondary);';
-
-    const providerOptions = DEFAULT_PROVIDERS.map(
-      (p) => `<option value="${p.id}" ${cfg.provider === p.id ? 'selected' : ''}>${p.name}</option>`
-    ).join('');
-
-    const providerObj = DEFAULT_PROVIDERS.find((p) => p.id === cfg.provider) || DEFAULT_PROVIDERS[0];
-    const modelOptions = providerObj.models.map(
-      (m) => `<option value="${m.id}" ${cfg.model === m.id ? 'selected' : ''}>${m.name}</option>`
-    ).join('');
-
-    el.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <label style="display:flex; align-items:center; gap:6px; font-weight:600; font-size:13px;">
-          <input type="checkbox" class="cfg-enabled" ${cfg.isEnabled ? 'checked' : ''}>
-          <span>${providerObj.name}</span>
-        </label>
-        <button class="sp-icon-btn cfg-delete" style="color:#ef4444;">${Icons.trash(14)}</button>
-      </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-        <select class="sp-field cfg-provider">${providerOptions}</select>
-        <select class="sp-field cfg-model">${modelOptions}</select>
-      </div>
-
-      <input type="password" class="sp-field cfg-key" placeholder="Enter API Key" value="${cfg.apiKey || ''}">
-    `;
-
-    const providerSelect = el.querySelector('.cfg-provider');
-    const modelSelect = el.querySelector('.cfg-model');
-    const keyInput = el.querySelector('.cfg-key');
-    const enabledInput = el.querySelector('.cfg-enabled');
-
-    const save = async () => {
-      await Storage.saveApiConfig({
-        id: cfg.id,
-        provider: providerSelect.value,
-        model: modelSelect.value,
-        apiKey: keyInput.value.trim(),
-        isEnabled: enabledInput.checked,
-      });
-      this.updateModelBadge();
-    };
-
-    providerSelect.addEventListener('change', () => {
-      const pObj = DEFAULT_PROVIDERS.find((p) => p.id === providerSelect.value) || DEFAULT_PROVIDERS[0];
-      modelSelect.innerHTML = pObj.models.map((m) => `<option value="${m.id}">${m.name}</option>`).join('');
-      save();
-    });
-
-    modelSelect.addEventListener('change', save);
-    keyInput.addEventListener('input', save);
-    enabledInput.addEventListener('change', save);
-
-    el.querySelector('.cfg-delete').addEventListener('click', async () => {
-      await Storage.removeApiConfig(cfg.id);
-      el.remove();
-      this.updateModelBadge();
-    });
-
-    if (isNew) save();
-    return el;
   }
 }
 
