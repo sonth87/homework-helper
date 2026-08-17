@@ -9,6 +9,7 @@ import { Storage } from '../shared/storage.js';
 
 // State & active streams
 const activeStreams = new Map(); // requestId -> AbortController
+const pendingOcrTabs = new Map(); // requestId -> tabId (for OCR progress forwarding)
 
 // 1. Extension Installation & Setup
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -198,19 +199,69 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  // OCR Recognition and Model Management Handlers
-  if (action === 'PERFORM_OCR') {
-    const { imageBase64, targetLang = 'vi' } = payload || {};
-    (async () => {
-      try {
-        const { OcrEngine } = await import('../shared/ocr-engine.js');
-        const text = await OcrEngine.recognize(imageBase64, targetLang);
-        sendResponse({ success: true, text });
-      } catch (err) {
-        sendResponse({ success: false, error: err.message });
+let creatingOffscreenPromise = null;
+async function ensureOffscreenDocument() {
+  const offscreenUrl = chrome.runtime.getURL('offscreen/ocr.html');
+  const existingContexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT'],
+    documentUrls: [offscreenUrl],
+  });
+
+  if (existingContexts.length > 0) return;
+
+  if (creatingOffscreenPromise) {
+    await creatingOffscreenPromise;
+    return;
+  }
+
+  creatingOffscreenPromise = chrome.offscreen.createDocument({
+    url: 'offscreen/ocr.html',
+    reasons: ['WORKERS', 'BLOBS'],
+    justification: 'Run WebAssembly Tesseract OCR offline',
+  });
+
+  await creatingOffscreenPromise;
+  creatingOffscreenPromise = null;
+}
+
+// OCR Recognition and Model Management Handlers
+if (action === 'PERFORM_OCR') {
+  const { imageBase64, targetLang = 'vi', requestId } = payload || {};
+  const tabId = sender.tab?.id;
+  // Store tabId so OCR_PROGRESS_UPDATE can forward to the right tab
+  if (requestId && tabId) {
+    pendingOcrTabs.set(requestId, tabId);
+  }
+  (async () => {
+    try {
+      await ensureOffscreenDocument();
+      const response = await chrome.runtime.sendMessage({
+        action: 'OFFSCREEN_RUN_OCR',
+        payload: { imageBase64, targetLang, requestId },
+      });
+      pendingOcrTabs.delete(requestId);
+      if (response && response.success) {
+        sendResponse({ success: true, text: response.text });
+      } else {
+        sendResponse({ success: false, error: response?.error || 'OCR nhận diện thất bại.' });
       }
-    })();
-    return true;
+    } catch (err) {
+      console.error('[ServiceWorker] OCR dispatch error:', err);
+      pendingOcrTabs.delete(requestId);
+      sendResponse({ success: false, error: err.message || String(err) });
+    }
+  })();
+  return true;
+}
+
+  if (action === 'OCR_PROGRESS_UPDATE') {
+    // Look up the tabId from the stored map (offscreen docs don't carry sender.tab)
+    const reqId = payload?.requestId;
+    const tabId = pendingOcrTabs.get(reqId);
+    if (tabId) {
+      chrome.tabs.sendMessage(tabId, { action: 'OCR_PROGRESS_UPDATE', payload }).catch(() => {});
+    }
+    return false;
   }
 
   if (action === 'DOWNLOAD_OCR_MODEL') {

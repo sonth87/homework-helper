@@ -26,6 +26,9 @@
   "side_panel": {
     "default_path": "sidepanel/sidepanel.html"
   },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
   "options_ui": {
     "page": "options/options.html",
     "open_in_tab": true
@@ -38,7 +41,8 @@
     "activeTab",
     "scripting",
     "contextMenus",
-    "sidePanel"
+    "sidePanel",
+    "offscreen"
   ],
   "host_permissions": [
     "https://generativelanguage.googleapis.com/*",
@@ -69,6 +73,7 @@
     {
       "matches": ["<all_urls>"],
       "js": [
+        "assets/ocr/tesseract.min.js",
         "content/loader.js"
       ],
       "css": [
@@ -90,7 +95,8 @@
         "shared/i18n/locales/*",
         "shared/katex/*",
         "shared/katex/fonts/*",
-        "assets/icons/*"
+        "assets/icons/*",
+        "assets/ocr/*"
       ],
       "matches": ["<all_urls>"]
     }

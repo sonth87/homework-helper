@@ -6,6 +6,7 @@ import { Icons } from '../../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES, DEFAULT_NANO_SYSTEM_PROMPT } from '../../shared/storage.js';
 import { formatMarkdownAndMath } from '../../shared/markdown-katex.js';
 import { getFloatingPopupI18n, getI18n } from '../../shared/i18n.js';
+import { OcrEngine } from '../../shared/ocr-engine.js';
 
 export class OverlayFloatingCard {
   constructor(overlay) {
@@ -193,35 +194,115 @@ export class OverlayFloatingCard {
       image: imageBase64,
     });
 
-    const { apiConfigs = [], systemPrompt, nanoSystemPrompt, routingStrategy = 'prefer_nano' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'routingStrategy']);
+    const { apiConfigs = [], systemPrompt, nanoSystemPrompt, routingStrategy = 'prefer_config' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'routingStrategy']);
     const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
 
     // If running in Gemini Nano mode (no keys or nano_only), run Local OCR first!
     if (enabledKeys.length === 0 || routingStrategy === 'nano_only') {
-      content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} ${cardDict.scanningOcr}</span>`;
+      const reqId = this.overlay.drawer.activeRequestId || `ocr_${Date.now()}`;
+      const logLines = [`[${new Date().toLocaleTimeString()}] Bắt đầu gửi yêu cầu OCR...`];
 
-      chrome.runtime.sendMessage({
-        action: 'PERFORM_OCR',
-        payload: { imageBase64, targetLang: outputLanguage }
-      }, (res) => {
-        const ocrText = res?.text || '';
-        const targetLangObj = SUPPORTED_LANGUAGES.find((l) => l.id === outputLanguage);
-        const targetLangName = targetLangObj ? targetLangObj.name : 'English';
+      const renderOcrProgress = (stepText = 'Khởi động bộ máy OCR...', pct = 15) => {
+        const logId = `hw-ocr-log-${reqId}`;
+        const isOpen = content.querySelector(`#${logId}`)?.open;
+        content.innerHTML = `
+          <div class="hw-ocr-progress-container">
+            <div class="hw-ocr-step-row">
+              <div class="hw-ocr-step-text">
+                ${Icons.sparkles(14)}
+                <span>${stepText}</span>
+                <span class="hw-animated-dots"><span>.</span><span>.</span><span>.</span></span>
+              </div>
+              <span style="font-weight:700; font-size:11.5px;">${pct}%</span>
+            </div>
+            <div class="hw-ocr-bar-bg">
+              <div class="hw-ocr-bar-fill" style="width:${Math.max(5, Math.min(100, pct))}%;"></div>
+            </div>
+            <details id="${logId}" style="margin-top:4px;" ${isOpen ? 'open' : ''}>
+              <summary style="cursor:pointer; font-size:10.5px; color:#64748b; user-select:none; list-style:none; display:flex; align-items:center; gap:4px; padding:3px 0;">
+                <span style="font-size:9px; transition:transform .2s;">▶</span>
+                <span>Chi tiết log OCR</span>
+              </summary>
+              <div style="font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:10.5px; color:#334155; background:rgba(255,255,255,0.85); padding:6px 10px; border-radius:6px; max-height:80px; overflow-y:auto; line-height:1.45; border:1px solid rgba(203,213,225,0.8); margin-top:2px;">
+                ${logLines.map((l) => `<div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">• ${l}</div>`).join('')}
+              </div>
+            </details>
+          </div>
+        `;
+        const logBox = content.querySelector('div[style*="overflow-y:auto"]');
+        if (logBox) logBox.scrollTop = logBox.scrollHeight;
+      };
 
-        const nanoPrompt = `${prompt}\n\n[OCR Text]:\n${ocrText || '(No text extracted)'}\n\n[Strict Output Language]: ${targetLangName}`;
-        const promptToUse = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
-        const nanoSysPrompt = `${promptToUse}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;
+      renderOcrProgress('Khởi tạo tiến trình OCR...', 15);
 
-        window.dispatchEvent(
-          new CustomEvent('HOMEWORK_AI_NANO_EXEC', {
-            detail: {
-              prompt: nanoPrompt,
-              requestId: this.overlay.drawer.activeRequestId,
-              systemPrompt: nanoSysPrompt,
-            },
-          })
-        );
-      });
+      const progressListener = (msg) => {
+        if (msg.action === 'OCR_PROGRESS_UPDATE' && msg.payload?.requestId === reqId) {
+          const time = msg.payload.time || new Date().toLocaleTimeString();
+          logLines.push(`[${time}] ${msg.payload.step} (${msg.payload.pct}%)`);
+          renderOcrProgress(msg.payload.step, msg.payload.pct);
+        }
+      };
+      chrome.runtime.onMessage.addListener(progressListener);
+
+      chrome.runtime.sendMessage(
+        {
+          action: 'PERFORM_OCR',
+          payload: { imageBase64, targetLang: outputLanguage, requestId: reqId },
+        },
+        (res) => {
+          chrome.runtime.onMessage.removeListener(progressListener);
+          if (!res || !res.success) {
+            console.warn('[FloatingCard] OCR Error:', res?.error);
+            logLines.push(`[${new Date().toLocaleTimeString()}] LỖI: ${res?.error || 'Không phản hồi'}`);
+            content.innerHTML = `
+              <div style="padding:12px; background:rgba(234, 179, 8, 0.1); border:1px solid rgba(234, 179, 8, 0.35); border-radius:8px; font-size:12px; color:#a16207; line-height:1.5;">
+                <div style="font-weight:700; display:flex; align-items:center; gap:6px; font-size:12.5px;">
+                  ${Icons.alertCircle(14)} Không trích xuất được văn bản từ ảnh
+                </div>
+                <div style="margin-top:4px;">
+                  Mô hình OCR cục bộ chưa nhận diện được chữ từ ảnh này (${res?.error || 'Trống'}). Bạn có thể mở <strong>Cài đặt</strong> và thêm <strong>API Key Google Gemini (Miễn phí)</strong> để AI đọc thẳng ảnh bằng Vision AI.
+                </div>
+                <div style="margin-top:8px; font-family:monospace; font-size:10.5px; background:rgba(255,255,255,0.7); padding:6px; border-radius:4px; color:#334155; max-height:80px; overflow-y:auto;">
+                  ${logLines.join('<br>')}
+                </div>
+              </div>
+            `;
+            return;
+          }
+
+          const ocrText = res.text || '';
+          if (!ocrText.trim()) {
+            content.innerHTML = `
+              <div style="padding:12px; background:rgba(234, 179, 8, 0.1); border:1px solid rgba(234, 179, 8, 0.35); border-radius:8px; font-size:12px; color:#a16207; line-height:1.5;">
+                <div style="font-weight:700; display:flex; align-items:center; gap:6px; font-size:12.5px;">
+                  ${Icons.alertCircle(14)} Không trích xuất được văn bản từ ảnh
+                </div>
+                <div style="margin-top:4px;">
+                  Mô hình OCR cục bộ chưa nhận diện được chữ từ hình ảnh này. Bạn có thể mở <strong>Cài đặt</strong> và thêm <strong>API Key Google Gemini (Miễn phí)</strong> để AI giải trực tiếp từ ảnh.
+                </div>
+              </div>
+            `;
+            return;
+          }
+
+          const targetLangObj = SUPPORTED_LANGUAGES.find((l) => l.id === outputLanguage);
+          const targetLangName = targetLangObj ? targetLangObj.name : 'English';
+
+          const nanoPrompt = `[Nội dung bài tập nhận diện từ ảnh]:\n${ocrText.trim()}\n\n[Yêu cầu]: Hãy giải bài toán trên từng bước chi tiết, trình bày công thức bằng LaTeX ($...$) và làm nổi bật đáp án cuối cùng.\n[Ngôn ngữ phản hồi]: Toàn bộ viết bằng ${targetLangName}.`;
+          const promptToUse = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
+          const nanoSysPrompt = `${promptToUse}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;
+
+          window.dispatchEvent(
+            new CustomEvent('HOMEWORK_AI_NANO_EXEC', {
+              detail: {
+                prompt: nanoPrompt,
+                requestId: this.overlay.drawer.activeRequestId,
+                systemPrompt: nanoSysPrompt,
+              },
+            })
+          );
+        }
+      );
       return;
     }
 

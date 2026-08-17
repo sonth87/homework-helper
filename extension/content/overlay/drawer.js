@@ -6,6 +6,7 @@ import { Icons } from '../../shared/icons.js';
 import { Storage, DEFAULT_NANO_SYSTEM_PROMPT } from '../../shared/storage.js';
 import { formatMarkdownAndMath } from '../../shared/markdown-katex.js';
 import { getI18n } from '../../shared/i18n.js';
+import { OcrEngine } from '../../shared/ocr-engine.js';
 
 export class OverlayDrawer {
   constructor(overlay) {
@@ -272,7 +273,20 @@ export class OverlayDrawer {
       const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'English';
       const promptToUse = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
       const nanoSysPrompt = `${promptToUse}\n\n[STRICT LANGUAGE]: You MUST reply in ${targetLangName}.`.trim();
-      const nanoPrompt = `${prompt}\n\n[Output entirely in ${targetLangName}]`;
+      
+      let nanoPromptText = prompt;
+      if (imageBase64) {
+        try {
+          const ocrText = await OcrEngine.recognize(imageBase64, outputLanguage);
+          if (ocrText && ocrText.trim()) {
+            nanoPromptText = `${prompt}\n\n[Nội dung nhận diện từ ảnh]:\n${ocrText.trim()}`;
+          }
+        } catch (e) {
+          console.warn('[Drawer] Nano OCR failed:', e);
+        }
+      }
+
+      const nanoPrompt = `${nanoPromptText}\n\n[Output entirely in ${targetLangName}]`;
 
       window.dispatchEvent(
         new CustomEvent('HOMEWORK_AI_NANO_EXEC', {

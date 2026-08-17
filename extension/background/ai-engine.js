@@ -149,7 +149,10 @@ export class AiEngine {
     const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Tiếng Việt (Vietnamese)';
     const langSuffix = `\n\n[Yêu cầu ngôn ngữ: Toàn bộ lời giải và giải thích PHẢI viết bằng ${targetLangName}]`;
 
-    if (!studyMode || studyMode === 'direct') return `${prompt}${langSuffix}`;
+    if (!studyMode || studyMode === 'direct') {
+      return `[MODE: ĐÁP ÁN TRỰC TIẾP]\nYêu cầu NGHIÊM NGẶT: Chỉ trả lời đáp án cuối cùng một cách CỰC KỲ NGẮN GỌN. Không giải thích, không phân tích, không trình bày các bước. Nếu là câu hỏi trắc nghiệm thì chỉ ghi tên đáp án và ký hiệu (ví dụ: "C. NaN"). Nếu là bài toán thì chỉ ghi kết quả số. Không quá 2-3 câu.\n\nCâu hỏi:\n${prompt}${langSuffix}`;
+    }
+
 
     const lower = prompt.trim().toLowerCase();
     const isGreeting = /^(hi|hello|hey|xin chào|chào bạn|chào ai|chào|test|alo|ping)\b/i.test(lower) && prompt.trim().length < 25;

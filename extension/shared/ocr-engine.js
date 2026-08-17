@@ -269,11 +269,9 @@ export class OcrEngine {
    */
   static getCompositeLanguage(targetLang = 'vi') {
     const mainCode = LANG_MAP[targetLang] || targetLang || 'vie';
-    const set = new Set();
-    set.add(mainCode);
-    set.add('equ'); // Math symbols
-    set.add('eng'); // English formulas / variables
-    return Array.from(set).join('+');
+    if (mainCode === 'vie') return 'vie+eng';
+    if (mainCode === 'eng') return 'eng';
+    return `${mainCode}+eng`;
   }
 
   /**
@@ -411,30 +409,78 @@ export class OcrEngine {
   }
 
   /**
-   * Execute Tesseract OCR processing
+   * Dynamically load Tesseract.js library from bundled assets
    */
-  static async executeTesseract(imageUrl, langCode, onProgress = null) {
-    // If Tesseract is loaded in window / global scope
+  static async loadTesseractLibrary() {
+    if (typeof globalThis !== 'undefined' && globalThis.Tesseract) {
+      return globalThis.Tesseract;
+    }
     if (typeof window !== 'undefined' && window.Tesseract) {
-      const worker = await window.Tesseract.createWorker(langCode, 1, {
-        logger: (m) => {
-          if (m.status === 'recognizing text' && onProgress) {
-            const pct = Math.round(35 + (m.progress || 0) * 55);
-            onProgress(pct, `Đang nhận diện văn bản (${Math.round(m.progress * 100)}%)...`);
-          }
-        },
-      });
-      const ret = await worker.recognize(imageUrl);
-      await worker.terminate();
-      return ret.data?.text || '';
+      return window.Tesseract;
+    }
+    if (typeof self !== 'undefined' && self.Tesseract) {
+      return self.Tesseract;
     }
 
-    // Fallback: Canvas-based OCR / Image text extraction simulator
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve('');
-      }, 400);
+    if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
+      try {
+        const tesseractUrl = chrome.runtime.getURL('assets/ocr/tesseract.min.js');
+        const res = await fetch(tesseractUrl);
+        if (res.ok) {
+          const code = await res.text();
+          const fn = new Function(code);
+          fn.call(globalThis || self || window);
+          return (typeof globalThis !== 'undefined' && globalThis.Tesseract)
+            || (typeof window !== 'undefined' && window.Tesseract)
+            || (typeof self !== 'undefined' && self.Tesseract)
+            || null;
+        }
+      } catch (e) {
+        console.warn('[OcrEngine] Failed to load tesseract.min.js:', e);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Execute Tesseract OCR processing with 100% offline WebAssembly assets
+   */
+  static async executeTesseract(imageUrl, langCode, onProgress = null) {
+    const Tesseract = await this.loadTesseractLibrary();
+    if (!Tesseract || typeof Tesseract.createWorker !== 'function') {
+      throw new Error('Thư viện Tesseract.js chưa được khởi tạo.');
+    }
+
+    const workerPath = typeof chrome !== 'undefined' && chrome.runtime?.getURL
+      ? chrome.runtime.getURL('assets/ocr/worker.min.js')
+      : undefined;
+    const corePath = typeof chrome !== 'undefined' && chrome.runtime?.getURL
+      ? chrome.runtime.getURL('assets/ocr/tesseract-core-lstm.wasm.js')
+      : undefined;
+    const langPath = typeof chrome !== 'undefined' && chrome.runtime?.getURL
+      ? chrome.runtime.getURL('assets/ocr')
+      : undefined;
+
+    const worker = await Tesseract.createWorker(langCode, 1, {
+      workerPath,
+      corePath,
+      langPath,
+      workerBlobURL: false,
+      gzip: false,
+      logger: (m) => {
+        if (m.status === 'recognizing text' && onProgress) {
+          const pct = Math.round(35 + (m.progress || 0) * 55);
+          onProgress(pct, `Đang nhận diện văn bản (${Math.round(m.progress * 100)}%)...`);
+        }
+      },
     });
+
+    try {
+      const ret = await worker.recognize(imageUrl);
+      return ret.data?.text || '';
+    } finally {
+      await worker.terminate();
+    }
   }
 
   /**
