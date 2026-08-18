@@ -114,6 +114,11 @@ body {
   border-bottom: 1px solid var(--border-color);
   font-size: 12px;
   color: var(--text-muted);
+  min-width: 0;
+}
+
+.sp-model-label {
+  flex-shrink: 0;
 }
 
 .sp-model-tag {
@@ -125,6 +130,11 @@ body {
   color: var(--accent);
   border-radius: 12px;
   font-weight: 600;
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Chat Body */
@@ -192,6 +202,25 @@ body {
   margin-top: 8px;
 }
 
+.sp-msg-notice-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+
+.sp-notice-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+  cursor: help;
+  flex-shrink: 0;
+}
+
 .sp-copy-btn {
   display: inline-flex;
   align-items: center;
@@ -207,6 +236,60 @@ body {
 
 .sp-copy-btn:hover {
   color: var(--text-main);
+}
+
+.sp-local-type-btn.active {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+}
+
+/* Local Server "Test Connection" button — a small tick badge that doubles
+   as the trigger and the status indicator (idle/checking/online/offline). */
+.opt-local-ping-btn {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.opt-local-ping-btn:hover {
+  color: var(--text-main);
+}
+
+.opt-local-ping-btn.checking {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.opt-local-ping-btn.checking svg {
+  animation: sp-status-spin 0.9s linear infinite;
+}
+
+.opt-local-ping-btn.online {
+  border-color: #16a34a;
+  background: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+}
+
+.opt-local-ping-btn.offline {
+  border-color: #ef4444;
+  background: #ef4444;
+  color: #ffffff;
+}
+
+@keyframes sp-status-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .sp-chips {
@@ -247,12 +330,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 .sp-tools-left {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .sp-btn-capture {
@@ -267,6 +353,8 @@ body {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .sp-btn-capture:hover {
@@ -292,7 +380,7 @@ body {
 }
 
 .sp-select-mode {
-  padding: 4px 8px;
+  padding: 4px 6px;
   border-radius: 12px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -300,6 +388,31 @@ body {
   color: var(--text-main);
   outline: none;
   cursor: pointer;
+  min-width: 0;
+  max-width: 92px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Narrow panel (Chrome's built-in side panel can be resized quite thin):
+   drop the "Capture" text label and shrink the selects further so all 4
+   toolbar controls (capture, upload, lang, mode) stay on one row. */
+@media (max-width: 340px) {
+  .sp-btn-capture {
+    padding: 6px;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    justify-content: center;
+  }
+
+  .sp-btn-capture-label {
+    display: none;
+  }
+
+  .sp-select-mode {
+    max-width: 64px;
+  }
 }
 
 .sp-input-box {
@@ -457,10 +570,89 @@ body {
   cursor: pointer;
 }
 
+/* Local Model (Ollama / LM Studio) entries — a distinct, compact row
+   instead of the generic cloud-provider form (no key, no dropdowns). */
+.sp-local-key-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  background: rgba(22, 163, 74, 0.06);
+}
+
+.sp-local-key-toggle input {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.sp-local-key-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: #16a34a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sp-local-key-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sp-local-key-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sp-local-key-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.15);
+  padding: 1px 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.sp-local-key-name {
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--text-main);
+}
+
+.sp-local-key-meta {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sp-local-key-status {
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.sp-local-key-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
 /* ========================================================= */
 /* Rich Liquid Glass Tooltip (SidePanel)                     */
 /* ========================================================= */
-.sp-rich-tooltip {
+.sp-tooltip-popup {
   position: fixed;
   z-index: 2147483647;
   max-width: 260px;
@@ -473,11 +665,12 @@ body {
   padding: 8px 12px;
   pointer-events: none;
   opacity: 0;
+  display: none;
   transform: translateY(4px);
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.sp-rich-tooltip.show {
+.sp-tooltip-popup.visible {
   opacity: 1;
   transform: translateY(0);
 }

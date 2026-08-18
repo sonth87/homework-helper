@@ -373,6 +373,25 @@ body {
   background: #0369a1;
 }
 
+.opt-btn-download-core {
+  align-items: center;
+  text-align: left;
+}
+
+.opt-btn-download-core-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.2;
+}
+
+.opt-btn-download-core-sub {
+  font-size: 10.5px;
+  font-weight: 400;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.8);
+}
+
 .opt-btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -507,6 +526,132 @@ body {
   padding-top: 4px;
 }
 
+/* Local Model (Ollama / LM Studio) entries — a distinct, compact card
+   instead of the generic cloud-provider form (no key, no dropdowns). */
+.opt-local-model-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.opt-local-card-toggle input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.opt-local-card-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #16a34a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.opt-local-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.opt-local-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.opt-local-card-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #dcfce7;
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.opt-local-card-model-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.opt-local-card-meta {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opt-local-card-embedding-warning {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: #d97706;
+  margin-top: 4px;
+}
+
+.opt-local-card-status {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.opt-local-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.opt-icon-btn-danger {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #ffffff;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.opt-icon-btn-danger:hover {
+  background: #fef2f2;
+}
+
+.opt-icon-btn-plain {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.opt-icon-btn-plain:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
 /* OCR Model List Items */
 .opt-ocr-item {
   background: #ffffff;
@@ -557,6 +702,18 @@ body {
   gap: 16px;
 }
 
+.opt-guide-card-why {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  border-left: 4px solid #0284c7;
+}
+
+.opt-guide-card-how {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  border-left: 4px solid #16a34a;
+}
+
 .opt-guide-title {
   font-size: 15px;
   font-weight: 700;
@@ -581,6 +738,299 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* Local AI Server (Ollama / LM Studio) Panel */
+.opt-local-type-btn {
+  padding: 6px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.opt-local-type-btn.active {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+}
+
+/* Local Server "Test Connection" button — a small tick badge that doubles
+   as the trigger and the status indicator (idle/checking/online/offline). */
+.opt-local-ping-btn {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.opt-local-ping-btn:hover {
+  border-color: #94a3b8;
+  color: #334155;
+}
+
+.opt-local-ping-btn.checking {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #f59e0b;
+}
+
+.opt-local-ping-btn.checking svg {
+  animation: opt-status-spin 0.9s linear infinite;
+}
+
+.opt-local-ping-btn.online {
+  border-color: #16a34a;
+  background: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+}
+
+.opt-local-ping-btn.offline {
+  border-color: #ef4444;
+  background: #ef4444;
+  color: #ffffff;
+}
+
+@keyframes opt-status-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.opt-local-model-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #0f172a;
+  background: #f8fafc;
+}
+
+.opt-local-model-row.is-embedding {
+  opacity: 0.7;
+}
+
+.opt-local-embedding-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #d97706;
+  background: rgba(217, 119, 6, 0.12);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.opt-local-vision-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.12);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.opt-local-textonly-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.12);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.opt-local-card-ocr-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+  cursor: pointer;
+}
+
+.opt-local-card-ocr-toggle input {
+  width: 13px;
+  height: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Local Model Installation Guide */
+.opt-guide-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: opt-guide-counter;
+}
+
+.opt-guide-steps > li {
+  counter-increment: opt-guide-counter;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding-left: 30px;
+  position: relative;
+}
+
+.opt-guide-steps > li::before {
+  content: counter(opt-guide-counter);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.opt-guide-step-text {
+  flex: 1 1 260px;
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.55;
+}
+
+.opt-guide-step-text code {
+  background: #f1f5f9;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #0369a1;
+}
+
+.opt-guide-shot {
+  flex: 0 0 220px;
+  min-height: 110px;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 11px;
+  text-align: center;
+  padding: 10px;
+}
+
+.opt-guide-shot.has-img {
+  flex-basis: 320px;
+  min-height: 0;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.opt-guide-shot.has-img img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 7px;
+}
+
+@media (max-width: 1100px) {
+  .opt-appearance-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .opt-preview-sticky {
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .opt-guide-steps > li {
+    flex-direction: column;
+  }
+  .opt-guide-shot,
+  .opt-guide-shot.has-img {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .opt-setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .opt-select,
+  input[type="range"],
+  input[type="checkbox"] {
+    width: 100%;
+  }
+
+  .opt-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .opt-sidebar {
+    display: none;
+  }
+
+  .opt-main {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .opt-main {
+    padding: 12px;
+  }
+
+  .opt-card {
+    padding: 12px;
+  }
+
+  .opt-heading {
+    font-size: 18px;
+  }
+
+  .opt-subheading {
+    font-size: 13px;
+  }
+
+  .opt-card-title {
+    font-size: 13px;
+  }
+
+  .opt-setting-title {
+    font-size: 13px;
+  }
+
+  .opt-setting-desc {
+    font-size: 12px;
+  }
+
+  .opt-preview-card {
+    max-width: 100%;
+  }
 }
 
 .opt-link-item {

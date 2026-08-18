@@ -19,7 +19,8 @@ class KeyRotator {
 
     // Filter enabled configs and check cooldowns
     const available = apiConfigs.filter((cfg) => {
-      if (!cfg.isEnabled || !cfg.apiKey) return false;
+      const isKeyRequired = cfg.provider !== 'ollama' && cfg.provider !== 'lmstudio' && cfg.provider !== 'chrome-builtin';
+      if (!cfg.isEnabled || (isKeyRequired && !cfg.apiKey)) return false;
       if (cfg.cooldownUntil && cfg.cooldownUntil > now) {
         return false; // Still in cooldown
       }

@@ -8,8 +8,13 @@ import { Storage } from './storage.js';
 
 export const OCR_MODEL_CATALOG = [
   // Core Package (Bundled / Fast Local)
+  // `name`/`description` are legacy Vietnamese defaults kept only as a fallback for
+  // contexts without an i18n dict (e.g. Intl.DisplayNames unsupported). The Options
+  // page (ocr-tab.js) derives the localized name from `bcp47` via Intl.DisplayNames
+  // and the description from the current UI language's `ocrModelDescTemplate`.
   {
     lang: 'vie',
+    bcp47: 'vi',
     name: 'Tiếng Việt',
     nativeName: 'Tiếng Việt',
     size: '1.9 MB',
@@ -21,6 +26,7 @@ export const OCR_MODEL_CATALOG = [
   },
   {
     lang: 'eng',
+    bcp47: 'en',
     name: 'Tiếng Anh',
     nativeName: 'English',
     size: '4.1 MB',
@@ -32,6 +38,7 @@ export const OCR_MODEL_CATALOG = [
   },
   {
     lang: 'equ',
+    bcp47: null,
     name: 'Toán học & Ký hiệu',
     nativeName: 'Math & Equations',
     size: '2.3 MB',
@@ -45,6 +52,7 @@ export const OCR_MODEL_CATALOG = [
   // International Languages
   {
     lang: 'chi_sim',
+    bcp47: 'zh-Hans',
     name: 'Tiếng Trung Giản thể',
     nativeName: '简体中文',
     size: '4.2 MB',
@@ -56,6 +64,7 @@ export const OCR_MODEL_CATALOG = [
   },
   {
     lang: 'chi_tra',
+    bcp47: 'zh-Hant',
     name: 'Tiếng Trung Phồn thể',
     nativeName: '繁體中文',
     size: '4.8 MB',
@@ -67,6 +76,7 @@ export const OCR_MODEL_CATALOG = [
   },
   {
     lang: 'jpn',
+    bcp47: 'ja',
     name: 'Tiếng Nhật',
     nativeName: '日本語',
     size: '4.6 MB',
@@ -78,6 +88,7 @@ export const OCR_MODEL_CATALOG = [
   },
   {
     lang: 'kor',
+    bcp47: 'ko',
     name: 'Tiếng Hàn',
     nativeName: '한국어',
     size: '3.9 MB',
@@ -89,6 +100,7 @@ export const OCR_MODEL_CATALOG = [
   },
   {
     lang: 'spa',
+    bcp47: 'es',
     name: 'Tiếng Tây Ban Nha',
     nativeName: 'Español',
     size: '3.2 MB',
@@ -100,6 +112,7 @@ export const OCR_MODEL_CATALOG = [
   },
   {
     lang: 'fra',
+    bcp47: 'fr',
     name: 'Tiếng Pháp',
     nativeName: 'Français',
     size: '3.8 MB',
@@ -111,6 +124,7 @@ export const OCR_MODEL_CATALOG = [
   },
   {
     lang: 'deu',
+    bcp47: 'de',
     name: 'Tiếng Đức',
     nativeName: 'Deutsch',
     size: '3.7 MB',
@@ -122,6 +136,7 @@ export const OCR_MODEL_CATALOG = [
   },
   {
     lang: 'por',
+    bcp47: 'pt',
     name: 'Tiếng Bồ Đào Nha',
     nativeName: 'Português',
     size: '3.3 MB',
@@ -133,6 +148,7 @@ export const OCR_MODEL_CATALOG = [
   },
   {
     lang: 'ind',
+    bcp47: 'id',
     name: 'Tiếng Indonesia',
     nativeName: 'Bahasa Indonesia',
     size: '2.8 MB',
@@ -144,6 +160,7 @@ export const OCR_MODEL_CATALOG = [
   },
   {
     lang: 'rus',
+    bcp47: 'ru',
     name: 'Tiếng Nga',
     nativeName: 'Русский',
     size: '4.0 MB',
@@ -154,6 +171,34 @@ export const OCR_MODEL_CATALOG = [
     description: 'Nhận diện hệ chữ cái Kirin (Cyrillic).',
   },
 ];
+
+/**
+ * Localized display name for a catalog entry's language, resolved against the
+ * current UI language via Intl.DisplayNames (falls back to the Vietnamese
+ * catalog default if unsupported, and to a dict key for 'equ' which isn't a
+ * real language code).
+ */
+export function getLocalizedModelName(model, uiLanguage, dict) {
+  if (!model.bcp47) return dict?.ocrModelNameEqu || model.name;
+  try {
+    const dn = new Intl.DisplayNames([uiLanguage], { type: 'language' });
+    return dn.of(model.bcp47) || model.name;
+  } catch (e) {
+    return model.name;
+  }
+}
+
+/**
+ * Localized description for a catalog entry, built from the current UI
+ * language's generic template (falls back to the Vietnamese catalog default).
+ */
+export function getLocalizedModelDescription(model, uiLanguage, dict) {
+  if (!model.bcp47) return dict?.ocrModelDescEqu || model.description;
+  const template = dict?.ocrModelDescTemplate;
+  if (!template) return model.description;
+  const localizedName = getLocalizedModelName(model, uiLanguage, dict);
+  return template.replace('{lang}', localizedName);
+}
 
 // Map app language settings to Tesseract codes
 const LANG_MAP = {
@@ -265,7 +310,17 @@ export class OcrEngine {
   }
 
   /**
-   * Resolve composite language string with math and english
+   * Resolve composite language string with english.
+   *
+   * NOTE: "equ" (Tesseract's math/equation symbol model) is bundled but is
+   * NOT included here. The bundled equ.traineddata is a legacy-engine-only
+   * file with no LSTM network data, while offscreen/ocr.js initializes
+   * TessBaseAPI with oem=1 (LSTM_ONLY) — mixing them makes Init() fail
+   * outright ("LSTM requested, but not present!!"), breaking OCR entirely
+   * rather than just under-serving math. Re-enable only after sourcing an
+   * LSTM-compatible equation model, or after switching the whole pipeline
+   * to a combined legacy+LSTM oem mode (which would in turn require the
+   * other bundled traineddata files to carry legacy data too).
    */
   static getCompositeLanguage(targetLang = 'vi') {
     const mainCode = LANG_MAP[targetLang] || targetLang || 'vie';
@@ -489,21 +544,24 @@ export class OcrEngine {
   static postProcessMathText(rawText) {
     if (!rawText) return '';
 
-    let text = rawText
-      // Fix common OCR misinterpretations
+    const lines = rawText
       .replace(/\r\n/g, '\n')
-      .replace(/[ \t]+/g, ' ')
-      // Fix sqrt formulas: V(x) -> \sqrt{x}
-      .replace(/[Vv]\(([0-9a-zA-Z\s\+\-\*\/]+)\)/g, '$\\sqrt{$1}$')
-      // Fix powers: x2 -> x^2 when following math variables
-      .replace(/([a-zA-Z])(\^?)(2|3|4|n|k|x|y)\b/g, '$1^{$3}')
-      // Fix common Greek letters
-      .replace(/\b(alpha|Alpha)\b/g, '$\\alpha$')
-      .replace(/\b(beta|Beta)\b/g, '$\\beta$')
-      .replace(/\b(pi|Pi)\b/g, '$\\pi$')
-      .replace(/\b(delta|Delta)\b/g, '$\\Delta$')
-      .trim();
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
 
-    return text;
+    const cleanedLines = lines.map((line, idx) => {
+      // Strip radio/checkbox/bullet artifacts (e.g. O, o, ©, ®, ○, •, ( ), [ ])
+      let cleaned = line
+        .replace(/^[\(\[\{]?\s*[Oo0©®○•*◦■□✓✔\-+]\s*[\)\]\}]?\s+/g, '')
+        .replace(/^[\(\[\{]\s*[\)\]\}]\s*/g, '');
+
+      if (idx > 0 && cleaned !== line && cleaned.length > 0) {
+        return `- ${cleaned}`;
+      }
+      return cleaned;
+    });
+
+    return cleanedLines.join('\n');
   }
 }

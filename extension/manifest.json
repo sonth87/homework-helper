@@ -34,7 +34,6 @@
     "open_in_tab": true
   },
   "permissions": [
-    "aiLanguageModelOriginTrial",
     "storage",
     "unlimitedStorage",
     "tabs",

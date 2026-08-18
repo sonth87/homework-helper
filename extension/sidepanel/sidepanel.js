@@ -4,7 +4,7 @@
  */
 
 import { Icons } from '../shared/icons.js';
-import { Storage } from '../shared/storage.js';
+import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
 import { formatMarkdownAndMath } from '../shared/markdown-katex.js';
 import { getI18n } from '../shared/i18n.js';
 import { SidePanelTooltips } from './sidepanel-tooltips.js';
@@ -54,7 +54,7 @@ export class SidePanelController {
     setInner('spBtnSettings', Icons.settings(16));
     setInner('spBtnClear', Icons.trash(16));
     setInner('spBtnOptions', Icons.externalLink(16));
-    setInner('spBtnCapture', `${Icons.scissors(14)} Capture`);
+    setInner('spBtnCapture', `${Icons.scissors(14)} <span class="sp-btn-capture-label">Capture</span>`);
     setInner('spBtnUpload', Icons.image(15));
     setInner('spBtnRemoveThumb', Icons.x(12));
     setInner('spBtnSend', `<span>Ask AI</span> ${Icons.send(13)}`);
@@ -158,16 +158,16 @@ export class SidePanelController {
     // Listen for AI responses from background worker
     chrome.runtime.onMessage.addListener((msg) => {
       if (msg.action === 'AI_STREAM_CHUNK') {
-        if (msg.payload?.requestId === this.activeRequestId) {
-          this.appendChunk(msg.payload.chunk, msg.payload.meta);
+        if (msg.requestId === this.activeRequestId) {
+          this.appendChunk(msg.chunk, msg.meta);
         }
-      } else if (msg.action === 'AI_STREAM_END') {
-        if (msg.payload?.requestId === this.activeRequestId) {
+      } else if (msg.action === 'AI_STREAM_COMPLETE') {
+        if (msg.requestId === this.activeRequestId) {
           this.finalizeStream();
         }
       } else if (msg.action === 'AI_STREAM_ERROR') {
-        if (msg.payload?.requestId === this.activeRequestId) {
-          this.handleError(msg.payload.error);
+        if (msg.requestId === this.activeRequestId) {
+          this.handleError(msg.error);
         }
       } else if (msg.action === 'OCR_RESULT') {
         if (msg.payload?.text) {
@@ -307,6 +307,7 @@ export class SidePanelController {
 
     this.activeAiBubble = this.createAiBubble();
     this.currentResponseText = '';
+    this.currentNotices = [];
     this.isStreaming = true;
     this.activeRequestId = `req_${Date.now()}`;
     const btnSend = document.getElementById('spBtnSend');
@@ -354,6 +355,9 @@ export class SidePanelController {
 
     msgEl.innerHTML = `
       <div class="sp-msg-bubble">
+        <div class="sp-msg-notice-row" style="display:none;">
+          <span class="sp-notice-icon" data-tooltip-title="Thông báo hệ thống"></span>
+        </div>
         <div class="sp-ai-content" style="color:var(--text-muted);">${Icons.sparkles(14)} Đang suy nghĩ & giải bài...</div>
         <div class="sp-msg-footer" style="display:none;">
           <button class="sp-copy-btn">${Icons.copy(12)} <span>Sao chép</span></button>
@@ -366,8 +370,27 @@ export class SidePanelController {
     return msgEl;
   }
 
+  // Notices (auto-fallback / key rotation / OCR pre-processing messages) are
+  // kept out of the visible answer text — they collect into a small hover
+  // icon instead, so they don't get confused with the AI's actual answer.
+  updateNoticeIcon(bubbleEl, notices) {
+    if (!bubbleEl || !notices || notices.length === 0) return;
+    const row = bubbleEl.querySelector('.sp-msg-notice-row');
+    const icon = bubbleEl.querySelector('.sp-notice-icon');
+    if (!row || !icon) return;
+    row.style.display = 'flex';
+    icon.innerHTML = Icons.alertCircle(13);
+    icon.setAttribute('data-tooltip-desc', notices.join('<br><br>'));
+  }
+
   appendChunk(chunk, meta) {
     if (!this.activeAiBubble) return;
+
+    if (meta?.notice) {
+      this.currentNotices = this.currentNotices || [];
+      this.currentNotices.push(meta.notice);
+      this.updateNoticeIcon(this.activeAiBubble, this.currentNotices);
+    }
 
     this.currentResponseText += chunk;
     const content = this.activeAiBubble.querySelector('.sp-ai-content');
@@ -425,7 +448,7 @@ export class SidePanelController {
 
     if (textarea) textarea.placeholder = dict.placeholder;
     if (sendBtn) sendBtn.innerHTML = `<span>${dict.askAiBtn}</span> ${Icons.send(13)}`;
-    if (captureBtn) captureBtn.innerHTML = `${Icons.scissors(14)} ${dict.captureBtn}`;
+    if (captureBtn) captureBtn.innerHTML = `${Icons.scissors(14)} <span class="sp-btn-capture-label">${dict.captureBtn}</span>`;
     if (hintSpan) hintSpan.textContent = dict.shiftEnterHint;
     if (welcomeText) welcomeText.textContent = dict.welcomeText;
 

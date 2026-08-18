@@ -144,12 +144,15 @@ export class OverlayConfigModal {
 
       <input type="text" class="hw-input cfg-custom-model" placeholder="${d.customModelPlaceholder || 'Nhập tên/mã model (vd: gemini-3.5-pro, gpt-5, claude-4...)'}" value="${isCustomModel && cfg.model !== '__custom__' ? cfg.model : ''}" style="margin-top:2px; ${isCustomModel ? 'display:block;' : 'display:none;'}">
 
-      <input type="password" class="hw-input cfg-key" placeholder="${d.modalKeyPlaceholder || 'Enter API Key (sk-... / AIza...)'}" value="${cfg.apiKey || ''}">
+      <input type="text" class="hw-input cfg-base-url" placeholder="${providerObj.defaultBaseUrl || 'Base URL (http://localhost:...)'}" value="${cfg.baseUrl || (providerObj.requiresBaseUrl ? providerObj.defaultBaseUrl : '')}" style="margin-top:2px; ${providerObj.requiresBaseUrl ? 'display:block;' : 'display:none;'}">
+
+      <input type="password" class="hw-input cfg-key" placeholder="${providerObj.requiresKey === false ? 'API Key (Không bắt buộc cho Local AI)' : (d.modalKeyPlaceholder || 'Enter API Key (sk-... / AIza...)')}" value="${cfg.apiKey || ''}">
     `;
 
     const providerSelect = el.querySelector('.cfg-provider');
     const modelSelect = el.querySelector('.cfg-model');
     const customModelInput = el.querySelector('.cfg-custom-model');
+    const baseUrlInput = el.querySelector('.cfg-base-url');
     const keyInput = el.querySelector('.cfg-key');
     const enabledInput = el.querySelector('.cfg-enabled');
 
@@ -165,6 +168,7 @@ export class OverlayConfigModal {
         id: cfg.id,
         provider: providerSelect.value,
         model: getSelectedModel(),
+        baseUrl: baseUrlInput.value.trim(),
         apiKey: keyInput.value.trim(),
         isEnabled: enabledInput.checked,
       });
@@ -185,6 +189,17 @@ export class OverlayConfigModal {
       modelSelect.innerHTML =
         pObj.models.map((m) => `<option value="${m.id}">${m.name}</option>`).join('') +
         `<option value="__custom__">✏️ ${d.customModelOption || 'Tự điền model (Custom)...'}</option>`;
+      
+      if (pObj.requiresBaseUrl) {
+        baseUrlInput.style.display = 'block';
+        baseUrlInput.placeholder = pObj.defaultBaseUrl || 'http://localhost:...';
+        if (!baseUrlInput.value) baseUrlInput.value = pObj.defaultBaseUrl || '';
+      } else {
+        baseUrlInput.style.display = 'none';
+      }
+
+      keyInput.placeholder = pObj.requiresKey === false ? 'API Key (Không bắt buộc cho Local AI)' : (d.modalKeyPlaceholder || 'Enter API Key (sk-... / AIza...)');
+
       updateCustomModelVisibility();
       save();
     });
@@ -195,6 +210,7 @@ export class OverlayConfigModal {
     });
 
     customModelInput.addEventListener('input', save);
+    baseUrlInput.addEventListener('input', save);
     keyInput.addEventListener('input', save);
     enabledInput.addEventListener('change', save);
 

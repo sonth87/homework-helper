@@ -40,6 +40,9 @@ export function formatMarkdownAndMath(text) {
 
   let html = text;
 
+  // 0. Auto-wrap isolated LaTeX commands not enclosed in $...$
+  html = html.replace(/(^|[\s(])(\\(?:infty|boxed\{[^}\n]+\}|frac\{[^}\n]+\}\{[^}\n]+\}|sqrt\{[^}\n]+\}|alpha|beta|gamma|theta|pi|pm|times|div|ne|le|ge))(?=[\s),.!?]|$)/g, '$1$$$2$$');
+
   // 1. Extract and protect Display Math: $$...$$ or \[...\]
   const mathBlocks = [];
   html = html.replace(/\$\$([\s\S]+?)\$\$/g, (match, code) => {

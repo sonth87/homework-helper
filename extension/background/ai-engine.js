@@ -6,6 +6,7 @@
 
 import { keyRotator } from './key-rotator.js';
 import { Storage, DEFAULT_NANO_SYSTEM_PROMPT } from '../shared/storage.js';
+import { runOcrInOffscreen } from './ocr-bridge.js';
 
 export class AiEngine {
   /**
@@ -62,8 +63,9 @@ export class AiEngine {
         return;
       } catch (nanoErr) {
         if (enabledKeys.length === 0) throw nanoErr;
-        onChunk(`\n\n> *[Thông báo] Gemini Nano không khả dụng, tự động chuyển sang mô hình Cloud Vision API...*\n\n`, {
+        onChunk('', {
           status: 'switching',
+          notice: 'Gemini Nano không khả dụng, tự động chuyển sang mô hình Cloud Vision API...',
           error: nanoErr.message,
         });
       }
@@ -80,8 +82,9 @@ export class AiEngine {
       if (!config) {
         // Fallback to Gemini Nano if prefer_config is set
         if (routingStrategy === 'prefer_config' || routingStrategy === 'prefer_nano') {
-          onChunk(`\n\n> *[Thông báo] Không có API Key khả dụng, tự động chuyển về Gemini Nano On-Device...*\n\n`, {
+          onChunk('', {
             status: 'switching',
+            notice: 'Không có API Key khả dụng, tự động chuyển về Gemini Nano On-Device...',
           });
           await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt }, onChunk, signal);
           return;
@@ -118,8 +121,9 @@ export class AiEngine {
         if (attempts >= maxAttempts || totalAvailable <= 1) {
           // Last resort fallback to Gemini Nano if prefer_config
           if (routingStrategy === 'prefer_config' || routingStrategy === 'prefer_nano') {
-            onChunk(`\n\n> *[Thông báo] Tất cả API Key đều bận, tự động chuyển về Gemini Nano On-Device...*\n\n`, {
+            onChunk('', {
               status: 'switching',
+              notice: 'Tất cả API Key đều bận hoặc không kết nối được, tự động chuyển về Gemini Nano On-Device...',
             });
             await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
             return;
@@ -128,8 +132,9 @@ export class AiEngine {
         }
 
         // Notify UI about failover
-        onChunk(`\n\n> *[Thông báo] Key ${config.model} gặp giới hạn, tự động xoay sang key dự phòng...*\n\n`, {
+        onChunk('', {
           status: 'switching',
+          notice: `Key ${config.model} gặp giới hạn, tự động xoay sang key dự phòng...`,
           error: err.message,
         });
       }
@@ -261,16 +266,37 @@ export class AiEngine {
     const model = config.model || 'gpt-4o';
     const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
 
+    let effectiveImage = imageBase64;
+    let effectivePrompt = prompt;
+
+    // Text-only local models (Ollama/LM Studio) can't read the image at all —
+    // OCR it into text first instead of silently sending an image the model
+    // will ignore or choke on.
+    const isLocalTextOnly = (config.provider === 'ollama' || config.provider === 'lmstudio') && config.isVision === false;
+    if (isLocalTextOnly && imageBase64 && config.ocrFallback !== false) {
+      onChunk('', { status: 'switching', notice: `Model "${model}" không đọc được ảnh trực tiếp, đang OCR trích xuất chữ từ ảnh trước khi gửi...` });
+      try {
+        const ocrText = await runOcrInOffscreen(imageBase64, outputLanguage);
+        effectivePrompt = ocrText.trim()
+          ? `${prompt}\n\n[Nội dung câu hỏi & các phương án từ ảnh]:\n${ocrText.trim()}`
+          : prompt;
+      } catch (ocrErr) {
+        console.warn('[AiEngine] OCR fallback failed, sending text-only prompt:', ocrErr);
+        onChunk('', { status: 'switching', notice: `OCR ảnh thất bại (${ocrErr.message}), tiếp tục với câu hỏi dạng văn bản...` });
+      }
+      effectiveImage = null;
+    }
+
     const userContent = [];
-    if (imageBase64) {
-      const formattedUrl = imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`;
+    if (effectiveImage) {
+      const formattedUrl = effectiveImage.startsWith('data:') ? effectiveImage : `data:image/jpeg;base64,${effectiveImage}`;
       userContent.push({
         type: 'image_url',
         image_url: { url: formattedUrl },
       });
     }
 
-    const fullPrompt = this.formatStudyPrompt(studyMode, prompt, outputLanguage);
+    const fullPrompt = this.formatStudyPrompt(studyMode, effectivePrompt, outputLanguage);
     userContent.push({ type: 'text', text: fullPrompt });
 
     const messages = [];
@@ -287,15 +313,46 @@ export class AiEngine {
       max_tokens: 4096,
     };
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.apiKey}`,
-      },
-      body: JSON.stringify(payload),
-      signal,
-    });
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    if (config.apiKey) {
+      headers['Authorization'] = `Bearer ${config.apiKey}`;
+    }
+
+    // Local servers (Ollama/LM Studio) that are turned off or unreachable
+    // don't always fail fast — a plain fetch can hang well past what a user
+    // will wait for, blocking the fallback-to-Nano logic in ask(). Bound the
+    // connection attempt so a dead local server surfaces as a normal error
+    // instead of a silent hang.
+    const isLocalProvider = config.provider === 'ollama' || config.provider === 'lmstudio';
+    const connectTimeoutMs = isLocalProvider ? 15000 : 30000;
+    const timeoutController = new AbortController();
+    const timeoutId = setTimeout(() => timeoutController.abort(), connectTimeoutMs);
+    const fetchSignal = signal ? AbortSignal.any([signal, timeoutController.signal]) : timeoutController.signal;
+
+    let response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+        signal: fetchSignal,
+      });
+    } catch (fetchErr) {
+      if (timeoutController.signal.aborted && !signal?.aborted) {
+        const timeoutErr = new Error(
+          isLocalProvider
+            ? `Không thể kết nối tới server local (${baseUrl}) sau ${connectTimeoutMs / 1000}s. Kiểm tra Ollama/LM Studio có đang chạy không.`
+            : `Kết nối tới ${config.provider.toUpperCase()} quá thời gian chờ (${connectTimeoutMs / 1000}s).`
+        );
+        timeoutErr.status = 504;
+        throw timeoutErr;
+      }
+      throw fetchErr;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       const errText = await response.text();
@@ -422,10 +479,12 @@ export class AiEngine {
    */
   static async streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt }, onChunk, signal) {
     if (imageBase64) {
-      onChunk(
-        `> *Lưu ý: Chrome Gemini Nano On-Device hiện tại chuyên về xử lý văn bản. Để phân tích hình ảnh và đồ thị, bạn có thể thêm API Key Google Gemini (Miễn phí) trong Cài đặt.* \n\n`,
-        { status: 'streaming', model: 'gemini-nano', isBuiltin: true }
-      );
+      onChunk('', {
+        status: 'switching',
+        model: 'gemini-nano',
+        isBuiltin: true,
+        notice: 'Chrome Gemini Nano On-Device hiện tại chuyên về xử lý văn bản. Để phân tích hình ảnh và đồ thị, bạn có thể thêm API Key Google Gemini (Miễn phí) trong Cài đặt.',
+      });
     }
 
     const fullPrompt = this.formatStudyPrompt(studyMode, prompt, outputLanguage);

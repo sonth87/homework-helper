@@ -298,6 +298,17 @@
   white-space: pre-wrap;
 }
 
+.hw-card-answer-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hw-card-answer-heading-row .hw-msg-notice-row {
+  margin-bottom: 0;
+}
+
 .hw-card-answer-heading {
   font-size: 11px;
   font-weight: 700;
@@ -566,6 +577,10 @@
   font-size: 11.5px;
   background: rgba(34, 197, 94, 0.15);
   color: #16a34a;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Drawer History Overlay Panel */
@@ -688,6 +703,25 @@
   justify-content: flex-end;
   gap: 6px;
   margin-top: 8px;
+}
+
+.hw-msg-notice-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+
+.hw-notice-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+  cursor: help;
+  flex-shrink: 0;
 }
 
 .hw-copy-btn {
@@ -813,6 +847,9 @@
   cursor: pointer;
   outline: none;
   transition: border-color 0.15s ease;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hw-select-mode:hover,

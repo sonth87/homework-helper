@@ -28,7 +28,7 @@
           <span id="navIconAppearance"></span> <span id="navTextAppearance">Giao diện & Tùy biến UI</span>
         </button>
         <button class="opt-nav-item" data-tab="guide">
-          <span id="navIconGuide"></span> <span id="navTextGuide">Hướng dẫn Lấy Key Miễn phí</span>
+          <span id="navIconGuide"></span> <span id="navTextGuide">Hướng dẫn Lấy API Key</span>
         </button>
         <button class="opt-nav-item" data-tab="prompt">
           <span id="navIconPrompt"></span> <span id="navTextPrompt">System Instructions</span>
@@ -50,9 +50,6 @@
               Thêm một hoặc nhiều API Key. Tiện ích tự động cân bằng tải và chuyển sang key dự phòng khi gặp giới hạn Rate Limit.
             </p>
           </div>
-          <button class="opt-btn-primary" id="optBtnAddKey">
-            <span id="optIconPlus"></span> <span id="optBtnAddKeyText">Thêm Model & Key</span>
-          </button>
         </div>
 
         <!-- AI Routing Strategy Box -->
@@ -142,38 +139,141 @@
 
           <!-- 5 Steps Activation Guide Box -->
           <div style="margin-top: 14px; padding: 12px 14px; background: rgba(255, 255, 255, 0.85); border-radius: 10px; border: 1px solid #bae6fd;">
-            <div style="font-weight: 700; font-size: 13px; color: #0369a1; margin-bottom: 8px;">
+            <div style="font-weight: 700; font-size: 13px; color: #0369a1; margin-bottom: 8px;" id="optNanoGuideIntro">
               Hướng dẫn kích hoạt Gemini Nano (Nhấn vào từng link để mở trực tiếp tab cờ tương ứng):
             </div>
             <ol style="margin-left: 18px; font-size: 12.5px; color: #334155; line-height: 1.8;">
               <li>
-                <strong>Bước 1:</strong> Mở cờ 
+                <span id="optNanoStep1Pre"><strong>Bước 1:</strong> Mở cờ</span>
                 <button type="button" class="opt-btn-link" id="btnFlagPromptApi" style="display:inline; color:#0284c7; font-weight:700; text-decoration:underline; background:none; border:none; cursor:pointer; padding:0; font-size:12.5px; font-family:inherit;">
                   chrome://flags/#prompt-api-for-gemini-nano
                 </button>
-                &rarr; Chọn <strong>Enabled</strong> (hoặc <strong>Enabled Multilingual</strong>).
+                <span id="optNanoStep1Post">&rarr; Chọn <strong>Enabled</strong> (hoặc <strong>Enabled Multilingual</strong>).</span>
               </li>
               <li>
-                <strong>Bước 2 (Bắt buộc):</strong> Mở cờ 
+                <span id="optNanoStep2Pre"><strong>Bước 2 (Bắt buộc):</strong> Mở cờ</span>
                 <button type="button" class="opt-btn-link" id="btnFlagOptimizationGuide" style="display:inline; color:#0284c7; font-weight:700; text-decoration:underline; background:none; border:none; cursor:pointer; padding:0; font-size:12.5px; font-family:inherit;">
                   chrome://flags/#optimization-guide-on-device-model
                 </button>
-                &rarr; Chọn <strong>Enabled BypassPerfRequirement</strong>.
+                <span id="optNanoStep2Post">&rarr; Chọn <strong>Enabled BypassPerfRequirement</strong>.</span>
               </li>
-              <li>
+              <li id="optNanoStep3">
                 <strong>Bước 3:</strong> Nhấn nút <strong>Relaunch</strong> ở góc dưới màn hình để khởi động lại Chrome.
               </li>
               <li>
-                <strong>Bước 4 (Tải model):</strong> Mở 
+                <span id="optNanoStep4Pre"><strong>Bước 4 (Tải model):</strong> Mở</span>
                 <button type="button" class="opt-btn-link" id="btnOpenComponents" style="display:inline; color:#0284c7; font-weight:700; text-decoration:underline; background:none; border:none; cursor:pointer; padding:0; font-size:12.5px; font-family:inherit;">
                   chrome://components
                 </button>
-                &rarr; Tìm mục <strong>Optimization Guide On Device Model</strong> và nhấn <strong>Check for update</strong> cho đến khi báo <em>Up-to-date</em>.
+                <span id="optNanoStep4Post">&rarr; Tìm mục <strong>Optimization Guide On Device Model</strong> và nhấn <strong>Check for update</strong> cho đến khi báo <em>Up-to-date</em>.</span>
               </li>
-              <li>
+              <li id="optNanoStep5">
                 <strong>Bước 5:</strong> Nhấn nút <strong>"Kiểm tra Model Nội bộ"</strong> ở trên để hoàn tất.
               </li>
             </ol>
+          </div>
+        </div>
+
+        <!-- Local Model Install Guide (Ollama / LM Studio) -->
+        <div class="opt-card" id="optLocalGuideCard" style="border-left: 4px solid #16a34a;">
+          <div style="display:flex; align-items:center; gap:8px; cursor:pointer;" id="optLocalGuideToggle">
+            <span id="optIconLocalGuide"></span>
+            <h3 class="opt-card-title" id="optLocalGuideTitle" style="margin:0; flex:1;">Hướng dẫn cài đặt Local Model (Ollama / LM Studio)</h3>
+            <span id="optLocalGuideChevron"></span>
+          </div>
+          <p class="opt-card-desc" id="optLocalGuideDesc" style="margin-top:6px;">
+            Chạy model AI hoàn toàn miễn phí, offline, ngay trên máy tính của bạn — không cần API Key, không giới hạn số lượt hỏi.
+          </p>
+
+          <div id="optLocalGuideBody" style="margin-top:14px; display:flex; flex-direction:column; gap:20px;">
+            <!-- Ollama Guide -->
+            <div>
+              <div style="font-weight:700; font-size:13.5px; color:#16a34a; margin-bottom:10px; display:flex; align-items:center; gap:6px;"><span id="optIconGuideOllama"></span> Ollama</div>
+              <ol class="opt-guide-steps">
+                <li>
+                  <div class="opt-guide-step-text" id="optOllamaStep1">Tải và cài đặt Ollama từ <strong>ollama.com/download</strong> (có bản Windows / macOS / Linux).</div>
+                  <div class="opt-guide-shot" data-step="ollama-1"><span id="optIconGuideShot1"></span><span id="optOllamaCaption1">Ảnh minh họa: Trang tải Ollama</span></div>
+                </li>
+                <li>
+                  <div class="opt-guide-step-text" id="optOllamaStep2">Mở Terminal / Command Prompt, chạy lệnh <code>ollama pull llama3.3</code> (hoặc tên model bất kỳ) để tải model về máy.</div>
+                  <div class="opt-guide-shot" data-step="ollama-2"><span id="optIconGuideShot2"></span><span id="optOllamaCaption2">Ảnh minh họa: Lệnh ollama pull</span></div>
+                </li>
+                <li>
+                  <div class="opt-guide-step-text" id="optOllamaStep3">Ollama tự động chạy server nền tại <code>http://127.0.0.1:11434</code>. Mở link này trên trình duyệt, thấy dòng chữ "Ollama is running" là đã thành công.</div>
+                  <div class="opt-guide-shot" data-step="ollama-3"><span id="optIconGuideShot3"></span><span id="optOllamaCaption3">Ảnh minh họa: Ollama is running</span></div>
+                </li>
+                <li>
+                  <div class="opt-guide-step-text" id="optOllamaStep4">Quay lại tiện ích này, nhấn nút <strong>"Thêm Local Model"</strong> ở trên → chọn tab <strong>Ollama</strong> → nhấn <strong>Kiểm tra kết nối</strong> → tick chọn model vừa tải → nhấn <strong>Thêm model đã chọn</strong>.</div>
+                  <div class="opt-guide-shot" data-step="ollama-4"><span id="optIconGuideShot4"></span><span id="optOllamaCaption4">Ảnh minh họa: Thêm Local Model trong tiện ích</span></div>
+                </li>
+              </ol>
+            </div>
+
+            <!-- LM Studio Guide -->
+            <div>
+              <div style="font-weight:700; font-size:13.5px; color:#16a34a; margin-bottom:10px; display:flex; align-items:center; gap:6px;"><span id="optIconGuideLmstudio"></span> LM Studio</div>
+              <ol class="opt-guide-steps">
+                <li>
+                  <div class="opt-guide-step-text" id="optLmstudioStep1">Tải LM Studio từ <strong>lmstudio.ai</strong>, cài đặt và mở ứng dụng.</div>
+                </li>
+                <li>
+                  <div class="opt-guide-step-text" id="optLmstudioStep2">Vào tab <strong>Discover</strong> (biểu tượng kính lúp), tìm và tải về 1 model bạn muốn dùng (định dạng GGUF).</div>
+                  <div class="opt-guide-shot has-img" data-step="lmstudio-2"><img id="optLmstudioImg2" src="../assets/images/guides/lms-install-model.png" alt="Tải model trong tab Discover của LM Studio"></div>
+                </li>
+                <li>
+                  <div class="opt-guide-step-text" id="optLmstudioStep3">Nếu không thấy tab <strong>Local Server</strong> / <strong>Developer</strong> (biểu tượng &lt;/&gt;) trên thanh bên, vào <strong>Settings → Developer</strong> để bật <strong>Developer Mode</strong> trước (các bản LM Studio mới gộp chung Power User + Developer vào 1 mục này).</div>
+                </li>
+                <li>
+                  <div class="opt-guide-step-text" id="optLmstudioStep4">Vào tab <strong>Local Server / Developer</strong>, chọn model đã tải ở danh sách phía trên, nhấn <strong>Start Server</strong>. Server mặc định chạy tại <code>http://127.0.0.1:1234</code>.</div>
+                  <div class="opt-guide-shot has-img" data-step="lmstudio-3"><img id="optLmstudioImg3" src="../assets/images/guides/lms-local-server.png" alt="Màn hình Local Server / Developer trong LM Studio hiển thị trạng thái Running"></div>
+                </li>
+                <li>
+                  <div class="opt-guide-step-text" id="optLmstudioStep5">Quay lại tiện ích này, nhấn nút <strong>"Thêm Local Model"</strong> ở trên → chọn tab <strong>LM Studio</strong> → nhấn <strong>Kiểm tra kết nối</strong> → tick chọn model đang chạy → nhấn <strong>Thêm model đã chọn</strong>.</div>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Buttons (kept right above the list so opening the Local Model form doesn't push the rest of the page down) -->
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="opt-btn-primary" id="optBtnAddKey">
+            <span id="optIconPlus"></span> <span id="optBtnAddKeyText">Thêm Model & Key</span>
+          </button>
+          <button class="opt-btn-secondary" id="optBtnAddLocalModel">
+            <span id="optIconServer"></span> <span id="optBtnAddLocalModelText">Thêm Local Model</span>
+          </button>
+        </div>
+
+        <!-- Local Model (Ollama / LM Studio) Config Panel -->
+        <div class="opt-card opt-local-panel" id="optLocalModelPanel" style="display:none; border-left: 4px solid #16a34a;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span id="optIconLocalPanel"></span>
+            <h3 class="opt-card-title" id="optLocalPanelTitle" style="margin:0; flex:1;">Kết nối Local AI Server (Ollama / LM Studio)</h3>
+            <button type="button" class="opt-icon-btn-plain" id="optLocalBtnClose" title="Đóng">
+              <span id="optIconLocalClose"></span>
+            </button>
+          </div>
+
+          <div style="display:flex; gap:8px; margin-bottom:12px;" id="optLocalTypeToggle">
+            <button type="button" class="opt-local-type-btn active" id="optLocalTypeLmstudio" data-type="lmstudio">LM Studio</button>
+            <button type="button" class="opt-local-type-btn" id="optLocalTypeOllama" data-type="ollama">Ollama</button>
+          </div>
+
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <input type="text" class="opt-input" id="optLocalBaseUrl" style="flex:1; min-width:220px;" placeholder="http://127.0.0.1:1234" value="http://127.0.0.1:1234">
+            <button type="button" class="opt-local-ping-btn" id="optLocalBtnPing" title="Kiểm tra kết nối">
+              <span id="optLocalStatusIcon"></span>
+            </button>
+          </div>
+
+          <div id="optLocalStatusText" style="font-size:12px; color:#64748b; margin-top:8px;"></div>
+
+          <div id="optLocalModelsList" style="display:flex; flex-direction:column; gap:6px; margin-top:10px;"></div>
+
+          <div class="opt-card-footer" id="optLocalPanelFooter" style="display:none;">
+            <button type="button" class="opt-btn-secondary" id="optLocalBtnCancel">Hủy</button>
+            <button type="button" class="opt-btn-primary" id="optLocalBtnAddSelected">Thêm model đã chọn</button>
           </div>
         </div>
 
@@ -196,10 +296,28 @@
             <button class="opt-btn-secondary" id="optBtnCheckOcrUpdates">
               <span id="optIconCheckUpdates"></span> <span id="optBtnCheckOcrUpdatesText">Kiểm tra Cập nhật</span>
             </button>
-            <button class="opt-btn-primary" id="optBtnDownloadCoreOcr">
-              <span id="optIconDownloadCore"></span> <span id="optBtnDownloadCoreOcrText">Tải Gói Cốt Lõi (Vie + Eng + Math)</span>
+            <button class="opt-btn-primary opt-btn-download-core" id="optBtnDownloadCoreOcr">
+              <span id="optIconDownloadCore"></span>
+              <span class="opt-btn-download-core-text">
+                <span id="optBtnDownloadCoreOcrText">Tải gói cốt lõi</span>
+                <span class="opt-btn-download-core-sub" id="optBtnDownloadCoreOcrSub">Tiếng Việt + Tiếng Anh</span>
+              </span>
             </button>
           </div>
+        </div>
+
+        <!-- What is this for? / Quality disclaimer -->
+        <div class="opt-card" style="border-left:4px solid #d97706; background:#fffbeb; margin-bottom:16px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span id="optIconOcrExplain"></span>
+            <h3 class="opt-card-title" id="optOcrExplainTitle" style="margin:0;">Tính năng này dùng để làm gì?</h3>
+          </div>
+          <p class="opt-card-desc" id="optOcrExplainDesc" style="margin-top:6px;">
+            OCR cục bộ chỉ được dùng làm <strong>phương án dự phòng</strong> khi bạn <strong>chưa cấu hình bất kỳ AI Model nào</strong> ở tab "AI Providers & Keys" (kể cả Local Model qua Ollama/LM Studio). Lúc đó, ảnh chụp bài tập sẽ được trích xuất thành chữ ngay trên trình duyệt để đưa cho Gemini Nano (chỉ đọc được văn bản, không đọc được ảnh) xử lý tiếp.
+          </p>
+          <p class="opt-card-desc" id="optOcrExplainWarning" style="margin-top:8px; color:#b45309; font-weight:600;">
+            Lưu ý: độ chính xác của OCR cục bộ không thể tốt bằng việc để AI đọc thẳng ảnh (Gemini, GPT-4o, Claude, hoặc model Vision qua Ollama/LM Studio) — nhất là với công thức phức tạp, ảnh mờ hoặc chữ viết tay. Nếu muốn kết quả chính xác nhất, hãy ưu tiên cấu hình 1 trong các model đó thay vì chỉ dựa vào OCR.
+          </p>
         </div>
 
         <!-- Notification Banner / Progress -->
@@ -246,8 +364,8 @@
       <section id="tabAppearance" class="opt-section">
         <div class="opt-section-header">
           <div>
-            <h2 class="opt-heading" id="optHeadingAppearance">Giao diện Liquid Glass & Xem trước Trực tiếp</h2>
-            <p class="opt-subheading" id="optSubheadingAppearance">Tùy biến hiệu ứng kính mờ (Liquid Glass), màu sắc, độ mờ hậu cảnh và kích thước với khung Live Preview thời gian thực.</p>
+            <h2 class="opt-heading" id="optHeadingAppearance">Liquid Glass UI & Live Preview</h2>
+            <p class="opt-subheading" id="optSubheadingAppearance">Customize Liquid Glass effects, colors, blur, opacity, and size with real-time Live Preview.</p>
           </div>
         </div>
 
@@ -256,7 +374,7 @@
           <div class="opt-appearance-controls">
             <!-- 1. Floating Action Buttons (FAB) -->
             <div class="opt-card">
-              <h3 class="opt-card-title" id="optCardFabTitle" style="margin-bottom:12px;">2 Nút Nổi Ngoài Màn Hình (Floating FAB)</h3>
+              <h3 class="opt-card-title" id="optCardFabTitle" style="margin-bottom:12px;">Floating Action Buttons (FAB)</h3>
               <div class="opt-settings-list">
                 <label class="opt-setting-row">
                   <div>
@@ -282,7 +400,7 @@
 
             <!-- 2. Selection Toolbar -->
             <div class="opt-card">
-              <h3 class="opt-card-title" id="optCardToolbarTitle" style="margin-bottom:12px;">Thanh Công Cụ Khi Bôi Đen (Selection Toolbar)</h3>
+              <h3 class="opt-card-title" id="optCardToolbarTitle" style="margin-bottom:12px;">Selection Toolbar</h3>
               <div class="opt-settings-list">
                 <div class="opt-setting-row">
                   <div>
@@ -338,7 +456,7 @@
 
             <!-- 3. Homework Helper Popup -->
             <div class="opt-card">
-              <h3 class="opt-card-title" id="optCardPopupTitle" style="margin-bottom:12px;">Popup "Homework Helper" Ngoài Màn Hình</h3>
+              <h3 class="opt-card-title" id="optCardPopupTitle" style="margin-bottom:12px;">Homework Helper Popup</h3>
               <div class="opt-settings-list">
                 <div class="opt-setting-row">
                   <div>
@@ -374,18 +492,18 @@
                 <div class="opt-mock-blob blob-2"></div>
                 
                 <div class="opt-mock-text">
-                  <h3>Calculus & Linear Algebra Problem</h3>
-                  <p>Find the derivative of $f(x) = \int_{0}^{x^2} \sin(t^2) dt$ with respect to $x$.</p>
-                  <p class="highlight-text">According to Leibniz Integral Rule, we differentiate the upper limit...</p>
+                  <h3 id="prevDemoTitle">Calculus & Linear Algebra Problem</h3>
+                  <p id="prevDemoQuestion">Find the derivative of $f(x) = \int_{0}^{x^2} \sin(t^2) dt$ with respect to $x$.</p>
+                  <p class="highlight-text" id="prevDemoHighlight">According to Leibniz Integral Rule, we differentiate the upper limit...</p>
                 </div>
 
                 <!-- Preview Selection Toolbar -->
                 <div class="opt-preview-toolbar" id="prevToolbar">
                   <div class="prev-tb-logo" id="prevTbLogo"></div>
-                  <div class="prev-tb-btn"><span id="prevIconAnswer"></span><span class="prev-tb-label">Answer</span></div>
-                  <div class="prev-tb-btn"><span id="prevIconCopy"></span><span class="prev-tb-label">Copy</span></div>
-                  <div class="prev-tb-btn"><span id="prevIconSearch"></span><span class="prev-tb-label">Search</span></div>
-                  <div class="prev-tb-btn"><span id="prevIconTranslate"></span><span class="prev-tb-label">Translate</span></div>
+                  <div class="prev-tb-btn"><span id="prevIconAnswer"></span><span class="prev-tb-label" id="prevTbLabelAnswer">Answer</span></div>
+                  <div class="prev-tb-btn"><span id="prevIconCopy"></span><span class="prev-tb-label" id="prevTbLabelCopy">Copy</span></div>
+                  <div class="prev-tb-btn"><span id="prevIconSearch"></span><span class="prev-tb-label" id="prevTbLabelSearch">Search</span></div>
+                  <div class="prev-tb-btn"><span id="prevIconTranslate"></span><span class="prev-tb-label" id="prevTbLabelTranslate">Translate</span></div>
                   <div class="prev-tb-btn"><span id="prevIconMore"></span></div>
                 </div>
 
@@ -393,21 +511,21 @@
                 <div class="opt-preview-popup" id="prevPopup">
                   <div class="prev-popup-header">
                     <div style="display:flex; align-items:center; gap:6px; font-weight:700;">
-                      <span id="prevIconSparkles"></span> Homework Helper
+                      <span id="prevIconSparkles"></span> <span id="prevPopupTitle">Homework Helper</span>
                     </div>
                     <span id="prevIconClose"></span>
                   </div>
                   <div class="prev-popup-body">
-                    <div style="font-size:11.5px; font-weight:600; color:#0f172a;">Answer</div>
+                    <div style="font-size:11.5px; font-weight:600; color:#0f172a;" id="prevPopupAnswerHeading">Answer</div>
                     <div class="prev-popup-content">
                       $f'(x) = 2x \sin(x^4)$
-                      <div style="font-size:11px; color:#475569; margin-top:2px;">Step 1: Apply Leibniz Rule $\frac{d}{dx}\int_{a}^{u(x)} g(t)dt = g(u(x))\cdot u'(x)$.</div>
+                      <div style="font-size:11px; color:#475569; margin-top:2px;" id="prevDemoStep">Step 1: Apply Leibniz Rule $\frac{d}{dx}\int_{a}^{u(x)} g(t)dt = g(u(x))\cdot u'(x)$.</div>
                     </div>
                   </div>
                   <div class="prev-popup-footer">
-                    <div class="prev-btn-blue"><span id="prevIconScissors"></span> Next Question</div>
+                    <div class="prev-btn-blue"><span id="prevIconScissors"></span> <span id="prevPopupNextQuestion">Next Question</span></div>
                     <div style="display:flex; gap:6px;">
-                      <div class="prev-btn-sub"><span id="prevIconCardCopy"></span> Copy</div>
+                      <div class="prev-btn-sub"><span id="prevIconCardCopy"></span> <span id="prevPopupCopy">Copy</span></div>
                     </div>
                   </div>
                 </div>
@@ -428,23 +546,23 @@
         <div class="opt-section-header">
           <div>
             <h2 class="opt-heading" id="optHeadingGuide">Hướng dẫn Lấy API Key & Cơ chế Xoay Vòng</h2>
-            <p class="opt-subheading" id="optSubheadingGuide">Giải thích chi tiết về lợi ích của việc cấu hình nhiều API Key và cách nhận API Key miễn phí từ các nhà cung cấp.</p>
+            <p class="opt-subheading" id="optSubheadingGuide">Giải thích chi tiết về lợi ích của việc cấu hình nhiều API Key và cách lấy API Key từ các nhà cung cấp.</p>
           </div>
         </div>
 
         <div class="opt-guide-grid">
-          <div class="opt-card opt-guide-card">
+          <div class="opt-card opt-guide-card opt-guide-card-why">
             <h3 class="opt-guide-title">
               <span id="guideIconWhy"></span> <span id="optGuideWhyTitle">Tại sao nên thêm nhiều API Key?</span>
             </h3>
             <ul class="opt-guide-list">
-              <li id="optGuideWhyItem1"><strong>Tránh giới hạn Rate Limit:</strong> Các tài khoản miễn phí của Google Gemini, Groq, hoặc OpenAI thường giới hạn số request/phút (RPM) hoặc số token/ngày. Thêm nhiều key giúp bạn hỏi liên tục không lo bị nghẽn.</li>
+              <li id="optGuideWhyItem1"><strong>Tránh giới hạn Rate Limit:</strong> Các nhà cung cấp thường giới hạn số request/phút (RPM) hoặc số token/ngày cho mỗi tài khoản. Thêm nhiều key giúp bạn hỏi liên tục không lo bị nghẽn.</li>
               <li id="optGuideWhyItem2"><strong>Hoạt động bền bỉ 24/7:</strong> Nếu một key tạm thời hết quota hoặc bị lỗi mạng, extension sẽ tự động chuyển sang key khác trong tích tắc.</li>
-              <li id="optGuideWhyItem3"><strong>Kết hợp nhiều model:</strong> Bạn có thể thêm cả Gemini 2.5 Flash (siêu nhanh, hình ảnh tốt) và OpenAI GPT-4o / DeepSeek R1 để có câu trả lời đa dạng.</li>
+              <li id="optGuideWhyItem3"><strong>Kết hợp nhiều model:</strong> Bạn có thể thêm key từ nhiều nhà cung cấp khác nhau (Gemini, OpenAI, DeepSeek, Claude...) — mỗi nơi có thế mạnh riêng, giúp câu trả lời đa dạng và ổn định hơn.</li>
             </ul>
           </div>
 
-          <div class="opt-card opt-guide-card">
+          <div class="opt-card opt-guide-card opt-guide-card-how">
             <h3 class="opt-guide-title">
               <span id="guideIconHow"></span> <span id="optGuideHowTitle">Cơ chế hoạt động như thế nào?</span>
             </h3>
@@ -458,12 +576,12 @@
 
         <!-- Where to get keys -->
         <div class="opt-card" style="margin-top: 16px;">
-          <h3 class="opt-card-title" id="optGuideLinksTitle" style="margin-bottom: 12px;">Địa chỉ lấy API Key chính thức (Nhiều nguồn Miễn phí)</h3>
-          
+          <h3 class="opt-card-title" id="optGuideLinksTitle" style="margin-bottom: 12px;">Địa chỉ lấy API Key chính thức</h3>
+
           <div class="opt-links-list">
             <div class="opt-link-item">
               <div>
-                <strong>Google AI Studio (Gemini 2.5 Flash / 1.5 Pro)</strong>
+                <strong>Google AI Studio</strong>
                 <div class="opt-link-sub" id="optLinkSubGemini">Miễn phí hoàn toàn với hạn mức rất cao, hỗ trợ ảnh/công thức toán học siêu nhanh.</div>
               </div>
               <a href="https://aistudio.google.com/app/apikey" target="_blank" class="opt-btn-secondary" id="optLinkBtnGemini">
@@ -473,7 +591,7 @@
 
             <div class="opt-link-item">
               <div>
-                <strong>Groq Console (Llama 3.3 / Llama 3.2 Vision)</strong>
+                <strong>Groq Console</strong>
                 <div class="opt-link-sub" id="optLinkSubGroq">Tốc độ xử lý cực nhanh (hàng trăm token/giây), miễn phí đăng ký.</div>
               </div>
               <a href="https://console.groq.com/keys" target="_blank" class="opt-btn-secondary" id="optLinkBtnGroq">
@@ -483,7 +601,7 @@
 
             <div class="opt-link-item">
               <div>
-                <strong>OpenAI Platform (GPT-4o, GPT-4o-mini)</strong>
+                <strong>OpenAI Platform</strong>
                 <div class="opt-link-sub" id="optLinkSubOpenAI">Mô hình AI đa năng hàng đầu thế giới về suy luận toán học và ngôn ngữ.</div>
               </div>
               <a href="https://platform.openai.com/api-keys" target="_blank" class="opt-btn-secondary" id="optLinkBtnOpenAI">
@@ -493,7 +611,7 @@
 
             <div class="opt-link-item">
               <div>
-                <strong>DeepSeek Platform (DeepSeek V3 / R1)</strong>
+                <strong>DeepSeek Platform</strong>
                 <div class="opt-link-sub" id="optLinkSubDeepSeek">Chuyên gia giải toán và suy luận logic chuyên sâu với chi phí cực rẻ.</div>
               </div>
               <a href="https://platform.deepseek.com/api_keys" target="_blank" class="opt-btn-secondary" id="optLinkBtnDeepSeek">
@@ -503,7 +621,7 @@
 
             <div class="opt-link-item">
               <div>
-                <strong>Anthropic Console (Claude 3.5 Sonnet)</strong>
+                <strong>Anthropic Console</strong>
                 <div class="opt-link-sub" id="optLinkSubClaude">Khả năng đọc hiểu hình ảnh bài tập và trình bày lời giải mẫu mực.</div>
               </div>
               <a href="https://console.anthropic.com/" target="_blank" class="opt-btn-secondary" id="optLinkBtnClaude">
@@ -551,13 +669,13 @@
         <div class="opt-section-header">
           <div>
             <h2 class="opt-heading" id="optHeadingGeneral">Cài đặt Chung & Ngôn ngữ</h2>
-            <p class="opt-subheading" id="optSubheadingGeneral">Quản lý ngôn ngữ phản hồi mặc định, Google Forms và sao lưu dữ liệu.</p>
+            <p class="opt-subheading" id="optSubheadingGeneral">Manage UI language, AI response language, form detection, and data backup.</p>
           </div>
         </div>
 
         <!-- Language Settings -->
         <div class="opt-card">
-          <h3 class="opt-card-title" id="optCardLangTitle" style="margin-bottom:12px;">Cài đặt Ngôn ngữ (Language Settings)</h3>
+          <h3 class="opt-card-title" id="optCardLangTitle" style="margin-bottom:12px;">Language Settings</h3>
           <div class="opt-settings-list">
             <div class="opt-setting-row">
               <div>
@@ -597,14 +715,14 @@
 
         <!-- Disabled Sites List -->
         <div class="opt-card" style="margin-top: 16px;">
-          <h3 class="opt-card-title" id="optDisabledSitesTitle">Danh sách Website Đã Tắt Tiện ích</h3>
+          <h3 class="opt-card-title" id="optDisabledSitesTitle">Disabled Websites List</h3>
           <p class="opt-card-desc" id="optDisabledSitesDesc" style="margin-bottom: 12px;">Các tên miền bạn đã chọn "Disable for this website" từ menu toolbar.</p>
           <div id="optDisabledSitesList" style="display:flex; flex-direction:column; gap:6px;"></div>
         </div>
 
         <!-- Backup & Clear -->
         <div class="opt-card" style="margin-top: 16px;">
-          <h3 class="opt-card-title" id="optBackupTitle">Sao lưu & Quản lý dữ liệu</h3>
+          <h3 class="opt-card-title" id="optBackupTitle">Backup & Data Management</h3>
           <p class="opt-card-desc" id="optBackupDesc" style="margin-bottom: 12px;">Xuất cấu hình các key ra file JSON để chuyển sang máy khác hoặc xóa lịch sử chat.</p>
           <div style="display:flex; gap:10px;">
             <button class="opt-btn-secondary" id="optBtnExport">Xuất cấu hình JSON</button>
@@ -614,7 +732,7 @@
 
         <!-- About & Tags -->
         <div class="opt-card" style="margin-top: 16px;">
-          <h3 class="opt-card-title" id="optAboutTitle">Thông tin Ứng dụng & Tags</h3>
+          <h3 class="opt-card-title" id="optAboutTitle">About & Tags</h3>
           <p class="opt-card-desc" id="optAboutDesc" style="margin-bottom: 12px;">
             <strong>Homework Helper</strong> - Trợ lý giải bài tập và ôn luyện học tập thông minh. Hỗ trợ AI cục bộ Chrome Gemini Nano Offline, xoay vòng đa mô hình AI (Gemini 2.5 Flash, GPT-4o, Claude 3.5 Sonnet, DeepSeek R1, Groq Llama 3.3), chụp ảnh OCR quét đề bài, giải toán từng bước với công thức KaTeX, thanh công cụ bôi đen văn bản và hỗ trợ làm trắc nghiệm Google Forms.
           </p>

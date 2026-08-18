@@ -111,7 +111,12 @@ class InPageOverlay {
             <img id="hwCardThumb" src="" alt="Cropped" style="display: none;">
           </div>
           <div class="hw-card-source-text" id="hwCardSourceText" style="display: none;"></div>
-          <div class="hw-card-answer-heading" id="hwCardAnswerHeading">Answer</div>
+          <div class="hw-card-answer-heading-row">
+            <div class="hw-card-answer-heading" id="hwCardAnswerHeading">Answer</div>
+            <div class="hw-msg-notice-row" id="hwCardNoticeRow" style="display:none;">
+              <span class="hw-notice-icon" id="hwCardNoticeIcon" data-tooltip-title="Thông báo hệ thống"></span>
+            </div>
+          </div>
           <div class="hw-card-answer-content" id="hwCardAnswerContent">
             <span style="color:#94a3b8;">${Icons.sparkles(14)} Đang giải từng bước với công thức KaTeX...</span>
           </div>
@@ -426,11 +431,27 @@ class InPageOverlay {
     if (btnCardCopyLabel) btnCardCopyLabel.textContent = cardDict.copy || 'Copy';
     if (btnCardRetryLabel) btnCardRetryLabel.textContent = cardDict.retry || 'Retry';
 
-    // Populate native language options
+    // Populate native language options (with compact names for display)
     if (langSelect) {
       const curVal = langSelect.value || outputLanguage;
+      const langDisplayNames = {
+        'vi': 'Tiếng Việt',
+        'en': 'English',
+        'th': 'ไทย',
+        'zh-CN': '简体中文',
+        'zh-TW': '繁體中文',
+        'ja': '日本語',
+        'ko': '한국어',
+        'es': 'Español',
+        'fr': 'Français',
+        'de': 'Deutsch',
+        'pt': 'Português',
+        'id': 'Bahasa Indo',
+        'ru': 'Русский',
+        'auto': 'Auto'
+      };
       langSelect.innerHTML = SUPPORTED_LANGUAGES.map(
-        (l) => `<option value="${l.id}" ${l.id === curVal ? 'selected' : ''}>${l.name}</option>`
+        (l) => `<option value="${l.id}" ${l.id === curVal ? 'selected' : ''}>${langDisplayNames[l.id] || l.name}</option>`
       ).join('');
     }
 

@@ -262,6 +262,13 @@ export const Icons = {
     <polyline points="7 10 12 15 17 10"></polyline>
     <line x1="12" y1="15" x2="12" y2="3"></line>
   `, size, cls),
+
+  server: (size = 18, cls = '') => createSvg(`
+    <rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect>
+    <rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect>
+    <line x1="6" x2="6.01" y1="6" y2="6"></line>
+    <line x1="6" x2="6.01" y1="18" y2="18"></line>
+  `, size, cls),
 };
 
 

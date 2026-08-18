@@ -246,6 +246,7 @@ export class OverlayDrawer {
 
     this.activeAiBubble = this.createAiBubble();
     this.currentDrawerResponseText = '';
+    this.currentNotices = [];
     this.isStreaming = true;
     this.activeTarget = 'drawer';
     this.activeRequestId = `req_${Date.now()}`;
@@ -253,7 +254,9 @@ export class OverlayDrawer {
     if (btnSend) btnSend.disabled = true;
 
     const { apiConfigs = [], systemPrompt, nanoSystemPrompt, outputLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'outputLanguage']);
-    const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
+    const enabledKeys = (apiConfigs || []).filter(
+      (c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')
+    );
 
     if (enabledKeys.length === 0) {
       const langNames = {
@@ -341,6 +344,9 @@ export class OverlayDrawer {
 
     msgEl.innerHTML = `
       <div class="hw-msg-bubble">
+        <div class="hw-msg-notice-row" style="display:none;">
+          <span class="hw-notice-icon" data-tooltip-title="Thông báo hệ thống"></span>
+        </div>
         <div class="hw-ai-content" style="color:#94a3b8;">${Icons.sparkles(14)} Đang suy nghĩ & giải bài...</div>
         <div class="hw-msg-footer" style="display:none;">
           <button class="hw-copy-btn">${Icons.copy(12)} <span>Sao chép</span></button>
@@ -353,7 +359,33 @@ export class OverlayDrawer {
     return msgEl;
   }
 
+  // Notices (auto-fallback / key rotation / OCR pre-processing messages) are
+  // kept out of the visible answer text — they collect into a small hover
+  // icon instead, so they don't get confused with the AI's actual answer.
+  updateNoticeIcon(bubbleEl, notices) {
+    if (!bubbleEl || !notices || notices.length === 0) return;
+    const row = bubbleEl.querySelector('.hw-msg-notice-row');
+    const icon = bubbleEl.querySelector('.hw-notice-icon');
+    if (!row || !icon) return;
+    row.style.display = 'flex';
+    icon.innerHTML = Icons.alertCircle(13);
+    icon.setAttribute('data-tooltip-desc', notices.join('<br><br>'));
+  }
+
   appendStreamChunk(chunk, meta) {
+    if (meta?.notice) {
+      if (this.activeTarget === 'card') {
+        const fc = this.overlay.floatingCard;
+        fc.activeCardNotices = fc.activeCardNotices || [];
+        fc.activeCardNotices.push(meta.notice);
+        fc.updateNoticeIcon?.(fc.activeCardNotices);
+      } else {
+        this.currentNotices = this.currentNotices || [];
+        this.currentNotices.push(meta.notice);
+        this.updateNoticeIcon(this.activeAiBubble, this.currentNotices);
+      }
+    }
+
     if (this.activeTarget === 'card') {
       this.overlay.floatingCard.activeCardResponseText += chunk;
       const content = this.shadow.getElementById('hwCardAnswerContent');

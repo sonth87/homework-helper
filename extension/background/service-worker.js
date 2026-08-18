@@ -6,6 +6,7 @@
 import { AiEngine } from './ai-engine.js';
 import { keyRotator } from './key-rotator.js';
 import { Storage } from '../shared/storage.js';
+import { ensureOffscreenDocument } from './ocr-bridge.js';
 
 // State & active streams
 const activeStreams = new Map(); // requestId -> AbortController
@@ -198,31 +199,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true, requestId });
     return true;
   }
-
-let creatingOffscreenPromise = null;
-async function ensureOffscreenDocument() {
-  const offscreenUrl = chrome.runtime.getURL('offscreen/ocr.html');
-  const existingContexts = await chrome.runtime.getContexts({
-    contextTypes: ['OFFSCREEN_DOCUMENT'],
-    documentUrls: [offscreenUrl],
-  });
-
-  if (existingContexts.length > 0) return;
-
-  if (creatingOffscreenPromise) {
-    await creatingOffscreenPromise;
-    return;
-  }
-
-  creatingOffscreenPromise = chrome.offscreen.createDocument({
-    url: 'offscreen/ocr.html',
-    reasons: ['WORKERS', 'BLOBS'],
-    justification: 'Run WebAssembly Tesseract OCR offline',
-  });
-
-  await creatingOffscreenPromise;
-  creatingOffscreenPromise = null;
-}
 
 // OCR Recognition and Model Management Handlers
 if (action === 'PERFORM_OCR') {

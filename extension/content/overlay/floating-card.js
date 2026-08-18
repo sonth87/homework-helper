@@ -18,6 +18,7 @@ export class OverlayFloatingCard {
     this.popupImageBase64 = null;
     this.targetLang = 'en';
     this.activeCardResponseText = '';
+    this.activeCardNotices = [];
 
     this.init();
   }
@@ -25,6 +26,24 @@ export class OverlayFloatingCard {
   init() {
     this.makeCardDraggable();
     this.setupListeners();
+  }
+
+  // Notices (auto-fallback / key rotation / OCR pre-processing messages) are
+  // kept out of the visible answer text — they collect into a small hover
+  // icon instead, so they don't get confused with the AI's actual answer.
+  resetNoticeIcon() {
+    const row = this.shadow.getElementById('hwCardNoticeRow');
+    if (row) row.style.display = 'none';
+  }
+
+  updateNoticeIcon(notices) {
+    if (!notices || notices.length === 0) return;
+    const row = this.shadow.getElementById('hwCardNoticeRow');
+    const icon = this.shadow.getElementById('hwCardNoticeIcon');
+    if (!row || !icon) return;
+    row.style.display = 'flex';
+    icon.innerHTML = Icons.alertCircle(13);
+    icon.setAttribute('data-tooltip-desc', notices.join('<br><br>'));
   }
 
   setupListeners() {
@@ -160,7 +179,23 @@ export class OverlayFloatingCard {
     this.popupSourceText = '';
     this.popupImageBase64 = imageBase64;
 
-    const { uiLanguage = 'en', outputLanguage = 'en' } = await Storage.get(['uiLanguage', 'outputLanguage']);
+    const {
+      uiLanguage = 'en',
+      outputLanguage = 'en',
+      studyMode = 'step-by-step',
+      apiConfigs = [],
+      systemPrompt,
+      nanoSystemPrompt,
+      routingStrategy = 'prefer_config',
+    } = await Storage.get([
+      'uiLanguage',
+      'outputLanguage',
+      'studyMode',
+      'apiConfigs',
+      'systemPrompt',
+      'nanoSystemPrompt',
+      'routingStrategy',
+    ]);
     const cardDict = getFloatingPopupI18n(uiLanguage);
     const genDict = getI18n(uiLanguage);
 
@@ -172,16 +207,21 @@ export class OverlayFloatingCard {
     thumb.src = imageBase64;
     thumb.style.display = 'block';
 
-    s.getElementById('hwCardAnswerHeading').textContent = cardDict.answerHeading;
+    const headingText = studyMode === 'direct'
+      ? (genDict.modes?.direct || 'ĐÁP ÁN TRỰC TIẾP')
+      : (studyMode === 'hint' ? (genDict.modes?.hint || 'GỢI Ý & HƯỚNG DẪN') : cardDict.answerHeading);
+    s.getElementById('hwCardAnswerHeading').textContent = headingText.toUpperCase();
     s.getElementById('hwBtnPrimaryLabel').textContent = cardDict.nextQuestion;
     s.getElementById('hwBtnCardPrimary').querySelector('.lucide-icon')?.remove();
     s.getElementById('hwBtnCardPrimary').insertAdjacentHTML('afterbegin', Icons.scissors(14));
 
     const content = s.getElementById('hwCardAnswerContent');
-    content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} ${cardDict.solvingStepByStep}</span>`;
+    content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} ${studyMode === 'direct' ? 'Đang xác định đáp án nhanh...' : cardDict.solvingStepByStep}</span>`;
 
     this.popupCard.style.display = 'flex';
     this.activeCardResponseText = '';
+    this.activeCardNotices = [];
+    this.resetNoticeIcon();
     this.overlay.drawer.isStreaming = true;
     this.overlay.drawer.activeTarget = 'card';
     this.overlay.drawer.activeRequestId = `req_${Date.now()}`;
@@ -194,8 +234,9 @@ export class OverlayFloatingCard {
       image: imageBase64,
     });
 
-    const { apiConfigs = [], systemPrompt, nanoSystemPrompt, routingStrategy = 'prefer_config', studyMode = 'step-by-step' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'routingStrategy', 'studyMode']);
-    const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
+    const enabledKeys = (apiConfigs || []).filter(
+      (c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')
+    );
 
     // If running in Gemini Nano mode (no keys or nano_only), run Local OCR first!
     if (enabledKeys.length === 0 || routingStrategy === 'nano_only') {
@@ -395,6 +436,8 @@ export class OverlayFloatingCard {
     content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} ${cardDict.processing}</span>`;
 
     this.activeCardResponseText = '';
+    this.activeCardNotices = [];
+    this.resetNoticeIcon();
     this.overlay.drawer.isStreaming = true;
     this.overlay.drawer.activeTarget = 'card';
     this.overlay.drawer.activeRequestId = `req_${Date.now()}`;

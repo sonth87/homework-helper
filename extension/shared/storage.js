@@ -89,6 +89,38 @@ export const DEFAULT_PROVIDERS = [
     authHeader: "Bearer",
   },
   {
+    id: "ollama",
+    name: "Ollama (Local AI)",
+    description: "Chạy mô hình cục bộ trên máy tính qua Ollama (Offline, Miễn phí, Không cần Key)",
+    models: [
+      { id: "llama3.3", name: "Llama 3.3 (8B / 70B)" },
+      { id: "deepseek-r1:8b", name: "DeepSeek R1 (8B - Reasoning)" },
+      { id: "deepseek-r1:14b", name: "DeepSeek R1 (14B)" },
+      { id: "qwen2.5:7b", name: "Qwen 2.5 (7B)" },
+      { id: "qwen2.5-coder:7b", name: "Qwen 2.5 Coder (7B)" },
+      { id: "gemma2:9b", name: "Gemma 2 (9B)" },
+      { id: "mistral", name: "Mistral (7B)" },
+      { id: "phi4", name: "Phi-4" },
+    ],
+    defaultBaseUrl: "http://localhost:11434/v1",
+    requiresBaseUrl: true,
+    requiresKey: false,
+    authHeader: "Bearer",
+  },
+  {
+    id: "lmstudio",
+    name: "LM Studio (Local AI)",
+    description: "Chạy mô hình cục bộ qua Local Server của LM Studio (OpenAI-compatible)",
+    models: [
+      { id: "loaded-model", name: "Mô hình đang nạp trong LM Studio" },
+      { id: "local-model", name: "Local Model" },
+    ],
+    defaultBaseUrl: "http://localhost:1234/v1",
+    requiresBaseUrl: true,
+    requiresKey: false,
+    authHeader: "Bearer",
+  },
+  {
     id: "custom",
     name: "Custom / OpenRouter / Local Endpoint",
     models: [
@@ -141,20 +173,22 @@ Instructions:
 
 export function buildNanoPrompts(studyMode = 'step-by-step', prompt = '', ocrText = '', targetLangName = 'Tiếng Việt', customSysPrompt = '') {
   const contentText = (ocrText && ocrText.trim())
-    ? (prompt && prompt.trim() ? `${prompt.trim()}\n\n[Nội dung câu hỏi từ ảnh]:\n${ocrText.trim()}` : ocrText.trim())
+    ? (prompt && prompt.trim() ? `${prompt.trim()}\n\n[Nội dung câu hỏi & các phương án từ ảnh]:\n${ocrText.trim()}` : ocrText.trim())
     : prompt.trim();
 
   let sysPrompt = customSysPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
   let userPrompt = '';
 
   if (studyMode === 'direct') {
-    sysPrompt = `You are a concise direct-answer AI.
+    sysPrompt = `You are a precise, concise direct-answer AI for quizzes and homework.
 CRITICAL RULES:
-1. Provide ONLY the direct final answer.
-2. DO NOT output steps, reasoning, breakdown, analysis, or explanations.
-3. For multiple-choice questions: Output ONLY the correct option letter and/or answer text (e.g. "Đáp án: 2" or "D. 2").
-4. Keep the entire response under 1-2 lines.`;
-    userPrompt = `[Câu hỏi]:\n${contentText}\n\n[YÊU CẦU NGHIÊM NGẶT]: Chỉ trả lời đáp án trực tiếp ngắn nhất. Tuyệt đối KHÔNG giải thích, KHÔNG ghi Bước 1/Bước 2.\n[Ngôn ngữ]: ${targetLangName}`;
+1. MULTIPLE-CHOICE QUESTIONS: If the question contains options/choices (e.g. A, B, C, D or choices like 2, NaN, 0, 1):
+   - You MUST pick and output ONLY the single correct matching option from the provided choices.
+   - DO NOT answer outside the given options if a matching option exists.
+   - Format: "Đáp án: [Nội dung đáp án]" (e.g. "Đáp án: NaN" hoặc "Đáp án: B. NaN").
+2. OPEN QUESTIONS (no choices): Output ONLY the final numeric or short phrase answer.
+3. STRICTLY FORBIDDEN: DO NOT write explanations, steps, definitions, formulas, or analysis. Keep output to 1 line only.`;
+    userPrompt = `[Câu hỏi & Các phương án]:\n${contentText}\n\n[YÊU CẦU NGHIÊM NGẶT]: Chọn chính xác 1 phương án trong các lựa chọn trên. Chỉ ghi đáp án đã chọn, tuyệt đối không giải thích.\n[Ngôn ngữ]: ${targetLangName}`;
   } else if (studyMode === 'hint') {
     sysPrompt = `You are a pedagogical tutor AI. Do NOT give the final answer. Provide hints, key formulas, and guiding questions in ${targetLangName}.`;
     userPrompt = `[Câu hỏi]:\n${contentText}\n\n[YÊU CẦU]: Đưa ra gợi ý và định hướng giúp học sinh tự giải bài, không đưa đáp án ngay.\n[Ngôn ngữ]: ${targetLangName}`;
@@ -166,8 +200,8 @@ CRITICAL RULES:
     userPrompt = `[Nội dung]:\n${contentText}\n\n[YÊU CẦU]: Dịch chính xác nội dung sang ${targetLangName}.`;
   } else {
     // step-by-step
-    sysPrompt = `${sysPrompt}\n\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;
-    userPrompt = `[Nội dung bài tập]:\n${contentText}\n\n[Yêu cầu]: Hãy giải bài toán từng bước chi tiết (Bước 1, Bước 2...), trình bày công thức bằng LaTeX ($...$) và đóng khung đáp án cuối cùng.\n[Ngôn ngữ]: ${targetLangName}`;
+    sysPrompt = `${sysPrompt}\n\n[MULTIPLE-CHOICE RULE]: If options are present, clearly conclude with the selected option from the list.\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;
+    userPrompt = `[Nội dung bài tập]:\n${contentText}\n\n[Yêu cầu]: Hãy giải bài toán từng bước chi tiết (Bước 1, Bước 2...), trình bày công thức bằng LaTeX ($...$) và chọn đáp án chính xác trong các lựa chọn.\n[Ngôn ngữ]: ${targetLangName}`;
   }
 
   const finalSysPrompt = `${sysPrompt}\n\n[LANGUAGE REQUIREMENT]: Reply in ${targetLangName}.`.trim();
@@ -232,32 +266,48 @@ export const DEFAULT_SETTINGS = {
 export const Storage = {
   async get(keys = null) {
     return new Promise((resolve) => {
-      if (typeof chrome === "undefined" || !chrome.storage?.local) {
+      // chrome.runtime.id reads as undefined once the extension is reloaded/updated
+      // while this script is still injected in an old tab — bail out before touching
+      // any chrome.* API to avoid the synchronous "Extension context invalidated" throw.
+      if (typeof chrome === "undefined" || !chrome.storage?.local || !chrome.runtime?.id) {
         resolve({ ...DEFAULT_SETTINGS });
         return;
       }
-      chrome.storage.local.get(keys, (res) => {
-        const merged = { ...DEFAULT_SETTINGS, ...res };
-        if (!keys) {
-          resolve(merged);
-        } else if (Array.isArray(keys)) {
-          const filtered = {};
-          keys.forEach((k) => {
-            filtered[k] = merged[k];
-          });
-          resolve(filtered);
-        } else if (typeof keys === "string") {
-          resolve({ [keys]: merged[keys] });
-        } else {
-          resolve(merged);
-        }
-      });
+      try {
+        chrome.storage.local.get(keys, (res) => {
+          const merged = { ...DEFAULT_SETTINGS, ...(res || {}) };
+          if (!keys) {
+            resolve(merged);
+          } else if (Array.isArray(keys)) {
+            const filtered = {};
+            keys.forEach((k) => {
+              filtered[k] = merged[k];
+            });
+            resolve(filtered);
+          } else if (typeof keys === "string") {
+            resolve({ [keys]: merged[keys] });
+          } else {
+            resolve(merged);
+          }
+        });
+      } catch (e) {
+        // Context was invalidated in the gap between the check above and this call.
+        resolve({ ...DEFAULT_SETTINGS });
+      }
     });
   },
 
   async set(data) {
     return new Promise((resolve) => {
-      chrome.storage.local.set(data, () => resolve(true));
+      if (typeof chrome === "undefined" || !chrome.storage?.local || !chrome.runtime?.id) {
+        resolve(false);
+        return;
+      }
+      try {
+        chrome.storage.local.set(data, () => resolve(true));
+      } catch (e) {
+        resolve(false);
+      }
     });
   },
 

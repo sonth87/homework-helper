@@ -5,7 +5,7 @@
 
 import { Icons } from '../shared/icons.js';
 import { Storage } from '../shared/storage.js';
-import { getOptionsI18n } from '../shared/i18n.js';
+import { getOptionsI18n, getSelectionTooltipI18n, getFloatingPopupI18n } from '../shared/i18n.js';
 import { KeysTab } from './tabs/keys-tab.js';
 import { OcrTab } from './tabs/ocr-tab.js';
 import { AppearanceTab } from './tabs/appearance-tab.js';
@@ -60,6 +60,16 @@ export class OptionsController {
     } else if (window.location.hash === '#ocr') {
       const ocrNav = document.querySelector('[data-tab="ocr"]');
       if (ocrNav) ocrNav.click();
+    } else if (window.location.hash === '#local-model-guide') {
+      const guideCard = document.getElementById('optLocalGuideCard');
+      if (guideCard) {
+        guideCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        guideCard.style.transition = 'all 0.4s ease';
+        guideCard.style.boxShadow = '0 0 0 4px rgba(22, 163, 74, 0.4)';
+        setTimeout(() => {
+          guideCard.style.boxShadow = '';
+        }, 2500);
+      }
     }
   }
 
@@ -83,6 +93,19 @@ export class OptionsController {
     setInner('optIconCheckUpdates', Icons.refresh(14));
     setInner('optIconDownloadCore', Icons.download(14));
     setInner('optIconCorePackage', Icons.checkCircle(18, 'text-green-600'));
+    setInner('optIconOcrExplain', Icons.helpCircle(18));
+
+    // Local Model (Ollama / LM Studio) Panel & Guide Icons
+    setInner('optIconServer', Icons.server(16));
+    setInner('optIconLocalPanel', Icons.server(18));
+    setInner('optIconLocalClose', Icons.x(16));
+    setInner('optIconLocalGuide', Icons.server(18));
+    setInner('optLocalGuideChevron', Icons.chevronDown(16));
+    setInner('optIconGuideOllama', Icons.cpu(15));
+    setInner('optIconGuideLmstudio', Icons.cpu(15));
+    for (let i = 1; i <= 4; i++) {
+      setInner(`optIconGuideShot${i}`, Icons.camera(20));
+    }
 
     // Live Preview Icons
     setInner('prevTbLogo', Icons.appLogo(16));
@@ -135,6 +158,8 @@ export class OptionsController {
     const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
     const currentLang = lang || uiLanguage;
     const dict = getOptionsI18n(currentLang);
+    const tooltipDict = getSelectionTooltipI18n(currentLang);
+    const popupDict = getFloatingPopupI18n(currentLang);
 
     const setText = (id, text) => {
       const el = document.getElementById(id);
@@ -160,6 +185,14 @@ export class OptionsController {
     setText('optHeadingProviders', dict.headingProviders);
     setText('optSubheadingProviders', dict.subheadingProviders);
     setText('optBtnAddKeyText', dict.btnAddKey);
+    setText('optBtnAddLocalModelText', dict.btnAddLocalModel);
+    setText('optLocalPanelTitle', dict.localPanelTitle);
+    const pingBtn = document.getElementById('optLocalBtnPing');
+    if (pingBtn && dict.localBtnPing) pingBtn.title = dict.localBtnPing;
+    setText('optLocalBtnCancel', dict.localBtnCancel);
+    setText('optLocalBtnAddSelected', dict.localBtnAddSelected);
+    setText('optLocalGuideTitle', dict.localGuideTitle);
+    setText('optLocalGuideDesc', dict.localGuideDesc);
     setText('optStrategyTitle', dict.strategyTitle);
     setText('optStrategyDesc', dict.strategyDesc);
 
@@ -179,11 +212,47 @@ export class OptionsController {
     setText('btnOpenFlagsFromOptions', dict.btnOpenFlags);
     setText('btnTestBuiltinAI', dict.btnTestBuiltinAI);
 
+    // Gemini Nano 5-step activation guide
+    setText('optNanoGuideIntro', dict.guideNanoIntro);
+    setHtml('optNanoStep1Pre', dict.guideNanoStep1Pre);
+    setHtml('optNanoStep1Post', dict.guideNanoStep1Post);
+    setHtml('optNanoStep2Pre', dict.guideNanoStep2Pre);
+    setHtml('optNanoStep2Post', dict.guideNanoStep2Post);
+    setHtml('optNanoStep3', dict.guideNanoStep3);
+    setHtml('optNanoStep4Pre', dict.guideNanoStep4Pre);
+    setHtml('optNanoStep4Post', dict.guideNanoStep4Post);
+    setHtml('optNanoStep5', dict.guideNanoStep5);
+
+    // Ollama local model guide
+    setHtml('optOllamaStep1', dict.guideOllamaStep1);
+    setHtml('optOllamaStep2', dict.guideOllamaStep2);
+    setHtml('optOllamaStep3', dict.guideOllamaStep3);
+    setHtml('optOllamaStep4', dict.guideOllamaStep4);
+    setText('optOllamaCaption1', dict.guideOllamaCaption1);
+    setText('optOllamaCaption2', dict.guideOllamaCaption2);
+    setText('optOllamaCaption3', dict.guideOllamaCaption3);
+    setText('optOllamaCaption4', dict.guideOllamaCaption4);
+
+    // LM Studio local model guide
+    setHtml('optLmstudioStep1', dict.guideLmstudioStep1);
+    setHtml('optLmstudioStep2', dict.guideLmstudioStep2);
+    setHtml('optLmstudioStep3', dict.guideLmstudioStep3);
+    setHtml('optLmstudioStep4', dict.guideLmstudioStep4);
+    setHtml('optLmstudioStep5', dict.guideLmstudioStep5);
+    const lmImg2 = document.getElementById('optLmstudioImg2');
+    if (lmImg2 && dict.guideLmstudioAlt2) lmImg2.alt = dict.guideLmstudioAlt2;
+    const lmImg3 = document.getElementById('optLmstudioImg3');
+    if (lmImg3 && dict.guideLmstudioAlt3) lmImg3.alt = dict.guideLmstudioAlt3;
+
     // OCR Tab
     setText('optHeadingOcr', dict.headingOcr);
     setText('optSubheadingOcr', dict.subheadingOcr);
     setText('optBtnCheckOcrUpdatesText', dict.btnCheckUpdates);
     setText('optBtnDownloadCoreOcrText', dict.btnDownloadCore);
+    setText('optBtnDownloadCoreOcrSub', dict.btnDownloadCoreSub);
+    setText('optOcrExplainTitle', dict.ocrExplainTitle);
+    setHtml('optOcrExplainDesc', dict.ocrExplainDesc);
+    setHtml('optOcrExplainWarning', dict.ocrExplainWarning);
     setText('optCorePackTitle', dict.corePackTitle);
     setText('optCorePackBadge', dict.corePackBadge);
     setText('optCorePackDesc', dict.corePackDesc);
@@ -198,6 +267,7 @@ export class OptionsController {
     setText('optLabelFabDisplayDesc', dict.labelFabDisplayDesc);
     setText('optLabelFabSize', dict.labelFabSize);
     setText('optCardToolbarTitle', dict.cardToolbarTitle);
+    setText('optCardPopupTitle', dict.cardPopupTitle);
     setText('optLabelToolbarTheme', dict.labelToolbarTheme);
     setText('optLabelToolbarThemeDesc', dict.labelToolbarThemeDesc);
     setText('optLabelToolbarText', dict.labelToolbarText);
@@ -214,6 +284,33 @@ export class OptionsController {
     setText('optLabelPopupBlurDesc', dict.labelPopupBlurDesc);
     setText('optLivePreviewBadge', dict.livePreviewBadge);
     setText('optLivePreviewSub', dict.livePreviewSub);
+
+    // Appearance Tab - Select <option> labels
+    setText('optFabOptSmall', dict.fabOptSmall);
+    setText('optFabOptNormal', dict.fabOptNormal);
+    setText('optFabOptLarge', dict.fabOptLarge);
+    setText('optThemeOptLight', dict.toolbarThemeOptLight);
+    setText('optThemeOptDark', dict.toolbarThemeOptDark);
+    setText('optThemeOptBlue', dict.toolbarThemeOptBlue);
+    setText('optThemeOptGreen', dict.toolbarThemeOptGreen);
+    setText('optThemeOptPurple', dict.toolbarThemeOptPurple);
+    setText('optSizeOptCompact', dict.toolbarSizeOptCompact);
+    setText('optSizeOptNormal', dict.toolbarSizeOptNormal);
+    setText('optSizeOptLarge', dict.toolbarSizeOptLarge);
+
+    // Appearance Tab - Live Preview demo content
+    setText('prevDemoTitle', dict.previewDemoTitle);
+    setText('prevDemoQuestion', dict.previewDemoQuestion);
+    setText('prevDemoHighlight', dict.previewDemoHighlight);
+    setText('prevDemoStep', dict.previewDemoStep);
+    setText('prevTbLabelAnswer', tooltipDict.answer);
+    setText('prevTbLabelCopy', tooltipDict.copy);
+    setText('prevTbLabelSearch', tooltipDict.search);
+    setText('prevTbLabelTranslate', tooltipDict.translate);
+    setText('prevPopupTitle', popupDict.helperTitle);
+    setText('prevPopupAnswerHeading', tooltipDict.answer);
+    setText('prevPopupNextQuestion', popupDict.nextQuestion);
+    setText('prevPopupCopy', popupDict.copy);
 
     // Guide Tab
     setText('optHeadingGuide', dict.headingGuide);
@@ -261,6 +358,7 @@ export class OptionsController {
     // General Tab
     setText('optHeadingGeneral', dict.headingGeneral);
     setText('optSubheadingGeneral', dict.subheadingGeneral);
+    setText('optCardLangTitle', dict.cardLangTitle);
     setText('optUiLangTitle', dict.uiLangTitle);
     setText('optUiLangDesc', dict.uiLangDesc);
     setText('optRespLangTitle', dict.respLangTitle);
