@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homework Helper</title>
+  <link rel="stylesheet" href="../shared/katex/katex.min.css">
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div class="sp-container">
+    <!-- Header -->
+    <header class="sp-header">
+      <div class="sp-header-left">
+        <div class="sp-logo" id="spLogo"></div>
+        <div style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+          <h1 class="sp-title">Homework Helper</h1>
+          <span id="spActiveConvTitle" style="font-size:10.5px;font-weight:500;color:#64748b;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Đoạn chat mới</span>
+        </div>
+      </div>
+      <div class="sp-header-right">
+        <button class="sp-icon-btn" id="spBtnNewChat" data-tooltip-title="Đoạn chat mới" data-tooltip-desc="Bắt đầu một phiên hội thoại bài tập mới."></button>
+        <button class="sp-icon-btn" id="spBtnHistory" data-tooltip-title="Lịch sử các hội thoại" data-tooltip-desc="Xem danh sách các phiên giải bài đã lưu."></button>
+        <button class="sp-icon-btn" id="spBtnSettings" data-tooltip-title="Cài đặt Key & Model" data-tooltip-desc="Quản lý danh sách API Key và cơ chế xoay vòng thông minh."></button>
+        <button class="sp-icon-btn" id="spBtnClear" data-tooltip-title="Xóa đoạn chat" data-tooltip-desc="Xóa hội thoại hiện tại."></button>
+        <button class="sp-icon-btn" id="spBtnOptions" data-tooltip-title="Trang cài đặt nâng cao" data-tooltip-desc="Mở giao diện Cài đặt chi tiết & tùy biến giao diện Liquid Glass."></button>
+      </div>
+    </header>
+
+    <!-- Active Model Bar -->
+    <div class="sp-model-bar" id="spModelBar">
+      <span class="sp-model-label">Model:</span>
+      <span class="sp-model-tag" id="spModelTag"></span>
+    </div>
+
+    <!-- Chat Messages Scroll Area -->
+    <main class="sp-chat-body" id="spChatBody">
+      <div class="sp-msg sp-msg-ai">
+        <div class="sp-msg-bubble" id="spWelcomeBubble">
+          <p id="spWelcomeText">Xin chào! Tôi là trợ lý Homework Helper. Bạn cần giải bài tập nào hôm nay?</p>
+          <div class="sp-chips" id="spChipsContainer">
+            <!-- Rendered dynamically by i18n -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Input Container -->
+    <footer class="sp-footer">
+      <div class="sp-tools">
+        <div class="sp-tools-left">
+          <button class="sp-btn-capture" id="spBtnCapture" data-tooltip-title="Chụp màn hình (Alt+C)" data-tooltip-desc="Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức."></button>
+          <button class="sp-tool-btn" id="spBtnUpload" data-tooltip-title="Tải ảnh bài tập" data-tooltip-desc="Đính kèm file hình ảnh bài tập từ máy tính."></button>
+          <input type="file" id="spFileInput" accept="image/*" style="display: none;">
+        </div>
+        <div class="sp-tools-right" style="display:flex; gap:6px; min-width:0; overflow:hidden;">
+          <select class="sp-select-mode" id="spSelectLang" data-tooltip-title="Ngôn ngữ phản hồi" data-tooltip-desc="AI sẽ tự động giải bài và trả lời bằng ngôn ngữ này.">
+          </select>
+          <select class="sp-select-mode" id="spSelectMode" data-tooltip-title="Chế độ giải bài" data-tooltip-desc="Chọn kiểu phản hồi: Từng bước (Step-by-Step), Đáp án ngay (Direct), Gợi ý (Hint), hoặc Giải thích sâu lý thuyết.">
+          </select>
+        </div>
+      </div>
+
+      <div class="sp-input-box">
+        <div id="spImgPreview" class="sp-img-preview" style="display: none;">
+          <img id="spThumb" src="" alt="Thumbnail">
+          <span id="spAttachedLabel">Image Attached</span>
+          <button class="sp-icon-btn" id="spBtnRemoveThumb" style="width:20px;height:20px;"></button>
+        </div>
+        <textarea id="spTextarea" class="sp-textarea" placeholder="Enter your homework question here..."></textarea>
+        <div class="sp-input-actions">
+          <span class="sp-hint">Shift+Enter for newline</span>
+          <button class="sp-btn-send" id="spBtnSend"></button>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Settings Modal -->
+    <div class="sp-modal-backdrop" id="spModal" style="display: none;">
+      <div class="sp-modal-card">
+        <div class="sp-modal-header">
+          <div class="sp-modal-title" id="spModalTitle"></div>
+          <button class="sp-icon-btn" id="spBtnCloseModal"></button>
+        </div>
+        <div class="sp-modal-body" id="spModalBody">
+          <!-- Populated by sidepanel.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="sp-modal-backdrop" id="spHistoryModal" style="display: none;">
+      <div class="sp-modal-card" style="max-height: 80vh; display: flex; flex-direction: column;">
+        <div class="sp-modal-header">
+          <div class="sp-modal-title" id="spHistoryModalTitle" style="display:flex; align-items:center; gap:8px;"></div>
+          <button class="sp-icon-btn" id="spBtnCloseHistoryModal"></button>
+        </div>
+        <div class="sp-history-body" id="spHistoryModalBody" style="padding: 14px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px;">
+          <!-- Populated by sidepanel.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="sp-toast" id="spToast"></div>
+  </div>
+
+  <script src="../shared/katex/katex.min.js"></script>
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>
