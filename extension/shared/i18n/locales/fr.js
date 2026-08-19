@@ -53,6 +53,13 @@ export default {
     toastNewChat: "Nouvelle discussion commencée",
     chatCleared: "Discussion effacée. Posez votre question !",
     thinking: "Réflexion & résolution...",
+    loadingSteps: [
+      "Lecture de l'énoncé",
+      "Réflexion en cours",
+      "Résolution étape par étape",
+      "Vérification du raisonnement",
+      "Presque terminé",
+    ],
     tooltips: {
       newChat: {
         title: "Nouvelle discussion",

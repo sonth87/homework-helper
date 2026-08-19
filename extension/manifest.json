@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Homework Helper - AI Homework Solver & Academic Assistant",
   "version": "1.0.0",
-  "description": "Smart AI homework helper and quiz solver. Features Chrome Gemini Nano local AI, multi-model API key rotation, screenshot OCR solver, KaTeX math formulas, text selection toolbar, and Google Forms quiz helper. [Tags: homework, ai, quiz, solver, study, math, tutor, gemini]",
+  "description": "Smart AI homework helper and quiz solver",
   "icons": {
     "16": "assets/icons/icon-16.png",
     "32": "assets/icons/icon-32.png",
@@ -71,14 +71,8 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": [
-        "assets/ocr/tesseract.min.js",
-        "content/loader.js"
-      ],
-      "css": [
-        "content/styles/cropper.css",
-        "content/styles/tooltip.css"
-      ],
+      "js": ["assets/ocr/tesseract.min.js", "content/loader.js"],
+      "css": ["content/styles/cropper.css", "content/styles/tooltip.css"],
       "all_frames": false,
       "run_at": "document_end"
     }

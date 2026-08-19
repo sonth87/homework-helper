@@ -448,7 +448,9 @@ export class KeysTab {
         const aiModel = getAiModel();
 
         if (aiModel && typeof aiModel.create === 'function') {
-          const session = await aiModel.create();
+          const session = await aiModel.create({
+            expectedOutputs: [{ type: 'text', languages: ['en'] }],
+          });
           reply = await session.prompt('Say "Gemini Nano is working on your computer!" in 1 short sentence.');
         } else {
           const tabs = await chrome.tabs.query({ url: ['https://*/*', 'http://*/*'] });
@@ -463,7 +465,9 @@ export class KeysTab {
               const g = typeof window !== 'undefined' ? window : (typeof self !== 'undefined' ? self : {});
               const m = g.ai?.languageModel || g.ai?.assistant || (typeof ai !== 'undefined' ? (ai.languageModel || ai.assistant) : null);
               if (!m) throw new Error('ai.languageModel not found on web page.');
-              const sess = await m.create();
+              const sess = await m.create({
+                expectedOutputs: [{ type: 'text', languages: ['en'] }],
+              });
               return await sess.prompt('Say "Gemini Nano is working on your device!" in 1 short sentence.');
             },
           });

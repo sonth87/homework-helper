@@ -54,6 +54,13 @@ export default {
     toastNewChat: "Obrolan baru telah dimulai",
     chatCleared: "Obrolan dibersihkan. Ajukan pertanyaan baru!",
     thinking: "Sedang berpikir & menyelesaikan...",
+    loadingSteps: [
+      "Membaca soal",
+      "Sedang berpikir",
+      "Menyelesaikan langkah demi langkah",
+      "Memeriksa logika",
+      "Hampir selesai",
+    ],
     tooltips: {
       newChat: {
         title: "Obrolan Baru",

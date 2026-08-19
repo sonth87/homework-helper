@@ -19,6 +19,7 @@ export class OverlayFloatingCard {
     this.targetLang = 'en';
     this.activeCardResponseText = '';
     this.activeCardNotices = [];
+    this.loadingStepsInterval = null;
 
     this.init();
   }
@@ -26,6 +27,33 @@ export class OverlayFloatingCard {
   init() {
     this.makeCardDraggable();
     this.setupListeners();
+  }
+
+  // Rotates through a set of short "thinking..." phrases every 5s while
+  // waiting for the AI's first chunk, so the popup doesn't look stuck on
+  // just the static "Lời giải chi tiết" heading with nothing moving under it.
+  startLoadingSteps(contentEl, steps) {
+    this.stopLoadingSteps();
+    if (!contentEl || !steps || steps.length === 0) return;
+
+    let idx = 0;
+    const render = () => {
+      contentEl.innerHTML = `
+        <span class="hw-loading-text">
+          ${Icons.sparkles(14)} ${steps[idx % steps.length]}<span class="hw-animated-dots"><span>.</span><span>.</span><span>.</span></span>
+        </span>
+      `;
+      idx++;
+    };
+    render();
+    this.loadingStepsInterval = setInterval(render, 5000);
+  }
+
+  stopLoadingSteps() {
+    if (this.loadingStepsInterval) {
+      clearInterval(this.loadingStepsInterval);
+      this.loadingStepsInterval = null;
+    }
   }
 
   // Notices (auto-fallback / key rotation / OCR pre-processing messages) are
@@ -50,6 +78,7 @@ export class OverlayFloatingCard {
     const s = this.shadow;
 
     s.getElementById('hwBtnCloseCard')?.addEventListener('click', () => {
+      this.stopLoadingSteps();
       this.popupCard.style.display = 'none';
       s.getElementById('hwCardHistoryPanel').style.display = 'none';
     });
@@ -216,7 +245,7 @@ export class OverlayFloatingCard {
     s.getElementById('hwBtnCardPrimary').insertAdjacentHTML('afterbegin', Icons.scissors(14));
 
     const content = s.getElementById('hwCardAnswerContent');
-    content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} ${studyMode === 'direct' ? 'Đang xác định đáp án nhanh...' : cardDict.solvingStepByStep}</span>`;
+    this.startLoadingSteps(content, genDict.loadingSteps);
 
     this.popupCard.style.display = 'flex';
     this.activeCardResponseText = '';
@@ -240,6 +269,7 @@ export class OverlayFloatingCard {
 
     // If running in Gemini Nano mode (no keys or nano_only), run Local OCR first!
     if (enabledKeys.length === 0 || routingStrategy === 'nano_only') {
+      this.stopLoadingSteps();
       const reqId = this.overlay.drawer.activeRequestId || `ocr_${Date.now()}`;
       const logLines = [`[${new Date().toLocaleTimeString()}] Bắt đầu gửi yêu cầu OCR...`];
 
@@ -431,9 +461,10 @@ export class OverlayFloatingCard {
     const s = this.shadow;
     const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
     const cardDict = getFloatingPopupI18n(uiLanguage);
+    const genDict = getI18n(uiLanguage);
 
     const content = s.getElementById('hwCardAnswerContent');
-    content.innerHTML = `<span style="color:#94a3b8;">${Icons.sparkles(14)} ${cardDict.processing}</span>`;
+    this.startLoadingSteps(content, genDict.loadingSteps);
 
     this.activeCardResponseText = '';
     this.activeCardNotices = [];
@@ -567,6 +598,7 @@ export class OverlayFloatingCard {
       });
 
       el.addEventListener('click', async () => {
+        this.stopLoadingSteps();
         await Storage.switchConversation(conv.id);
         this.shadow.getElementById('hwCardHistoryPanel').style.display = 'none';
 

@@ -323,6 +323,24 @@
   color: #1e293b;
 }
 
+.hw-loading-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #0284c7;
+}
+
+.hw-loading-text .lucide-icon {
+  animation: hwLoadingSpin 1.6s linear infinite;
+}
+
+@keyframes hwLoadingSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .hw-card-answer-content p {
   margin: 0 0 8px 0;
 }

@@ -50,6 +50,13 @@ export default {
     toastNewChat: "已開啟新對話",
     chatCleared: "對話已清空，隨時提問新題目！",
     thinking: "正在思考與解題中...",
+    loadingSteps: [
+      "正在閱讀題目",
+      "正在思考解法",
+      "正在逐步求解",
+      "正在核對邏輯",
+      "馬上完成",
+    ],
     tooltips: {
       newChat: {
         title: "新建對話",

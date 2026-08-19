@@ -50,6 +50,13 @@ export default {
     toastNewChat: "已开启新对话",
     chatCleared: "对话已清空，随时提问新题目！",
     thinking: "正在思考与解题中...",
+    loadingSteps: [
+      "正在阅读题目",
+      "正在思考解法",
+      "正在逐步求解",
+      "正在核对逻辑",
+      "马上完成",
+    ],
     modalConfigTitle: "AI 模型与 API 密钥配置",
     modalConfigDesc:
       "添加一个或多个 API Key。插件会自动进行负载均衡，并在遇到限流时无缝切换到备用密钥。",

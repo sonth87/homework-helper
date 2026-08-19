@@ -292,6 +292,49 @@ body {
   to { transform: rotate(360deg); }
 }
 
+.sp-loading-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--accent);
+}
+
+.sp-loading-text .lucide-icon {
+  animation: sp-status-spin 1.6s linear infinite;
+}
+
+.sp-animated-dots {
+  display: inline-flex;
+  gap: 2px;
+  letter-spacing: 1px;
+}
+
+.sp-animated-dots span {
+  display: inline-block;
+  animation: sp-dot-pulse 1.4s infinite ease-in-out both;
+}
+
+.sp-animated-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.sp-animated-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes sp-dot-pulse {
+  0%, 80%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
 .sp-chips {
   display: flex;
   flex-wrap: wrap;

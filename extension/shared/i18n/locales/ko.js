@@ -52,6 +52,13 @@ export default {
     toastNewChat: "새 대화가 시작되었습니다",
     chatCleared: "채팅 기록이 초기화되었습니다. 새로운 질문을 입력하세요!",
     thinking: "생각하며 풀이 중...",
+    loadingSteps: [
+      "문제를 읽는 중",
+      "생각하는 중",
+      "단계별로 풀이 중",
+      "논리를 확인하는 중",
+      "거의 다 됐어요",
+    ],
     tooltips: {
       newChat: {
         title: "새 대화",

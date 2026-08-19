@@ -1,11 +1,12 @@
 /**
- * Offscreen OCR Bridge
+ * Offscreen Document Bridge
  * Tesseract's WebAssembly worker needs a DOM/Worker-capable context that a
  * bare MV3 service worker doesn't reliably provide, so recognition actually
- * runs in an offscreen document (offscreen/ocr.html). This module ensures
- * that document exists and relays recognition requests to it. Shared by the
- * service worker's PERFORM_OCR message handler and AiEngine's OCR fallback
- * for text-only local models.
+ * runs in an offscreen document (offscreen/ocr.html). Cloud AI provider
+ * streaming (offscreen-ai-bridge.js) piggybacks on the same document — only
+ * one offscreen document is allowed per extension — since regular fetch()
+ * calls there aren't subject to the service worker's 30s response timeout.
+ * ensureOffscreenDocument() is shared infrastructure for both.
  */
 
 let creatingOffscreenPromise = null;
@@ -27,7 +28,7 @@ export async function ensureOffscreenDocument() {
   creatingOffscreenPromise = chrome.offscreen.createDocument({
     url: 'offscreen/ocr.html',
     reasons: ['WORKERS', 'BLOBS'],
-    justification: 'Run WebAssembly Tesseract OCR offline',
+    justification: 'Run WebAssembly Tesseract OCR offline and stream cloud AI provider responses outside the service worker\'s 30s fetch timeout',
   });
 
   await creatingOffscreenPromise;

@@ -53,6 +53,13 @@ export default {
     toastNewChat: "Nova conversa iniciada",
     chatCleared: "Chat limpo. Faça uma nova pergunta!",
     thinking: "Pensando e resolvendo...",
+    loadingSteps: [
+      "Lendo o enunciado",
+      "Pensando na solução",
+      "Resolvendo passo a passo",
+      "Verificando a lógica",
+      "Quase pronto",
+    ],
     tooltips: {
       newChat: {
         title: "Novo chat",

@@ -19,11 +19,39 @@ export class SidePanelController {
     this.activeRequestId = null;
     this.activeAiBubble = null;
     this.currentResponseText = '';
+    this.loadingStepsInterval = null;
 
     this.keysModal = new SidePanelKeysModal(this);
     this.historyModal = new SidePanelHistory(this);
 
     this.init();
+  }
+
+  // Rotates through a set of short "thinking..." phrases every 5s while
+  // waiting for the AI's first chunk, so the bubble doesn't sit frozen on
+  // static placeholder text with nothing moving.
+  startLoadingSteps(contentEl, steps) {
+    this.stopLoadingSteps();
+    if (!contentEl || !steps || steps.length === 0) return;
+
+    let idx = 0;
+    const render = () => {
+      contentEl.innerHTML = `
+        <span class="sp-loading-text">
+          ${Icons.sparkles(14)} ${steps[idx % steps.length]}<span class="sp-animated-dots"><span>.</span><span>.</span><span>.</span></span>
+        </span>
+      `;
+      idx++;
+    };
+    render();
+    this.loadingStepsInterval = setInterval(render, 5000);
+  }
+
+  stopLoadingSteps() {
+    if (this.loadingStepsInterval) {
+      clearInterval(this.loadingStepsInterval);
+      this.loadingStepsInterval = null;
+    }
   }
 
   async init() {
@@ -313,7 +341,9 @@ export class SidePanelController {
     const btnSend = document.getElementById('spBtnSend');
     if (btnSend) btnSend.disabled = true;
 
-    const { outputLanguage = 'en' } = await Storage.get(['outputLanguage']);
+    const { outputLanguage = 'en', uiLanguage = 'en' } = await Storage.get(['outputLanguage', 'uiLanguage']);
+    const dict = getI18n(uiLanguage);
+    this.startLoadingSteps(this.activeAiBubble?.querySelector('.sp-ai-content'), dict.loadingSteps);
 
     chrome.runtime.sendMessage({
       action: 'ASK_AI',
@@ -392,6 +422,12 @@ export class SidePanelController {
       this.updateNoticeIcon(this.activeAiBubble, this.currentNotices);
     }
 
+    // ai-engine.js also sends onChunk('', {status: 'connecting'|'switching', ...})
+    // as a status-only ping with no real text. Rendering that would blank the
+    // placeholder with formatMarkdownAndMath('') before any real answer arrives.
+    if (!chunk) return;
+
+    this.stopLoadingSteps();
     this.currentResponseText += chunk;
     const content = this.activeAiBubble.querySelector('.sp-ai-content');
     if (content) {
@@ -411,6 +447,7 @@ export class SidePanelController {
     this.updateModelBadge();
 
     if (this.activeAiBubble) {
+      this.stopLoadingSteps();
       const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
       const dict = getI18n(uiLanguage);
       const footer = this.activeAiBubble.querySelector('.sp-msg-footer');
@@ -521,6 +558,7 @@ export class SidePanelController {
     if (btnSend) btnSend.disabled = false;
 
     if (!this.activeAiBubble) return;
+    this.stopLoadingSteps();
     const content = this.activeAiBubble.querySelector('.sp-ai-content');
 
     const errStr = String(err || '');

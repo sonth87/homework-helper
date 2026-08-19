@@ -50,6 +50,13 @@ export default {
     toastNewChat: "Started a new chat session",
     chatCleared: "Chat cleared. Ask a new question!",
     thinking: "Thinking & solving...",
+    loadingSteps: [
+      "Reading the question",
+      "Thinking it through",
+      "Working out the steps",
+      "Double-checking the logic",
+      "Almost there",
+    ],
     modalConfigTitle: "AI Models & API Key Configuration",
     modalConfigDesc:
       "Add one or more API Keys. The extension automatically load-balances and falls back to backup keys when hitting rate limits.",

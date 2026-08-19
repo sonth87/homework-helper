@@ -53,6 +53,13 @@ export default {
     toastNewChat: "Đã bắt đầu đoạn chat mới",
     chatCleared: "Đã xóa đoạn chat. Hãy đặt câu hỏi mới!",
     thinking: "Đang suy nghĩ & giải bài...",
+    loadingSteps: [
+      "Đang đọc đề bài",
+      "Đang suy nghĩ",
+      "Đang giải từng bước",
+      "Đang kiểm tra lại",
+      "Sắp xong rồi",
+    ],
     modalConfigTitle: "Cấu hình AI Models & API Keys",
     modalConfigDesc:
       "Thêm một hoặc nhiều API Key. Tiện ích tự động xoay vòng cân bằng tải và chuyển sang key dự phòng khi gặp giới hạn Rate Limit.",

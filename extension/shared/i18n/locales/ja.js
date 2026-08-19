@@ -52,6 +52,13 @@ export default {
     toastNewChat: "新しいチャットを開始しました",
     chatCleared: "チャットをクリアしました。新しい質問をどうぞ！",
     thinking: "思考＆解答中...",
+    loadingSteps: [
+      "問題を読み込み中",
+      "考えています",
+      "手順を組み立て中",
+      "論理を確認中",
+      "もうすぐ完了",
+    ],
     tooltips: {
       newChat: {
         title: "新規チャット",

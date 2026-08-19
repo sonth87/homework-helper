@@ -5,6 +5,9 @@
   <title>OCR Offscreen Direct Engine</title>
   <script src="../assets/ocr/tesseract-core-lstm.wasm.js"></script>
   <script type="module" src="ocr.js"></script>
+  <!-- Only one offscreen document is allowed per extension, so cloud AI provider
+       streaming (see background/offscreen-ai-bridge.js) shares this document too. -->
+  <script type="module" src="ai-stream.js"></script>
 </head>
 <body>
 </body>

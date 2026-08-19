@@ -22,12 +22,40 @@ export class OverlayDrawer {
     this.activeAiBubble = null;
     this.activeTarget = 'drawer';
     this.currentDrawerResponseText = '';
+    this.loadingStepsInterval = null;
 
     this.init();
   }
 
   init() {
     this.setupListeners();
+  }
+
+  // Rotates through a set of short "thinking..." phrases every 5s while
+  // waiting for the AI's first chunk, so the bubble doesn't sit frozen on
+  // static placeholder text with nothing moving.
+  startLoadingSteps(contentEl, steps) {
+    this.stopLoadingSteps();
+    if (!contentEl || !steps || steps.length === 0) return;
+
+    let idx = 0;
+    const render = () => {
+      contentEl.innerHTML = `
+        <span class="hw-loading-text">
+          ${Icons.sparkles(14)} ${steps[idx % steps.length]}<span class="hw-animated-dots"><span>.</span><span>.</span><span>.</span></span>
+        </span>
+      `;
+      idx++;
+    };
+    render();
+    this.loadingStepsInterval = setInterval(render, 5000);
+  }
+
+  stopLoadingSteps() {
+    if (this.loadingStepsInterval) {
+      clearInterval(this.loadingStepsInterval);
+      this.loadingStepsInterval = null;
+    }
   }
 
   setupListeners() {
@@ -253,7 +281,9 @@ export class OverlayDrawer {
     const btnSend = this.shadow.getElementById('hwBtnSend');
     if (btnSend) btnSend.disabled = true;
 
-    const { apiConfigs = [], systemPrompt, nanoSystemPrompt, outputLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'outputLanguage']);
+    const { apiConfigs = [], systemPrompt, nanoSystemPrompt, outputLanguage = 'en', uiLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'outputLanguage', 'uiLanguage']);
+    const dict = getI18n(uiLanguage);
+    this.startLoadingSteps(this.activeAiBubble?.querySelector('.hw-ai-content'), dict.loadingSteps);
     const enabledKeys = (apiConfigs || []).filter(
       (c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')
     );
@@ -386,7 +416,17 @@ export class OverlayDrawer {
       }
     }
 
+    // ai-engine.js also calls onChunk('', {status: 'connecting'|'switching', ...})
+    // as a status-only ping carrying no real text (e.g. right as a request starts,
+    // or when failing over to another key). Those pings used to be treated as real
+    // content, which stopped the loading animation and blanked the display with
+    // formatMarkdownAndMath('') within milliseconds of the request starting — before
+    // any actual answer text ever arrived. Only real, non-empty chunks should touch
+    // the rendered content.
+    if (!chunk) return;
+
     if (this.activeTarget === 'card') {
+      this.overlay.floatingCard.stopLoadingSteps();
       this.overlay.floatingCard.activeCardResponseText += chunk;
       const content = this.shadow.getElementById('hwCardAnswerContent');
       if (content) {
@@ -397,6 +437,7 @@ export class OverlayDrawer {
 
     if (!this.activeAiBubble) return;
 
+    this.stopLoadingSteps();
     this.currentDrawerResponseText += chunk;
     const content = this.activeAiBubble.querySelector('.hw-ai-content');
     if (content) {
@@ -416,11 +457,13 @@ export class OverlayDrawer {
     this.updateActiveModelBadge();
 
     if (this.activeTarget === 'card') {
+      this.overlay.floatingCard.stopLoadingSteps();
       Storage.addChatMessage({ role: 'assistant', content: this.overlay.floatingCard.activeCardResponseText });
       return;
     }
 
     if (this.activeAiBubble) {
+      this.stopLoadingSteps();
       const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
       const dict = getI18n(uiLanguage);
       const footer = this.activeAiBubble.querySelector('.hw-msg-footer');
@@ -450,6 +493,7 @@ export class OverlayDrawer {
     const errStr = String(err || '');
 
     if (this.activeTarget === 'card') {
+      this.overlay.floatingCard.stopLoadingSteps();
       const content = this.shadow.getElementById('hwCardAnswerContent');
       if (content) {
         content.innerHTML = `
@@ -463,6 +507,7 @@ export class OverlayDrawer {
     }
 
     if (!this.activeAiBubble) return;
+    this.stopLoadingSteps();
     const content = this.activeAiBubble.querySelector('.hw-ai-content');
 
     if (errStr.includes('NO_KEYS_NO_LOCAL_AI') || errStr.includes('CHROME_AI_UNAVAILABLE') || errStr.includes('QUOTA_EXHAUSTED')) {
@@ -496,6 +541,13 @@ export class OverlayDrawer {
     const history = await Storage.getChatHistory();
     const body = this.shadow.getElementById('hwChatBody');
     if (!body) return;
+
+    // toggle(true) fires this without awaiting it. If a message gets sent
+    // while this storage fetch is still in flight, askAi() has already
+    // appended a live user+AI bubble (and set isStreaming) by the time we
+    // get here — wiping the body now would destroy that bubble and orphan
+    // whatever appendStreamChunk is still writing into it.
+    if (this.isStreaming) return;
 
     body.innerHTML = '';
 
