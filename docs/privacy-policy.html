@@ -1,0 +1,462 @@
+<title>Homework Helper Privacy Policy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink: #1C2438;
+    --ink-soft: #4B5468;
+    --ink-faint: #7A8296;
+    --paper: #F4F5F1;
+    --surface: #FFFFFF;
+    --border: #DEE1D8;
+    --border-strong: #C7CBBE;
+    --accent-cloud: #A8641A;
+    --accent-cloud-bg: #F7EBDA;
+    --accent-local: #2C7A63;
+    --accent-local-bg: #E1F0EA;
+    --link: #24406B;
+
+    --font-display: "Fraunces", "Iowan Old Style", "Georgia", serif;
+    --font-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #E7E9E1;
+      --ink-soft: #ADB3A6;
+      --ink-faint: #7C8377;
+      --paper: #14171A;
+      --surface: #1B1F22;
+      --border: #2B302E;
+      --border-strong: #3A403C;
+      --accent-cloud: #E3A855;
+      --accent-cloud-bg: #362A17;
+      --accent-local: #56C0A2;
+      --accent-local-bg: #143229;
+      --link: #8FB3E0;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink: #E7E9E1;
+    --ink-soft: #ADB3A6;
+    --ink-faint: #7C8377;
+    --paper: #14171A;
+    --surface: #1B1F22;
+    --border: #2B302E;
+    --border-strong: #3A403C;
+    --accent-cloud: #E3A855;
+    --accent-cloud-bg: #362A17;
+    --accent-local: #56C0A2;
+    --accent-local-bg: #143229;
+    --link: #8FB3E0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+  }
+
+  header.doc-head {
+    margin-bottom: 2.75rem;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.9rem;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.1rem, 5vw, 2.7rem);
+    line-height: 1.1;
+    margin: 0 0 0.85rem;
+    text-wrap: balance;
+    border-bottom: 3px double var(--border-strong);
+    padding-bottom: 0.85rem;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    margin-bottom: 1.4rem;
+  }
+  .meta-row strong { color: var(--ink); font-weight: 600; }
+
+  .lede {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    max-width: 62ch;
+  }
+
+  .facts-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.5rem 1.6rem;
+    margin: 2.2rem 0;
+  }
+  .facts-card h2 {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 0.9rem;
+  }
+  .facts-card ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .facts-card li {
+    display: flex;
+    gap: 0.65rem;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+  .facts-card li::before {
+    content: "";
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-local);
+    margin-top: 0.5em;
+  }
+  .facts-card li strong { color: var(--ink); font-weight: 600; }
+
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 2.2rem 0 3rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--border);
+  }
+  nav.toc a {
+    font-size: 0.82rem;
+    font-family: var(--font-mono);
+    color: var(--ink-soft);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    padding: 0.35rem 0.7rem;
+    border-radius: 100px;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  nav.toc a:hover { border-color: var(--border-strong); color: var(--ink); }
+
+  section {
+    margin: 3.4rem 0;
+    scroll-margin-top: 1.5rem;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0 0 1rem;
+    text-wrap: balance;
+  }
+
+  h2 .num {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--ink-faint);
+    margin-right: 0.6rem;
+  }
+
+  p { margin: 0 0 1rem; max-width: 68ch; }
+  section > p:last-child { margin-bottom: 0; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin: 1.1rem 0 1.5rem;
+  }
+  .flow-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 0.3rem 0.65rem;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .flow-badge.local { background: var(--accent-local-bg); color: var(--accent-local); }
+  .flow-badge.cloud { background: var(--accent-cloud-bg); color: var(--accent-cloud); }
+  .flow-badge::before {
+    content: "";
+    width: 7px; height: 7px; border-radius: 50%;
+    background: currentColor;
+  }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.92rem; background: var(--surface); }
+  caption { caption-side: top; text-align: left; padding: 0.9rem 1rem 0; font-size: 0.82rem; color: var(--ink-faint); font-family: var(--font-mono); }
+  th, td { text-align: left; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  thead th { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); font-weight: 500; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.feature { font-weight: 600; color: var(--ink); }
+  td.where { white-space: nowrap; }
+
+  dl.perms {
+    display: grid;
+    gap: 0;
+    border-top: 1px solid var(--border);
+  }
+  dl.perms > div {
+    display: grid;
+    grid-template-columns: 11rem 1fr;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  dl.perms dt {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  dl.perms dd {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+  }
+  @media (max-width: 560px) {
+    dl.perms > div { grid-template-columns: 1fr; gap: 0.25rem; }
+  }
+
+  ul.plain, ol.plain {
+    margin: 0;
+    padding-left: 1.2rem;
+    display: grid;
+    gap: 0.55rem;
+  }
+  ul.plain li, ol.plain li { max-width: 66ch; color: var(--ink-soft); }
+  ul.plain li strong, ol.plain li strong { color: var(--ink); font-weight: 600; }
+
+  .providers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.6rem;
+    margin: 1.2rem 0;
+  }
+  .provider-chip {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 6px;
+    padding: 0.65rem 0.8rem;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+  .provider-chip strong { display: block; color: var(--ink); font-weight: 600; font-size: 0.88rem; margin-bottom: 0.1rem; }
+
+  .callout {
+    border-left: 3px solid var(--accent-local);
+    background: var(--accent-local-bg);
+    padding: 0.9rem 1.1rem;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.92rem;
+    color: var(--ink);
+    margin: 1.2rem 0;
+  }
+
+  footer.doc-foot {
+    margin-top: 4.5rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.6rem;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="doc-head">
+    <p class="eyebrow">Homework Helper — Chrome Extension</p>
+    <h1>Privacy Policy</h1>
+    <div class="meta-row">
+      <span>Effective: <strong>August 19, 2026</strong></span>
+      <span>Applies to: <strong>Homework Helper for Google Chrome</strong></span>
+      <span>Contact: <strong><a href="mailto:sonth87@gmail.com">sonth87@gmail.com</a></strong></span>
+    </div>
+    <p class="lede">Homework Helper is built local-first. This page explains, plainly, what the extension touches, where it stores it, and the only circumstance under which anything ever leaves your device.</p>
+  </header>
+
+  <div class="facts-card">
+    <h2>The short version</h2>
+    <ul>
+      <li><strong>No account, sign-up, or personal information</strong> is required to use the extension.</li>
+      <li><strong>No analytics, telemetry, or advertising trackers</strong> of any kind are included.</li>
+      <li><strong>We don't run any servers</strong> — there is nowhere for your data to be collected by us.</li>
+      <li>Your screenshots, chat history, and settings are kept in <strong>Chrome's local storage on your device</strong>.</li>
+      <li>Data only leaves your device if <strong>you</strong> add a cloud AI provider's API key — and then it travels straight from your browser to that provider, using your key.</li>
+    </ul>
+  </div>
+
+  <nav class="toc" aria-label="On this page">
+    <a href="#data-flow">Data flow at a glance</a>
+    <a href="#local-storage">What's stored on your device</a>
+    <a href="#permissions">Permissions we request</a>
+    <a href="#providers">Third-party AI providers</a>
+    <a href="#controls">Your controls</a>
+    <a href="#children">Children's privacy</a>
+    <a href="#changes">Changes</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <section id="data-flow">
+    <h2><span class="num">01</span>Data flow at a glance</h2>
+    <p>Homework Helper can run entirely on your device, or route a question to a cloud AI provider you've configured — never both without your say. Every feature below is tagged with where your data actually goes.</p>
+    <div class="legend">
+      <span class="flow-badge local">Stays on this device</span>
+      <span class="flow-badge cloud">Sent to a provider you configured</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>What happens when you use each feature</caption>
+        <thead>
+          <tr><th>Feature</th><th>What happens</th><th>Where it goes</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="feature">Chat &amp; selected-text questions</td>
+            <td>Answered by Chrome's on-device Gemini&nbsp;Nano by default, or by whichever engine your routing strategy selects.</td>
+            <td class="where"><span class="flow-badge local">On-device</span></td>
+          </tr>
+          <tr>
+            <td class="feature">Crop &amp; Solve screenshot</td>
+            <td>Read by the bundled offline OCR engine and/or Gemini&nbsp;Nano. Escalated to a cloud vision model only if you've added a cloud API key and image routing needs it.</td>
+            <td class="where"><span class="flow-badge local">Local</span> or <span class="flow-badge cloud">Your key</span></td>
+          </tr>
+          <tr>
+            <td class="feature">Quiz &amp; Google Forms auto-solve</td>
+            <td>Question text is read from the page and sent to your currently active AI engine — same path as chat.</td>
+            <td class="where"><span class="flow-badge local">Local</span> or <span class="flow-badge cloud">Your key</span></td>
+          </tr>
+          <tr>
+            <td class="feature">Local AI server (Ollama / LM Studio)</td>
+            <td>The extension talks to a server running on your own computer or network.</td>
+            <td class="where"><span class="flow-badge local">Never leaves your machine</span></td>
+          </tr>
+          <tr>
+            <td class="feature">Settings, API keys, chat history</td>
+            <td>Saved with Chrome's built-in storage APIs (<code>chrome.storage.local</code>, IndexedDB).</td>
+            <td class="where"><span class="flow-badge local">On-device only</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="callout">Cloud requests are never proxied through a server we run. Your browser talks directly to the provider you picked, using the API key you supplied.</p>
+  </section>
+
+  <section id="local-storage">
+    <h2><span class="num">02</span>What's stored on your device</h2>
+    <ul class="plain">
+      <li><strong>chrome.storage.local</strong> — your configured AI providers and API keys (masked in the UI), interface language and theme, and up to 50 recent chat sessions, including cropped screenshot thumbnails.</li>
+      <li><strong>IndexedDB (<code style="font-family:var(--font-mono)">HomeworkAi_Ocr_DB</code>)</strong> — offline OCR language model files you've downloaded. Delete any of them individually from Settings → OCR Models at any time.</li>
+    </ul>
+    <p style="margin-top:1rem">We request the <code style="font-family:var(--font-mono)">unlimitedStorage</code> permission so these on-device caches — screenshot thumbnails and OCR models can each run several megabytes — don't hit Chrome's default 10MB quota and silently fail. None of it is synced to a server; exporting your configuration (Settings → General → Export) writes a plain JSON file to your own computer, under your control.</p>
+  </section>
+
+  <section id="permissions">
+    <h2><span class="num">03</span>Permissions we request, and why</h2>
+    <dl class="perms">
+      <div><dt>storage</dt><dd>Save your settings, keys, and chat history locally in the browser.</dd></div>
+      <div><dt>unlimitedStorage</dt><dd>Let local screenshot/OCR caches grow past Chrome's default 10MB limit.</dd></div>
+      <div><dt>tabs</dt><dd>Find the active tab to relay a shortcut action, and to reach Chrome's on-device AI, which only runs in the context of a normal web page.</dd></div>
+      <div><dt>activeTab</dt><dd>Capture a screenshot of the current tab only when you trigger Crop &amp; Solve.</dd></div>
+      <div><dt>scripting</dt><dd>Call Chrome's on-device AI API from a web page's context, where alone it is exposed.</dd></div>
+      <div><dt>contextMenus</dt><dd>Add the right-click "Ask AI" and "Crop &amp; Solve" shortcuts.</dd></div>
+      <div><dt>sidePanel</dt><dd>Host the chat assistant in Chrome's side panel alongside the page you're reading.</dd></div>
+      <div><dt>offscreen</dt><dd>Run the offline OCR engine and stream AI replies from a hidden document, since the background service worker can't do this directly.</dd></div>
+      <div><dt>host permissions</dt><dd>Reach the AI provider(s) you configure — directly, with your own key — and run the extension's page tools on whatever site you're studying on.</dd></div>
+    </dl>
+  </section>
+
+  <section id="providers">
+    <h2><span class="num">04</span>Third-party AI providers</h2>
+    <p>If you add an API key for a cloud provider — or Chrome's on-device model is unavailable or insufficient for the task — your question (and screenshot, where relevant) is sent directly from your browser to that provider, using your own key. We never see or store this traffic ourselves.</p>
+    <div class="providers-grid">
+      <div class="provider-chip"><strong>Google Gemini</strong>Cloud vision &amp; text</div>
+      <div class="provider-chip"><strong>OpenAI</strong>GPT models</div>
+      <div class="provider-chip"><strong>Anthropic</strong>Claude models</div>
+      <div class="provider-chip"><strong>DeepSeek</strong>Chat &amp; reasoning</div>
+      <div class="provider-chip"><strong>Groq</strong>Fast inference</div>
+      <div class="provider-chip"><strong>OpenRouter</strong>Model routing</div>
+      <div class="provider-chip"><strong>Custom endpoint</strong>Any OpenAI-compatible API, including your own Ollama / LM Studio server</div>
+    </div>
+    <p>Each provider is governed by its own privacy policy and terms for the content you send it — please review theirs if you choose to use them. Chrome's on-device model (Gemini Nano) is governed by Google Chrome's own on-device AI terms and runs locally within the browser.</p>
+  </section>
+
+  <section id="controls">
+    <h2><span class="num">05</span>Your controls</h2>
+    <ol class="plain">
+      <li><strong>Export your configuration</strong> — back up providers, keys, and prompts to a JSON file you keep.</li>
+      <li><strong>Clear chat history</strong> — wipe every saved conversation and screenshot in one click, from Settings → General.</li>
+      <li><strong>Remove individual OCR models or API keys</strong> — anytime, without affecting the rest of your setup.</li>
+      <li><strong>Uninstall the extension</strong> — Chrome deletes all locally stored data (storage and IndexedDB) tied to it automatically.</li>
+    </ol>
+  </section>
+
+  <section id="children">
+    <h2><span class="num">06</span>Children's privacy</h2>
+    <p>Homework Helper is a study tool that students, including minors, may use under a parent, teacher, or school's guidance. The extension itself never asks for or collects personal information from anyone, regardless of age. If a cloud AI provider is used through the extension, that provider's own policy and any age requirements apply to the content submitted to it.</p>
+  </section>
+
+  <section id="changes">
+    <h2><span class="num">07</span>Changes to this policy</h2>
+    <p>If this policy changes, we'll update the effective date at the top of this page. Continuing to use Homework Helper after a change means you accept the revised terms.</p>
+  </section>
+
+  <section id="contact">
+    <h2><span class="num">08</span>Contact</h2>
+    <p>Questions about this policy or how the extension handles data: <a href="mailto:sonth87@gmail.com">sonth87@gmail.com</a>. Source code: <a href="https://github.com/sonth87/homework-helper" target="_blank" rel="noopener">github.com/sonth87/homework-helper</a>.</p>
+  </section>
+
+  <footer class="doc-foot">
+    <span>Homework Helper — AI Homework Solver &amp; Academic Assistant</span>
+    <span>Last updated August 19, 2026</span>
+  </footer>
+
+</div>
