@@ -15,6 +15,7 @@
 
 import { formatStudyPrompt } from '../shared/study-prompt.js';
 import { runOcrInOffscreen } from '../background/ocr-bridge.js';
+import { getThinkingDisableValue } from '../shared/thinking-control.js';
 
 console.log('[Offscreen AI Stream] Initialized in extension origin.');
 
@@ -24,7 +25,7 @@ const activeControllers = new Map(); // requestId -> AbortController
 /**
  * Google Gemini SSE Stream
  */
-async function streamGemini(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt }, onChunk, signal) {
+async function streamGemini(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled }, onChunk, signal) {
   const baseUrl = config.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
   const model = config.model || 'gemini-2.5-flash';
   const url = `${baseUrl}/models/${model}:streamGenerateContent?alt=sse&key=${config.apiKey}`;
@@ -44,13 +45,19 @@ async function streamGemini(config, { prompt, imageBase64, studyMode, outputLang
   const fullPrompt = formatStudyPrompt(studyMode, prompt, outputLanguage);
   parts.push({ text: fullPrompt });
 
+  const generationConfig = {
+    temperature: 0.4,
+    maxOutputTokens: 4096,
+  };
+  if (thinkingEnabled === false) {
+    const level = getThinkingDisableValue('gemini', model);
+    if (level) generationConfig.thinkingConfig = { thinkingLevel: level };
+  }
+
   const payload = {
     contents: [{ role: 'user', parts }],
     system_instruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
-    generationConfig: {
-      temperature: 0.4,
-      maxOutputTokens: 4096,
-    },
+    generationConfig,
   };
 
   const response = await fetch(url, {
@@ -101,7 +108,7 @@ async function streamGemini(config, { prompt, imageBase64, studyMode, outputLang
 /**
  * OpenAI / DeepSeek / Groq / OpenRouter / Custom Streaming
  */
-async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt }, onChunk, signal) {
+async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled }, onChunk, signal) {
   const baseUrl = config.baseUrl || 'https://api.openai.com/v1';
   const model = config.model || 'gpt-4o';
   const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
@@ -152,6 +159,18 @@ async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, 
     temperature: 0.4,
     max_tokens: 4096,
   };
+
+  if (thinkingEnabled === false) {
+    const level = getThinkingDisableValue(config.provider, model);
+    if (level === true) {
+      // DeepSeek V4: reasoning_effort only accepts "high"/"max" and silently
+      // ignores lower values — actually disabling thinking needs this
+      // separate field instead.
+      payload.thinking = { type: 'disabled' };
+    } else if (level) {
+      payload.reasoning_effort = level;
+    }
+  }
 
   const headers = {
     'Content-Type': 'application/json',
@@ -235,7 +254,7 @@ async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, 
 /**
  * Anthropic Claude Streaming
  */
-async function streamClaude(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt }, onChunk, signal) {
+async function streamClaude(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled }, onChunk, signal) {
   const baseUrl = config.baseUrl || 'https://api.anthropic.com/v1';
   const model = config.model || 'claude-3-5-sonnet-20241022';
   const url = `${baseUrl.replace(/\/+$/, '')}/messages`;
@@ -265,6 +284,11 @@ async function streamClaude(config, { prompt, imageBase64, studyMode, outputLang
     stream: true,
     temperature: 0.4,
   };
+
+  if (thinkingEnabled === false) {
+    const level = getThinkingDisableValue('claude', model);
+    if (level) payload.effort = level;
+  }
 
   const response = await fetch(url, {
     method: 'POST',

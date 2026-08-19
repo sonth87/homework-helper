@@ -68,7 +68,7 @@ export default {
     modalBtnFlagOptGuide: "2. เปิด #optimization-guide",
     modalBtnComponents: "3. เปิด components",
     modalBtnAddKey: "เพิ่มโมเดลและคีย์",
-    modalLinkGuide: "ดูวิธีขอรับ API Key ฟรี →",
+    modalLinkGuide: "ดูวิธีขอรับ API Key →",
     modalKeyPlaceholder: "ป้อน API Key (sk-... / AIza...)",
     customModelOption: "ระบุชื่อโมเดลเอง (กำหนดเอง)...",
     customModelPlaceholder: "ป้อนชื่อรหัสโมเดล (เช่น gemini-2.5-pro, gpt-5, claude-4...)",
@@ -198,6 +198,11 @@ export default {
     strategyTitle: "กลยุทธ์การกระจายโหลดและสลับคีย์อัจฉริยะ",
     strategyDesc:
       "ระบบจะกระจายคำถามไปยังคีย์ที่พร้อมใช้งานอย่างสม่ำเสมอ หากคีย์ใดติด Rate Limit ระบบจะพักคีย์นั้น 60 วินาทีและสลับไปยังคีย์ถัดไปทันที",
+    thinkingTitle: "โหมดคิดวิเคราะห์ (Thinking)",
+    thinkingDesc:
+      "บางโมเดลจะ \"คิด\" ก่อนตอบโดยอัตโนมัติ — แม่นยำขึ้นแต่ช้าลง ปิดเพื่อเน้นความเร็ว ใช้ได้เฉพาะโมเดลที่รองรับเท่านั้น โมเดลอื่นไม่ได้รับผลกระทบ",
+    thinkingOn: "เปิด",
+    thinkingOff: "ปิด",
     stratPreferNanoTitle: "จัดลำดับความสำคัญ Gemini Nano",
     stratPreferNanoDesc: "ใช้ Nano บนอุปกรณ์สำหรับข้อความ; สลับเป็น Vision API หรือ OCR อัตโนมัติสำหรับรูปภาพ",
     stratPreferConfigTitle: "จัดลำดับความสำคัญโมเดลที่กำหนดค่า (แนะนำ)",

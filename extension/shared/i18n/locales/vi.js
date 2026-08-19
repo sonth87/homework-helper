@@ -70,7 +70,7 @@ export default {
     modalBtnFlagOptGuide: "2. Mở #optimization-guide",
     modalBtnComponents: "3. Mở components",
     modalBtnAddKey: "Thêm Model & Key",
-    modalLinkGuide: "Xem hướng dẫn lấy Key miễn phí →",
+    modalLinkGuide: "Xem hướng dẫn lấy Key →",
     modalKeyPlaceholder: "Nhập API Key (sk-... / AIza...)",
     btnAddLocalModel: "Thêm Local Model",
     localPanelTitle: "Kết nối Local AI Server",
@@ -219,6 +219,11 @@ export default {
       "Cơ chế xoay vòng thông minh (Smart Load Balancing & Fallback)",
     strategyDesc:
       "Hệ thống tự động phân phối đều câu hỏi qua các key đang hoạt động (Round-Robin). Nếu 1 key gặp lỗi Rate Limit (HTTP 429) hoặc tạm quá tải, hệ thống tự động đưa key đó vào hàng chờ nghỉ 60 giây và ngay lập tức chuyển sang Key kế tiếp mà không làm gián đoạn câu trả lời.",
+    thinkingTitle: "Chế độ Suy luận (Thinking)",
+    thinkingDesc:
+      "Một số model tự động \"suy nghĩ\" trước khi trả lời — chính xác hơn nhưng chậm hơn. Tắt để ưu tiên tốc độ; chỉ áp dụng cho model có hỗ trợ, các model khác không bị ảnh hưởng.",
+    thinkingOn: "Bật",
+    thinkingOff: "Tắt",
     stratPreferNanoTitle: "Ưu tiên Gemini Nano",
     stratPreferNanoDesc: "Văn bản dùng Nano On-Device; Chụp ảnh tự động chuyển Vision API hoặc OCR.",
     stratPreferConfigTitle: "Ưu tiên Model đã cấu hình (Khuyên dùng)",

@@ -543,6 +543,20 @@ export const Storage = {
     return strategy;
   },
 
+  // Single global toggle (not per-key): when off, requests to models with a
+  // known reasoning/thinking control (see shared/thinking-control.js) ask
+  // for the lowest level that model allows, to cut latency. Models with no
+  // known control, custom-typed models, and local providers are unaffected.
+  async getThinkingEnabled() {
+    const { thinkingEnabled = true } = await this.get(["thinkingEnabled"]);
+    return thinkingEnabled;
+  },
+
+  async setThinkingEnabled(enabled) {
+    await this.set({ thinkingEnabled: enabled });
+    return enabled;
+  },
+
   async getInstalledOcrModels() {
     const { installedOcrModels = DEFAULT_SETTINGS.installedOcrModels } =
       await this.get(["installedOcrModels"]);

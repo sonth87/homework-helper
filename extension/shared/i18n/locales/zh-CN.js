@@ -67,7 +67,7 @@ export default {
     modalBtnFlagOptGuide: "2. 打开 #optimization-guide",
     modalBtnComponents: "3. 打开 components",
     modalBtnAddKey: "添加模型与密钥",
-    modalLinkGuide: "查看免费获取 Key 指南 →",
+    modalLinkGuide: "查看获取 Key 指南 →",
     modalKeyPlaceholder: "输入 API Key (sk-... / AIza...)",
     customModelOption: "自定义模型名称 (手动输入)...",
     customModelPlaceholder: "输入模型ID (例如: gemini-2.5-pro, gpt-5, claude-4...)",
@@ -197,6 +197,11 @@ export default {
     strategyTitle: "智能负载均衡与故障转移机制",
     strategyDesc:
       "系统自动将请求均匀分配到当前可用的 Key。若某 Key 达到速率限制 (HTTP 429)，将自动进入 60 秒冷却，并立即切换到下一个 Key，解答不中断。",
+    thinkingTitle: "思考模式（Thinking）",
+    thinkingDesc:
+      "部分模型会在回答前自动\"思考\"，更准确但更慢。关闭以优先速度；仅对支持的模型生效，其他模型不受影响。",
+    thinkingOn: "开启",
+    thinkingOff: "关闭",
     stratPreferNanoTitle: "优先使用 Gemini Nano",
     stratPreferNanoDesc: "文本使用本地 Gemini Nano；图片自动转为 Vision API 或 OCR。",
     stratPreferConfigTitle: "优先使用已配置的模型 (推荐)",

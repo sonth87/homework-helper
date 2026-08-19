@@ -32,6 +32,18 @@ function renderMath(formula, displayMode = false) {
   return `<code class="math-fallback">${escapeHtml(formula)}</code>`;
 }
 
+// Vietnamese diacritics essentially never appear inside real LaTeX math. A
+// $...$/$$...$$ span containing them is almost always a stray `$` (currency,
+// a mismatched delimiter) that swallowed ordinary prose rather than an actual
+// formula — feeding that to KaTeX just produces console warning spam and
+// garbled output for characters it has no glyph metrics for. Skip those and
+// leave the original text untouched instead of misrendering it as math.
+const VIETNAMESE_DIACRITICS = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ]/;
+
+function looksLikeMath(code) {
+  return !VIETNAMESE_DIACRITICS.test(code);
+}
+
 /**
  * Format markdown text and LaTeX math into HTML
  */
@@ -46,12 +58,14 @@ export function formatMarkdownAndMath(text) {
   // 1. Extract and protect Display Math: $$...$$ or \[...\]
   const mathBlocks = [];
   html = html.replace(/\$\$([\s\S]+?)\$\$/g, (match, code) => {
+    if (!looksLikeMath(code)) return match;
     const placeholder = `___MATH_BLOCK_${mathBlocks.length}___`;
     mathBlocks.push({ code: code.trim(), display: true });
     return placeholder;
   });
 
   html = html.replace(/\\\[([\s\S]+?)\\\]/g, (match, code) => {
+    if (!looksLikeMath(code)) return match;
     const placeholder = `___MATH_BLOCK_${mathBlocks.length}___`;
     mathBlocks.push({ code: code.trim(), display: true });
     return placeholder;
@@ -59,12 +73,14 @@ export function formatMarkdownAndMath(text) {
 
   // 2. Extract and protect Inline Math: $...$ or \(...\)
   html = html.replace(/\$([^\$\n]+?)\$/g, (match, code) => {
+    if (!looksLikeMath(code)) return match;
     const placeholder = `___MATH_BLOCK_${mathBlocks.length}___`;
     mathBlocks.push({ code: code.trim(), display: false });
     return placeholder;
   });
 
   html = html.replace(/\\\(([\s\S]+?)\\\)/g, (match, code) => {
+    if (!looksLikeMath(code)) return match;
     const placeholder = `___MATH_BLOCK_${mathBlocks.length}___`;
     mathBlocks.push({ code: code.trim(), display: false });
     return placeholder;

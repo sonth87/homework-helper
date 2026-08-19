@@ -88,6 +88,7 @@ export class OptionsController {
     setInner('navIconGeneral', Icons.settings(16));
     setInner('optIconPlus', Icons.plus(16));
     setInner('optIconRouting', Icons.cpu(18));
+    setInner('optIconThinking', Icons.sparkles(18));
     setInner('optIconStrategy', Icons.checkCircle(18, 'text-green-600'));
     setInner('optIconBuiltinNano', Icons.cpu(18));
     setInner('optIconCheckUpdates', Icons.refresh(14));
@@ -195,6 +196,8 @@ export class OptionsController {
     setText('optLocalGuideDesc', dict.localGuideDesc);
     setText('optStrategyTitle', dict.strategyTitle);
     setText('optStrategyDesc', dict.strategyDesc);
+    setText('optThinkingTitle', dict.thinkingTitle);
+    setText('optThinkingDesc', dict.thinkingDesc);
 
     // Strategy Options
     setText('optRoutingOpt1Title', dict.stratPreferNanoTitle);

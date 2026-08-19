@@ -115,7 +115,7 @@ export default {
     modalBtnFlagOptGuide: "2. Открыть #optimization-guide",
     modalBtnComponents: "3. Открыть компоненты",
     modalBtnAddKey: "Добавить модель и ключ",
-    modalLinkGuide: "Гайд по бесплатным API-ключам →",
+    modalLinkGuide: "Гайд по API-ключам →",
     modalKeyPlaceholder: "Введите API-ключ (sk-... / AIza...)",
     customModelOption: "Своя модель (Ввести вручную)...",
     customModelPlaceholder: "Введите ID модели (напр. gemini-2.5-pro, gpt-5, claude-4...)",
@@ -199,6 +199,11 @@ export default {
     strategyTitle: "Стратегия ротации ключей",
     strategyDesc:
       "Выберите метод распределения активных ключей при отправке запросов.",
+    thinkingTitle: "Режим размышления (Thinking)",
+    thinkingDesc:
+      "Некоторые модели автоматически «думают» перед ответом — точнее, но медленнее. Отключите для приоритета скорости; применяется только к поддерживаемым моделям, остальные не затрагиваются.",
+    thinkingOn: "Вкл",
+    thinkingOff: "Выкл",
     statTotal: "Всего ключей",
     statActive: "Готовы к работе",
     statCooldown: "На паузе (60с)",

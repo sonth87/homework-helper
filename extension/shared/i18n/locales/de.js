@@ -114,7 +114,7 @@ export default {
     modalBtnFlagOptGuide: "2. #optimization-guide öffnen",
     modalBtnComponents: "3. Komponenten öffnen",
     modalBtnAddKey: "Modell & Schlüssel hinzufügen",
-    modalLinkGuide: "Kostenlosen API-Schlüssel Leitfaden anzeigen →",
+    modalLinkGuide: "API-Schlüssel Leitfaden anzeigen →",
     modalKeyPlaceholder: "API-Schlüssel eingeben (sk-... / AIza...)",
     customModelOption: "Benutzerdefiniertes Modell (Name eingeben)...",
     customModelPlaceholder: "Modell-ID eingeben (z.B. gemini-2.5-pro, gpt-5, claude-4...)",
@@ -198,6 +198,11 @@ export default {
     strategyTitle: "Rotationsstrategie",
     strategyDesc:
       "Wähle die Auswahlmethode der aktiven Schlüssel bei Anfragen.",
+    thinkingTitle: "Denkmodus (Thinking)",
+    thinkingDesc:
+      "Manche Modelle \"denken\" automatisch nach, bevor sie antworten — genauer, aber langsamer. Deaktivieren, um Geschwindigkeit zu priorisieren; gilt nur für unterstützte Modelle, andere sind nicht betroffen.",
+    thinkingOn: "Ein",
+    thinkingOff: "Aus",
     statTotal: "Konfigurierte Schlüssel",
     statActive: "Bereit und nutzbar",
     statCooldown: "Pause (60s)",

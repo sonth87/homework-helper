@@ -132,7 +132,7 @@ export class OverlayConfigModal {
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <label style="display:flex; align-items:center; gap:6px; font-weight:600; font-size:13px; color:#0f172a;">
           <input type="checkbox" class="cfg-enabled" ${cfg.isEnabled ? 'checked' : ''}>
-          <span>${providerObj.name}</span>
+          <span class="cfg-provider-name">${providerObj.name}</span>
         </label>
         <button class="hw-icon-btn cfg-delete" style="color:#ef4444;">${Icons.trash(14)}</button>
       </div>
@@ -186,6 +186,8 @@ export class OverlayConfigModal {
 
     providerSelect.addEventListener('change', () => {
       const pObj = DEFAULT_PROVIDERS.find((p) => p.id === providerSelect.value) || DEFAULT_PROVIDERS[0];
+      const nameEl = el.querySelector('.cfg-provider-name');
+      if (nameEl) nameEl.textContent = pObj.name;
       modelSelect.innerHTML =
         pObj.models.map((m) => `<option value="${m.id}">${m.name}</option>`).join('') +
         `<option value="__custom__">✏️ ${d.customModelOption || 'Tự điền model (Custom)...'}</option>`;

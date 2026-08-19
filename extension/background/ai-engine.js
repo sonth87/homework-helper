@@ -21,7 +21,7 @@ export class AiEngine {
    * @param {AbortSignal} [signal] - Abort signal
    */
   static async ask({ prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage = 'en' }, onChunk, signal) {
-    const { routingStrategy = 'prefer_nano', apiConfigs = [], nanoSystemPrompt } = await Storage.get(['routingStrategy', 'apiConfigs', 'nanoSystemPrompt']);
+    const { routingStrategy = 'prefer_nano', apiConfigs = [], nanoSystemPrompt, thinkingEnabled = true } = await Storage.get(['routingStrategy', 'apiConfigs', 'nanoSystemPrompt', 'thinkingEnabled']);
     const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
 
     const langNames = {
@@ -103,7 +103,7 @@ export class AiEngine {
           // The actual fetch() runs in the offscreen document, not here — MV3 kills the
           // service worker if a fetch() response takes over 30s to arrive, and "thinking"
           // models routinely take longer than that just to send their first byte.
-          await streamViaOffscreen(config.provider, config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
+          await streamViaOffscreen(config.provider, config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt, thinkingEnabled }, onChunk, signal);
         }
 
         // Successfully completed

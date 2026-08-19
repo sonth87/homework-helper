@@ -116,7 +116,7 @@ export default {
     modalBtnFlagOptGuide: "2. Ouvrir #optimization-guide",
     modalBtnComponents: "3. Ouvrir les composants",
     modalBtnAddKey: "Ajouter modèle et clé",
-    modalLinkGuide: "Voir le guide des clés API gratuites →",
+    modalLinkGuide: "Voir le guide des clés API →",
     modalKeyPlaceholder: "Entrez la clé API (sk-... / AIza...)",
     customModelOption: "Modèle personnalisé (Saisir le nom)...",
     customModelPlaceholder: "Saisir l'ID du modèle (ex: gemini-2.5-pro, gpt-5, claude-4...)",
@@ -200,6 +200,11 @@ export default {
     strategyTitle: "Stratégie de rotation",
     strategyDesc:
       "Choisissez la méthode de sélection des clés actives lors des requêtes.",
+    thinkingTitle: "Mode Réflexion (Thinking)",
+    thinkingDesc:
+      "Certains modèles « réfléchissent » automatiquement avant de répondre — plus précis mais plus lent. Désactivez pour privilégier la vitesse ; ne s'applique qu'aux modèles compatibles, les autres ne sont pas affectés.",
+    thinkingOn: "Activé",
+    thinkingOff: "Désactivé",
     statTotal: "Clés configurées",
     statActive: "Prêtes et utilisables",
     statCooldown: "En pause (60s)",

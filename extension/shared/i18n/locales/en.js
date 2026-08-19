@@ -67,7 +67,7 @@ export default {
     modalBtnFlagOptGuide: "2. Open #optimization-guide",
     modalBtnComponents: "3. Open components",
     modalBtnAddKey: "Add Model & Key",
-    modalLinkGuide: "View free API key guide →",
+    modalLinkGuide: "View API key guide →",
     btnAddLocalModel: "Add Local Model",
     localPanelTitle: "Connect Local AI Server",
     localBtnPing: "Test Connection",
@@ -215,6 +215,11 @@ export default {
     strategyTitle: "Smart Load Balancing & Fallback Strategy",
     strategyDesc:
       "The system automatically distributes questions across active keys (Round-Robin). If a key encounters Rate Limit (HTTP 429), it cools down for 60s and immediately rotates to the next key without interruption.",
+    thinkingTitle: "Thinking Mode",
+    thinkingDesc:
+      "Some models automatically \"think\" before answering — more accurate but slower. Turn off to prioritize speed; only applies to models that support it, others are unaffected.",
+    thinkingOn: "On",
+    thinkingOff: "Off",
     stratPreferNanoTitle: "Prefer Gemini Nano",
     stratPreferNanoDesc: "Use Nano On-Device for text; auto-switch to Vision API or OCR for images.",
     stratPreferConfigTitle: "Prefer Configured Models (Recommended)",

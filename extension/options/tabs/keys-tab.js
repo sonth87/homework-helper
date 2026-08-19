@@ -19,6 +19,7 @@ export class KeysTab {
 
   async init() {
     await this.loadRoutingStrategy();
+    await this.loadThinkingToggle();
     await this.loadProvidersAndKeys();
     await this.checkChromeBuiltinAI();
     this.initLocalModelPanel();
@@ -35,6 +36,26 @@ export class KeysTab {
           await Storage.setRoutingStrategy(r.value);
         }
       });
+    });
+  }
+
+  // Single global switch — not per API config. Models with no known
+  // reasoning/thinking control, custom-typed models, and local providers are
+  // unaffected either way (see shared/thinking-control.js).
+  async loadThinkingToggle() {
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const d = getOptionsI18n(uiLanguage);
+    const checkbox = document.getElementById('optThinkingEnabled');
+    const label = document.getElementById('optThinkingEnabledLabel');
+    if (!checkbox) return;
+
+    const enabled = await Storage.getThinkingEnabled();
+    checkbox.checked = enabled;
+    if (label) label.textContent = enabled ? (d.thinkingOn || 'Bật') : (d.thinkingOff || 'Tắt');
+
+    checkbox.addEventListener('change', async () => {
+      await Storage.setThinkingEnabled(checkbox.checked);
+      if (label) label.textContent = checkbox.checked ? (d.thinkingOn || 'Bật') : (d.thinkingOff || 'Tắt');
     });
   }
 
@@ -107,7 +128,7 @@ export class KeysTab {
       <div class="opt-key-header">
         <label class="opt-key-provider-title">
           <input type="checkbox" class="card-enabled" ${cfg.isEnabled ? 'checked' : ''}>
-          <span>${providerObj.name}</span>
+          <span class="card-provider-name">${providerObj.name}</span>
         </label>
         <button class="opt-btn-secondary card-delete" style="color:#ef4444; padding:4px 8px; font-size:12px;" title="${d.deleteKey || 'Delete'}">
           ${Icons.trash(14)} ${d.deleteKey || 'Delete'}
@@ -172,6 +193,8 @@ export class KeysTab {
 
     providerSelect.addEventListener('change', () => {
       const pObj = DEFAULT_PROVIDERS.find((p) => p.id === providerSelect.value) || DEFAULT_PROVIDERS[0];
+      const nameEl = card.querySelector('.card-provider-name');
+      if (nameEl) nameEl.textContent = pObj.name;
       modelSelect.innerHTML =
         pObj.models.map((m) => `<option value="${m.id}">${m.name}</option>`).join('') +
         `<option value="__custom__">✏️ ${d.customModelOption || 'Tự điền model (Custom)...'}</option>`;

@@ -117,7 +117,7 @@ export default {
     modalBtnFlagOptGuide: "2. Buka #optimization-guide",
     modalBtnComponents: "3. Buka komponen",
     modalBtnAddKey: "Tambah Model & Kunci",
-    modalLinkGuide: "Lihat panduan kunci API gratis →",
+    modalLinkGuide: "Lihat panduan kunci API →",
     modalKeyPlaceholder: "Masukkan Kunci API (sk-... / AIza...)",
     customModelOption: "Model kustom (Ketik nama)...",
     customModelPlaceholder: "Masukkan ID model (contoh: gemini-2.5-pro, gpt-5, claude-4...)",
@@ -203,6 +203,11 @@ export default {
     strategyTitle: "Strategi Rotasi Kunci",
     strategyDesc:
       "Pilih metode pemilihan kunci saat mengirim permintaan ke AI.",
+    thinkingTitle: "Mode Berpikir (Thinking)",
+    thinkingDesc:
+      "Beberapa model otomatis \"berpikir\" sebelum menjawab — lebih akurat tapi lebih lambat. Matikan untuk mengutamakan kecepatan; hanya berlaku untuk model yang mendukung, model lain tidak terpengaruh.",
+    thinkingOn: "Aktif",
+    thinkingOff: "Nonaktif",
     statTotal: "Total Kunci Terdaftar",
     statActive: "Siap Digunakan",
     statCooldown: "Jeda Sementara (60d)",
