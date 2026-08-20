@@ -1145,7 +1145,7 @@
 /* ========================================================= */
 .hw-rich-tooltip {
   position: fixed;
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(15, 23, 42, 0.5);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: #ffffff;
