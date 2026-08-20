@@ -101,19 +101,19 @@ class SelectionTooltip {
     this.toolbar.innerHTML = `
       <div class="hw-tb-logo">${Icons.appLogo(18)}</div>
       
-      <button class="hw-tb-btn ${iconOnlyCls}" data-action="answer">
+      <button class="hw-tb-btn ${iconOnlyCls}" data-action="answer" title="${dict.answer}">
         ${Icons.messageCircle(14)} <span class="hw-tb-label">${dict.answer}</span>
       </button>
 
-      <button class="hw-tb-btn ${iconOnlyCls}" data-action="copy">
+      <button class="hw-tb-btn ${iconOnlyCls}" data-action="copy" title="${dict.copy}">
         ${Icons.copy(14)} <span class="hw-tb-label">${dict.copy}</span>
       </button>
 
-      <button class="hw-tb-btn ${iconOnlyCls}" data-action="search">
+      <button class="hw-tb-btn ${iconOnlyCls}" data-action="search" title="${dict.search}">
         ${Icons.globe(14)} <span class="hw-tb-label">${dict.search}</span>
       </button>
 
-      <button class="hw-tb-btn ${iconOnlyCls}" data-action="translate">
+      <button class="hw-tb-btn ${iconOnlyCls}" data-action="translate" title="${dict.translate}">
         ${Icons.languages(14)} <span class="hw-tb-label">${dict.translate}</span>
       </button>
 
