@@ -6,6 +6,7 @@
 import { Icons } from '../shared/icons.js';
 import { Storage } from '../shared/storage.js';
 import { getOptionsI18n, getSelectionTooltipI18n, getFloatingPopupI18n } from '../shared/i18n.js';
+import { OptionsTooltips } from './options-tooltips.js';
 import { KeysTab } from './tabs/keys-tab.js';
 import { OcrTab } from './tabs/ocr-tab.js';
 import { AppearanceTab } from './tabs/appearance-tab.js';
@@ -28,6 +29,7 @@ export class OptionsController {
   async init() {
     this.renderIcons();
     this.setupNavigation();
+    OptionsTooltips.init();
     await this.applyLanguageI18n();
 
     await this.keysTab.init();
@@ -99,6 +101,7 @@ export class OptionsController {
     // Local Model (Ollama / LM Studio) Panel & Guide Icons
     setInner('optIconServer', Icons.server(16));
     setInner('optIconLocalPanel', Icons.server(18));
+    setInner('optLocalPanelHelp', Icons.helpCircle(15));
     setInner('optIconLocalClose', Icons.x(16));
     setInner('optIconLocalGuide', Icons.server(18));
     setInner('optLocalGuideChevron', Icons.chevronDown(16));
@@ -188,6 +191,11 @@ export class OptionsController {
     setText('optBtnAddKeyText', dict.btnAddKey);
     setText('optBtnAddLocalModelText', dict.btnAddLocalModel);
     setText('optLocalPanelTitle', dict.localPanelTitle);
+    const localPanelHelp = document.getElementById('optLocalPanelHelp');
+    if (localPanelHelp) {
+      if (dict.localPanelHelpTitle) localPanelHelp.setAttribute('data-tooltip-title', dict.localPanelHelpTitle);
+      if (dict.localPanelHelpDesc) localPanelHelp.setAttribute('data-tooltip-desc', dict.localPanelHelpDesc);
+    }
     const pingBtn = document.getElementById('optLocalBtnPing');
     if (pingBtn && dict.localBtnPing) pingBtn.title = dict.localBtnPing;
     setText('optLocalBtnCancel', dict.localBtnCancel);

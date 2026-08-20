@@ -20,13 +20,125 @@ export class OverlayFloatingCard {
     this.activeCardResponseText = '';
     this.activeCardNotices = [];
     this.loadingStepsInterval = null;
+    // Must match .hw-card-collapsed-fab's width/height in overlay.css.
+    this.fabSize = 36;
+    this.fabEdgeMargin = 10;
 
     this.init();
   }
 
   init() {
     this.makeCardDraggable();
+    this.makeCollapsedFabDraggable();
     this.setupListeners();
+  }
+
+  hideCollapsedFab() {
+    const fab = this.shadow.getElementById('hwCardCollapsedFab');
+    if (fab) fab.style.display = 'none';
+  }
+
+  // Whichever of the 4 screen edges (left/right/top/bottom) the FAB's
+  // current rect is closest to, snap flush against that edge and clamp the
+  // other axis within the viewport — used both right after collapsing and
+  // after a drag ends.
+  snapRectToNearestEdge(rect) {
+    const { fabSize, fabEdgeMargin: margin } = this;
+    const distLeft = rect.left;
+    const distRight = window.innerWidth - rect.right;
+    const distTop = rect.top;
+    const distBottom = window.innerHeight - rect.bottom;
+    const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+
+    let left = Math.max(margin, Math.min(window.innerWidth - fabSize - margin, rect.left));
+    let top = Math.max(margin, Math.min(window.innerHeight - fabSize - margin, rect.top));
+
+    if (minDist === distLeft) {
+      left = margin;
+    } else if (minDist === distRight) {
+      left = window.innerWidth - fabSize - margin;
+    } else if (minDist === distTop) {
+      top = margin;
+    } else {
+      top = window.innerHeight - fabSize - margin;
+    }
+
+    return { left, top };
+  }
+
+  // Hides the popup and shows a small round FAB in its place; the card's
+  // own position styles are left untouched so expandCard() can just show it
+  // again without needing to save/restore anything.
+  collapseCard() {
+    const card = this.popupCard;
+    const fab = this.shadow.getElementById('hwCardCollapsedFab');
+    if (!card || !fab) return;
+
+    const rect = card.getBoundingClientRect();
+    card.style.display = 'none';
+
+    const { left, top } = this.snapRectToNearestEdge(rect);
+    fab.style.left = `${left}px`;
+    fab.style.top = `${top}px`;
+    fab.style.display = 'flex';
+  }
+
+  expandCard() {
+    this.hideCollapsedFab();
+    if (this.popupCard) this.popupCard.style.display = 'flex';
+  }
+
+  makeCollapsedFabDraggable() {
+    const fab = this.shadow.getElementById('hwCardCollapsedFab');
+    if (!fab) return;
+
+    const { fabSize } = this;
+    let isPressed = false;
+    let hasMoved = false;
+    let startX = 0;
+    let startY = 0;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    fab.addEventListener('mousedown', (e) => {
+      isPressed = true;
+      hasMoved = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      const rect = fab.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isPressed) return;
+      if (!hasMoved) {
+        // Small threshold so a plain click doesn't jitter the FAB by a pixel.
+        if (Math.abs(e.clientX - startX) < 4 && Math.abs(e.clientY - startY) < 4) return;
+        hasMoved = true;
+        fab.classList.add('hw-fab-dragging');
+      }
+      const left = Math.max(0, Math.min(window.innerWidth - fabSize, e.clientX - offsetX));
+      const top = Math.max(0, Math.min(window.innerHeight - fabSize, e.clientY - offsetY));
+      fab.style.left = `${left}px`;
+      fab.style.top = `${top}px`;
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!isPressed) return;
+      isPressed = false;
+
+      if (!hasMoved) {
+        this.expandCard();
+        return;
+      }
+
+      fab.classList.remove('hw-fab-dragging');
+      const { left, top } = this.snapRectToNearestEdge(fab.getBoundingClientRect());
+      fab.style.left = `${left}px`;
+      fab.style.top = `${top}px`;
+    });
   }
 
   // Rotates through a set of short "thinking..." phrases every 5s while
@@ -81,6 +193,11 @@ export class OverlayFloatingCard {
       this.stopLoadingSteps();
       this.popupCard.style.display = 'none';
       s.getElementById('hwCardHistoryPanel').style.display = 'none';
+    });
+
+    s.getElementById('hwBtnCardCollapse')?.addEventListener('click', () => {
+      s.getElementById('hwCardHistoryPanel').style.display = 'none';
+      this.collapseCard();
     });
 
     s.getElementById('hwBtnCardNewChat')?.addEventListener('click', async () => {
@@ -247,6 +364,7 @@ export class OverlayFloatingCard {
     const content = s.getElementById('hwCardAnswerContent');
     this.startLoadingSteps(content, genDict.loadingSteps);
 
+    this.hideCollapsedFab();
     this.popupCard.style.display = 'flex';
     this.activeCardResponseText = '';
     this.activeCardNotices = [];
@@ -453,6 +571,7 @@ export class OverlayFloatingCard {
       this.popupCard.style.right = 'auto';
     }
 
+    this.hideCollapsedFab();
     this.popupCard.style.display = 'flex';
     this.executePopupAction(type, text);
   }
@@ -506,7 +625,7 @@ export class OverlayFloatingCard {
     });
 
     const { apiConfigs = [], systemPrompt, nanoSystemPrompt, outputLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'outputLanguage']);
-    const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
+    const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin'));
 
     if (enabledKeys.length === 0) {
       const langNames = {

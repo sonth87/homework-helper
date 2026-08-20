@@ -66,7 +66,9 @@ export class SidePanelKeysModal {
       <!-- Local AI Server (Ollama / LM Studio) Config Panel -->
       <div id="spLocalModelPanel" style="display:none; border:1px solid rgba(22,163,74,0.3); border-radius:10px; padding:10px; background:rgba(22,163,74,0.05); flex-direction:column; gap:8px;">
         <div style="display:flex; align-items:center; gap:6px;">
-          <span style="flex:1; font-size:12.5px; font-weight:700; color:#16a34a;">${dict.localPanelTitle || "Connect Local AI Server"}</span>
+          <span style="font-size:12.5px; font-weight:700; color:#16a34a;">${dict.localPanelTitle || "Connect Local AI Server"}</span>
+          <span style="display:inline-flex; cursor:help; color:#16a34a;" data-tooltip-title="${dict.localPanelHelpTitle || "Picking the right local model"}" data-tooltip-desc="${dict.localPanelHelpDesc || ""}">${Icons.helpCircle(13)}</span>
+          <span style="flex:1;"></span>
           <button type="button" class="sp-icon-btn" id="spLocalBtnClose" title="${dict.localBtnCancel || "Cancel"}" style="width:24px; height:24px;">${Icons.x(14)}</button>
         </div>
 
@@ -287,7 +289,7 @@ export class SidePanelKeysModal {
         <label style="display:flex; align-items:center; gap:6px; font-size:11.5px; padding:5px 8px; border:1px solid var(--border-color); border-radius:6px; background:var(--bg-secondary); ${m.isEmbedding ? "opacity:0.6;" : ""}">
           <input type="checkbox" class="sp-local-model-check" value="${idx}" ${m.isEmbedding ? "disabled" : "checked"}>
           <span style="display:flex; flex-direction:column;">
-            <span>${pretty} ${capabilityTag}</span>
+            <span>${pretty} ${capabilityTag} <span style="display:inline-flex; cursor:help; color:var(--text-muted);" data-tooltip-title="${d.localModelHelpTitle || "Can this model actually read images?"}" data-tooltip-desc="${d.localModelHelpDesc || ""}">${Icons.helpCircle(12)}</span></span>
             ${showRawId ? `<span style="font-size:10px; color:var(--text-muted);">${m.id}</span>` : ""}
             ${m.isEmbedding ? `<span style="font-size:10px; color:#d97706;">${d.localEmbeddingWarning || "Embedding model — cannot answer questions."}</span>` : ""}
             ${!m.isEmbedding && !m.isVision ? `<span style="font-size:10px; color:var(--text-muted);">${d.localTextOnlyHint || "No direct image support — screenshots are OCR-extracted to text before sending."}</span>` : ""}
@@ -367,6 +369,7 @@ export class SidePanelKeysModal {
           <span class="sp-local-key-badge">${providerLabel}</span>
           <span class="sp-local-key-name">${prettyName}</span>
           ${isVision ? `<span style="font-size:9px; font-weight:700; color:#0284c7; background:rgba(2,132,199,0.12); padding:1px 5px; border-radius:6px;">${d.localVisionTag || "Vision"}</span>` : `<span style="font-size:9px; font-weight:700; color:#64748b; background:rgba(100,116,139,0.12); padding:1px 5px; border-radius:6px;">${d.localTextOnlyTag || "Text only"}</span>`}
+          <span style="display:inline-flex; cursor:help; color:var(--text-muted);" data-tooltip-title="${d.localModelHelpTitle || "Can this model actually read images?"}" data-tooltip-desc="${d.localModelHelpDesc || ""}">${Icons.helpCircle(12)}</span>
         </div>
         <div class="sp-local-key-meta">${cfg.model} &middot; ${cfg.baseUrl || ""}</div>
         ${embeddingWarning ? `<div style="font-size:10px; color:#d97706; margin-top:2px;">${Icons.alertCircle(10)} ${d.localEmbeddingCardWarning || "Embedding model — cannot answer questions. Delete and add a chat model instead."}</div>` : ""}

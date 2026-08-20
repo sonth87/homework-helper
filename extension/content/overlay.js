@@ -76,6 +76,7 @@ class InPageOverlay {
           </div>
           <div class="hw-card-header-actions">
             <button class="hw-icon-btn" id="hwBtnCardHistory" data-tooltip-title="Lịch sử các câu hỏi" data-tooltip-desc="Xem lại các câu hỏi hoặc bài tập đã giải gần đây.">${Icons.history(14)}</button>
+            <button class="hw-icon-btn" id="hwBtnCardCollapse" data-tooltip-title="Thu gọn" data-tooltip-desc="Thu popup thành một nút tròn nổi, kéo thả để di chuyển.">${Icons.chevronDown(14)}</button>
             <button class="hw-icon-btn" id="hwBtnCloseCard" data-tooltip-title="Đóng cửa sổ" data-tooltip-desc="Tắt popup giải bài">${Icons.x(14)}</button>
           </div>
         </div>
@@ -137,6 +138,11 @@ class InPageOverlay {
           </button>
         </div>
       </div>
+
+      <!-- Collapsed Solution Popup — round draggable FAB, snaps to nearest screen edge -->
+      <button class="hw-card-collapsed-fab" id="hwCardCollapsedFab" style="display: none;">
+        ${Icons.appLogo(36)}
+      </button>
 
       <!-- Slide-over Drawer Backdrop -->
       <div class="hw-drawer-backdrop" id="hwDrawerBackdrop" style="display: none;"></div>
@@ -515,6 +521,12 @@ class InPageOverlay {
 
       s.getElementById('hwBtnCloseCard')?.setAttribute('data-tooltip-title', cardDict.closeTitle || 'Đóng cửa sổ');
       s.getElementById('hwBtnCloseCard')?.setAttribute('data-tooltip-desc', cardDict.closeDesc || 'Tắt popup giải bài');
+
+      s.getElementById('hwBtnCardCollapse')?.setAttribute('data-tooltip-title', cardDict.collapseTitle || 'Thu gọn');
+      s.getElementById('hwBtnCardCollapse')?.setAttribute('data-tooltip-desc', cardDict.collapseDesc || 'Thu popup thành một nút tròn nổi, kéo thả để di chuyển.');
+
+      // s.getElementById('hwCardCollapsedFab')?.setAttribute('data-tooltip-title', cardDict.reopenTitle || 'Mở lại popup');
+      // s.getElementById('hwCardCollapsedFab')?.setAttribute('data-tooltip-desc', cardDict.reopenDesc || 'Kéo để di chuyển, thả ra sẽ tự bay về cạnh màn hình gần nhất.');
 
       s.getElementById('hwBtnCardAddConv')?.setAttribute('data-tooltip-title', cardDict.addConvTitle || 'Đoạn chat mới');
       s.getElementById('hwBtnCardAddConv')?.setAttribute('data-tooltip-desc', cardDict.addConvDesc || 'Bắt đầu một phiên hội thoại bài tập mới.');

@@ -20,7 +20,7 @@ export class OverlayFabs {
     // Crop trigger
     const triggerCrop = async () => {
       const { routingStrategy = 'prefer_nano', apiConfigs = [] } = await Storage.get(['routingStrategy', 'apiConfigs']);
-      const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
+      const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin'));
 
       if (routingStrategy === 'config_only' && enabledKeys.length === 0) {
         chrome.runtime.sendMessage({ action: 'OPEN_OPTIONS' });
@@ -49,9 +49,11 @@ export class OverlayFabs {
       const drawer = s.getElementById('hwDrawer');
       const fab = s.getElementById('hwFabContainer');
       const card = this.overlay.floatingCard?.popupCard;
+      const collapsedFab = s.getElementById('hwCardCollapsedFab');
       if (drawer) drawer.style.display = 'none';
       if (fab) fab.style.display = 'none';
       if (card) card.style.display = 'none';
+      if (collapsedFab) collapsedFab.style.display = 'none';
     });
 
     // Restore extension UI when crop is completed or cancelled

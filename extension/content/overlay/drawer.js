@@ -214,7 +214,7 @@ export class OverlayDrawer {
     const dict = getI18n(uiLanguage);
     const tag = this.shadow.getElementById('hwModelTag');
     if (!tag) return;
-    const enabledCount = apiConfigs.filter((c) => c.isEnabled && c.apiKey).length;
+    const enabledCount = apiConfigs.filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')).length;
 
     if (enabledCount === 0) {
       let isReady = !!isNanoReady;

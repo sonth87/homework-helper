@@ -298,6 +298,7 @@ export class KeysTab {
           <span class="opt-local-card-badge">${providerLabel}</span>
           <span class="opt-local-card-model-name">${prettyName}</span>
           ${isVision ? `<span class="opt-local-vision-tag">${d.localVisionTag || 'Vision'}</span>` : `<span class="opt-local-textonly-tag">${d.localTextOnlyTag || 'Text only'}</span>`}
+          <span class="opt-help-icon" data-tooltip-title="${d.localModelHelpTitle || 'Can this model actually read images?'}" data-tooltip-desc="${d.localModelHelpDesc || ''}">${Icons.helpCircle(13)}</span>
         </div>
         <div class="opt-local-card-meta">${cfg.model} &middot; ${cfg.baseUrl || ''}</div>
         ${embeddingWarning ? `<div class="opt-local-card-embedding-warning">${Icons.alertCircle(12)} ${d.localEmbeddingCardWarning || 'This looks like an embedding model — it cannot answer questions. Delete it and add a chat/vision model instead.'}</div>` : ''}
@@ -638,7 +639,7 @@ export class KeysTab {
         <label class="opt-local-model-row ${m.isEmbedding ? 'is-embedding' : ''}">
           <input type="checkbox" class="opt-local-model-check" value="${idx}" ${m.isEmbedding ? 'disabled' : 'checked'}>
           <span style="display:flex; flex-direction:column; flex:1;">
-            <span>${pretty} ${capabilityTag}</span>
+            <span>${pretty} ${capabilityTag} <span class="opt-help-icon" data-tooltip-title="${d.localModelHelpTitle || 'Can this model actually read images?'}" data-tooltip-desc="${d.localModelHelpDesc || ''}">${Icons.helpCircle(13)}</span></span>
             ${showRawId ? `<span style="font-size:11px; color:#94a3b8;">${m.id}</span>` : ''}
             ${m.isEmbedding ? `<span style="font-size:11px; color:#d97706;">${d.localEmbeddingWarning || 'Embedding model — cannot be used to answer questions.'}</span>` : ''}
             ${!m.isEmbedding && !m.isVision ? `<span style="font-size:11px; color:#64748b;">${d.localTextOnlyHint || 'No direct image support — screenshots are OCR-extracted to text before sending.'}</span>` : ''}

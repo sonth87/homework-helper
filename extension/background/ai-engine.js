@@ -22,7 +22,7 @@ export class AiEngine {
    */
   static async ask({ prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage = 'en' }, onChunk, signal) {
     const { routingStrategy = 'prefer_nano', apiConfigs = [], nanoSystemPrompt, thinkingEnabled = true } = await Storage.get(['routingStrategy', 'apiConfigs', 'nanoSystemPrompt', 'thinkingEnabled']);
-    const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && c.apiKey);
+    const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin'));
 
     const langNames = {
       en: 'English',
@@ -44,10 +44,17 @@ export class AiEngine {
       directSysInstruction = `\n\n[STRICT DIRECT-ANSWER INSTRUCTION]: You MUST output ONLY the direct final answer. DO NOT write steps, reasoning, breakdown, analysis, or explanations. For multiple-choice questions, output ONLY the correct option letter and/or answer text (e.g. "Đáp án: 2" or "D. 2"). Keep the response under 1-2 lines.`;
     }
 
-    const finalSystemPrompt = `${systemPrompt || ''}${directSysInstruction}\n\n[STRICT LANGUAGE REQUIREMENT]: You MUST provide your entire solution, explanations, step-by-step reasoning, and answer in ${targetLangName}. Do NOT use any other language unless explicitly requested.`.trim();
+    // The language requirement is placed FIRST, ahead of the (often long,
+    // English) base system prompt — weaker/local models (Ollama, LM Studio,
+    // small quantized checkpoints) frequently default back to English when
+    // a language directive is buried after several paragraphs of other
+    // instructions, since it competes with the dominant English signal.
+    const languageDirective = `[STRICT LANGUAGE REQUIREMENT — HIGHEST PRIORITY]: You MUST provide your entire response — solution, explanations, step-by-step reasoning, and final answer — in ${targetLangName}. Do NOT use any other language unless explicitly requested. This instruction overrides all other stylistic guidance below.`;
+    const finalSystemPrompt = `${languageDirective}\n\n${systemPrompt || ''}${directSysInstruction}`.trim();
 
     const nanoPromptBase = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
-    const nanoFinalSystemPrompt = `${nanoPromptBase}${directSysInstruction}\n\n[STRICT LANGUAGE]: You MUST reply in ${targetLangName}.`.trim();
+    const nanoLanguageDirective = `[STRICT LANGUAGE — HIGHEST PRIORITY]: You MUST reply in ${targetLangName}, overriding all other instructions below.`;
+    const nanoFinalSystemPrompt = `${nanoLanguageDirective}\n\n${nanoPromptBase}${directSysInstruction}`.trim();
 
     // 1. nano_only Strategy: 100% On-Device execution
     if (routingStrategy === 'nano_only') {

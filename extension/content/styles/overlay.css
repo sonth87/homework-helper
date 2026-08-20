@@ -91,6 +91,38 @@
 }
 
 /* ========================================================= */
+/* Collapsed Solution Popup — round draggable FAB              */
+/* ========================================================= */
+.hw-card-collapsed-fab {
+  position: fixed;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 20px rgba(252, 222, 109, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+  z-index: 2147483640;
+  padding: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, left 0.25s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hw-card-collapsed-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.hw-card-collapsed-fab.hw-fab-dragging {
+  cursor: grabbing;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* ========================================================= */
 /* Homework Helper Floating Popup (Liquid Glass Resizable) */
 /* ========================================================= */
 .hw-solution-card {
@@ -101,7 +133,7 @@
   min-width: 320px;
   min-height: 220px;
   max-width: 90vw;
-  max-height: 82vh;
+  max-height: 80vh;
   background: rgba(255, 255, 255, var(--popup-alpha, 0.92));
   backdrop-filter: blur(var(--popup-blur, 16px)) saturate(180%);
   -webkit-backdrop-filter: blur(var(--popup-blur, 16px)) saturate(180%);
@@ -293,7 +325,8 @@
   border-radius: 0 6px 6px 0;
   font-size: 12px;
   color: #475569;
-  max-height: 80px;
+  min-height: 140px;
+  max-height: 200px;
   overflow-y: auto;
   white-space: pre-wrap;
 }

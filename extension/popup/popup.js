@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Load Status
   const { apiConfigs = [], rotationStrategy, enableFormsAdapter = true, enableTextTooltip = true } = await Storage.get();
-  const enabledKeys = apiConfigs.filter((c) => c.isEnabled && c.apiKey);
+  const enabledKeys = apiConfigs.filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin'));
 
   const countBadge = document.getElementById('popKeyCount');
   countBadge.textContent = `${enabledKeys.length} Active Key${enabledKeys.length !== 1 ? 's' : ''}`;

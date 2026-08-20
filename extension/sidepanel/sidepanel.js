@@ -239,7 +239,7 @@ export class SidePanelController {
 
     const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
     const dict = getI18n(uiLanguage);
-    const enabledCount = apiConfigs.filter((c) => c.isEnabled && c.apiKey).length;
+    const enabledCount = apiConfigs.filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')).length;
 
     if (enabledCount === 0) {
       let isReady = !!isNanoReady;
