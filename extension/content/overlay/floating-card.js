@@ -3,7 +3,7 @@
  */
 
 import { Icons } from '../../shared/icons.js';
-import { Storage, SUPPORTED_LANGUAGES, DEFAULT_NANO_SYSTEM_PROMPT, buildNanoPrompts } from '../../shared/storage.js';
+import { Storage, SUPPORTED_LANGUAGES, buildNanoPrompts } from '../../shared/storage.js';
 import { formatMarkdownAndMath } from '../../shared/markdown-katex.js';
 import { getFloatingPopupI18n, getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
@@ -562,8 +562,11 @@ export class OverlayFloatingCard {
       translateBar.style.display = 'none';
     }
 
-    // Position popup near selection
-    if (rect) {
+    // Position popup near the new selection — but only if the card isn't already
+    // open. If the user left a previous popup open (possibly dragged elsewhere),
+    // keep it where they put it instead of jumping to the new selection.
+    const wasAlreadyOpen = this.popupCard.style.display === 'flex';
+    if (rect && !wasAlreadyOpen) {
       const top = Math.min(window.innerHeight - 340, Math.max(20, rect.bottom + 10));
       const left = Math.min(window.innerWidth - 440, Math.max(20, rect.left));
       this.popupCard.style.top = `${top}px`;
@@ -578,7 +581,7 @@ export class OverlayFloatingCard {
 
   async executePopupAction(type, text) {
     const s = this.shadow;
-    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const { uiLanguage = 'en', studyMode: savedStudyMode = 'step-by-step' } = await Storage.get(['uiLanguage', 'studyMode']);
     const cardDict = getFloatingPopupI18n(uiLanguage);
     const genDict = getI18n(uiLanguage);
 
@@ -593,7 +596,7 @@ export class OverlayFloatingCard {
     this.overlay.drawer.activeRequestId = `req_${Date.now()}`;
 
     let prompt = text;
-    let studyMode = 'step-by-step';
+    let studyMode = savedStudyMode;
     let userLabel = text;
 
     if (type === 'translate') {
@@ -643,9 +646,7 @@ export class OverlayFloatingCard {
         ru: 'Russian (Русский)',
       };
       const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'English';
-      const promptToUse = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
-      const nanoSysPrompt = `${promptToUse}\n\n[STRICT LANGUAGE]: You MUST reply in ${targetLangName}.`.trim();
-      const nanoPrompt = `${prompt}\n\n[Output entirely in ${targetLangName}]`;
+      const { sysPrompt: nanoSysPrompt, userPrompt: nanoPrompt } = buildNanoPrompts(studyMode, prompt, '', targetLangName, nanoSystemPrompt);
 
       window.dispatchEvent(
         new CustomEvent('HOMEWORK_AI_NANO_EXEC', {
