@@ -56,12 +56,9 @@ export function formatMarkdownAndMath(text) {
   if (!text) return '';
 
   let html = text;
-
-  // 0. Auto-wrap isolated LaTeX commands not enclosed in $...$
-  html = html.replace(/(^|[\s(])(\\(?:infty|boxed\{[^}\n]+\}|frac\{[^}\n]+\}\{[^}\n]+\}|sqrt\{[^}\n]+\}|alpha|beta|gamma|theta|pi|pm|times|div|ne|le|ge))(?=[\s),.!?]|$)/g, '$1$$$2$$');
+  const mathBlocks = [];
 
   // 1. Extract and protect Display Math: $$...$$ or \[...\]
-  const mathBlocks = [];
   html = html.replace(/\$\$([\s\S]+?)\$\$/g, (match, code) => {
     if (!looksLikeMath(code)) return match;
     const placeholder = `___MATH_BLOCK_${mathBlocks.length}___`;
@@ -75,6 +72,22 @@ export function formatMarkdownAndMath(text) {
     mathBlocks.push({ code: code.trim(), display: true });
     return placeholder;
   });
+
+  // 1b. Some responses emit LaTeX alignment/matrix environments
+  // (\begin{aligned}...\end{aligned}) without wrapping them in $$...$$ at
+  // all. Catch those bare environments here — before the auto-wrap step
+  // below, which would otherwise reach inside the (still unrecognized)
+  // environment and inject a stray $...$ around any \frac{}{} it finds,
+  // corrupting the block.
+  html = html.replace(/\\begin\{(aligned|align\*?|cases|matrix|pmatrix|bmatrix|vmatrix|array)\}[\s\S]+?\\end\{\1\}/g, (match) => {
+    if (!looksLikeMath(match)) return match;
+    const placeholder = `___MATH_BLOCK_${mathBlocks.length}___`;
+    mathBlocks.push({ code: match.trim(), display: true });
+    return placeholder;
+  });
+
+  // 0. Auto-wrap isolated LaTeX commands not enclosed in $...$
+  html = html.replace(/(^|[\s(])(\\(?:infty|boxed\{[^}\n]+\}|frac\{[^}\n]+\}\{[^}\n]+\}|sqrt\{[^}\n]+\}|alpha|beta|gamma|theta|pi|pm|times|div|ne|le|ge))(?=[\s),.!?]|$)/g, '$1$$$2$$');
 
   // 2. Extract and protect Inline Math: $...$ or \(...\)
   html = html.replace(/\$([^\$\n]+?)\$/g, (match, code) => {
