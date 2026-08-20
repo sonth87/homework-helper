@@ -45,7 +45,7 @@ export default {
     copiedBtn: "已复制！",
     retryBtn: "重试",
     imagePromptHeader:
-      "请详细分步解答图片中的作业题目，使用 LaTeX 数学公式 ($...$) 并框出最终答案：",
+      "请解答图片中的作业题目：",
     captureSolveText: "解答截屏中的作业题目",
     toastNewChat: "已开启新对话",
     chatCleared: "对话已清空，随时提问新题目！",

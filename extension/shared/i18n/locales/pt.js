@@ -48,7 +48,7 @@ export default {
     copiedBtn: "Copiado!",
     retryBtn: "Tentar novamente",
     imagePromptHeader:
-      "Por favor, resolva e explique esta questão da imagem passo a passo com fórmulas LaTeX ($...$) e destaque a resposta final:",
+      "Por favor, resolva a questão de tarefa mostrada nesta imagem:",
     captureSolveText: "Resolver problema da imagem capturada",
     toastNewChat: "Nova conversa iniciada",
     chatCleared: "Chat limpo. Faça uma nova pergunta!",

@@ -45,7 +45,7 @@ export default {
     copiedBtn: "已複製！",
     retryBtn: "重試",
     imagePromptHeader:
-      "請詳細分步解答圖片中的作業題目，使用 LaTeX 數學公式 ($...$) 並框出最終答案：",
+      "請解答圖片中的作業題目：",
     captureSolveText: "解答截圖中的作業題目",
     toastNewChat: "已開啟新對話",
     chatCleared: "對話已清空，隨時提問新題目！",

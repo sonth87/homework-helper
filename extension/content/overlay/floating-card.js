@@ -373,7 +373,7 @@ export class OverlayFloatingCard {
     this.overlay.drawer.activeTarget = 'card';
     this.overlay.drawer.activeRequestId = `req_${Date.now()}`;
 
-    const prompt = genDict.imagePromptHeader || 'Please solve this homework question with clear step-by-step reasoning, mathematical formulas in LaTeX ($...$), and highlight the final answer:';
+    const prompt = genDict.imagePromptHeader || 'Please solve the homework question shown in this image:';
 
     Storage.addChatMessage({
       role: 'user',

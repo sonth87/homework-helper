@@ -47,7 +47,7 @@ export default {
     copiedBtn: "복사 완료!",
     retryBtn: "다시 시도",
     imagePromptHeader:
-      "이미지의 과제 문제를 LaTeX 수식 ($...$)을 사용하여 단계별로 풀이하고 최종 정답을 강조해 주세요:",
+      "이미지에 있는 과제 문제를 풀어주세요:",
     captureSolveText: "캡처한 이미지의 문제 풀이",
     toastNewChat: "새 대화가 시작되었습니다",
     chatCleared: "채팅 기록이 초기화되었습니다. 새로운 질문을 입력하세요!",

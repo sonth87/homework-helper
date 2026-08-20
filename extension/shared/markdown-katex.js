@@ -32,16 +32,21 @@ function renderMath(formula, displayMode = false) {
   return `<code class="math-fallback">${escapeHtml(formula)}</code>`;
 }
 
-// Vietnamese diacritics essentially never appear inside real LaTeX math. A
-// $...$/$$...$$ span containing them is almost always a stray `$` (currency,
-// a mismatched delimiter) that swallowed ordinary prose rather than an actual
-// formula — feeding that to KaTeX just produces console warning spam and
-// garbled output for characters it has no glyph metrics for. Skip those and
-// leave the original text untouched instead of misrendering it as math.
+// Vietnamese diacritics essentially never appear inside real LaTeX math,
+// UNLESS they're wrapped in a text-mode command like \text{...} — a
+// standard, valid way to embed Vietnamese labels ("\text{Đáp án: B}") inside
+// a math expression. A $...$/$$...$$ span with diacritics OUTSIDE any such
+// wrapper is almost always a stray `$` (currency, a mismatched delimiter)
+// that swallowed ordinary prose rather than an actual formula — feeding
+// that to KaTeX just produces console warning spam and garbled output for
+// characters it has no glyph metrics for. Skip those and leave the original
+// text untouched instead of misrendering it as math.
 const VIETNAMESE_DIACRITICS = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ]/;
+const TEXT_MODE_COMMAND = /\\(?:text|mathrm|textrm|operatorname)\{[^{}]*\}/g;
 
 function looksLikeMath(code) {
-  return !VIETNAMESE_DIACRITICS.test(code);
+  const withoutTextSpans = code.replace(TEXT_MODE_COMMAND, '');
+  return !VIETNAMESE_DIACRITICS.test(withoutTextSpans);
 }
 
 /**

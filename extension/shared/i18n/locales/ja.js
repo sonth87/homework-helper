@@ -47,7 +47,7 @@ export default {
     copiedBtn: "コピー完了！",
     retryBtn: "再試行",
     imagePromptHeader:
-      "画像の宿題問題をLaTeX数式 ($...$) を使用して段階的に解説し、最終的な答えを枠で囲んでください:",
+      "画像に写っている宿題の問題を解いてください:",
     captureSolveText: "キャプチャした画像の問題を解答",
     toastNewChat: "新しいチャットを開始しました",
     chatCleared: "チャットをクリアしました。新しい質問をどうぞ！",

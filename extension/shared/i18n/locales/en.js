@@ -45,7 +45,7 @@ export default {
     copiedBtn: "Copied!",
     retryBtn: "Retry",
     imagePromptHeader:
-      "Please solve and explain this homework question from the image step-by-step with LaTeX formulas ($...$) and highlight the final answer:",
+      "Please solve the homework question shown in this image:",
     captureSolveText: "Solve homework problem from captured image",
     toastNewChat: "Started a new chat session",
     chatCleared: "Chat cleared. Ask a new question!",

@@ -46,7 +46,7 @@ export default {
     copiedBtn: "Kopiert!",
     retryBtn: "Wiederholen",
     imagePromptHeader:
-      "Bitte löse und erkläre diese Hausaufgabe aus dem Bild Schritt für Schritt mit LaTeX-Formeln ($...$) und hebe die Antwort hervor:",
+      "Bitte löse die in diesem Bild gezeigte Hausaufgabe:",
     captureSolveText: "Aufgabe aus dem Screenshot lösen",
     toastNewChat: "Neuer Chat gestartet",
     chatCleared: "Chat gelöscht. Stelle eine neue Frage!",

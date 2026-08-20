@@ -49,7 +49,7 @@ export default {
     copiedBtn: "Tersalin!",
     retryBtn: "Coba Lagi",
     imagePromptHeader:
-      "Tolong selesaikan dan jelaskan soal PR pada gambar ini langkah demi langkah dengan rumus LaTeX ($...$) dan tandai jawaban akhir:",
+      "Tolong selesaikan soal PR yang ada pada gambar ini:",
     captureSolveText: "Selesaikan soal dari gambar yang diambil",
     toastNewChat: "Obrolan baru telah dimulai",
     chatCleared: "Obrolan dibersihkan. Ajukan pertanyaan baru!",

@@ -48,7 +48,7 @@ export default {
     copiedBtn: "Đã sao chép!",
     retryBtn: "Thử lại",
     imagePromptHeader:
-      "Vui lòng giải chi tiết từng bước bài tập trong hình ảnh này kèm công thức toán học LaTeX ($...$) và đóng khung đáp án cuối cùng:",
+      "Vui lòng giải bài tập trong hình ảnh này:",
     captureSolveText: "Giải bài tập trong hình ảnh đã chụp",
     toastNewChat: "Đã bắt đầu đoạn chat mới",
     chatCleared: "Đã xóa đoạn chat. Hãy đặt câu hỏi mới!",

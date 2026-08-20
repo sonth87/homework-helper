@@ -48,7 +48,7 @@ export default {
     copiedBtn: "Copié !",
     retryBtn: "Réessayer",
     imagePromptHeader:
-      "Veuillez résoudre et expliquer ce problème étape par étape avec des formules LaTeX ($...$) et encadrer la réponse finale :",
+      "Veuillez résoudre le problème de devoir présent dans cette image :",
     captureSolveText: "Résoudre le devoir à partir de l'image capturée",
     toastNewChat: "Nouvelle discussion commencée",
     chatCleared: "Discussion effacée. Posez votre question !",
