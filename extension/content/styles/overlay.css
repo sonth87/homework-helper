@@ -109,12 +109,14 @@
   user-select: none;
   z-index: 2147483640;
   padding: 0;
+  opacity: 0.85;
   transition: transform 0.15s ease, box-shadow 0.15s ease, left 0.25s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hw-card-collapsed-fab:hover {
   transform: scale(1.08);
-  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  opacity: 1;
+  box-shadow: 0 8px 24px rgba(252, 222, 109, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
 .hw-card-collapsed-fab.hw-fab-dragging {
