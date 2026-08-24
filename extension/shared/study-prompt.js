@@ -19,6 +19,25 @@ export function formatStudyPrompt(studyMode, prompt, outputLanguage = 'en') {
     ru: 'Russian (Русский)',
   };
   const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Tiếng Việt (Vietnamese)';
+
+  // Translate mode is a dictionary/translator tool, not a homework solver —
+  // it must never be wrapped in the generic "solve/explain" framing below,
+  // and must go straight to the requested content with no meta-commentary
+  // about the task itself (no "Đề bài:", "Yêu cầu:", restating the prompt...).
+  if (studyMode === 'translate') {
+    return `Bạn là một công cụ dịch thuật kiêm từ điển song ngữ. Nhiệm vụ DUY NHẤT là xử lý đúng nội dung bên dưới theo quy tắc sau — không thêm lời dẫn, không nhắc lại đề bài, không giải thích nhiệm vụ:
+
+- Nếu nội dung là MỘT TỪ hoặc MỘT CỤM TỪ ngắn, độc lập (không phải câu/đoạn văn hoàn chỉnh), trả lời theo đúng 3 phần sau, không thêm gì khác:
+  1. Từ/cụm từ gốc kèm phiên âm quốc tế (IPA) đặt trong dấu /.../ ngay sau.
+  2. 1-2 câu ví dụ có dùng từ đó: mỗi ví dụ gồm câu ở ngôn ngữ gốc và câu dịch sang ${targetLangName} (không cần ghi chú phát âm cho câu ví dụ).
+  3. Một đoạn mô tả/định nghĩa ngắn gọn cho từ đó, viết bằng ${targetLangName}.
+
+- Nếu nội dung là một câu, đoạn văn, hoặc văn bản dài hơn, CHỈ trả về DUY NHẤT bản dịch chính xác sang ${targetLangName}. Tuyệt đối không thêm giải thích, không phân tích, không ghi chú.
+
+Nội dung cần xử lý:
+${prompt}`;
+  }
+
   // Weaker/local models (Ollama, LM Studio, small quantized checkpoints) tend
   // to ignore a language instruction buried at the end of a long prompt —
   // sandwiching it at both the start (primacy) and end (recency) makes
@@ -41,9 +60,6 @@ export function formatStudyPrompt(studyMode, prompt, outputLanguage = 'en') {
           break;
         case 'explain':
           body = `[MODE: GIẢI THÍCH CHUYÊN SÂU]\nMục tiêu: Giải thích bản chất lý thuyết khoa học/toán học, các định luật liên quan và trực quan thực tế đằng sau bài toán này một cách dễ hiểu:\n\nCâu hỏi:\n${prompt}`;
-          break;
-        case 'translate':
-          body = `[MODE: DỊCH THUẬT & DIỄN GIẢI]\nMục tiêu: Dịch chính xác đề bài và nội dung sau sang ${targetLangName}:\n\n${prompt}`;
           break;
         case 'step-by-step':
         default:

@@ -462,7 +462,7 @@ class InPageOverlay {
     }
 
     if (targetLangSelect) {
-      const curTarget = targetLangSelect.value || 'en';
+      const curTarget = targetLangSelect.value || outputLanguage;
       const targetLangs = SUPPORTED_LANGUAGES.filter((l) => l.id !== 'auto');
       targetLangSelect.innerHTML = targetLangs.map(
         (l) => `<option value="${l.id}" ${l.id === curTarget ? 'selected' : ''}>${l.name}</option>`

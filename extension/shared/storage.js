@@ -196,8 +196,8 @@ CRITICAL RULES:
     sysPrompt = `You are an educator AI. Explain the underlying scientific/mathematical theory and principles clearly in ${targetLangName}.`;
     userPrompt = `[Câu hỏi]:\n${contentText}\n\n[YÊU CẦU]: Giải thích sâu bản chất lý thuyết và kiến thức bài toán.\n[Ngôn ngữ]: ${targetLangName}`;
   } else if (studyMode === 'translate') {
-    sysPrompt = `You are an academic translator. Translate the text accurately to ${targetLangName}.`;
-    userPrompt = `[Nội dung]:\n${contentText}\n\n[YÊU CẦU]: Dịch chính xác nội dung sang ${targetLangName}.`;
+    sysPrompt = `Bạn là một công cụ dịch thuật kiêm từ điển song ngữ, không phải trợ lý giải bài tập. Không thêm lời dẫn, không nhắc lại đề bài, không giải thích nhiệm vụ — đi thẳng vào nội dung được yêu cầu.`;
+    userPrompt = `Nội dung cần xử lý:\n${contentText}\n\n[QUY TẮC]:\n- Nếu đây là MỘT TỪ/CỤM TỪ ngắn, độc lập (không phải câu/đoạn văn hoàn chỉnh): trả lời đúng 3 phần, không thêm gì khác:\n  1. Từ/cụm từ gốc kèm phiên âm quốc tế (IPA) trong dấu /.../.\n  2. 1-2 câu ví dụ có dùng từ đó: câu gốc và câu dịch sang ${targetLangName} (không cần ghi chú phát âm).\n  3. Mô tả/định nghĩa ngắn gọn cho từ đó, viết bằng ${targetLangName}.\n- Nếu đây là câu, đoạn văn, hoặc văn bản dài hơn: CHỈ trả về DUY NHẤT bản dịch chính xác sang ${targetLangName}, không thêm giải thích hay ghi chú.`;
   } else {
     // step-by-step
     sysPrompt = `${sysPrompt}\n\n[MULTIPLE-CHOICE RULE]: If options are present, clearly conclude with the selected option from the list.\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;

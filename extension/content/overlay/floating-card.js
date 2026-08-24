@@ -531,7 +531,7 @@ export class OverlayFloatingCard {
     this.popupSourceText = text;
     this.popupImageBase64 = null;
 
-    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const { uiLanguage = 'en', outputLanguage = 'en' } = await Storage.get(['uiLanguage', 'outputLanguage']);
     const cardDict = getFloatingPopupI18n(uiLanguage);
 
     s.getElementById('hwCardThumb').style.display = 'none';
@@ -554,6 +554,9 @@ export class OverlayFloatingCard {
       titleEl.textContent = cardDict.translateTitle;
       headingEl.textContent = cardDict.translateHeading;
       translateBar.style.display = 'flex';
+      const targetLangSelect = s.getElementById('hwLangTarget');
+      this.targetLang = (targetLangSelect && targetLangSelect.value) || outputLanguage;
+      if (targetLangSelect) targetLangSelect.value = this.targetLang;
     } else if (type === 'search') {
       titleEl.textContent = cardDict.searchTitle;
       headingEl.textContent = cardDict.searchHeading;
@@ -615,7 +618,11 @@ export class OverlayFloatingCard {
 
     if (type === 'translate') {
       const targetLangName = SUPPORTED_LANGUAGES.find((l) => l.id === this.targetLang)?.name || 'English';
-      prompt = `Translate the following text accurately into ${targetLangName}:\n\n${text}`;
+      // The raw selected text is passed through as-is — formatStudyPrompt /
+      // buildNanoPrompts build the actual translate instruction from
+      // studyMode + outputLanguage. Pre-wrapping it here too used to produce
+      // a doubled, conflicting instruction (see effectiveOutputLanguage below).
+      prompt = text;
       studyMode = 'translate';
       userLabel = `[Translate to ${targetLangName}]: ${text}`;
     } else if (type === 'search') {
@@ -644,6 +651,11 @@ export class OverlayFloatingCard {
     const { apiConfigs = [], systemPrompt, nanoSystemPrompt, outputLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'outputLanguage']);
     const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin'));
 
+    // For translate mode the "language to reply in" IS the chosen translate
+    // target — reusing the general outputLanguage setting here would tell
+    // the model to reply in one language while translating into another.
+    const effectiveOutputLanguage = type === 'translate' ? this.targetLang : outputLanguage;
+
     if (enabledKeys.length === 0) {
       const langNames = {
         en: 'English',
@@ -659,7 +671,7 @@ export class OverlayFloatingCard {
         id: 'Bahasa Indonesia',
         ru: 'Russian (Русский)',
       };
-      const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'English';
+      const targetLangName = (effectiveOutputLanguage && effectiveOutputLanguage !== 'auto') ? (langNames[effectiveOutputLanguage] || effectiveOutputLanguage) : 'English';
       const { sysPrompt: nanoSysPrompt, userPrompt: nanoPrompt } = buildNanoPrompts(studyMode, prompt, '', targetLangName, nanoSystemPrompt);
 
       window.dispatchEvent(
@@ -679,7 +691,7 @@ export class OverlayFloatingCard {
       payload: {
         prompt,
         studyMode,
-        outputLanguage,
+        outputLanguage: effectiveOutputLanguage,
         requestId: this.overlay.drawer.activeRequestId,
       },
     });
