@@ -49,6 +49,9 @@ export default {
     imagePromptHeader:
       "画像に写っている宿題の問題を解いてください:",
     captureSolveText: "キャプチャした画像の問題を解答",
+    imageTranslatePromptHeader:
+      "この画像に表示されているすべてのテキストを正確に翻訳してください:",
+    captureTranslateText: "キャプチャした画像のテキストを翻訳",
     toastNewChat: "新しいチャットを開始しました",
     chatCleared: "チャットをクリアしました。新しい質問をどうぞ！",
     thinking: "思考＆解答中...",

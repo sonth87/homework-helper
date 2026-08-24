@@ -282,9 +282,9 @@ class InPageOverlay {
   setupGlobalListeners() {
     // 1. Screenshot cropped -> Show Homework Helper Solution Popup
     window.addEventListener('HOMEWORK_AI_SOLVE_IMAGE', (e) => {
-      const { imageBase64 } = e.detail || {};
+      const { imageBase64, mode = 'solve' } = e.detail || {};
       if (imageBase64) {
-        this.floatingCard.showSolutionCard(imageBase64);
+        this.floatingCard.showSolutionCard(imageBase64, mode);
       }
     });
 

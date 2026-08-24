@@ -47,6 +47,9 @@ export default {
     imagePromptHeader:
       "Please solve the homework question shown in this image:",
     captureSolveText: "Solve homework problem from captured image",
+    imageTranslatePromptHeader:
+      "Please translate all the text shown in this image accurately:",
+    captureTranslateText: "Translate text from captured image",
     toastNewChat: "Started a new chat session",
     chatCleared: "Chat cleared. Ask a new question!",
     thinking: "Thinking & solving...",

@@ -20,6 +20,35 @@
   border-radius: 2px;
 }
 
+/* Once a selection is finalized, it becomes draggable (move) and grows
+   resize handles at its edges/corners; pointer-events flips to auto so the
+   box itself (not just the handles) can catch the move drag. */
+.hw-crop-selection-active {
+  pointer-events: auto;
+  cursor: move;
+}
+
+.hw-crop-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border: 2px solid #0284c7;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.hw-crop-handle-nw { top: -7px; left: -7px; cursor: nwse-resize; }
+.hw-crop-handle-n  { top: -7px; left: 50%; margin-left: -6px; cursor: ns-resize; }
+.hw-crop-handle-ne { top: -7px; right: -7px; cursor: nesw-resize; }
+.hw-crop-handle-e  { top: 50%; right: -7px; margin-top: -6px; cursor: ew-resize; }
+.hw-crop-handle-se { bottom: -7px; right: -7px; cursor: nwse-resize; }
+.hw-crop-handle-s  { bottom: -7px; left: 50%; margin-left: -6px; cursor: ns-resize; }
+.hw-crop-handle-sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
+.hw-crop-handle-w  { top: 50%; left: -7px; margin-top: -6px; cursor: ew-resize; }
+
 .hw-crop-toolbar {
   position: absolute;
   display: flex;
@@ -76,6 +105,19 @@
 
 .hw-crop-btn-cancel:hover {
   background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.hw-crop-btn-secondary {
+  background: rgba(2, 132, 199, 0.16);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #e0f2fe;
+  border: 1px solid rgba(2, 132, 199, 0.4);
+}
+
+.hw-crop-btn-secondary:hover {
+  background: rgba(2, 132, 199, 0.3);
   color: #ffffff;
 }
 

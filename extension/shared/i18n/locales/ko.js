@@ -49,6 +49,9 @@ export default {
     imagePromptHeader:
       "이미지에 있는 과제 문제를 풀어주세요:",
     captureSolveText: "캡처한 이미지의 문제 풀이",
+    imageTranslatePromptHeader:
+      "이 이미지에 표시된 모든 텍스트를 정확하게 번역해주세요:",
+    captureTranslateText: "캡처한 이미지의 텍스트 번역",
     toastNewChat: "새 대화가 시작되었습니다",
     chatCleared: "채팅 기록이 초기화되었습니다. 새로운 질문을 입력하세요!",
     thinking: "생각하며 풀이 중...",

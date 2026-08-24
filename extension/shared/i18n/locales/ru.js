@@ -49,6 +49,9 @@ export default {
     imagePromptHeader:
       "Пожалуйста, решите задание, показанное на этом изображении:",
     captureSolveText: "Решить задание со снимка экрана",
+    imageTranslatePromptHeader:
+      "Пожалуйста, точно переведите весь текст, показанный на этом изображении:",
+    captureTranslateText: "Перевести текст со снимка экрана",
     toastNewChat: "Начат новый диалог",
     chatCleared: "Чат очищен. Задайте новый вопрос!",
     thinking: "Думаю & решаю...",

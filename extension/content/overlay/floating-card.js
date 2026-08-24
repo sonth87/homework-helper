@@ -16,6 +16,7 @@ export class OverlayFloatingCard {
     this.popupMode = 'screenshot';
     this.popupSourceText = '';
     this.popupImageBase64 = null;
+    this.popupImageMode = 'solve';
     this.targetLang = 'en';
     this.activeCardResponseText = '';
     this.activeCardNotices = [];
@@ -274,7 +275,7 @@ export class OverlayFloatingCard {
 
     s.getElementById('hwBtnCardRetry')?.addEventListener('click', () => {
       if (this.popupMode === 'screenshot' && this.popupImageBase64) {
-        this.showSolutionCard(this.popupImageBase64);
+        this.showSolutionCard(this.popupImageBase64, this.popupImageMode);
       } else if (this.popupSourceText) {
         this.executePopupAction(this.popupMode, this.popupSourceText);
       }
@@ -319,16 +320,17 @@ export class OverlayFloatingCard {
     });
   }
 
-  async showSolutionCard(imageBase64) {
+  async showSolutionCard(imageBase64, mode = 'solve') {
     const s = this.shadow;
     this.popupMode = 'screenshot';
     this.popupSourceText = '';
     this.popupImageBase64 = imageBase64;
+    this.popupImageMode = mode;
 
     const {
       uiLanguage = 'en',
       outputLanguage = 'en',
-      studyMode = 'step-by-step',
+      studyMode: savedStudyMode = 'step-by-step',
       apiConfigs = [],
       systemPrompt,
       nanoSystemPrompt,
@@ -344,8 +346,9 @@ export class OverlayFloatingCard {
     ]);
     const cardDict = getFloatingPopupI18n(uiLanguage);
     const genDict = getI18n(uiLanguage);
+    const studyMode = mode === 'translate' ? 'translate' : savedStudyMode;
 
-    s.getElementById('hwPopupTitle').textContent = cardDict.helperTitle;
+    s.getElementById('hwPopupTitle').textContent = mode === 'translate' ? cardDict.translateTitle : cardDict.helperTitle;
     s.getElementById('hwTranslateBar').style.display = 'none';
     s.getElementById('hwCardSourceText').style.display = 'none';
 
@@ -353,9 +356,16 @@ export class OverlayFloatingCard {
     thumb.src = imageBase64;
     thumb.style.display = 'block';
 
-    const headingText = studyMode === 'direct'
-      ? (genDict.modes?.direct || 'ĐÁP ÁN TRỰC TIẾP')
-      : (studyMode === 'hint' ? (genDict.modes?.hint || 'GỢI Ý & HƯỚNG DẪN') : cardDict.answerHeading);
+    let headingText;
+    if (mode === 'translate') {
+      headingText = cardDict.translateHeading;
+    } else if (studyMode === 'direct') {
+      headingText = genDict.modes?.direct || 'ĐÁP ÁN TRỰC TIẾP';
+    } else if (studyMode === 'hint') {
+      headingText = genDict.modes?.hint || 'GỢI Ý & HƯỚNG DẪN';
+    } else {
+      headingText = cardDict.answerHeading;
+    }
     s.getElementById('hwCardAnswerHeading').textContent = headingText.toUpperCase();
     s.getElementById('hwBtnPrimaryLabel').textContent = cardDict.nextQuestion;
     s.getElementById('hwBtnCardPrimary').querySelector('.lucide-icon')?.remove();
@@ -373,11 +383,15 @@ export class OverlayFloatingCard {
     this.overlay.drawer.activeTarget = 'card';
     this.overlay.drawer.activeRequestId = `req_${Date.now()}`;
 
-    const prompt = genDict.imagePromptHeader || 'Please solve the homework question shown in this image:';
+    const prompt = mode === 'translate'
+      ? (genDict.imageTranslatePromptHeader || 'Please translate all text shown in this image accurately:')
+      : (genDict.imagePromptHeader || 'Please solve the homework question shown in this image:');
 
     Storage.addChatMessage({
       role: 'user',
-      content: genDict.captureSolveText || 'Solve homework problem from captured image',
+      content: mode === 'translate'
+        ? (genDict.captureTranslateText || 'Translate text from captured image')
+        : (genDict.captureSolveText || 'Solve homework problem from captured image'),
       image: imageBase64,
     });
 
@@ -728,6 +742,7 @@ export class OverlayFloatingCard {
         if (lastUser?.image) {
           this.popupMode = 'screenshot';
           this.popupImageBase64 = lastUser.image;
+          this.popupImageMode = 'solve';
           this.popupSourceText = '';
           const thumb = this.shadow.getElementById('hwCardThumb');
           thumb.src = lastUser.image;

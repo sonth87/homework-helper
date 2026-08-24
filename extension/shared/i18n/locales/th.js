@@ -48,6 +48,9 @@ export default {
     imagePromptHeader:
       "โปรดแก้โจทย์การบ้านในรูปภาพนี้:",
     captureSolveText: "แก้โจทย์การบ้านจากรูปภาพที่จับภาพ",
+    imageTranslatePromptHeader:
+      "โปรดแปลข้อความทั้งหมดในรูปภาพนี้อย่างถูกต้อง:",
+    captureTranslateText: "แปลข้อความจากรูปภาพที่จับภาพ",
     toastNewChat: "เริ่มบทสนทนาใหม่แล้ว",
     chatCleared: "ล้างการแชทแล้ว สอบถามโจทย์ข้อใหม่ได้เลย!",
     thinking: "กำลังคิดและแก้โจทย์...",

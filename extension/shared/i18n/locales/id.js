@@ -51,6 +51,9 @@ export default {
     imagePromptHeader:
       "Tolong selesaikan soal PR yang ada pada gambar ini:",
     captureSolveText: "Selesaikan soal dari gambar yang diambil",
+    imageTranslatePromptHeader:
+      "Tolong terjemahkan semua teks yang ada pada gambar ini secara akurat:",
+    captureTranslateText: "Terjemahkan teks dari gambar yang diambil",
     toastNewChat: "Obrolan baru telah dimulai",
     chatCleared: "Obrolan dibersihkan. Ajukan pertanyaan baru!",
     thinking: "Sedang berpikir & menyelesaikan...",

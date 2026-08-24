@@ -49,6 +49,9 @@ export default {
     imagePromptHeader:
       "Por favor resuelve la pregunta de la tarea que aparece en esta imagen:",
     captureSolveText: "Resolver problema de la imagen capturada",
+    imageTranslatePromptHeader:
+      "Por favor traduce con precisión todo el texto que aparece en esta imagen:",
+    captureTranslateText: "Traducir texto de la imagen capturada",
     toastNewChat: "Nueva conversación iniciada",
     chatCleared: "Chat borrado. ¡Haz cualquier pregunta!",
     thinking: "Pensando y resolviendo...",

@@ -50,6 +50,9 @@ export default {
     imagePromptHeader:
       "Vui lòng giải bài tập trong hình ảnh này:",
     captureSolveText: "Giải bài tập trong hình ảnh đã chụp",
+    imageTranslatePromptHeader:
+      "Vui lòng dịch chính xác toàn bộ văn bản trong hình ảnh này:",
+    captureTranslateText: "Dịch văn bản trong hình ảnh đã chụp",
     toastNewChat: "Đã bắt đầu đoạn chat mới",
     chatCleared: "Đã xóa đoạn chat. Hãy đặt câu hỏi mới!",
     thinking: "Đang suy nghĩ & giải bài...",

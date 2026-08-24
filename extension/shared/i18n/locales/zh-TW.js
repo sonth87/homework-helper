@@ -47,6 +47,9 @@ export default {
     imagePromptHeader:
       "請解答圖片中的作業題目：",
     captureSolveText: "解答截圖中的作業題目",
+    imageTranslatePromptHeader:
+      "請準確翻譯圖片中顯示的所有文字：",
+    captureTranslateText: "翻譯截圖中的文字",
     toastNewChat: "已開啟新對話",
     chatCleared: "對話已清空，隨時提問新題目！",
     thinking: "正在思考與解題中...",

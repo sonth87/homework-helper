@@ -48,6 +48,9 @@ export default {
     imagePromptHeader:
       "Bitte löse die in diesem Bild gezeigte Hausaufgabe:",
     captureSolveText: "Aufgabe aus dem Screenshot lösen",
+    imageTranslatePromptHeader:
+      "Bitte übersetze den gesamten in diesem Bild gezeigten Text genau:",
+    captureTranslateText: "Text aus dem Screenshot übersetzen",
     toastNewChat: "Neuer Chat gestartet",
     chatCleared: "Chat gelöscht. Stelle eine neue Frage!",
     thinking: "Denke nach & löse...",
