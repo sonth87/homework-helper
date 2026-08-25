@@ -6,6 +6,7 @@
 import { Icons } from '../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
 import { getI18n, getFloatingPopupI18n } from '../shared/i18n.js';
+import { getOverlayThemeAttr } from '../shared/theme.js';
 import { OverlayFabs } from './overlay/fabs.js';
 import { OverlayDrawer } from './overlay/drawer.js';
 import { OverlayDrawerHistory } from './overlay/drawer-history.js';
@@ -93,7 +94,7 @@ class InPageOverlay {
           <div class="hw-card-history-list" id="hwCardHistoryList">
             <!-- Rendered dynamically -->
           </div>
-          <div style="padding: 8px 10px; border-top: 1px solid rgba(226, 232, 240, 0.8); background: #f8fafc; text-align: center;">
+          <div style="padding: 8px 10px; border-top: 1px solid var(--hw-border-color); background: var(--hw-bg-secondary); text-align: center;">
             <button class="hw-btn-open-drawer" id="hwBtnCardOpenDrawer" style="font-size: 11.5px; padding: 4px 10px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer;">
               ${Icons.messageCircle(12)} Mở toàn bộ trong Khung Chat
             </button>
@@ -119,7 +120,7 @@ class InPageOverlay {
             </div>
           </div>
           <div class="hw-card-answer-content" id="hwCardAnswerContent">
-            <span style="color:#94a3b8;">${Icons.sparkles(14)} Đang giải từng bước với công thức KaTeX...</span>
+            <span style="color:var(--hw-text-muted);">${Icons.sparkles(14)} Đang giải từng bước với công thức KaTeX...</span>
           </div>
         </div>
 
@@ -235,14 +236,14 @@ class InPageOverlay {
 
           <div class="hw-img-preview-row" id="hwImgPreviewRow" style="display: none;">
             <img class="hw-img-preview-thumb" id="hwImgThumb" src="" alt="preview">
-            <span style="font-size: 11px; color: #64748b;">Hình ảnh đính kèm</span>
+            <span style="font-size: 11px; color: var(--hw-text-muted);">Hình ảnh đính kèm</span>
             <button class="hw-btn-remove-img" id="hwBtnRemoveImg">${Icons.x(12)}</button>
           </div>
 
           <div class="hw-input-box">
             <textarea class="hw-textarea" id="hwTextarea" rows="2" placeholder="Nhập câu hỏi hoặc đề bài tập của bạn vào đây..."></textarea>
             <div class="hw-input-footer">
-              <span style="font-size: 11px; color: #94a3b8;" id="hwHintText">Enter để gửi, Shift+Enter để xuống dòng</span>
+              <span style="font-size: 11px; color: var(--hw-text-muted);" id="hwHintText">Enter để gửi, Shift+Enter để xuống dòng</span>
               <button class="hw-btn-send" id="hwBtnSend">
                 <span id="hwSendBtnLabel">Hỏi AI</span> ${Icons.send(13)}
               </button>
@@ -349,7 +350,7 @@ class InPageOverlay {
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local') {
-          if (changes.enableFloatingButton || changes.fabSize || changes.popupOpacity || changes.popupBlur) {
+          if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.popupOpacity || changes.popupBlur || changes.overlayTheme) {
             this.applyAppearanceSettings();
           }
           if (changes.uiLanguage) {
@@ -386,16 +387,21 @@ class InPageOverlay {
     const {
       enableFloatingButton = true,
       fabSize = 'normal',
+      fabOpacity = 90,
       popupOpacity = 92,
       popupBlur = 16,
     } = await Storage.get();
 
-    this.fabs.applyAppearance(enableFloatingButton, fabSize);
+    this.fabs.applyAppearance(enableFloatingButton, fabSize, fabOpacity);
+
+    const themeAttr = await getOverlayThemeAttr();
+    if (themeAttr) this.host.setAttribute('data-theme', themeAttr);
+    else this.host.removeAttribute('data-theme');
 
     const card = this.floatingCard?.popupCard;
     if (card) {
       const popAlpha = (popupOpacity / 100).toFixed(2);
-      card.style.background = `rgba(255, 255, 255, ${popAlpha})`;
+      card.style.background = `rgba(var(--hw-glass-rgb), ${popAlpha})`;
       card.style.backdropFilter = `blur(${popupBlur}px) saturate(180%)`;
       card.style.webkitBackdropFilter = `blur(${popupBlur}px) saturate(180%)`;
     }

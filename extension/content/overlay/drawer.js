@@ -225,17 +225,17 @@ export class OverlayDrawer {
       if (isReady) {
         Storage.set({ isNanoReady: true });
         tag.innerHTML = `${Icons.cpu(12)} ${dict.modelNanoReady || 'Chrome Gemini Nano (Sẵn sàng On-Device)'}`;
-        tag.style.background = 'rgba(34, 197, 94, 0.15)';
-        tag.style.color = '#16a34a';
+        tag.style.background = 'rgba(var(--hw-success-rgb), 0.15)';
+        tag.style.color = 'var(--hw-success)';
         tag.style.border = 'none';
         tag.style.cursor = 'default';
         tag.title = '';
         tag.onclick = null;
       } else {
         tag.innerHTML = `${Icons.alertCircle(12)} ${dict.modelNanoSetup || 'Chrome Gemini Nano (Yêu cầu thiết lập)'}`;
-        tag.style.background = 'rgba(234, 179, 8, 0.15)';
-        tag.style.color = '#a16207';
-        tag.style.border = '1px solid rgba(234, 179, 8, 0.4)';
+        tag.style.background = 'rgba(var(--hw-warning-rgb), 0.15)';
+        tag.style.color = 'var(--hw-warning)';
+        tag.style.border = '1px solid rgba(var(--hw-warning-rgb), 0.4)';
         tag.style.cursor = 'pointer';
         tag.title = dict.modelNanoClick || 'Click to view Gemini Nano guide in Settings';
         tag.onclick = () => {
@@ -244,8 +244,8 @@ export class OverlayDrawer {
       }
     } else {
       tag.innerHTML = `${Icons.layers(12)} ${dict.modelAutoRotate || 'Auto-Rotate'} (${enabledCount} Active)`;
-      tag.style.background = 'rgba(2, 132, 199, 0.12)';
-      tag.style.color = '#0284c7';
+      tag.style.background = 'rgba(var(--hw-accent-rgb), 0.12)';
+      tag.style.color = 'var(--hw-accent)';
       tag.style.border = 'none';
       tag.style.cursor = 'default';
       tag.title = '';
@@ -377,7 +377,7 @@ export class OverlayDrawer {
         <div class="hw-msg-notice-row" style="display:none;">
           <span class="hw-notice-icon" data-tooltip-title="Thông báo hệ thống"></span>
         </div>
-        <div class="hw-ai-content" style="color:#94a3b8;">${Icons.sparkles(14)} Đang suy nghĩ & giải bài...</div>
+        <div class="hw-ai-content" style="color:var(--hw-text-muted);">${Icons.sparkles(14)} Đang suy nghĩ & giải bài...</div>
         <div class="hw-msg-footer" style="display:none;">
           <button class="hw-copy-btn">${Icons.copy(12)} <span>Sao chép</span></button>
         </div>
@@ -441,7 +441,7 @@ export class OverlayDrawer {
     this.currentDrawerResponseText += chunk;
     const content = this.activeAiBubble.querySelector('.hw-ai-content');
     if (content) {
-      content.style.color = '#0f172a';
+      content.style.color = 'var(--hw-text-main)';
       content.innerHTML = formatMarkdownAndMath(this.currentDrawerResponseText);
     }
 
@@ -497,7 +497,7 @@ export class OverlayDrawer {
       const content = this.shadow.getElementById('hwCardAnswerContent');
       if (content) {
         content.innerHTML = `
-          <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px; color:#ef4444; font-size:12px;">
+          <div style="background:rgba(var(--hw-danger-rgb), 0.1); border:1px solid rgba(var(--hw-danger-rgb), 0.35); border-radius:8px; padding:10px; color:var(--hw-danger); font-size:12px;">
             <div style="font-weight:700; margin-bottom:4px;">${Icons.alertCircle(14)} Error solving question</div>
             <div>${errStr}</div>
           </div>
@@ -513,7 +513,7 @@ export class OverlayDrawer {
     if (errStr.includes('NO_KEYS_NO_LOCAL_AI') || errStr.includes('CHROME_AI_UNAVAILABLE') || errStr.includes('QUOTA_EXHAUSTED')) {
       if (content) {
         content.innerHTML = `
-          <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px; color:#ef4444; font-size:12px;">
+          <div style="background:rgba(var(--hw-danger-rgb), 0.1); border:1px solid rgba(var(--hw-danger-rgb), 0.35); border-radius:8px; padding:10px; color:var(--hw-danger); font-size:12px;">
             <div style="font-weight:700; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
               ${Icons.alertCircle(14)} Chưa có AI Sẵn sàng
             </div>
@@ -522,7 +522,7 @@ export class OverlayDrawer {
               <button class="hw-btn-copy" id="hwErrBtnOpenKeys" style="background:#ef4444; color:#fff; font-size:11px; padding:3px 8px;">
                 ${Icons.plus(11)} Thêm Key Miễn Phí
               </button>
-              <button class="hw-btn-copy" id="hwErrBtnOpenOptions" style="background:transparent; border:1px solid #ef4444; color:#ef4444; font-size:11px; padding:3px 8px;">
+              <button class="hw-btn-copy" id="hwErrBtnOpenOptions" style="background:transparent; border:1px solid var(--hw-danger); color:var(--hw-danger); font-size:11px; padding:3px 8px;">
                 ${Icons.externalLink(11)} Xem Hướng Dẫn
               </button>
             </div>
@@ -533,7 +533,7 @@ export class OverlayDrawer {
         content.querySelector('#hwErrBtnOpenOptions')?.addEventListener('click', () => chrome.runtime.sendMessage({ action: 'OPEN_OPTIONS', hash: 'guide' }));
       }
     } else if (content) {
-      content.innerHTML = `<span style="color:#ef4444;">${Icons.alertCircle(14)} ${err}</span>`;
+      content.innerHTML = `<span style="color:var(--hw-danger);">${Icons.alertCircle(14)} ${err}</span>`;
     }
   }
 

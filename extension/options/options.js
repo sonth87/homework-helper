@@ -273,10 +273,18 @@ export class OptionsController {
     // Appearance Tab
     setText('optHeadingAppearance', dict.headingAppearance);
     setText('optSubheadingAppearance', dict.subheadingAppearance);
+    setText('optCardOverlayThemeTitle', dict.cardOverlayThemeTitle);
+    setText('optLabelOverlayTheme', dict.labelOverlayTheme);
+    setText('optLabelOverlayThemeDesc', dict.labelOverlayThemeDesc);
+    setText('optOverlayThemeOptAuto', dict.overlayThemeOptAuto);
+    setText('optOverlayThemeOptLight', dict.overlayThemeOptLight);
+    setText('optOverlayThemeOptDark', dict.overlayThemeOptDark);
     setText('optCardFabTitle', dict.cardFabTitle);
     setText('optLabelFabDisplay', dict.labelFabDisplay);
     setText('optLabelFabDisplayDesc', dict.labelFabDisplayDesc);
     setText('optLabelFabSize', dict.labelFabSize);
+    setText('optLabelFabOpacity', dict.labelFabOpacity);
+    setText('optLabelFabOpacityDesc', dict.labelFabOpacityDesc);
     setText('optCardToolbarTitle', dict.cardToolbarTitle);
     setText('optCardPopupTitle', dict.cardPopupTitle);
     setText('optLabelToolbarTheme', dict.labelToolbarTheme);
@@ -297,6 +305,7 @@ export class OptionsController {
     setText('optLivePreviewSub', dict.livePreviewSub);
 
     // Appearance Tab - Select <option> labels
+    setText('optFabOptTiny', dict.fabOptTiny);
     setText('optFabOptSmall', dict.fabOptSmall);
     setText('optFabOptNormal', dict.fabOptNormal);
     setText('optFabOptLarge', dict.fabOptLarge);

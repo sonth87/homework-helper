@@ -422,11 +422,11 @@ export class OverlayFloatingCard {
               <div class="hw-ocr-bar-fill" style="width:${Math.max(5, Math.min(100, pct))}%;"></div>
             </div>
             <details id="${logId}" style="margin-top:4px;" ${isOpen ? 'open' : ''}>
-              <summary style="cursor:pointer; font-size:10.5px; color:#64748b; user-select:none; list-style:none; display:flex; align-items:center; gap:4px; padding:3px 0;">
+              <summary style="cursor:pointer; font-size:10.5px; color:var(--hw-text-muted); user-select:none; list-style:none; display:flex; align-items:center; gap:4px; padding:3px 0;">
                 <span style="font-size:9px; transition:transform .2s;">▶</span>
                 <span>Chi tiết log OCR</span>
               </summary>
-              <div style="font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:10.5px; color:#334155; background:rgba(255,255,255,0.85); padding:6px 10px; border-radius:6px; max-height:80px; overflow-y:auto; line-height:1.45; border:1px solid rgba(203,213,225,0.8); margin-top:2px;">
+              <div style="font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:10.5px; color:var(--hw-text-main); background:rgba(var(--hw-glass-rgb), 0.85); padding:6px 10px; border-radius:6px; max-height:80px; overflow-y:auto; line-height:1.45; border:1px solid var(--hw-border-color); margin-top:2px;">
                 ${logLines.map((l) => `<div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">• ${l}</div>`).join('')}
               </div>
             </details>
@@ -458,14 +458,14 @@ export class OverlayFloatingCard {
             console.warn('[FloatingCard] OCR Error:', res?.error);
             logLines.push(`[${new Date().toLocaleTimeString()}] LỖI: ${res?.error || 'Không phản hồi'}`);
             content.innerHTML = `
-              <div style="padding:12px; background:rgba(234, 179, 8, 0.1); border:1px solid rgba(234, 179, 8, 0.35); border-radius:8px; font-size:12px; color:#a16207; line-height:1.5;">
+              <div style="padding:12px; background:rgba(var(--hw-warning-rgb), 0.1); border:1px solid rgba(var(--hw-warning-rgb), 0.35); border-radius:8px; font-size:12px; color:var(--hw-warning); line-height:1.5;">
                 <div style="font-weight:700; display:flex; align-items:center; gap:6px; font-size:12.5px;">
                   ${Icons.alertCircle(14)} Không trích xuất được văn bản từ ảnh
                 </div>
                 <div style="margin-top:4px;">
                   Mô hình OCR cục bộ chưa nhận diện được chữ từ ảnh này (${res?.error || 'Trống'}). Bạn có thể mở <strong>Cài đặt</strong> và thêm <strong>API Key Google Gemini (Miễn phí)</strong> để AI đọc thẳng ảnh bằng Vision AI.
                 </div>
-                <div style="margin-top:8px; font-family:monospace; font-size:10.5px; background:rgba(255,255,255,0.7); padding:6px; border-radius:4px; color:#334155; max-height:80px; overflow-y:auto;">
+                <div style="margin-top:8px; font-family:monospace; font-size:10.5px; background:rgba(var(--hw-glass-rgb), 0.7); padding:6px; border-radius:4px; color:var(--hw-text-main); max-height:80px; overflow-y:auto;">
                   ${logLines.join('<br>')}
                 </div>
               </div>
@@ -476,7 +476,7 @@ export class OverlayFloatingCard {
           const ocrText = res.text || '';
           if (!ocrText.trim()) {
             content.innerHTML = `
-              <div style="padding:12px; background:rgba(234, 179, 8, 0.1); border:1px solid rgba(234, 179, 8, 0.35); border-radius:8px; font-size:12px; color:#a16207; line-height:1.5;">
+              <div style="padding:12px; background:rgba(var(--hw-warning-rgb), 0.1); border:1px solid rgba(var(--hw-warning-rgb), 0.35); border-radius:8px; font-size:12px; color:var(--hw-warning); line-height:1.5;">
                 <div style="font-weight:700; display:flex; align-items:center; gap:6px; font-size:12.5px;">
                   ${Icons.alertCircle(14)} Không trích xuất được văn bản từ ảnh
                 </div>
@@ -707,7 +707,7 @@ export class OverlayFloatingCard {
 
     if (conversations.length === 0) {
       listEl.innerHTML = `
-        <div style="text-align:center; padding:32px 10px; color:#94a3b8; font-size:13px;">
+        <div style="text-align:center; padding:32px 10px; color:var(--hw-text-muted); font-size:13px;">
           Chưa có hội thoại nào được lưu.<br>Hãy tạo đoạn chat mới để bắt đầu!
         </div>
       `;
@@ -720,7 +720,7 @@ export class OverlayFloatingCard {
 
       let thumbHtml = conv.thumbnail
         ? `<img src="${conv.thumbnail}" class="hw-card-history-thumb" alt="thumb">`
-        : `<div class="hw-card-history-thumb" style="display:flex;align-items:center;justify-content:center;color:#0284c7;background:#e0f2fe;">${Icons.fileText(18)}</div>`;
+        : `<div class="hw-card-history-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--hw-accent);background:var(--hw-accent-tint);">${Icons.fileText(18)}</div>`;
 
       const dateStr = conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
       const msgCount = conv.messages?.length || 0;
@@ -731,7 +731,7 @@ export class OverlayFloatingCard {
           <div class="hw-card-history-title">${conv.title || 'Hội thoại không tên'}</div>
           <div class="hw-card-history-time">${Icons.clock(11)} ${dateStr} &bull; ${msgCount} tin nhắn</div>
         </div>
-        <button class="hw-icon-btn hw-btn-del-conv" title="Xóa hội thoại này" style="width:24px;height:24px;color:#94a3b8;flex-shrink:0;">
+        <button class="hw-icon-btn hw-btn-del-conv" title="Xóa hội thoại này" style="width:24px;height:24px;color:var(--hw-text-muted);flex-shrink:0;">
           ${Icons.trash(13)}
         </button>
       `;

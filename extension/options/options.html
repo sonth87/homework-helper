@@ -393,6 +393,24 @@
         <div class="opt-appearance-layout">
           <!-- Left Controls Column -->
           <div class="opt-appearance-controls">
+            <!-- 0. Overlay Theme -->
+            <div class="opt-card">
+              <h3 class="opt-card-title" id="optCardOverlayThemeTitle" style="margin-bottom:12px;">Giao diện Overlay</h3>
+              <div class="opt-settings-list">
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title" id="optLabelOverlayTheme">Chế độ màu (Sáng/Tối)</div>
+                    <div class="opt-setting-desc" id="optLabelOverlayThemeDesc">Áp dụng cho toàn bộ panel nổi trong trang (khung chat, popup giải bài, modal cấu hình).</div>
+                  </div>
+                  <select id="optOverlayThemeSelect" class="opt-select">
+                    <option value="auto" id="optOverlayThemeOptAuto" selected>Tự động theo hệ thống</option>
+                    <option value="light" id="optOverlayThemeOptLight">Sáng</option>
+                    <option value="dark" id="optOverlayThemeOptDark">Tối</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <!-- 1. Floating Action Buttons (FAB) -->
             <div class="opt-card">
               <h3 class="opt-card-title" id="optCardFabTitle" style="margin-bottom:12px;">Floating Action Buttons (FAB)</h3>
@@ -411,10 +429,19 @@
                     <div class="opt-setting-desc" id="optLabelFabSizeDesc">Kích thước vòng tròn icon.</div>
                   </div>
                   <select id="optFabSizeSelect" class="opt-select">
+                    <option value="tiny" id="optFabOptTiny">Siêu nhỏ (22px)</option>
                     <option value="small" id="optFabOptSmall">Nhỏ gọn (30px)</option>
                     <option value="normal" id="optFabOptNormal" selected>Tiêu chuẩn (36px)</option>
                     <option value="large" id="optFabOptLarge">Lớn (44px)</option>
                   </select>
+                </div>
+
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title"><span id="optLabelFabOpacity">Độ trong suốt nút nổi (Opacity):</span> <span id="valFabOpacity">90%</span></div>
+                    <div class="opt-setting-desc" id="optLabelFabOpacityDesc">Độ mờ kính của 2 nút nổi.</div>
+                  </div>
+                  <input type="range" id="optRangeFabOpacity" min="30" max="100" value="90" class="opt-range">
                 </div>
               </div>
             </div>

@@ -99,6 +99,15 @@ export default {
     localModelHelpDesc: "Nhãn “Nhận diện ảnh” hay “Chỉ văn bản” cho biết model có đọc được ảnh chụp bài hay không. Nếu tự tải model, hãy chọn bản GGUF (không chọn MLX vì hay lỗi khi đọc ảnh) và tìm tên có chữ “-VL” hoặc “Vision” (vd: Qwen2.5-VL). Model đời cũ như LLaVA cần tải thêm 1 file tên “mmproj” để chung thư mục mới đọc được ảnh.",
     customModelOption: "Tự điền model (Custom)...",
     customModelPlaceholder: "Nhập tên/mã model (vd: gemini-2.5-pro, gpt-5, claude-4...)",
+    testConnection: "Kiểm tra kết nối",
+    testingConnection: "Đang kiểm tra...",
+    keyValid: "Key hợp lệ & Hoạt động",
+    keyInvalid: "Lỗi kết nối:",
+    enterKeyFirst: "Vui lòng nhập API Key trước khi kiểm tra",
+    deleteKey: "Xóa Key",
+    statusReady: "Trạng thái: Sẵn sàng",
+    statusCooldown: "Đang hạ nhiệt ({time})",
+    localKeyOptionalPlaceholder: "API Key (Không bắt buộc cho Local AI)",
     tooltips: {
       newChat: {
         title: "Đoạn chat mới",
@@ -267,6 +276,8 @@ export default {
     keyValid: "Key hợp lệ & Hoạt động",
     keyInvalid: "Lỗi kết nối:",
     enterKeyFirst: "Vui lòng nhập API Key trước khi kiểm tra",
+    statusCooldown: "Đang hạ nhiệt ({time})",
+    localKeyOptionalPlaceholder: "API Key (Không bắt buộc cho Local AI)",
     deleteKey: "Xóa Key",
     keyPlaceholder: "Nhập API Key",
     statusReady: "Trạng thái: Sẵn sàng",
@@ -317,11 +328,20 @@ export default {
     headingAppearance: "Giao diện & Tùy biến Trực quan",
     subheadingAppearance:
       "Tùy chỉnh nút nổi FAB, thanh công cụ bôi đen, độ trong suốt Liquid Glass và độ mờ.",
+
+    cardOverlayThemeTitle: "Giao diện Overlay",
+    labelOverlayTheme: "Chế độ màu (Sáng/Tối)",
+    labelOverlayThemeDesc: "Áp dụng cho toàn bộ panel nổi trong trang (khung chat, popup giải bài, modal cấu hình).",
+    overlayThemeOptAuto: "Tự động theo hệ thống",
+    overlayThemeOptLight: "Sáng",
+    overlayThemeOptDark: "Tối",
     cardFabTitle: "Nút Nổi Trong Trang (Floating FABs)",
     labelFabDisplay: "Hiển thị nút nổi trên website",
     labelFabDisplayDesc:
       "Hiện nút chụp nhanh (Alt+C) và mở trợ lý ở mép phải màn hình.",
     labelFabSize: "Kích thước nút nổi FAB",
+    labelFabOpacity: "Độ trong suốt nút nổi",
+    labelFabOpacityDesc: "Độ mờ kính của 2 nút nổi.",
     cardToolbarTitle: "Thanh Công Cụ Bôi Đen (Selection Toolbar)",
     labelToolbarTheme: "Chủ đề màu sắc Toolbar",
     labelToolbarThemeDesc: "Chọn phong cách Liquid Glass cho thanh công cụ.",
@@ -389,6 +409,7 @@ export default {
     subheadingGeneral:
       "Quản lý ngôn ngữ phản hồi, trợ lý biểu mẫu Google Forms và sao lưu dữ liệu.",
     cardLangTitle: "Cài Đặt Ngôn Ngữ",
+    fabOptTiny: "Siêu nhỏ (22px)",
     fabOptSmall: "Nhỏ gọn (30px)",
     fabOptNormal: "Tiêu chuẩn (36px)",
     fabOptLarge: "Lớn (44px)",

@@ -6,11 +6,23 @@
 
 import { Icons } from '../shared/icons.js';
 import { Storage } from '../shared/storage.js';
+import { getOverlayThemeAttr } from '../shared/theme.js';
+
+// This button is injected straight into the Google Forms page's own light
+// DOM (not a shadow root), so it can't reach overlay.css's :host variables —
+// resolve the same light/dark palette once at init and pick literal colors
+// from it, rather than building a separate CSS-variable stylesheet for one
+// small button.
+const PALETTE = {
+  light: { bg: 'rgba(255, 255, 255, 0.85)', color: '#0284c7', border: 'rgba(2, 132, 199, 0.32)', hoverBg: 'rgba(2, 132, 199, 0.12)', hoverBorder: '#0284c7', hoverColor: '#0369a1' },
+  dark: { bg: 'rgba(15, 23, 42, 0.85)', color: '#38bdf8', border: 'rgba(56, 189, 248, 0.35)', hoverBg: 'rgba(56, 189, 248, 0.15)', hoverBorder: '#38bdf8', hoverColor: '#7dd3fc' },
+};
 
 class GoogleFormsAdapter {
   constructor() {
     this.observer = null;
     this.uiLanguage = 'vi';
+    this.palette = PALETTE.light;
 
     if (window.location.href.includes('docs.google.com/forms')) {
       this.init();
@@ -20,6 +32,10 @@ class GoogleFormsAdapter {
   async init() {
     const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
     this.uiLanguage = uiLanguage;
+
+    const themeAttr = await getOverlayThemeAttr();
+    const isDark = themeAttr ? themeAttr === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    this.palette = isDark ? PALETTE.dark : PALETTE.light;
 
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
@@ -102,11 +118,11 @@ class GoogleFormsAdapter {
         align-items: center;
         justify-content: center;
         padding: 4px 7px;
-        background: rgba(255, 255, 255, 0.85);
+        background: ${this.palette.bg};
         backdrop-filter: blur(12px) saturate(180%);
         -webkit-backdrop-filter: blur(12px) saturate(180%);
-        color: #0284c7;
-        border: 1px solid rgba(2, 132, 199, 0.32);
+        color: ${this.palette.color};
+        border: 1px solid ${this.palette.border};
         border-radius: 14px;
         font-size: 11px;
         font-weight: 600;
@@ -126,9 +142,9 @@ class GoogleFormsAdapter {
       const labelSpan = aiBtn.querySelector('.hw-form-btn-label');
 
       aiBtn.addEventListener('mouseenter', () => {
-        aiBtn.style.background = 'rgba(2, 132, 199, 0.12)';
-        aiBtn.style.borderColor = '#0284c7';
-        aiBtn.style.color = '#0369a1';
+        aiBtn.style.background = this.palette.hoverBg;
+        aiBtn.style.borderColor = this.palette.hoverBorder;
+        aiBtn.style.color = this.palette.hoverColor;
         aiBtn.style.boxShadow = '0 4px 12px rgba(2, 132, 199, 0.22), inset 0 1px 0.5px rgba(255, 255, 255, 0.95)';
         aiBtn.style.transform = 'translateY(-1px)';
         aiBtn.style.padding = '4px 10px';
@@ -141,9 +157,9 @@ class GoogleFormsAdapter {
 
       aiBtn.addEventListener('mouseleave', () => {
         if (aiBtn.disabled) return;
-        aiBtn.style.background = 'rgba(255, 255, 255, 0.85)';
-        aiBtn.style.borderColor = 'rgba(2, 132, 199, 0.32)';
-        aiBtn.style.color = '#0284c7';
+        aiBtn.style.background = this.palette.bg;
+        aiBtn.style.borderColor = this.palette.border;
+        aiBtn.style.color = this.palette.color;
         aiBtn.style.boxShadow = '0 2px 6px rgba(2, 132, 199, 0.12), inset 0 1px 0.5px rgba(255, 255, 255, 0.95)';
         aiBtn.style.transform = 'translateY(0)';
         aiBtn.style.padding = '4px 7px';

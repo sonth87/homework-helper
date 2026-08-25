@@ -3,13 +3,16 @@
  */
 
 import { Icons } from '../../shared/icons.js';
-import { Storage, DEFAULT_PROVIDERS } from '../../shared/storage.js';
 import { getI18n } from '../../shared/i18n.js';
+import { Storage } from '../../shared/storage.js';
+import { isLocalProvider, createKeyCard, createLocalKeyCard, wireLocalModelPanel } from '../../shared/api-config-ui.js';
 
 export class OverlayConfigModal {
   constructor(overlay) {
     this.overlay = overlay;
     this.shadow = overlay.shadow;
+    this.localModelType = 'lmstudio';
+    this.localDiscoveredModels = [];
     this.init();
   }
 
@@ -36,16 +39,16 @@ export class OverlayConfigModal {
     const dict = getI18n(uiLanguage);
 
     body.innerHTML = `
-      <div style="font-size:12px; color:#64748b; line-height:1.4;">
+      <div style="font-size:12px; color:var(--hw-text-muted); line-height:1.4;">
         ${dict.modalConfigDesc || 'Add one or more API Keys. The extension automatically load-balances and falls back to backup keys when hitting rate limits.'}
       </div>
 
       <!-- Chrome Built-in AI Gemini Nano Guide Section in In-Page Modal -->
-      <div style="margin-top: 8px; padding: 10px; background: rgba(2, 132, 199, 0.08); border-radius: 8px; border: 1px solid rgba(2, 132, 199, 0.25);">
-        <div style="font-weight: 700; font-size: 12.5px; color: #0284c7; display:flex; align-items:center; gap:6px;">
+      <div style="margin-top: 8px; padding: 10px; background: rgba(var(--hw-accent-rgb), 0.08); border-radius: 8px; border: 1px solid rgba(var(--hw-accent-rgb), 0.25);">
+        <div style="font-weight: 700; font-size: 12.5px; color: var(--hw-accent); display:flex; align-items:center; gap:6px;">
           ${Icons.cpu(14)} ${dict.modalNanoTitle || 'Chrome Gemini Nano (Local AI)'}
         </div>
-        <div style="font-size:11.5px; color:#64748b; margin-top:4px; line-height:1.5;">
+        <div style="font-size:11.5px; color:var(--hw-text-muted); margin-top:4px; line-height:1.5;">
           ${dict.modalNanoDesc || 'On-Device AI running offline. Click links below to open flags directly:'}
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
@@ -64,9 +67,43 @@ export class OverlayConfigModal {
       <div id="hwModalKeyList" style="display:flex; flex-direction:column; gap:10px; margin-top:8px;"></div>
 
       <button class="hw-btn-add" id="hwBtnAddKey">${Icons.plus(16)} ${dict.modalBtnAddKey || 'Add Model & Key'}</button>
+      <button class="hw-btn-add" id="hwBtnAddLocalModel" style="border-color:var(--hw-success); background:rgba(var(--hw-success-rgb),0.06); color:var(--hw-success);">${Icons.server(16)} ${dict.btnAddLocalModel || 'Add Local Model'}</button>
 
-      <div style="text-align:right; margin-top:6px;">
-        <a href="#" id="hwLinkFullOptions" style="font-size:12px; color:#0284c7; text-decoration:none;">
+      <!-- Local AI Server (Ollama / LM Studio) Config Panel -->
+      <div id="hwLocalModelPanel" style="display:none; border:1px solid rgba(var(--hw-success-rgb),0.3); border-radius:10px; padding:10px; background:rgba(var(--hw-success-rgb),0.05); flex-direction:column; gap:8px;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-size:12.5px; font-weight:700; color:var(--hw-success);">${dict.localPanelTitle || 'Connect Local AI Server'}</span>
+          <span style="display:inline-flex; cursor:help; color:var(--hw-success);" data-tooltip-title="${dict.localPanelHelpTitle || 'Picking the right local model'}" data-tooltip-desc="${dict.localPanelHelpDesc || ''}">${Icons.helpCircle(13)}</span>
+          <span style="flex:1;"></span>
+          <button type="button" class="hw-icon-btn" id="hwLocalBtnClose" title="${dict.localBtnCancel || 'Cancel'}" style="width:24px; height:24px;">${Icons.x(14)}</button>
+        </div>
+
+        <div style="display:flex; gap:6px;" id="hwLocalTypeToggle">
+          <button type="button" class="opt-local-type-btn active" data-type="lmstudio">LM Studio</button>
+          <button type="button" class="opt-local-type-btn" data-type="ollama">Ollama</button>
+        </div>
+
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input type="text" class="hw-input" id="hwLocalBaseUrl" style="flex:1;" placeholder="http://127.0.0.1:1234" value="http://127.0.0.1:1234">
+          <button type="button" class="opt-local-ping-btn" id="hwLocalBtnPing" title="${dict.localBtnPing || 'Test Connection'}">
+            <span id="hwLocalStatusIcon">${Icons.check(15)}</span>
+          </button>
+        </div>
+
+        <div id="hwLocalStatusText" style="font-size:11px; color:var(--hw-text-muted); line-height:1.4;"></div>
+        <div id="hwLocalModelsList" style="display:flex; flex-direction:column; gap:4px;"></div>
+
+        <div id="hwLocalPanelFooter" style="display:none; justify-content:flex-end; gap:8px;">
+          <button type="button" class="hw-icon-btn" id="hwLocalBtnCancel" style="width:auto; padding:4px 10px; font-size:11px;">${dict.localBtnCancel || 'Cancel'}</button>
+          <button type="button" class="hw-btn-copy" id="hwLocalBtnAddSelected" style="background:#16a34a;">${dict.localBtnAddSelected || 'Add Selected'}</button>
+        </div>
+      </div>
+
+      <div style="text-align:right; margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
+        <a href="#" id="hwLinkLocalGuide" style="font-size:12px; color:var(--hw-success); text-decoration:none;">
+          ${dict.localGuideLinkText || 'Local Model setup guide →'}
+        </a>
+        <a href="#" id="hwLinkFullOptions" style="font-size:12px; color:var(--hw-accent); text-decoration:none;">
           ${dict.modalLinkGuide || 'View free API key guide →'}
         </a>
       </div>
@@ -85,7 +122,14 @@ export class OverlayConfigModal {
     });
 
     const list = body.querySelector('#hwModalKeyList');
-    apiConfigs.forEach((cfg) => list.appendChild(this.renderKeyItem(cfg, false, dict)));
+    const onChange = () => this.overlay.drawer.updateActiveModelBadge();
+
+    apiConfigs.forEach((cfg) => {
+      const item = isLocalProvider(cfg.provider)
+        ? createLocalKeyCard(cfg, { dict, variant: 'overlay', onChange })
+        : createKeyCard(cfg, { isNew: false, dict, variant: 'overlay', onChange });
+      list.appendChild(item);
+    });
 
     body.querySelector('#hwBtnAddKey').addEventListener('click', () => {
       const newCfg = {
@@ -96,133 +140,27 @@ export class OverlayConfigModal {
         apiKey: '',
         isEnabled: true,
       };
-      list.appendChild(this.renderKeyItem(newCfg, true, dict));
+      list.appendChild(createKeyCard(newCfg, { isNew: true, dict, variant: 'overlay', onChange }));
     });
 
     body.querySelector('#hwLinkFullOptions').addEventListener('click', (e) => {
       e.preventDefault();
       chrome.runtime.sendMessage({ action: 'OPEN_OPTIONS', hash: 'guide' });
     });
-  }
 
-  renderKeyItem(cfg, isNew = false, dict = null) {
-    const d = dict || getI18n();
-    const el = document.createElement('div');
-    el.style.cssText = 'border:1px solid rgba(226, 232, 240, 0.9); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:6px; background:#f8fafc;';
-
-    const providerOptions = DEFAULT_PROVIDERS.map(
-      (p) => `<option value="${p.id}" ${cfg.provider === p.id ? 'selected' : ''}>${p.name}</option>`
-    ).join('');
-
-    const providerObj = DEFAULT_PROVIDERS.find((p) => p.id === cfg.provider) || DEFAULT_PROVIDERS[0];
-    
-    const isCustomModel =
-      !providerObj.models.some((m) => m.id === cfg.model) ||
-      cfg.model === '__custom__';
-
-    const modelOptions =
-      providerObj.models
-        .map(
-          (m) => `<option value="${m.id}" ${cfg.model === m.id ? 'selected' : ''}>${m.name}</option>`
-        )
-        .join('') +
-      `<option value="__custom__" ${isCustomModel ? 'selected' : ''}>✏️ ${d.customModelOption || 'Tự điền model (Custom)...'}</option>`;
-
-    el.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <label style="display:flex; align-items:center; gap:6px; font-weight:600; font-size:13px; color:#0f172a;">
-          <input type="checkbox" class="cfg-enabled" ${cfg.isEnabled ? 'checked' : ''}>
-          <span class="cfg-provider-name">${providerObj.name}</span>
-        </label>
-        <button class="hw-icon-btn cfg-delete" style="color:#ef4444;">${Icons.trash(14)}</button>
-      </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-        <select class="hw-select cfg-provider">${providerOptions}</select>
-        <select class="hw-select cfg-model">${modelOptions}</select>
-      </div>
-
-      <input type="text" class="hw-input cfg-custom-model" placeholder="${d.customModelPlaceholder || 'Nhập tên/mã model (vd: gemini-3.5-pro, gpt-5, claude-4...)'}" value="${isCustomModel && cfg.model !== '__custom__' ? cfg.model : ''}" style="margin-top:2px; ${isCustomModel ? 'display:block;' : 'display:none;'}">
-
-      <input type="text" class="hw-input cfg-base-url" placeholder="${providerObj.defaultBaseUrl || 'Base URL (http://localhost:...)'}" value="${cfg.baseUrl || (providerObj.requiresBaseUrl ? providerObj.defaultBaseUrl : '')}" style="margin-top:2px; ${providerObj.requiresBaseUrl ? 'display:block;' : 'display:none;'}">
-
-      <input type="password" class="hw-input cfg-key" placeholder="${providerObj.requiresKey === false ? 'API Key (Không bắt buộc cho Local AI)' : (d.modalKeyPlaceholder || 'Enter API Key (sk-... / AIza...)')}" value="${cfg.apiKey || ''}">
-    `;
-
-    const providerSelect = el.querySelector('.cfg-provider');
-    const modelSelect = el.querySelector('.cfg-model');
-    const customModelInput = el.querySelector('.cfg-custom-model');
-    const baseUrlInput = el.querySelector('.cfg-base-url');
-    const keyInput = el.querySelector('.cfg-key');
-    const enabledInput = el.querySelector('.cfg-enabled');
-
-    const getSelectedModel = () => {
-      if (modelSelect.value === '__custom__') {
-        return customModelInput.value.trim() || '__custom__';
-      }
-      return modelSelect.value;
-    };
-
-    const save = async () => {
-      await Storage.saveApiConfig({
-        id: cfg.id,
-        provider: providerSelect.value,
-        model: getSelectedModel(),
-        baseUrl: baseUrlInput.value.trim(),
-        apiKey: keyInput.value.trim(),
-        isEnabled: enabledInput.checked,
-      });
-      this.overlay.drawer.updateActiveModelBadge();
-    };
-
-    const updateCustomModelVisibility = () => {
-      if (modelSelect.value === '__custom__') {
-        customModelInput.style.display = 'block';
-        customModelInput.focus();
-      } else {
-        customModelInput.style.display = 'none';
-      }
-    };
-
-    providerSelect.addEventListener('change', () => {
-      const pObj = DEFAULT_PROVIDERS.find((p) => p.id === providerSelect.value) || DEFAULT_PROVIDERS[0];
-      const nameEl = el.querySelector('.cfg-provider-name');
-      if (nameEl) nameEl.textContent = pObj.name;
-      modelSelect.innerHTML =
-        pObj.models.map((m) => `<option value="${m.id}">${m.name}</option>`).join('') +
-        `<option value="__custom__">✏️ ${d.customModelOption || 'Tự điền model (Custom)...'}</option>`;
-      
-      if (pObj.requiresBaseUrl) {
-        baseUrlInput.style.display = 'block';
-        baseUrlInput.placeholder = pObj.defaultBaseUrl || 'http://localhost:...';
-        if (!baseUrlInput.value) baseUrlInput.value = pObj.defaultBaseUrl || '';
-      } else {
-        baseUrlInput.style.display = 'none';
-      }
-
-      keyInput.placeholder = pObj.requiresKey === false ? 'API Key (Không bắt buộc cho Local AI)' : (d.modalKeyPlaceholder || 'Enter API Key (sk-... / AIza...)');
-
-      updateCustomModelVisibility();
-      save();
+    body.querySelector('#hwLinkLocalGuide')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      chrome.runtime.sendMessage({ action: 'OPEN_OPTIONS', hash: 'local-model-guide' });
     });
 
-    modelSelect.addEventListener('change', () => {
-      updateCustomModelVisibility();
-      save();
+    wireLocalModelPanel(body, {
+      dict,
+      variant: 'overlay',
+      state: this,
+      onModelsAdded: (newConfigs) => {
+        newConfigs.forEach((cfg) => list.appendChild(createLocalKeyCard(cfg, { dict, variant: 'overlay', onChange })));
+        onChange();
+      },
     });
-
-    customModelInput.addEventListener('input', save);
-    baseUrlInput.addEventListener('input', save);
-    keyInput.addEventListener('input', save);
-    enabledInput.addEventListener('change', save);
-
-    el.querySelector('.cfg-delete').addEventListener('click', async () => {
-      await Storage.removeApiConfig(cfg.id);
-      el.remove();
-      this.overlay.drawer.updateActiveModelBadge();
-    });
-
-    if (isNew) save();
-    return el;
   }
 }

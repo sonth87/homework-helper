@@ -11,8 +11,10 @@ export class AppearanceTab {
 
   async loadAppearanceSettings() {
     const {
+      overlayTheme = 'auto',
       enableFloatingButton = true,
       fabSize = 'normal',
+      fabOpacity = 90,
       popupOpacity = 92,
       popupBlur = 16,
       toolbarShowText = true,
@@ -23,8 +25,11 @@ export class AppearanceTab {
     } = await Storage.get();
 
     // DOM Controls
+    const overlayThemeSelect = document.getElementById('optOverlayThemeSelect');
     const checkFab = document.getElementById('optCheckFab');
     const fabSizeSelect = document.getElementById('optFabSizeSelect');
+    const rangeFabOpacity = document.getElementById('optRangeFabOpacity');
+    const valFabOpacity = document.getElementById('valFabOpacity');
     const checkToolbarText = document.getElementById('optCheckToolbarText');
     const toolbarSizeSelect = document.getElementById('optToolbarSizeSelect');
     const toolbarThemeSelect = document.getElementById('optToolbarThemeSelect');
@@ -47,8 +52,13 @@ export class AppearanceTab {
     if (!checkFab) return;
 
     // Populate initial values
+    if (overlayThemeSelect) overlayThemeSelect.value = overlayTheme;
     checkFab.checked = enableFloatingButton;
     if (fabSizeSelect) fabSizeSelect.value = fabSize;
+    if (rangeFabOpacity) {
+      rangeFabOpacity.value = fabOpacity;
+      if (valFabOpacity) valFabOpacity.textContent = `${fabOpacity}%`;
+    }
     if (checkToolbarText) checkToolbarText.checked = toolbarShowText;
     if (toolbarSizeSelect) toolbarSizeSelect.value = toolbarSize;
     if (toolbarThemeSelect) toolbarThemeSelect.value = toolbarTheme;
@@ -77,9 +87,13 @@ export class AppearanceTab {
       if (prevFab) {
         const isFabVisible = checkFab.checked;
         const fSize = fabSizeSelect?.value || 'normal';
+        const fabAlpha = rangeFabOpacity ? (parseInt(rangeFabOpacity.value, 10) / 100).toFixed(2) : '0.9';
         prevFab.style.display = isFabVisible ? 'flex' : 'none';
         prevFab.querySelectorAll('.prev-fab-btn').forEach((btn) => {
-          if (fSize === 'small') {
+          if (fSize === 'tiny') {
+            btn.style.width = '22px';
+            btn.style.height = '22px';
+          } else if (fSize === 'small') {
             btn.style.width = '28px';
             btn.style.height = '28px';
           } else if (fSize === 'large') {
@@ -89,6 +103,9 @@ export class AppearanceTab {
             btn.style.width = '34px';
             btn.style.height = '34px';
           }
+          btn.style.background = btn.classList.contains('prev-fab-crop')
+            ? `rgba(2, 132, 199, ${fabAlpha})`
+            : `rgba(255, 255, 255, ${fabAlpha})`;
         });
       }
 
@@ -143,6 +160,10 @@ export class AppearanceTab {
     updatePreview();
 
     // Event Listeners
+    overlayThemeSelect?.addEventListener('change', () => {
+      Storage.set({ overlayTheme: overlayThemeSelect.value });
+    });
+
     checkFab.addEventListener('change', () => {
       Storage.set({ enableFloatingButton: checkFab.checked });
       updatePreview();
@@ -150,6 +171,12 @@ export class AppearanceTab {
 
     fabSizeSelect?.addEventListener('change', () => {
       Storage.set({ fabSize: fabSizeSelect.value });
+      updatePreview();
+    });
+
+    rangeFabOpacity?.addEventListener('input', () => {
+      if (valFabOpacity) valFabOpacity.textContent = `${rangeFabOpacity.value}%`;
+      Storage.set({ fabOpacity: parseInt(rangeFabOpacity.value, 10) });
       updatePreview();
     });
 

@@ -238,10 +238,79 @@ body {
   color: var(--text-main);
 }
 
-.sp-local-type-btn.active {
+.opt-local-type-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.opt-local-type-btn:hover {
+  color: var(--text-main);
+}
+
+.opt-local-type-btn.active {
   background: #16a34a;
   border-color: #16a34a;
   color: #ffffff;
+}
+
+/* Local-model detect results — shared across overlay/sidepanel/options. */
+.opt-local-model-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  padding: 5px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+}
+
+.opt-local-model-row.is-embedding {
+  opacity: 0.6;
+}
+
+.opt-local-embedding-tag,
+.opt-local-vision-tag,
+.opt-local-textonly-tag {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 6px;
+}
+
+.opt-local-embedding-tag {
+  color: #d97706;
+  background: rgba(217, 119, 6, 0.12);
+}
+
+.opt-local-vision-tag {
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.12);
+}
+
+.opt-local-textonly-tag {
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.12);
+}
+
+.opt-help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.opt-help-icon:hover {
+  color: #16a34a;
 }
 
 /* Local Server "Test Connection" button — a small tick badge that doubles
@@ -617,7 +686,10 @@ body {
    instead of the generic cloud-provider form (no key, no dropdowns). */
 .sp-local-key-item {
   display: flex;
-  align-items: center;
+  /* flex-start (not center) — if the title row ever wraps onto multiple
+     lines, centering here would pull the icon/actions toward the middle of
+     that stack instead of the top. */
+  align-items: flex-start;
   gap: 8px;
   padding: 8px 10px;
   border-radius: 10px;

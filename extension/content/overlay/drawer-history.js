@@ -69,7 +69,7 @@ export class OverlayDrawerHistory {
 
     if (conversations.length === 0) {
       listEl.innerHTML = `
-        <div style="text-align:center; padding:32px 10px; color:#94a3b8; font-size:13px;">
+        <div style="text-align:center; padding:32px 10px; color:var(--hw-text-muted); font-size:13px;">
           ${dict.emptyHistory || 'No conversations saved yet.<br>Start a new chat to begin!'}
         </div>
       `;
@@ -82,7 +82,7 @@ export class OverlayDrawerHistory {
 
       let thumbHtml = conv.thumbnail
         ? `<img src="${conv.thumbnail}" class="hw-card-history-thumb" alt="thumb">`
-        : `<div class="hw-card-history-thumb" style="display:flex;align-items:center;justify-content:center;color:#0284c7;background:#e0f2fe;">${Icons.fileText(18)}</div>`;
+        : `<div class="hw-card-history-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--hw-accent);background:var(--hw-accent-tint);">${Icons.fileText(18)}</div>`;
 
       const dateStr = conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
       const msgCount = conv.messages?.length || 0;
@@ -93,7 +93,7 @@ export class OverlayDrawerHistory {
           <div class="hw-card-history-title">${conv.title || dict.newChat || 'Untitled Chat'}</div>
           <div class="hw-card-history-time">${Icons.clock(11)} ${dateStr} &bull; ${msgCount} msgs</div>
         </div>
-        <button class="hw-icon-btn hw-btn-del-conv" title="Delete" style="width:24px;height:24px;color:#94a3b8;flex-shrink:0;">
+        <button class="hw-icon-btn hw-btn-del-conv" title="Delete" style="width:24px;height:24px;color:var(--hw-text-muted);flex-shrink:0;">
           ${Icons.trash(13)}
         </button>
       `;

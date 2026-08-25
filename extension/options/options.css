@@ -515,7 +515,7 @@ body {
 
 .opt-key-grid {
   display: grid;
-  grid-template-columns: 180px 1fr 1.5fr;
+  grid-template-columns: 180px minmax(0, 1fr) minmax(0, 1.5fr);
   gap: 10px;
 }
 
@@ -530,7 +530,11 @@ body {
    instead of the generic cloud-provider form (no key, no dropdowns). */
 .opt-local-model-card {
   display: flex;
-  align-items: center;
+  /* flex-start (not center) — a long model name / provider path can still
+     wrap the title row onto multiple lines even on the wide Options page;
+     centering here would then pull the icon and actions toward the middle
+     of that stack instead of the top. */
+  align-items: flex-start;
   gap: 12px;
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
