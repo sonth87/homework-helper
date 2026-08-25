@@ -13,6 +13,7 @@ class SelectionTooltip {
     this.dropdown = null;
     this.submenu = null;
     this.selectedText = '';
+    this.epoch = 0;
     this.init();
   }
 
@@ -68,6 +69,7 @@ class SelectionTooltip {
 
   async renderToolbar(rect) {
     this.removeToolbar();
+    const epoch = ++this.epoch;
 
     const {
       toolbarOpacity = 90,
@@ -77,6 +79,10 @@ class SelectionTooltip {
       toolbarTheme = 'glass-light',
       uiLanguage = 'en',
     } = await Storage.get();
+
+    // A newer render/removal happened while we were waiting on storage — abort so we
+    // don't append a stale toolbar the current state has no reference to (orphaned node).
+    if (epoch !== this.epoch) return;
 
     const dict = getSelectionTooltipI18n(uiLanguage);
 
@@ -150,7 +156,13 @@ class SelectionTooltip {
       return;
     }
 
+    const epoch = this.epoch;
     const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+
+    // Toolbar may have been removed (or replaced by a newer render) while we waited —
+    // bail out instead of touching a null/stale this.toolbar.
+    if (epoch !== this.epoch || !this.toolbar || this.dropdown) return;
+
     const dict = getSelectionTooltipI18n(uiLanguage);
 
     this.dropdown = document.createElement('div');
@@ -262,6 +274,7 @@ class SelectionTooltip {
   }
 
   removeToolbar() {
+    this.epoch++;
     if (this.dropdown) {
       this.dropdown.remove();
       this.dropdown = null;
