@@ -103,6 +103,13 @@
   pointer-events: auto;
 }
 
+.hw-fab-container.hw-fab-dock-left {
+  right: auto;
+  left: 0;
+  align-items: flex-start;
+  padding: 12px 24px 12px 0;
+}
+
 .hw-fab-inner {
   display: flex;
   flex-direction: column;
@@ -116,6 +123,32 @@
 .hw-fab-container:hover .hw-fab-inner {
   transform: translateX(-10px);
   opacity: 1;
+}
+
+.hw-fab-container.hw-fab-dock-left .hw-fab-inner {
+  align-items: flex-start;
+  transform: translateX(-18px);
+}
+
+.hw-fab-container.hw-fab-dock-left:hover .hw-fab-inner {
+  transform: translateX(10px);
+}
+
+/* While dragging the FAB cluster: kill the hover slide-out animation so the
+   buttons track the cursor 1:1 with no lag, and swap in a grabbing cursor. */
+.hw-fab-container.hw-fab-dragging {
+  cursor: grabbing;
+}
+
+.hw-fab-container.hw-fab-dragging .hw-fab-inner {
+  transition: none;
+  transform: none;
+  opacity: 1;
+}
+
+.hw-fab-container.hw-fab-dragging .hw-fab-btn {
+  cursor: grabbing;
+  transition: none;
 }
 
 .hw-fab-btn {

@@ -225,6 +225,7 @@ export const DEFAULT_SETTINGS = {
   overlayTheme: "auto", // 'auto' (follow system) | 'light' | 'dark'
   fabSize: "normal", // 'tiny' | 'small' | 'normal' | 'large'
   fabOpacity: 90, // 30 - 100% (Liquid Glass background alpha)
+  fabPosition: null, // null (default docked position) | { dock: 'left' | 'right', top: number(px) } — set by dragging the FAB cluster
   popupOpacity: 92, // 40 - 100% (Liquid Glass background alpha)
   popupBlur: 16, // 0 - 30px
   popupCardSize: "normal", // 'normal' | 'compact' (compact hides secondary buttons until hover, tighter padding)

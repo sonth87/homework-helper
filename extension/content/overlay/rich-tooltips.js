@@ -5,7 +5,15 @@
 export class OverlayRichTooltips {
   constructor(shadow) {
     this.shadow = shadow;
+    this.suppressed = false;
     this.init();
+  }
+
+  // Called while dragging the FAB cluster so the tooltip doesn't stay pinned
+  // to a button that's sliding across the screen underneath the cursor.
+  suppress(value) {
+    this.suppressed = value;
+    if (value) this.hideTooltip?.();
   }
 
   init() {
@@ -59,8 +67,10 @@ export class OverlayRichTooltips {
     const hideTooltip = () => {
       tooltipEl.classList.remove('show');
     };
+    this.hideTooltip = hideTooltip;
 
     this.shadow.addEventListener('mouseover', (e) => {
+      if (this.suppressed) return;
       const target = e.target.closest('[data-tooltip-title]');
       if (target) {
         showTooltip(target);
