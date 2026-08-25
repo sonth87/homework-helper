@@ -171,9 +171,9 @@ Instructions:
 2. For math & science problems: Show step-by-step reasoning with formulas in LaTeX ($...$) and clearly state the final answer.
 3. Keep explanations structured, concise, and easy to understand.`;
 
-export function buildNanoPrompts(studyMode = 'step-by-step', prompt = '', ocrText = '', targetLangName = 'Tiếng Việt', customSysPrompt = '') {
+export function buildNanoPrompts(studyMode = 'step-by-step', prompt = '', ocrText = '', targetLangName = 'Vietnamese', customSysPrompt = '') {
   const contentText = (ocrText && ocrText.trim())
-    ? (prompt && prompt.trim() ? `${prompt.trim()}\n\n[Nội dung câu hỏi & các phương án từ ảnh]:\n${ocrText.trim()}` : ocrText.trim())
+    ? (prompt && prompt.trim() ? `${prompt.trim()}\n\n[Question content & options from image]:\n${ocrText.trim()}` : ocrText.trim())
     : prompt.trim();
 
   let sysPrompt = customSysPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
@@ -185,23 +185,23 @@ CRITICAL RULES:
 1. MULTIPLE-CHOICE QUESTIONS: If the question contains options/choices (e.g. A, B, C, D or choices like 2, NaN, 0, 1):
    - You MUST pick and output ONLY the single correct matching option from the provided choices.
    - DO NOT answer outside the given options if a matching option exists.
-   - Format: "Đáp án: [Nội dung đáp án]" (e.g. "Đáp án: NaN" hoặc "Đáp án: B. NaN").
+   - Format: "Answer: [answer content]" (e.g. "Answer: NaN" or "Answer: B. NaN"), with the "Answer:" label itself translated into ${targetLangName}.
 2. OPEN QUESTIONS (no choices): Output ONLY the final numeric or short phrase answer.
 3. STRICTLY FORBIDDEN: DO NOT write explanations, steps, definitions, formulas, or analysis. Keep output to 1 line only.`;
-    userPrompt = `[Câu hỏi & Các phương án]:\n${contentText}\n\n[YÊU CẦU NGHIÊM NGẶT]: Chọn chính xác 1 phương án trong các lựa chọn trên. Chỉ ghi đáp án đã chọn, tuyệt đối không giải thích.\n[Ngôn ngữ]: ${targetLangName}`;
+    userPrompt = `[Question & options]:\n${contentText}\n\n[STRICT REQUIREMENT]: Pick exactly 1 option from the choices above. Output only the chosen answer, with absolutely no explanation.\n[Language]: ${targetLangName}`;
   } else if (studyMode === 'hint') {
     sysPrompt = `You are a pedagogical tutor AI. Do NOT give the final answer. Provide hints, key formulas, and guiding questions in ${targetLangName}.`;
-    userPrompt = `[Câu hỏi]:\n${contentText}\n\n[YÊU CẦU]: Đưa ra gợi ý và định hướng giúp học sinh tự giải bài, không đưa đáp án ngay.\n[Ngôn ngữ]: ${targetLangName}`;
+    userPrompt = `[Question]:\n${contentText}\n\n[REQUIREMENT]: Give hints and guidance to help the student work out the problem themselves — do not give the final answer.\n[Language]: ${targetLangName}`;
   } else if (studyMode === 'explain') {
     sysPrompt = `You are an educator AI. Explain the underlying scientific/mathematical theory and principles clearly in ${targetLangName}.`;
-    userPrompt = `[Câu hỏi]:\n${contentText}\n\n[YÊU CẦU]: Giải thích sâu bản chất lý thuyết và kiến thức bài toán.\n[Ngôn ngữ]: ${targetLangName}`;
+    userPrompt = `[Question]:\n${contentText}\n\n[REQUIREMENT]: Explain in depth the underlying theory and knowledge behind this problem.\n[Language]: ${targetLangName}`;
   } else if (studyMode === 'translate') {
-    sysPrompt = `Bạn là một công cụ dịch thuật kiêm từ điển song ngữ, không phải trợ lý giải bài tập. Không thêm lời dẫn, không nhắc lại đề bài, không giải thích nhiệm vụ — đi thẳng vào nội dung được yêu cầu.`;
-    userPrompt = `Nội dung cần xử lý:\n${contentText}\n\n[QUY TẮC]:\n- Nếu đây là MỘT TỪ/CỤM TỪ ngắn, độc lập (không phải câu/đoạn văn hoàn chỉnh): trả lời đúng 3 phần, không thêm gì khác:\n  1. Từ/cụm từ gốc kèm phiên âm quốc tế (IPA) trong dấu /.../.\n  2. 1-2 câu ví dụ có dùng từ đó: câu gốc và câu dịch sang ${targetLangName} (không cần ghi chú phát âm).\n  3. Mô tả/định nghĩa ngắn gọn cho từ đó, viết bằng ${targetLangName}.\n- Nếu đây là câu, đoạn văn, hoặc văn bản dài hơn: CHỈ trả về DUY NHẤT bản dịch chính xác sang ${targetLangName}, không thêm giải thích hay ghi chú.`;
+    sysPrompt = `You are a translation tool and bilingual dictionary, not a homework-solving assistant. No preamble, no restating the request, no explaining the task — go straight to the requested content.`;
+    userPrompt = `Content to process:\n${contentText}\n\n[RULES]:\n- If this is a SINGLE STANDALONE WORD (exactly 1 word, not a multi-word phrase): reply with exactly these 3 parts, nothing else:\n  1. The original word followed by its IPA phonetic transcription in /.../ brackets.\n  2. 1-2 example sentences using the word: the original sentence and its translation into ${targetLangName} (no need for pronunciation notes).\n  3. A short description/definition of the word, written in ${targetLangName}.\n- If this is a PHRASE (2+ words), a sentence, a paragraph, or longer text: reply with ONLY the accurate translation into ${targetLangName}. Do NOT add IPA phonetics, do NOT add examples, no explanation, no notes — no matter how short the term or phrase is.`;
   } else {
     // step-by-step
     sysPrompt = `${sysPrompt}\n\n[MULTIPLE-CHOICE RULE]: If options are present, clearly conclude with the selected option from the list.\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;
-    userPrompt = `[Nội dung bài tập]:\n${contentText}\n\n[Yêu cầu]: Hãy giải bài toán từng bước chi tiết (Bước 1, Bước 2...), trình bày công thức bằng LaTeX ($...$) và chọn đáp án chính xác trong các lựa chọn.\n[Ngôn ngữ]: ${targetLangName}`;
+    userPrompt = `[Homework content]:\n${contentText}\n\n[Requirement]: Solve the problem with detailed step-by-step reasoning (Step 1, Step 2...), present formulas using LaTeX ($...$), and select the correct option among the choices.\n[Language]: ${targetLangName}`;
   }
 
   const finalSysPrompt = `${sysPrompt}\n\n[LANGUAGE REQUIREMENT]: Reply in ${targetLangName}.`.trim();

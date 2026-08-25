@@ -1,6 +1,6 @@
 {
   "name": "homework-helper-extension",
-  "version": "1.2.3",
+  "version": "1.2.5",
   "description": "Homework Helper Chrome Extension",
   "scripts": {
     "zip": "node build-zip.js",

@@ -659,17 +659,17 @@ export class OverlayFloatingCard {
     if (enabledKeys.length === 0) {
       const langNames = {
         en: 'English',
-        vi: 'Tiếng Việt (Vietnamese)',
-        es: 'Español (Spanish)',
-        fr: 'Français (French)',
-        de: 'Deutsch (German)',
-        'zh-CN': 'Simplified Chinese (简体中文)',
-        'zh-TW': 'Traditional Chinese (繁體中文)',
-        ja: 'Japanese (日本語)',
-        ko: 'Korean (한국어)',
-        pt: 'Portuguese (Português)',
-        id: 'Bahasa Indonesia',
-        ru: 'Russian (Русский)',
+        vi: 'Vietnamese',
+        es: 'Spanish',
+        fr: 'French',
+        de: 'German',
+        'zh-CN': 'Simplified Chinese',
+        'zh-TW': 'Traditional Chinese',
+        ja: 'Japanese',
+        ko: 'Korean',
+        pt: 'Portuguese',
+        id: 'Indonesian',
+        ru: 'Russian',
       };
       const targetLangName = (effectiveOutputLanguage && effectiveOutputLanguage !== 'auto') ? (langNames[effectiveOutputLanguage] || effectiveOutputLanguage) : 'English';
       const { sysPrompt: nanoSysPrompt, userPrompt: nanoPrompt } = buildNanoPrompts(studyMode, prompt, '', targetLangName, nanoSystemPrompt);

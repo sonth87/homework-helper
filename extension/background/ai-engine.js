@@ -26,22 +26,22 @@ export class AiEngine {
 
     const langNames = {
       en: 'English',
-      vi: 'Tiếng Việt (Vietnamese)',
-      es: 'Español (Spanish)',
-      fr: 'Français (French)',
-      de: 'Deutsch (German)',
-      'zh-CN': 'Simplified Chinese (简体中文)',
-      'zh-TW': 'Traditional Chinese (繁體中文)',
-      ja: 'Japanese (日本語)',
-      ko: 'Korean (한국어)',
-      pt: 'Portuguese (Português)',
-      id: 'Bahasa Indonesia',
-      ru: 'Russian (Русский)',
+      vi: 'Vietnamese',
+      es: 'Spanish',
+      fr: 'French',
+      de: 'German',
+      'zh-CN': 'Simplified Chinese',
+      'zh-TW': 'Traditional Chinese',
+      ja: 'Japanese',
+      ko: 'Korean',
+      pt: 'Portuguese',
+      id: 'Indonesian',
+      ru: 'Russian',
     };
-    const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Tiếng Việt (Vietnamese)';
+    const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Vietnamese';
     let directSysInstruction = '';
     if (studyMode === 'direct') {
-      directSysInstruction = `\n\n[STRICT DIRECT-ANSWER INSTRUCTION]: You MUST output ONLY the direct final answer. DO NOT write steps, reasoning, breakdown, analysis, or explanations. For multiple-choice questions, output ONLY the correct option letter and/or answer text (e.g. "Đáp án: 2" or "D. 2"). Keep the response under 1-2 lines.`;
+      directSysInstruction = `\n\n[STRICT DIRECT-ANSWER INSTRUCTION]: You MUST output ONLY the direct final answer. DO NOT write steps, reasoning, breakdown, analysis, or explanations. For multiple-choice questions, output ONLY the correct option letter and/or answer text (e.g. "Answer: 2" or "D. 2"). Keep the response under 1-2 lines.`;
     }
 
     // The language requirement is placed FIRST, ahead of the (often long,
