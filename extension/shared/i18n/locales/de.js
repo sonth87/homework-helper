@@ -5,6 +5,7 @@ export default {
     shiftEnterHint: "Enter zum Senden, Shift+Enter für Zeilenumbruch",
     aiDisclaimer: "KI kann Fehler machen, und die Ergebnisse hängen stark vom verwendeten Modell ab.",
     askAiBtn: "KI fragen",
+    stopBtn: "Stoppen",
     captureBtn: "Aufnehmen",
     uploadBtn: "Bild anhängen",
     attachedLabel: "Bild angehängt",

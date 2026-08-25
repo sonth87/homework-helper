@@ -161,3 +161,68 @@ export function formatMarkdownAndMath(text) {
 
   return html;
 }
+
+// Inline-only markdown (bold/italic/inline-code), with the source text HTML-escaped
+// first — used by formatDictionaryEntry() below, which builds its own block-level
+// HTML (headword/sense/example divs) around these already-escaped inline fragments.
+function formatInline(text) {
+  let html = escapeHtml(text);
+  html = html.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+  return html;
+}
+
+/**
+ * Renders a single-word translate/dictionary result (see the 'translate'
+ * studyMode prompt in study-prompt.js) into the two-column dictionary layout:
+ * **word** /phonetic/, then one row per sense with *pos.* on the left and the
+ * bolded gloss + example on the right, then a plain description paragraph.
+ * Falls back to the regular formatMarkdownAndMath() renderer whenever the
+ * text doesn't actually match that structure (phrase/sentence translations,
+ * a model that ignored the format, or a still-incomplete streaming chunk).
+ */
+export function formatDictionaryEntry(text) {
+  if (!text) return '';
+
+  const paragraphs = text.trim().split(/\n\s*\n/).filter((p) => p.trim());
+  if (paragraphs.length < 2) return formatMarkdownAndMath(text);
+
+  const headwordMatch = paragraphs[0].trim().match(/^\*\*(.+?)\*\*\s*(\/[^/\n]+\/)?/);
+  if (!headwordMatch) return formatMarkdownAndMath(text);
+
+  const [, word, phonetic] = headwordMatch;
+  let html = `<div class="hw-dict-headword"><strong>${escapeHtml(word.trim())}</strong>${phonetic ? ` <span class="hw-dict-phonetic">${escapeHtml(phonetic)}</span>` : ''}</div>`;
+
+  const senseRe = /^\*([^*\n]+?)\.?\*\s*\*\*([^*\n]+?)\*\*/;
+
+  for (let i = 1; i < paragraphs.length; i++) {
+    const lines = paragraphs[i].trim().split('\n');
+    const firstLine = lines[0].trim();
+    const senseMatch = firstLine.match(senseRe);
+
+    if (senseMatch) {
+      const [full, pos, gloss] = senseMatch;
+      const exampleParts = [];
+      const restFirstLine = firstLine.slice(full.length).trim();
+      if (restFirstLine) exampleParts.push(formatInline(restFirstLine));
+      for (let j = 1; j < lines.length; j++) {
+        const t = lines[j].trim();
+        if (t) exampleParts.push(formatInline(t));
+      }
+
+      html += `<div class="hw-dict-sense">
+        <div class="hw-dict-pos">${escapeHtml(pos.trim())}.</div>
+        <div class="hw-dict-body">
+          <div class="hw-dict-gloss">${formatInline(gloss.trim())}</div>
+          ${exampleParts.length ? `<div class="hw-dict-example">${exampleParts.join('<br>')}</div>` : ''}
+        </div>
+      </div>`;
+    } else {
+      html += `<div class="hw-dict-desc">${formatInline(paragraphs[i].trim())}</div>`;
+    }
+  }
+
+  return html;
+}

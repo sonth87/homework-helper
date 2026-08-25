@@ -618,6 +618,14 @@ body {
   cursor: not-allowed;
 }
 
+.sp-btn-send.sp-btn-send-stop {
+  background: #ef4444;
+}
+
+.sp-btn-send.sp-btn-send-stop:hover:not(:disabled) {
+  background: #dc2626;
+}
+
 /* Modal */
 .sp-modal-backdrop {
   position: absolute;

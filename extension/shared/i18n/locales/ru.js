@@ -5,6 +5,7 @@ export default {
     shiftEnterHint: "Enter для отправки, Shift+Enter для новой строки",
     aiDisclaimer: "ИИ может ошибаться, и результат сильно зависит от используемой модели.",
     askAiBtn: "Спросить ИИ",
+    stopBtn: "Остановить",
     captureBtn: "Скриншот",
     uploadBtn: "Прикрепить изображение",
     attachedLabel: "Изображение прикреплено",

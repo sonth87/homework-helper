@@ -5,6 +5,7 @@ export default {
     shiftEnterHint: "Enter untuk mengirim, Shift+Enter untuk baris baru",
     aiDisclaimer: "AI dapat membuat kesalahan, dan hasilnya sangat bergantung pada model yang digunakan.",
     askAiBtn: "Tanya AI",
+    stopBtn: "Berhenti",
     captureBtn: "Tangkapan Layar",
     uploadBtn: "Lampirkan Gambar",
     attachedLabel: "Gambar Terlampir",

@@ -5,6 +5,7 @@ export default {
     shiftEnterHint: "Enter để gửi, Shift+Enter để xuống dòng",
     aiDisclaimer: "AI có thể mắc sai sót, và phụ thuộc nhiều vào model đang sử dụng.",
     askAiBtn: "Hỏi AI",
+    stopBtn: "Dừng",
     captureBtn: "Chụp ảnh",
     uploadBtn: "Đính kèm ảnh bài tập",
     attachedLabel: "Ảnh đã đính kèm",

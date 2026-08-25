@@ -54,6 +54,39 @@ export class SidePanelController {
     }
   }
 
+  async setSendButtonStreaming(streaming) {
+    const btn = document.getElementById('spBtnSend');
+    if (!btn) return;
+    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+    const dict = getI18n(uiLanguage);
+    btn.classList.toggle('sp-btn-send-stop', streaming);
+    btn.disabled = false;
+    btn.innerHTML = streaming
+      ? `<span>${dict.stopBtn || 'Stop'}</span> ${Icons.stopCircle(13)}`
+      : `<span>${dict.askAiBtn || 'Ask AI'}</span> ${Icons.send(13)}`;
+  }
+
+  // Cancels the in-flight request: aborts it on the background/offscreen side
+  // (so a local LM Studio/Ollama model actually stops generating instead of
+  // grinding away unseen) and settles the UI as if the stream ended here.
+  stopStream() {
+    if (!this.isStreaming) return;
+    if (this.activeRequestId) {
+      chrome.runtime.sendMessage({ action: 'ABORT_STREAM', payload: { requestId: this.activeRequestId } }).catch(() => {});
+    }
+    this.isStreaming = false;
+    this.setSendButtonStreaming(false);
+    this.stopLoadingSteps();
+
+    if (this.activeAiBubble) {
+      const footer = this.activeAiBubble.querySelector('.sp-msg-footer');
+      if (footer) footer.style.display = 'flex';
+    }
+    if (this.currentResponseText) {
+      Storage.addChatMessage({ role: 'assistant', content: this.currentResponseText });
+    }
+  }
+
   async init() {
     this.populateStaticIcons();
     this.setupEventListeners();
@@ -96,7 +129,13 @@ export class SidePanelController {
     const fileInput = document.getElementById('spFileInput');
 
     // Send on button click or Enter key
-    sendBtn?.addEventListener('click', () => this.handleSend());
+    sendBtn?.addEventListener('click', () => {
+      if (this.isStreaming) {
+        this.stopStream();
+      } else {
+        this.handleSend();
+      }
+    });
     textarea?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -338,8 +377,7 @@ export class SidePanelController {
     this.currentNotices = [];
     this.isStreaming = true;
     this.activeRequestId = `req_${Date.now()}`;
-    const btnSend = document.getElementById('spBtnSend');
-    if (btnSend) btnSend.disabled = true;
+    this.setSendButtonStreaming(true);
 
     const { outputLanguage = 'en', uiLanguage = 'en' } = await Storage.get(['outputLanguage', 'uiLanguage']);
     const dict = getI18n(uiLanguage);
@@ -441,8 +479,7 @@ export class SidePanelController {
 
   async finalizeStream() {
     this.isStreaming = false;
-    const btnSend = document.getElementById('spBtnSend');
-    if (btnSend) btnSend.disabled = false;
+    this.setSendButtonStreaming(false);
     Storage.set({ isNanoReady: true });
     this.updateModelBadge();
 
@@ -556,8 +593,7 @@ export class SidePanelController {
 
   async handleError(err) {
     this.isStreaming = false;
-    const btnSend = document.getElementById('spBtnSend');
-    if (btnSend) btnSend.disabled = false;
+    this.setSendButtonStreaming(false);
 
     if (!this.activeAiBubble) return;
     this.stopLoadingSteps();

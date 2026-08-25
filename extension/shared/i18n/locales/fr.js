@@ -5,6 +5,7 @@ export default {
     shiftEnterHint: "Entrée pour envoyer, Shift+Entrée pour saut de ligne",
     aiDisclaimer: "L'IA peut faire des erreurs, et les résultats dépendent fortement du modèle utilisé.",
     askAiBtn: "Demander à l’IA",
+    stopBtn: "Arrêter",
     captureBtn: "Capturer",
     uploadBtn: "Joindre une image",
     attachedLabel: "Image jointe",

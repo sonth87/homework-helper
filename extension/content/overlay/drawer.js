@@ -4,7 +4,7 @@
 
 import { Icons } from '../../shared/icons.js';
 import { Storage, DEFAULT_NANO_SYSTEM_PROMPT, buildNanoPrompts } from '../../shared/storage.js';
-import { formatMarkdownAndMath } from '../../shared/markdown-katex.js';
+import { formatMarkdownAndMath, formatDictionaryEntry } from '../../shared/markdown-katex.js';
 import { getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
 
@@ -55,6 +55,50 @@ export class OverlayDrawer {
     if (this.loadingStepsInterval) {
       clearInterval(this.loadingStepsInterval);
       this.loadingStepsInterval = null;
+    }
+  }
+
+  // Toggles the send button between "Ask AI" and "Stop" — used both for the
+  // drawer's own requests and (via activeTarget === 'card') requests started
+  // from the floating popup card, since they share this same streaming state.
+  async setSendButtonStreaming(streaming) {
+    const btn = this.shadow.getElementById('hwBtnSend');
+    if (!btn) return;
+    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+    const dict = getI18n(uiLanguage);
+    btn.classList.toggle('hw-btn-send-stop', streaming);
+    btn.disabled = false;
+    btn.innerHTML = streaming
+      ? `<span id="hwSendBtnLabel">${dict.stopBtn || 'Stop'}</span> ${Icons.stopCircle(13)}`
+      : `<span id="hwSendBtnLabel">${dict.askAiBtn || 'Ask AI'}</span> ${Icons.send(13)}`;
+  }
+
+  // Cancels the in-flight request: aborts it on the background/offscreen side
+  // (so a local LM Studio/Ollama model actually stops generating instead of
+  // grinding away unseen) and settles the UI as if the stream ended here.
+  stopStream() {
+    if (!this.isStreaming) return;
+    if (this.activeRequestId) {
+      chrome.runtime.sendMessage({ action: 'ABORT_STREAM', payload: { requestId: this.activeRequestId } }).catch(() => {});
+    }
+    this.isStreaming = false;
+    this.setSendButtonStreaming(false);
+
+    if (this.activeTarget === 'card') {
+      this.overlay.floatingCard.stopLoadingSteps();
+      if (this.overlay.floatingCard.activeCardResponseText) {
+        Storage.addChatMessage({ role: 'assistant', content: this.overlay.floatingCard.activeCardResponseText });
+      }
+      return;
+    }
+
+    this.stopLoadingSteps();
+    if (this.activeAiBubble) {
+      const footer = this.activeAiBubble.querySelector('.hw-msg-footer');
+      if (footer) footer.style.display = 'flex';
+    }
+    if (this.currentDrawerResponseText) {
+      Storage.addChatMessage({ role: 'assistant', content: this.currentDrawerResponseText });
     }
   }
 
@@ -126,7 +170,13 @@ export class OverlayDrawer {
     const textarea = s.getElementById('hwTextarea');
     const sendBtn = s.getElementById('hwBtnSend');
 
-    sendBtn?.addEventListener('click', () => this.handleSend());
+    sendBtn?.addEventListener('click', () => {
+      if (this.isStreaming) {
+        this.stopStream();
+      } else {
+        this.handleSend();
+      }
+    });
     textarea?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -278,8 +328,7 @@ export class OverlayDrawer {
     this.isStreaming = true;
     this.activeTarget = 'drawer';
     this.activeRequestId = `req_${Date.now()}`;
-    const btnSend = this.shadow.getElementById('hwBtnSend');
-    if (btnSend) btnSend.disabled = true;
+    this.setSendButtonStreaming(true);
 
     const { apiConfigs = [], systemPrompt, nanoSystemPrompt, outputLanguage = 'en', uiLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'outputLanguage', 'uiLanguage']);
     const dict = getI18n(uiLanguage);
@@ -430,7 +479,9 @@ export class OverlayDrawer {
       this.overlay.floatingCard.activeCardResponseText += chunk;
       const content = this.shadow.getElementById('hwCardAnswerContent');
       if (content) {
-        content.innerHTML = formatMarkdownAndMath(this.overlay.floatingCard.activeCardResponseText);
+        content.innerHTML = content.classList.contains('hw-dict-mode')
+          ? formatDictionaryEntry(this.overlay.floatingCard.activeCardResponseText)
+          : formatMarkdownAndMath(this.overlay.floatingCard.activeCardResponseText);
       }
       return;
     }
@@ -451,8 +502,7 @@ export class OverlayDrawer {
 
   async finalizeStream() {
     this.isStreaming = false;
-    const btnSend = this.shadow.getElementById('hwBtnSend');
-    if (btnSend) btnSend.disabled = false;
+    this.setSendButtonStreaming(false);
     Storage.set({ isNanoReady: true });
     this.updateActiveModelBadge();
 
@@ -487,8 +537,7 @@ export class OverlayDrawer {
 
   handleStreamError(err) {
     this.isStreaming = false;
-    const btnSend = this.shadow.getElementById('hwBtnSend');
-    if (btnSend) btnSend.disabled = false;
+    this.setSendButtonStreaming(false);
 
     const errStr = String(err || '');
 

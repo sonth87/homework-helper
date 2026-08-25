@@ -5,6 +5,7 @@ export default {
     shiftEnterHint: "Enter เพื่อส่ง, Shift+Enter เพื่อขึ้นบรรทัดใหม่",
     aiDisclaimer: "AI อาจผิดพลาดได้ และผลลัพธ์ขึ้นอยู่กับโมเดลที่ใช้เป็นอย่างมาก",
     askAiBtn: "ถาม AI",
+    stopBtn: "หยุด",
     captureBtn: "ถ่ายภาพ",
     uploadBtn: "แนบรูปภาพโจทย์",
     attachedLabel: "แนบรูปภาพแล้ว",

@@ -5,6 +5,7 @@ export default {
     shiftEnterHint: "Enter로 전송, Shift+Enter로 줄바꿈",
     aiDisclaimer: "AI는 실수를 할 수 있으며, 결과는 사용하는 모델에 따라 크게 달라집니다.",
     askAiBtn: "AI에게 질문",
+    stopBtn: "중지",
     captureBtn: "화면 캡처",
     uploadBtn: "문제 이미지 첨부",
     attachedLabel: "이미지 첨부됨",

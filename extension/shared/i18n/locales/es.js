@@ -5,6 +5,7 @@ export default {
     shiftEnterHint: "Enter para enviar, Shift+Enter para nueva línea",
     aiDisclaimer: "La IA puede cometer errores, y los resultados dependen en gran medida del modelo utilizado.",
     askAiBtn: "Preguntar a la IA",
+    stopBtn: "Detener",
     captureBtn: "Capturar",
     uploadBtn: "Adjuntar imagen",
     attachedLabel: "Imagen adjunta",

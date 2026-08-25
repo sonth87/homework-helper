@@ -5,6 +5,7 @@ export default {
     shiftEnterHint: "按 Enter 發送，Shift+Enter 換行",
     aiDisclaimer: "AI 可能會出錯，結果很大程度上取決於所使用的模型。",
     askAiBtn: "向 AI 提問",
+    stopBtn: "停止",
     captureBtn: "截圖解題",
     uploadBtn: "上傳題目圖片",
     attachedLabel: "已附加圖片",

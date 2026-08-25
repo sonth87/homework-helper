@@ -4,7 +4,7 @@
 
 import { Icons } from '../../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES, buildNanoPrompts } from '../../shared/storage.js';
-import { formatMarkdownAndMath } from '../../shared/markdown-katex.js';
+import { formatDictionaryEntry } from '../../shared/markdown-katex.js';
 import { getFloatingPopupI18n, getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
 
@@ -252,6 +252,13 @@ export class OverlayFloatingCard {
 
     s.getElementById('hwBtnCloseCard')?.addEventListener('click', () => {
       this.stopLoadingSteps();
+      // Closing the popup mid-answer used to just hide the UI while the
+      // request kept running unseen in the background/offscreen document
+      // (burning tokens, or leaving a local LM Studio/Ollama model still
+      // generating) — abort it for real instead.
+      if (this.overlay.drawer.isStreaming && this.overlay.drawer.activeTarget === 'card') {
+        this.overlay.drawer.stopStream();
+      }
       this.popupCard.style.display = 'none';
       s.getElementById('hwCardHistoryPanel').style.display = 'none';
     });
@@ -449,6 +456,7 @@ export class OverlayFloatingCard {
     this.overlay.drawer.isStreaming = true;
     this.overlay.drawer.activeTarget = 'card';
     this.overlay.drawer.activeRequestId = `req_${Date.now()}`;
+    this.overlay.drawer.setSendButtonStreaming(true);
 
     const prompt = mode === 'translate'
       ? (genDict.imageTranslatePromptHeader || 'Please translate all text shown in this image accurately:')
@@ -617,6 +625,10 @@ export class OverlayFloatingCard {
     primaryBtn.querySelector('.lucide-icon')?.remove();
     primaryBtn.insertAdjacentHTML('afterbegin', Icons.messageCircle(14));
 
+    // Dictionary-style markdown (POS tags, highlighted example words) only
+    // applies to translate mode's single-word lookups — see hw-dict-mode in overlay.css.
+    s.getElementById('hwCardAnswerContent')?.classList.toggle('hw-dict-mode', type === 'translate');
+
     if (type === 'translate') {
       titleEl.textContent = cardDict.translateTitle;
       headingEl.textContent = cardDict.translateHeading;
@@ -678,6 +690,7 @@ export class OverlayFloatingCard {
     this.overlay.drawer.isStreaming = true;
     this.overlay.drawer.activeTarget = 'card';
     this.overlay.drawer.activeRequestId = `req_${Date.now()}`;
+    this.overlay.drawer.setSendButtonStreaming(true);
 
     let prompt = text;
     let studyMode = savedStudyMode;
@@ -845,7 +858,11 @@ export class OverlayFloatingCard {
 
         const ansContent = this.shadow.getElementById('hwCardAnswerContent');
         const replyText = lastAssistant?.content || lastUser?.content || 'Hội thoại rỗng';
-        ansContent.innerHTML = formatMarkdownAndMath(replyText);
+        // History doesn't track which studyMode produced a message, so detect
+        // a dictionary-shaped reply (**word** /phonetic/...) the same way
+        // formatDictionaryEntry() itself does, just to scope the dict-mode CSS.
+        ansContent.classList.toggle('hw-dict-mode', /^\*\*.+?\*\*\s*\/[^/\n]+\//.test(replyText.trim()));
+        ansContent.innerHTML = formatDictionaryEntry(replyText);
         this.activeCardResponseText = replyText;
       });
 

@@ -5,6 +5,7 @@ export default {
     shiftEnterHint: "Enterで送信、Shift+Enterで改行",
     aiDisclaimer: "AIは間違えることがあり、結果は使用するモデルに大きく左右されます。",
     askAiBtn: "AIに質問",
+    stopBtn: "停止",
     captureBtn: "画面キャプチャ",
     uploadBtn: "画像を添付",
     attachedLabel: "画像添付済み",
