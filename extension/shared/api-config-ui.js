@@ -455,6 +455,12 @@ export function wireLocalModelPanel(root, { dict = {}, variant, state, onModelsA
       return;
     }
 
+    // "localhost" can silently fail to connect (IPv6 loopback resolution)
+    // even when the server is reachable at 127.0.0.1 — detectLocalModels()
+    // already retried and found it there, so reflect the working address
+    // back into the field instead of leaving the misleading "localhost" value.
+    if (result.resolvedBaseUrl) baseUrlInput.value = result.resolvedBaseUrl;
+
     pingBtn.className = 'opt-local-ping-btn online';
     statusIcon.innerHTML = Icons.check(15);
     state.localDiscoveredModels = result.models;

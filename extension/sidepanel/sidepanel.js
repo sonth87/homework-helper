@@ -478,6 +478,7 @@ export class SidePanelController {
     const sendBtn = document.getElementById('spBtnSend');
     const captureBtn = document.getElementById('spBtnCapture');
     const hintSpan = document.querySelector('.sp-hint');
+    const aiDisclaimer = document.getElementById('spAiDisclaimer');
     const welcomeText = document.getElementById('spWelcomeText');
     const chipsContainer = document.getElementById('spChipsContainer');
     const modeSelect = document.getElementById('spSelectMode');
@@ -487,6 +488,7 @@ export class SidePanelController {
     if (sendBtn) sendBtn.innerHTML = `<span>${dict.askAiBtn}</span> ${Icons.send(13)}`;
     if (captureBtn) captureBtn.innerHTML = `${Icons.scissors(14)} <span class="sp-btn-capture-label">${dict.captureBtn}</span>`;
     if (hintSpan) hintSpan.textContent = dict.shiftEnterHint;
+    if (aiDisclaimer) aiDisclaimer.textContent = dict.aiDisclaimer;
     if (welcomeText) welcomeText.textContent = dict.welcomeText;
 
     if (langSelect) {

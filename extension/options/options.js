@@ -29,6 +29,7 @@ export class OptionsController {
   async init() {
     this.renderIcons();
     this.setupNavigation();
+    this.initImageLightbox();
     OptionsTooltips.init();
     await this.applyLanguageI18n();
 
@@ -144,6 +145,40 @@ export class OptionsController {
         if (tab === 'prompt') document.getElementById('tabPrompt')?.classList.add('active');
         if (tab === 'general') document.getElementById('tabGeneral')?.classList.add('active');
       });
+    });
+  }
+
+  // Click any guide screenshot (.opt-guide-shot.has-img img) to view it
+  // full-size; close via the × button, clicking outside the image, or Esc.
+  initImageLightbox() {
+    const backdrop = document.getElementById('optLightboxBackdrop');
+    const lightboxImg = document.getElementById('optLightboxImg');
+    const closeBtn = document.getElementById('optLightboxClose');
+    if (!backdrop || !lightboxImg || !closeBtn) return;
+
+    closeBtn.innerHTML = Icons.x(18);
+
+    const open = (src, alt) => {
+      lightboxImg.src = src;
+      lightboxImg.alt = alt || '';
+      backdrop.style.display = 'flex';
+    };
+
+    const close = () => {
+      backdrop.style.display = 'none';
+      lightboxImg.src = '';
+    };
+
+    document.querySelectorAll('.opt-guide-shot.has-img img').forEach((thumb) => {
+      thumb.addEventListener('click', () => open(thumb.src, thumb.alt));
+    });
+
+    closeBtn.addEventListener('click', close);
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && backdrop.style.display !== 'none') close();
     });
   }
 

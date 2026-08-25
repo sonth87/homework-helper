@@ -249,6 +249,7 @@ class InPageOverlay {
               </button>
             </div>
           </div>
+          <div style="font-size: 10px; color: var(--hw-text-muted); text-align: center; opacity: 0.8;" id="hwAiDisclaimer">AI có thể mắc sai sót, và phụ thuộc nhiều vào model đang sử dụng.</div>
         </div>
 
         <!-- Config Modal Container -->
@@ -418,6 +419,7 @@ class InPageOverlay {
     const sendBtnLabel = s.getElementById('hwSendBtnLabel');
     const captureBtnLabel = s.getElementById('hwCaptureBtnLabel');
     const hintText = s.getElementById('hwHintText');
+    const aiDisclaimer = s.getElementById('hwAiDisclaimer');
     const welcomeText = s.getElementById('hwWelcomeText');
     const chipsContainer = s.getElementById('hwChipsContainer');
     const modeSelect = s.getElementById('hwModeSelect');
@@ -433,6 +435,7 @@ class InPageOverlay {
     if (sendBtnLabel) sendBtnLabel.textContent = dict.askAiBtn;
     if (captureBtnLabel) captureBtnLabel.textContent = dict.captureBtn;
     if (hintText) hintText.textContent = dict.shiftEnterHint;
+    if (aiDisclaimer) aiDisclaimer.textContent = dict.aiDisclaimer;
     if (welcomeText) welcomeText.textContent = dict.welcomeText;
     if (configModalTitle) configModalTitle.textContent = dict.modalConfigTitle || 'Cấu hình AI Models & API Keys';
 

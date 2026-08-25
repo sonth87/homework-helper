@@ -205,12 +205,37 @@
           </p>
 
           <div id="optLocalGuideBody" style="margin-top:14px; display:flex; flex-direction:column; gap:20px;">
+            <!-- LM Studio Guide -->
+            <div>
+              <div style="font-weight:700; font-size:13.5px; color:#16a34a; margin-bottom:10px; display:flex; align-items:center; gap:6px;"><span id="optIconGuideLmstudio"></span> LM Studio</div>
+              <ol class="opt-guide-steps">
+                <li>
+                  <div class="opt-guide-step-text" id="optLmstudioStep1">Tải LM Studio từ <strong><a href='https://lmstudio.ai' target='_blank' />https://lmstudio.ai</a></strong>, cài đặt và mở ứng dụng.</div>
+                </li>
+                <li>
+                  <div class="opt-guide-step-text" id="optLmstudioStep2">Vào tab <strong>Discover</strong> (biểu tượng kính lúp), tìm và tải về 1 model bạn muốn dùng (định dạng GGUF).</div>
+                  <div class="opt-guide-shot has-img" data-step="lmstudio-2"><img id="optLmstudioImg2" src="../assets/images/guides/lms-install-model.png" alt="Tải model trong tab Discover của LM Studio"></div>
+                </li>
+                <li>
+                  <div class="opt-guide-step-text" id="optLmstudioStep3">Nếu không thấy tab <strong>Local Server</strong> / <strong>Developer</strong> (biểu tượng &lt;/&gt;) trên thanh bên, vào <strong>Settings → Developer</strong> để bật <strong>Developer Mode</strong> trước (các bản LM Studio mới gộp chung Power User + Developer vào 1 mục này).</div>
+                  <div class="opt-guide-shot has-img" data-step="lmstudio-dev"><img id="optLmstudioImgDev" src="../assets/images/guides/lms-setting-develop.png" alt="Bật Developer Mode trong Settings của LM Studio"></div>
+                </li>
+                <li>
+                  <div class="opt-guide-step-text" id="optLmstudioStep4">Vào tab <strong>Local Server / Developer</strong> (server tự chạy ở trạng thái <strong>Status: Running</strong>). Nhấn nút <strong>+ Load Model</strong> ở góc trên bên phải, chọn model bạn đã tải ở bước trên rồi đợi model nạp xong — model sẽ hiện <strong>READY</strong> trong mục <strong>Loaded Models</strong>. Server mặc định chạy tại <code>http://127.0.0.1:1234</code>.</div>
+                  <div class="opt-guide-shot has-img" data-step="lmstudio-3"><img id="optLmstudioImg3" src="../assets/images/guides/lms-local-server.png" alt="Màn hình Local Server / Developer trong LM Studio hiển thị trạng thái Running"></div>
+                </li>
+                <li>
+                  <div class="opt-guide-step-text" id="optLmstudioStep5">Quay lại tiện ích này, nhấn nút <strong>"Thêm Local Model"</strong> ở trên → chọn tab <strong>LM Studio</strong> → nhấn <strong>Kiểm tra kết nối</strong> → tick chọn model đang chạy → nhấn <strong>Thêm model đã chọn</strong>.</div>
+                </li>
+              </ol>
+            </div>
+
             <!-- Ollama Guide -->
             <div>
               <div style="font-weight:700; font-size:13.5px; color:#16a34a; margin-bottom:10px; display:flex; align-items:center; gap:6px;"><span id="optIconGuideOllama"></span> Ollama</div>
               <ol class="opt-guide-steps">
                 <li>
-                  <div class="opt-guide-step-text" id="optOllamaStep1">Tải và cài đặt Ollama từ <strong>ollama.com/download</strong> (có bản Windows / macOS / Linux).</div>
+                  <div class="opt-guide-step-text" id="optOllamaStep1">Tải và cài đặt Ollama từ <strong><a href='https://ollama.com/download' target='_blank' />https://ollama.com/download</a></strong> (có bản Windows / macOS / Linux).</div>
                   <div class="opt-guide-shot" data-step="ollama-1"><span id="optIconGuideShot1"></span><span id="optOllamaCaption1">Ảnh minh họa: Trang tải Ollama</span></div>
                 </li>
                 <li>
@@ -224,30 +249,6 @@
                 <li>
                   <div class="opt-guide-step-text" id="optOllamaStep4">Quay lại tiện ích này, nhấn nút <strong>"Thêm Local Model"</strong> ở trên → chọn tab <strong>Ollama</strong> → nhấn <strong>Kiểm tra kết nối</strong> → tick chọn model vừa tải → nhấn <strong>Thêm model đã chọn</strong>.</div>
                   <div class="opt-guide-shot" data-step="ollama-4"><span id="optIconGuideShot4"></span><span id="optOllamaCaption4">Ảnh minh họa: Thêm Local Model trong tiện ích</span></div>
-                </li>
-              </ol>
-            </div>
-
-            <!-- LM Studio Guide -->
-            <div>
-              <div style="font-weight:700; font-size:13.5px; color:#16a34a; margin-bottom:10px; display:flex; align-items:center; gap:6px;"><span id="optIconGuideLmstudio"></span> LM Studio</div>
-              <ol class="opt-guide-steps">
-                <li>
-                  <div class="opt-guide-step-text" id="optLmstudioStep1">Tải LM Studio từ <strong>lmstudio.ai</strong>, cài đặt và mở ứng dụng.</div>
-                </li>
-                <li>
-                  <div class="opt-guide-step-text" id="optLmstudioStep2">Vào tab <strong>Discover</strong> (biểu tượng kính lúp), tìm và tải về 1 model bạn muốn dùng (định dạng GGUF).</div>
-                  <div class="opt-guide-shot has-img" data-step="lmstudio-2"><img id="optLmstudioImg2" src="../assets/images/guides/lms-install-model.png" alt="Tải model trong tab Discover của LM Studio"></div>
-                </li>
-                <li>
-                  <div class="opt-guide-step-text" id="optLmstudioStep3">Nếu không thấy tab <strong>Local Server</strong> / <strong>Developer</strong> (biểu tượng &lt;/&gt;) trên thanh bên, vào <strong>Settings → Developer</strong> để bật <strong>Developer Mode</strong> trước (các bản LM Studio mới gộp chung Power User + Developer vào 1 mục này).</div>
-                </li>
-                <li>
-                  <div class="opt-guide-step-text" id="optLmstudioStep4">Vào tab <strong>Local Server / Developer</strong>, chọn model đã tải ở danh sách phía trên, nhấn <strong>Start Server</strong>. Server mặc định chạy tại <code>http://127.0.0.1:1234</code>.</div>
-                  <div class="opt-guide-shot has-img" data-step="lmstudio-3"><img id="optLmstudioImg3" src="../assets/images/guides/lms-local-server.png" alt="Màn hình Local Server / Developer trong LM Studio hiển thị trạng thái Running"></div>
-                </li>
-                <li>
-                  <div class="opt-guide-step-text" id="optLmstudioStep5">Quay lại tiện ích này, nhấn nút <strong>"Thêm Local Model"</strong> ở trên → chọn tab <strong>LM Studio</strong> → nhấn <strong>Kiểm tra kết nối</strong> → tick chọn model đang chạy → nhấn <strong>Thêm model đã chọn</strong>.</div>
                 </li>
               </ol>
             </div>
@@ -805,6 +806,12 @@
 
     <!-- Floating Options Toast -->
     <div class="opt-toast" id="optToast"></div>
+
+    <!-- Image Lightbox (click any guide screenshot to enlarge) -->
+    <div class="opt-lightbox-backdrop" id="optLightboxBackdrop" style="display:none;">
+      <button class="opt-lightbox-close" id="optLightboxClose" title="Đóng (Esc)"></button>
+      <img class="opt-lightbox-img" id="optLightboxImg" src="" alt="">
+    </div>
   </div>
 
   <script type="module" src="options.js"></script>

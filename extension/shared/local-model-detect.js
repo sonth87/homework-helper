@@ -90,15 +90,7 @@ export function looksLikeVisionModel(id) {
   return VISION_NAME_HINT.test(id || '');
 }
 
-/**
- * @param {'ollama'|'lmstudio'} type
- * @param {string} rawBaseUrl
- * @returns {Promise<{ok: boolean, models: {id: string, isEmbedding: boolean, isVision: boolean}[], error?: string}>}
- */
-export async function detectLocalModels(type, rawBaseUrl) {
-  if (!rawBaseUrl || !rawBaseUrl.trim()) {
-    return { ok: false, models: [], error: 'missing_base_url' };
-  }
+async function detectLocalModelsAt(type, rawBaseUrl) {
   const { root, v1 } = normalizeBaseUrl(rawBaseUrl);
 
   let ids;
@@ -131,7 +123,69 @@ export async function detectLocalModels(type, rawBaseUrl) {
     isEmbedding: isLikelyEmbeddingModel(id, typeMap),
     isVision: isLikelyVisionModel(id, typeMap),
   }));
-  return { ok: true, models };
+  return { ok: true, models, root };
+}
+
+/**
+ * The actual network probe — only ever safe to run from an
+ * extension-privileged context (background service worker). `host_permissions`
+ * only bypasses CORS for fetches made from the background or extension pages
+ * (options.html/sidepanel.html); a fetch issued from a content script carries
+ * the *hosting web page's* origin instead, so a local server that doesn't
+ * send `Access-Control-Allow-Origin` (LM Studio/Ollama, by default) gets
+ * blocked by the browser's CORS check when the overlay pings it directly.
+ * @param {'ollama'|'lmstudio'} type
+ * @param {string} rawBaseUrl
+ * @returns {Promise<{ok: boolean, models: {id: string, isEmbedding: boolean, isVision: boolean}[], error?: string, resolvedBaseUrl?: string}>}
+ */
+async function detectLocalModelsDirect(type, rawBaseUrl) {
+  if (!rawBaseUrl || !rawBaseUrl.trim()) {
+    return { ok: false, models: [], error: 'missing_base_url' };
+  }
+
+  const result = await detectLocalModelsAt(type, rawBaseUrl);
+  if (result.ok) return result;
+
+  // "localhost" commonly resolves to the IPv6 loopback (::1) before IPv4;
+  // if the local server only binds to 127.0.0.1 (LM Studio/Ollama's own
+  // default), that first attempt fails to connect even though the server is
+  // genuinely running. Silently retry with the IPv4 literal — this is the
+  // exact fix LM Studio's own "Reachable at" address already recommends.
+  if (/^https?:\/\/localhost(:|\/|$)/i.test(rawBaseUrl.trim())) {
+    const fallbackUrl = rawBaseUrl.trim().replace(/^(https?:\/\/)localhost/i, '$1127.0.0.1');
+    const fallbackResult = await detectLocalModelsAt(type, fallbackUrl);
+    if (fallbackResult.ok) {
+      return { ...fallbackResult, resolvedBaseUrl: fallbackResult.root };
+    }
+  }
+
+  return result;
+}
+
+// `typeof window === 'undefined'` is true only inside the service worker —
+// content scripts and extension pages (options/sidepanel) both have a
+// `window`. Calling this from the background runs the probe directly (it's
+// already the privileged context); calling it from anywhere else relays the
+// request through the background via messaging so every surface gets the
+// same CORS-exempt fetch, instead of only the ones that happen to be
+// extension pages.
+export async function detectLocalModels(type, rawBaseUrl) {
+  if (typeof window === 'undefined') {
+    return detectLocalModelsDirect(type, rawBaseUrl);
+  }
+
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage(
+      { action: 'DETECT_LOCAL_MODELS', payload: { type, rawBaseUrl } },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          resolve({ ok: false, models: [], error: chrome.runtime.lastError.message });
+          return;
+        }
+        resolve(response || { ok: false, models: [], error: 'no_response' });
+      }
+    );
+  });
 }
 
 // Well-known model family names, capitalized the way people actually write them.

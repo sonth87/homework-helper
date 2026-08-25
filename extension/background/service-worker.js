@@ -7,6 +7,7 @@ import { AiEngine } from './ai-engine.js';
 import { keyRotator } from './key-rotator.js';
 import { Storage } from '../shared/storage.js';
 import { ensureOffscreenDocument } from './ocr-bridge.js';
+import { detectLocalModels } from '../shared/local-model-detect.js';
 
 // State & active streams
 const activeStreams = new Map(); // requestId -> AbortController
@@ -131,6 +132,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.tabs.create({ url: targetUrl });
     sendResponse({ success: true });
     return false;
+  }
+
+  // Probe a local Ollama/LM Studio server for its loaded models. Always run
+  // from here (not the caller's own context) — this is the background
+  // service worker, so the fetch is covered by host_permissions and isn't
+  // subject to the CORS check a content-script-origin fetch would hit.
+  if (action === 'DETECT_LOCAL_MODELS') {
+    const { type, rawBaseUrl } = payload || {};
+    (async () => {
+      try {
+        const result = await detectLocalModels(type, rawBaseUrl);
+        sendResponse(result);
+      } catch (err) {
+        sendResponse({ ok: false, models: [], error: err.message });
+      }
+    })();
+    return true;
   }
 
   // Abort ongoing stream

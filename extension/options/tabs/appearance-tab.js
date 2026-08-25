@@ -114,7 +114,11 @@ export class AppearanceTab {
         const tbAlpha = (parseInt(rangeToolbarOpacity.value, 10) / 100).toFixed(2);
         const tbBlurVal = parseInt(rangeToolbarBlur.value, 10);
         const tbTheme = toolbarThemeSelect.value;
+        const tbSize = toolbarSizeSelect?.value || 'normal';
         const showText = checkToolbarText ? checkToolbarText.checked : true;
+
+        prevToolbar.classList.remove('size-compact', 'size-large');
+        if (tbSize === 'compact' || tbSize === 'large') prevToolbar.classList.add(`size-${tbSize}`);
 
         prevToolbar.querySelectorAll('.prev-tb-label').forEach((lbl) => {
           lbl.style.display = showText ? 'inline' : 'none';
