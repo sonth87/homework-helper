@@ -140,6 +140,12 @@ class InPageOverlay {
         </div>
       </div>
 
+      <!-- Compact-mode floating title tab — sibling of .hw-solution-card
+           (not a descendant), positioned via JS so it can slide above the
+           card's own top edge without being clipped by the card's
+           overflow:hidden. Its content is mirrored from .hw-card-title. -->
+      <div class="hw-card-float-tab" id="hwCardFloatTab" style="display: none;"></div>
+
       <!-- Collapsed Solution Popup — round draggable FAB, snaps to nearest screen edge -->
       <button class="hw-card-collapsed-fab" id="hwCardCollapsedFab" style="display: none;">
         ${Icons.appLogo(36)}
@@ -351,7 +357,7 @@ class InPageOverlay {
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local') {
-          if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.popupOpacity || changes.popupBlur || changes.overlayTheme) {
+          if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.popupOpacity || changes.popupBlur || changes.popupCardSize || changes.overlayTheme) {
             this.applyAppearanceSettings();
           }
           if (changes.uiLanguage) {
@@ -391,6 +397,7 @@ class InPageOverlay {
       fabOpacity = 90,
       popupOpacity = 92,
       popupBlur = 16,
+      popupCardSize = 'normal',
     } = await Storage.get();
 
     this.fabs.applyAppearance(enableFloatingButton, fabSize, fabOpacity);
@@ -405,6 +412,7 @@ class InPageOverlay {
       card.style.background = `rgba(var(--hw-glass-rgb), ${popAlpha})`;
       card.style.backdropFilter = `blur(${popupBlur}px) saturate(180%)`;
       card.style.webkitBackdropFilter = `blur(${popupBlur}px) saturate(180%)`;
+      card.classList.toggle('hw-card-compact', popupCardSize === 'compact');
     }
   }
 

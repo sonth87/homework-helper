@@ -332,6 +332,10 @@ export class OptionsController {
     setText('optLabelToolbarBlur', dict.labelToolbarBlur);
     setText('optLabelToolbarBlurDesc', dict.labelToolbarBlurDesc);
     setText('optCardPopupTitle', dict.cardPopupTitle);
+    setText('optLabelPopupCardSize', dict.labelPopupCardSize);
+    setText('optLabelPopupCardSizeDesc', dict.labelPopupCardSizeDesc);
+    setText('optPopupCardSizeOptNormal', dict.popupCardSizeOptNormal);
+    setText('optPopupCardSizeOptCompact', dict.popupCardSizeOptCompact);
     setText('optLabelPopupOpacity', dict.labelPopupOpacity);
     setText('optLabelPopupOpacityDesc', dict.labelPopupOpacityDesc);
     setText('optLabelPopupBlur', dict.labelPopupBlur);

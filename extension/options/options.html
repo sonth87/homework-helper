@@ -509,6 +509,17 @@
               <div class="opt-settings-list">
                 <div class="opt-setting-row">
                   <div>
+                    <div class="opt-setting-title" id="optLabelPopupCardSize">Kiểu hiển thị Popup</div>
+                    <div class="opt-setting-desc" id="optLabelPopupCardSizeDesc">Compact: ẩn bớt nút phụ, chỉ hiện khi rê chuột vào popup, tăng mật độ hiển thị nội dung.</div>
+                  </div>
+                  <select id="optPopupCardSizeSelect" class="opt-select">
+                    <option value="normal" id="optPopupCardSizeOptNormal" selected>Normal</option>
+                    <option value="compact" id="optPopupCardSizeOptCompact">Compact</option>
+                  </select>
+                </div>
+
+                <div class="opt-setting-row">
+                  <div>
                     <div class="opt-setting-title"><span id="optLabelPopupOpacity">Độ trong suốt nền Popup:</span> <span id="valPopupOpacity">92%</span></div>
                     <div class="opt-setting-desc" id="optLabelPopupOpacityDesc">Độ mờ kính của popup giải bài.</div>
                   </div>
@@ -559,7 +570,7 @@
                 <!-- Preview Homework Helper Popup -->
                 <div class="opt-preview-popup" id="prevPopup">
                   <div class="prev-popup-header">
-                    <div style="display:flex; align-items:center; gap:6px; font-weight:700;">
+                    <div class="prev-popup-title" style="display:flex; align-items:center; gap:6px; font-weight:700;">
                       <span id="prevIconSparkles"></span> <span id="prevPopupTitle">Homework Helper</span>
                     </div>
                     <span id="prevIconClose"></span>

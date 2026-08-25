@@ -32,6 +32,66 @@ export class OverlayFloatingCard {
     this.makeCardDraggable();
     this.makeCollapsedFabDraggable();
     this.setupListeners();
+    this.setupFloatTab();
+  }
+
+  // Compact mode's floating title tab lives outside .hw-solution-card (see
+  // overlay.js/overlay.css) so it can slide above the card's own top edge
+  // without being clipped by the card's overflow:hidden (needed for its
+  // rounded corners + native resize handle) and without ever pushing the
+  // card's own content down. Since it's a sibling rather than a descendant,
+  // plain CSS :hover on the card can't reveal it — position and visibility
+  // are kept in sync here instead.
+  setupFloatTab() {
+    const tab = this.shadow.getElementById('hwCardFloatTab');
+    const card = this.popupCard;
+    if (!tab || !card) return;
+
+    const syncPosition = () => {
+      const isOpen = getComputedStyle(card).display !== 'none';
+      const isCompact = card.classList.contains('hw-card-compact');
+      if (!isOpen || !isCompact) {
+        tab.style.display = 'none';
+        return;
+      }
+      const titleEl = card.querySelector('.hw-card-title');
+      if (titleEl) {
+        tab.innerHTML = titleEl.innerHTML;
+        // Strip any mirrored id (e.g. #hwPopupTitle) so it doesn't collide
+        // with the original still living inside the (hidden) header.
+        tab.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+      }
+      tab.style.display = 'flex';
+      const cardRect = card.getBoundingClientRect();
+      const tabRect = tab.getBoundingClientRect();
+      tab.style.left = `${Math.round(cardRect.left + 10)}px`;
+      tab.style.top = `${Math.round(cardRect.top - tabRect.height + 2)}px`;
+    };
+
+    let hideTimer = null;
+    const reveal = () => {
+      clearTimeout(hideTimer);
+      tab.classList.add('hw-visible');
+    };
+    const scheduleHide = () => {
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => tab.classList.remove('hw-visible'), 120);
+    };
+
+    card.addEventListener('mouseenter', reveal);
+    card.addEventListener('mouseleave', scheduleHide);
+    card.addEventListener('focusin', reveal);
+    card.addEventListener('focusout', scheduleHide);
+    tab.addEventListener('mouseenter', reveal);
+    tab.addEventListener('mouseleave', scheduleHide);
+
+    new ResizeObserver(syncPosition).observe(card);
+    new MutationObserver(syncPosition).observe(card, { attributes: true, attributeFilter: ['style', 'class'] });
+    const titleEl = card.querySelector('.hw-card-title');
+    if (titleEl) new MutationObserver(syncPosition).observe(titleEl, { childList: true, characterData: true, subtree: true });
+    window.addEventListener('resize', syncPosition);
+
+    syncPosition();
   }
 
   hideCollapsedFab() {
@@ -292,6 +352,7 @@ export class OverlayFloatingCard {
 
   makeCardDraggable() {
     const header = this.shadow.getElementById('hwCardHeader');
+    const floatTab = this.shadow.getElementById('hwCardFloatTab');
     const card = this.popupCard;
     if (!header || !card) return;
 
@@ -299,12 +360,18 @@ export class OverlayFloatingCard {
     let offsetX = 0;
     let offsetY = 0;
 
-    header.addEventListener('mousedown', (e) => {
+    const startDrag = (e) => {
       if (e.target.closest('.hw-icon-btn, select')) return;
       isDragging = true;
       offsetX = e.clientX - card.getBoundingClientRect().left;
       offsetY = e.clientY - card.getBoundingClientRect().top;
-    });
+    };
+
+    // In compact mode the header collapses to zero height and the floating
+    // title tab (outside the card, see setupFloatTab()) becomes the only
+    // visible drag surface, so it needs its own listener too.
+    header.addEventListener('mousedown', startDrag);
+    floatTab?.addEventListener('mousedown', startDrag);
 
     window.addEventListener('mousemove', (e) => {
       if (!isDragging) return;

@@ -330,6 +330,7 @@
 }
 
 .hw-card-header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -533,6 +534,126 @@
 .hw-btn-card-action:hover {
   background: rgba(var(--hw-glass-rgb), 0.85);
   color: var(--hw-text-main);
+}
+
+/* ========================================================= */
+/* Compact display mode for the solution popup — the header    */
+/* bar itself takes up no permanent space (0 height, no         */
+/* padding/border) and its in-flow title is hidden entirely;    */
+/* a separate #hwCardFloatTab element (sibling of the card, see  */
+/* below) mirrors it and floats ABOVE the card's own top edge —  */
+/* outside the card's box, so it never overlaps or pushes down   */
+/* any of the card's content (translate-bar included) and never  */
+/* resizes the popup itself. The history/collapse/close icons    */
+/* form a small always-on cluster pinned over the top-right of   */
+/* the content. The footer's secondary buttons keep their spot   */
+/* and fade in/out with opacity. The primary CTA (Next Question  */
+/* / Continue in chat) stays visible at all times.               */
+/* ========================================================= */
+.hw-solution-card.hw-card-compact .hw-card-header {
+  padding: 0;
+  border-bottom: none;
+  background: transparent;
+}
+
+.hw-solution-card.hw-card-compact .hw-card-header-actions {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 2;
+  gap: 2px;
+  padding: 2px;
+  /* background: rgba(var(--hw-glass-rgb), 0.85); */
+  border-radius: 8px;
+}
+
+.hw-solution-card.hw-card-compact .hw-card-header-actions .hw-icon-btn {
+  width: 24px;
+  height: 24px;
+}
+
+.hw-solution-card.hw-card-compact .hw-card-title {
+  display: none;
+}
+
+.hw-solution-card.hw-card-compact .hw-card-actions-left {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.hw-solution-card.hw-card-compact:hover .hw-card-actions-left,
+.hw-solution-card.hw-card-compact:focus-within .hw-card-actions-left {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hw-solution-card.hw-card-compact .hw-card-body {
+  padding: 6px 8px;
+  gap: 5px;
+}
+
+.hw-solution-card.hw-card-compact .hw-card-answer-heading {
+  font-size: 10px;
+}
+
+.hw-solution-card.hw-card-compact .hw-card-footer {
+  padding: 5px 8px;
+}
+
+.hw-solution-card.hw-card-compact .hw-btn-card-primary {
+  padding: 4px 10px;
+  font-size: 11.5px;
+}
+
+/* Copy/Retry lose their text label in compact mode — icon only, */
+/* so the already-narrow footer packs tighter once revealed.     */
+.hw-solution-card.hw-card-compact .hw-btn-card-action {
+  padding: 5px 7px;
+  gap: 0;
+}
+
+.hw-solution-card.hw-card-compact #hwBtnCardCopyLabel,
+.hw-solution-card.hw-card-compact #hwBtnCardRetryLabel {
+  display: none;
+}
+
+/* Floating title tab for compact mode — lives OUTSIDE .hw-solution-card
+   (a sibling, positioned via JS in floating-card.js) so it can render
+   above the card's top edge without being clipped by the card's own
+   overflow:hidden (required for its rounded corners + native resize
+   handle to work) and without shifting any of the card's own content. */
+.hw-card-float-tab {
+  position: fixed;
+  z-index: 2147483643;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--hw-text-main);
+  background: rgba(var(--hw-glass-rgb), 0.92);
+  backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
+  border: 1px solid var(--hw-border-color);
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.12);
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  cursor: grab;
+  user-select: none;
+}
+
+.hw-card-float-tab:active {
+  cursor: grabbing;
+}
+
+.hw-card-float-tab.hw-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 /* ========================================================= */

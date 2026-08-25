@@ -227,6 +227,7 @@ export const DEFAULT_SETTINGS = {
   fabOpacity: 90, // 30 - 100% (Liquid Glass background alpha)
   popupOpacity: 92, // 40 - 100% (Liquid Glass background alpha)
   popupBlur: 16, // 0 - 30px
+  popupCardSize: "normal", // 'normal' | 'compact' (compact hides secondary buttons until hover, tighter padding)
   toolbarOpacity: 90, // 40 - 100%
   toolbarBlur: 16,
   toolbarShowText: true, // true: icon + label, false: icon only

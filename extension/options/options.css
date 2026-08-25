@@ -285,6 +285,7 @@ body {
 }
 
 .prev-popup-header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -337,6 +338,68 @@ body {
   border-radius: 8px;
   font-size: 11px;
   color: #475569;
+}
+
+/* Preview mirror of the compact solution-popup mode — the header bar
+   itself takes no permanent space; the icon+title becomes a full-width
+   tab that floats over the body, hidden by default and sliding upward
+   into view on hover. The close icon becomes a small always-on badge
+   pinned over the top-right of the content (above the title tab via
+   z-index so it stays clickable), and Copy loses its text label. */
+.opt-preview-popup.compact .prev-popup-header {
+  padding: 0;
+  border-bottom: none;
+}
+
+.opt-preview-popup.compact #prevIconClose {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 2;
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 8px;
+}
+
+.opt-preview-popup.compact .prev-popup-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.opt-preview-popup.compact:hover .prev-popup-title {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.opt-preview-popup.compact .prev-popup-footer {
+  padding: 5px 10px;
+}
+
+.opt-preview-popup.compact .prev-popup-body {
+  padding: 6px 10px;
+  gap: 4px;
+}
+
+.opt-preview-popup.compact .prev-btn-sub {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.opt-preview-popup.compact:hover .prev-btn-sub {
+  opacity: 1;
+}
+
+.opt-preview-popup.compact #prevPopupCopy {
+  display: none;
 }
 
 /* Preview FAB */

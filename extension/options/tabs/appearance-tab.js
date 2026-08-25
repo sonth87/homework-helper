@@ -17,6 +17,7 @@ export class AppearanceTab {
       fabOpacity = 90,
       popupOpacity = 92,
       popupBlur = 16,
+      popupCardSize = 'normal',
       toolbarShowText = true,
       toolbarSize = 'normal',
       toolbarTheme = 'glass-light',
@@ -39,6 +40,7 @@ export class AppearanceTab {
     const rangeToolbarBlur = document.getElementById('optRangeToolbarBlur');
     const valToolbarBlur = document.getElementById('valToolbarBlur');
 
+    const popupCardSizeSelect = document.getElementById('optPopupCardSizeSelect');
     const rangePopupOpacity = document.getElementById('optRangePopupOpacity');
     const valPopupOpacity = document.getElementById('valPopupOpacity');
     const rangePopupBlur = document.getElementById('optRangePopupBlur');
@@ -72,6 +74,7 @@ export class AppearanceTab {
       if (valToolbarBlur) valToolbarBlur.textContent = `${toolbarBlur}px`;
     }
 
+    if (popupCardSizeSelect) popupCardSizeSelect.value = popupCardSize;
     if (rangePopupOpacity) {
       rangePopupOpacity.value = popupOpacity;
       if (valPopupOpacity) valPopupOpacity.textContent = `${popupOpacity}%`;
@@ -158,6 +161,7 @@ export class AppearanceTab {
         prevPopup.style.background = `rgba(255, 255, 255, ${popAlpha})`;
         prevPopup.style.backdropFilter = `blur(${popBlurVal}px) saturate(180%)`;
         prevPopup.style.webkitBackdropFilter = `blur(${popBlurVal}px) saturate(180%)`;
+        prevPopup.classList.toggle('compact', (popupCardSizeSelect?.value || 'normal') === 'compact');
       }
     };
 
@@ -208,6 +212,11 @@ export class AppearanceTab {
     rangeToolbarBlur?.addEventListener('input', () => {
       if (valToolbarBlur) valToolbarBlur.textContent = `${rangeToolbarBlur.value}px`;
       Storage.set({ toolbarBlur: parseInt(rangeToolbarBlur.value, 10) });
+      updatePreview();
+    });
+
+    popupCardSizeSelect?.addEventListener('change', () => {
+      Storage.set({ popupCardSize: popupCardSizeSelect.value });
       updatePreview();
     });
 
