@@ -306,6 +306,8 @@ export default {
     labelFabOpacityDesc: "Настройте уровень прозрачности плавающих кнопок.",
     cardToolbarTitle: "Плавающая панель выделения текста (Selection Toolbar)",
     labelToolbarTheme: "Цветовая тема панели",
+    labelToolbarPosition: "Положение панели",
+    labelToolbarPositionDesc: "Показывать панель над или под выделенным текстом.",
     labelToolbarText: "Показывать текст рядом с иконками",
     descToolbarText:
       "Отображать названия действий (Решить, Копировать, Поиск, Перевод).",
@@ -378,6 +380,8 @@ export default {
     toolbarSizeOptCompact: "Компактный",
     toolbarSizeOptNormal: "Стандартный",
     toolbarSizeOptLarge: "Крупный",
+    toolbarPositionOptAbove: "Над выделением",
+    toolbarPositionOptBelow: "Под выделением",
     previewDemoTitle: "Задача по анализу и линейной алгебре",
     previewDemoQuestion: "Найдите производную $f(x) = \\int_{0}^{x^2} \\sin(t^2) dt$ по $x$.",
     previewDemoHighlight: "По интегральному правилу Лейбница дифференцируем верхний предел...",

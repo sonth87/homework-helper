@@ -25,6 +25,8 @@ Repo này **chưa từng bump version** (`package.json` và `extension/manifest.
   - Patch (`1.0.0` → `1.0.1`): sửa lỗi, tinh chỉnh nhỏ, thêm tooltip/copy.
   - Minor (`1.0.0` → `1.1.0`): tính năng mới, thay đổi UI đáng kể.
   - Major: thay đổi phá vỡ tương thích ngược (hiếm khi cần trong extension này).
+- **Một lần bump patch cho mỗi phiên chưa commit**: nếu nhiều thay đổi user-facing (nhỏ, ở mức patch) xảy ra liên tiếp trong cùng một phiên làm việc mà code **chưa được commit**, chỉ bump patch **một lần duy nhất** cho phiên đó (ví dụ `1.2.8` → `1.2.9`) — không bump tiếp lên `1.2.10`, `1.2.11`... cho từng fix nhỏ tiếp theo trong cùng phiên. Mốc để "được bump thêm một lần patch nữa" là code đã **commit** (không phải mỗi khi xong một task).
+  - Nếu trong cùng phiên chưa commit đó xuất hiện một thay đổi đủ lớn để tính là **minor**, vẫn bump minor bình thường (`1.2.x` → `1.3.x`) — bump minor này thay thế/nuốt luôn phần patch đã bump trước đó trong phiên, không cần giữ cả hai mốc.
 - **Không bump** cho thay đổi thuần nội bộ không ảnh hưởng người dùng: sửa docs, refactor không đổi hành vi, thêm test.
 - Chrome Web Store bắt buộc version tăng giữa các lần nộp gói — quên bump sẽ bị reject khi upload `homework-helper.zip` (xem `docs/development.md` mục 4 để đóng gói).
 

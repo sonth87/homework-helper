@@ -324,6 +324,8 @@ export class OptionsController {
     setText('optCardPopupTitle', dict.cardPopupTitle);
     setText('optLabelToolbarTheme', dict.labelToolbarTheme);
     setText('optLabelToolbarThemeDesc', dict.labelToolbarThemeDesc);
+    setText('optLabelToolbarPosition', dict.labelToolbarPosition);
+    setText('optLabelToolbarPositionDesc', dict.labelToolbarPositionDesc);
     setText('optLabelToolbarText', dict.labelToolbarText);
     setText('optLabelToolbarTextDesc', dict.labelToolbarTextDesc);
     setText('optLabelToolbarSize', dict.labelToolbarSize);
@@ -356,6 +358,8 @@ export class OptionsController {
     setText('optSizeOptCompact', dict.toolbarSizeOptCompact);
     setText('optSizeOptNormal', dict.toolbarSizeOptNormal);
     setText('optSizeOptLarge', dict.toolbarSizeOptLarge);
+    setText('optPositionOptAbove', dict.toolbarPositionOptAbove);
+    setText('optPositionOptBelow', dict.toolbarPositionOptBelow);
 
     // Appearance Tab - Live Preview demo content
     setText('prevDemoTitle', dict.previewDemoTitle);

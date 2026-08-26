@@ -303,6 +303,8 @@ export default {
     labelFabOpacityDesc: "フローティングボタンのガラス透明度を調整します。",
     cardToolbarTitle: "テキスト選択ツールバー (Selection Toolbar)",
     labelToolbarTheme: "ツールバーのカラーテーマ",
+    labelToolbarPosition: "ツールバーの表示位置",
+    labelToolbarPositionDesc: "選択したテキストの上または下にツールバーを表示します。",
     labelToolbarText: "アイコンの横にラベルを表示",
     descToolbarText:
       "機能名（解答、コピー、検索、翻訳）をアイコンの横に表示します。",
@@ -370,6 +372,8 @@ export default {
     toolbarSizeOptCompact: "コンパクト",
     toolbarSizeOptNormal: "標準",
     toolbarSizeOptLarge: "大",
+    toolbarPositionOptAbove: "選択範囲の上",
+    toolbarPositionOptBelow: "選択範囲の下",
     previewDemoTitle: "微積分と線形代数の問題",
     previewDemoQuestion: "$f(x) = \\int_{0}^{x^2} \\sin(t^2) dt$ の $x$ に関する導関数を求めよ。",
     previewDemoHighlight: "ライプニッツの積分則により、上限を微分すると...",

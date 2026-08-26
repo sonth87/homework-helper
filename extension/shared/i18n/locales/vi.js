@@ -347,6 +347,8 @@ export default {
     cardToolbarTitle: "Thanh Công Cụ Bôi Đen (Selection Toolbar)",
     labelToolbarTheme: "Chủ đề màu sắc Toolbar",
     labelToolbarThemeDesc: "Chọn phong cách Liquid Glass cho thanh công cụ.",
+    labelToolbarPosition: "Vị trí hiển thị Toolbar",
+    labelToolbarPositionDesc: "Thanh công cụ xuất hiện phía trên hay phía dưới đoạn văn bản được bôi đen.",
     labelToolbarText: "Hiển thị chữ kèm icon",
     labelToolbarTextDesc:
       "Hiện tên hành động (Lời giải, Sao chép, Tìm kiếm, Dịch) bên cạnh biểu tượng.",
@@ -427,6 +429,8 @@ export default {
     toolbarSizeOptCompact: "Nhỏ gọn (Compact)",
     toolbarSizeOptNormal: "Tiêu chuẩn (Normal)",
     toolbarSizeOptLarge: "Lớn (Large)",
+    toolbarPositionOptAbove: "Phía trên vùng bôi đen",
+    toolbarPositionOptBelow: "Phía dưới vùng bôi đen",
     previewDemoTitle: "Bài toán Giải tích & Đại số Tuyến tính",
     previewDemoQuestion: "Tìm đạo hàm của $f(x) = \\int_{0}^{x^2} \\sin(t^2) dt$ theo biến $x$.",
     previewDemoHighlight: "Theo Quy tắc Leibniz, ta đạo hàm cận trên...",

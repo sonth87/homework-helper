@@ -308,6 +308,8 @@ export default {
     labelFabOpacityDesc: "Ajusta o nível de transparência dos botões flutuantes.",
     cardToolbarTitle: "Barra flutuante ao selecionar texto",
     labelToolbarTheme: "Tema de cor da barra",
+    labelToolbarPosition: "Posição da barra",
+    labelToolbarPositionDesc: "Exibe a barra acima ou abaixo do texto selecionado.",
     labelToolbarText: "Mostrar texto ao lado dos ícones",
     descToolbarText:
       "Exibe nomes das ações (Resolver, Copiar, Buscar, Traduzir).",
@@ -379,6 +381,8 @@ export default {
     toolbarSizeOptCompact: "Compacto",
     toolbarSizeOptNormal: "Padrão",
     toolbarSizeOptLarge: "Grande",
+    toolbarPositionOptAbove: "Acima da seleção",
+    toolbarPositionOptBelow: "Abaixo da seleção",
     previewDemoTitle: "Problema de Cálculo e Álgebra Linear",
     previewDemoQuestion: "Encontre a derivada de $f(x) = \\int_{0}^{x^2} \\sin(t^2) dt$ em relação a $x$.",
     previewDemoHighlight: "Pela Regra Integral de Leibniz, derivamos o limite superior...",

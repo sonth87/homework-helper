@@ -310,6 +310,8 @@ export default {
     labelFabOpacityDesc: "Sesuaikan tingkat transparansi kaca tombol mengambang.",
     cardToolbarTitle: "Bilah Mengambang Seleksi Teks (Selection Toolbar)",
     labelToolbarTheme: "Tema Warna Bilah",
+    labelToolbarPosition: "Posisi Bilah",
+    labelToolbarPositionDesc: "Tampilkan bilah di atas atau di bawah teks yang dipilih.",
     labelToolbarText: "Tampilkan teks di samping ikon",
     descToolbarText:
       "Menampilkan nama tindakan (Selesaikan, Salin, Cari, Terjemahkan).",
@@ -382,6 +384,8 @@ export default {
     toolbarSizeOptCompact: "Ringkas",
     toolbarSizeOptNormal: "Standar",
     toolbarSizeOptLarge: "Besar",
+    toolbarPositionOptAbove: "Di atas seleksi",
+    toolbarPositionOptBelow: "Di bawah seleksi",
     previewDemoTitle: "Soal Kalkulus & Aljabar Linear",
     previewDemoQuestion: "Carilah turunan dari $f(x) = \\int_{0}^{x^2} \\sin(t^2) dt$ terhadap $x$.",
     previewDemoHighlight: "Berdasarkan Aturan Integral Leibniz, kita menurunkan batas atas...",

@@ -23,6 +23,11 @@ function renderMath(formula, displayMode = false) {
         displayMode,
         throwOnError: false,
         output: 'htmlAndMathml',
+        // Vietnamese diacritics inside \text{...} labels (e.g. \text{Tổng})
+        // render correctly via the browser's own font, but KaTeX's strict
+        // mode still logs a console warning per character since they're
+        // outside its built-in Unicode symbol table — silence that here.
+        strict: false,
       });
     } catch (e) {
       console.warn('KaTeX render error:', e);

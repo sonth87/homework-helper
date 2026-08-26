@@ -304,6 +304,8 @@ export default {
     labelFabOpacityDesc: "Passt die Glastransparenz der schwebenden Schaltflächen an.",
     cardToolbarTitle: "Textauswahl-Symbolleiste (Selection Toolbar)",
     labelToolbarTheme: "Farbthema der Leiste",
+    labelToolbarPosition: "Position der Leiste",
+    labelToolbarPositionDesc: "Zeigt die Leiste über oder unter dem markierten Text an.",
     labelToolbarText: "Beschriftung neben Icons anzeigen",
     descToolbarText:
       "Zeigt Aktionsnamen (Lösen, Kopieren, Suchen, Übersetzen) neben den Symbolen.",
@@ -375,6 +377,8 @@ export default {
     toolbarSizeOptCompact: "Kompakt",
     toolbarSizeOptNormal: "Standard",
     toolbarSizeOptLarge: "Groß",
+    toolbarPositionOptAbove: "Über der Auswahl",
+    toolbarPositionOptBelow: "Unter der Auswahl",
     previewDemoTitle: "Analysis- & Lineare-Algebra-Aufgabe",
     previewDemoQuestion: "Bestimme die Ableitung von $f(x) = \\int_{0}^{x^2} \\sin(t^2) dt$ nach $x$.",
     previewDemoHighlight: "Nach der Leibniz-Integralregel leiten wir die obere Grenze ab...",

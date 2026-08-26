@@ -307,6 +307,8 @@ export default {
     labelFabOpacityDesc: "Ajuste le niveau de transparence des boutons flottants.",
     cardToolbarTitle: "Barre flottante au surlignage de texte",
     labelToolbarTheme: "Thème de couleur de la barre",
+    labelToolbarPosition: "Position de la barre",
+    labelToolbarPositionDesc: "Affiche la barre au-dessus ou en dessous du texte sélectionné.",
     labelToolbarText: "Afficher les libellés à côté des icônes",
     descToolbarText:
       "Affiche le nom des actions (Résoudre, Copier, Rechercher, Traduire).",
@@ -378,6 +380,8 @@ export default {
     toolbarSizeOptCompact: "Compact",
     toolbarSizeOptNormal: "Standard",
     toolbarSizeOptLarge: "Grand",
+    toolbarPositionOptAbove: "Au-dessus de la sélection",
+    toolbarPositionOptBelow: "En dessous de la sélection",
     previewDemoTitle: "Problème de Calcul & Algèbre Linéaire",
     previewDemoQuestion: "Trouvez la dérivée de $f(x) = \\int_{0}^{x^2} \\sin(t^2) dt$ par rapport à $x$.",
     previewDemoHighlight: "Selon la règle intégrale de Leibniz, on dérive la borne supérieure...",

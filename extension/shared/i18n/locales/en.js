@@ -341,6 +341,8 @@ export default {
     cardToolbarTitle: "Selection Toolbar",
     labelToolbarTheme: "Toolbar color theme",
     labelToolbarThemeDesc: "Choose Liquid Glass effect style for the selection toolbar.",
+    labelToolbarPosition: "Toolbar position",
+    labelToolbarPositionDesc: "Show the toolbar above or below the selected text.",
     labelToolbarText: "Show labels next to icons",
     labelToolbarTextDesc:
       "Display action text (Answer, Copy, Search, Translate) beside icons.",
@@ -423,6 +425,8 @@ export default {
     toolbarSizeOptCompact: "Compact",
     toolbarSizeOptNormal: "Standard",
     toolbarSizeOptLarge: "Large",
+    toolbarPositionOptAbove: "Above selection",
+    toolbarPositionOptBelow: "Below selection",
     previewDemoTitle: "Calculus & Linear Algebra Problem",
     previewDemoQuestion: "Find the derivative of $f(x) = \\int_{0}^{x^2} \\sin(t^2) dt$ with respect to $x$.",
     previewDemoHighlight: "According to Leibniz Integral Rule, we differentiate the upper limit...",

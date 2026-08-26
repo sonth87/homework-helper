@@ -305,6 +305,8 @@ export default {
     labelFabOpacityDesc: "플로팅 버튼의 유리 투명도를 조절합니다.",
     cardToolbarTitle: "텍스트 드래그 선택 툴바 (Selection Toolbar)",
     labelToolbarTheme: "툴바 색상 테마",
+    labelToolbarPosition: "툴바 표시 위치",
+    labelToolbarPositionDesc: "선택한 텍스트 위 또는 아래에 툴바를 표시합니다.",
     labelToolbarText: "아이콘 옆 텍스트 표시",
     descToolbarText:
       "아이콘 옆에 기능 이름(풀이, 복사, 검색, 번역)을 함께 표시합니다.",
@@ -372,6 +374,8 @@ export default {
     toolbarSizeOptCompact: "작게",
     toolbarSizeOptNormal: "표준",
     toolbarSizeOptLarge: "크게",
+    toolbarPositionOptAbove: "선택 영역 위",
+    toolbarPositionOptBelow: "선택 영역 아래",
     previewDemoTitle: "미적분 및 선형대수 문제",
     previewDemoQuestion: "$f(x) = \\int_{0}^{x^2} \\sin(t^2) dt$ 를 $x$ 에 대해 미분하시오.",
     previewDemoHighlight: "라이프니츠 적분 법칙에 따라 상한을 미분하면...",

@@ -21,6 +21,7 @@ export class AppearanceTab {
       toolbarShowText = true,
       toolbarSize = 'normal',
       toolbarTheme = 'glass-light',
+      toolbarPosition = 'above',
       toolbarOpacity = 90,
       toolbarBlur = 14,
     } = await Storage.get();
@@ -34,6 +35,7 @@ export class AppearanceTab {
     const checkToolbarText = document.getElementById('optCheckToolbarText');
     const toolbarSizeSelect = document.getElementById('optToolbarSizeSelect');
     const toolbarThemeSelect = document.getElementById('optToolbarThemeSelect');
+    const toolbarPositionSelect = document.getElementById('optToolbarPositionSelect');
 
     const rangeToolbarOpacity = document.getElementById('optRangeToolbarOpacity');
     const valToolbarOpacity = document.getElementById('valToolbarOpacity');
@@ -64,6 +66,7 @@ export class AppearanceTab {
     if (checkToolbarText) checkToolbarText.checked = toolbarShowText;
     if (toolbarSizeSelect) toolbarSizeSelect.value = toolbarSize;
     if (toolbarThemeSelect) toolbarThemeSelect.value = toolbarTheme;
+    if (toolbarPositionSelect) toolbarPositionSelect.value = toolbarPosition;
 
     if (rangeToolbarOpacity) {
       rangeToolbarOpacity.value = toolbarOpacity;
@@ -201,6 +204,10 @@ export class AppearanceTab {
     toolbarThemeSelect?.addEventListener('change', () => {
       Storage.set({ toolbarTheme: toolbarThemeSelect.value });
       updatePreview();
+    });
+
+    toolbarPositionSelect?.addEventListener('change', () => {
+      Storage.set({ toolbarPosition: toolbarPositionSelect.value });
     });
 
     rangeToolbarOpacity?.addEventListener('input', () => {

@@ -77,6 +77,7 @@ class SelectionTooltip {
       toolbarShowText = true,
       toolbarSize = 'normal',
       toolbarTheme = 'glass-light',
+      toolbarPosition = 'above',
       uiLanguage = 'en',
     } = await Storage.get();
 
@@ -93,7 +94,9 @@ class SelectionTooltip {
     this.toolbar.style.setProperty('--tb-alpha', `${(toolbarOpacity / 100).toFixed(2)}`);
     this.toolbar.style.setProperty('--tb-blur', `${toolbarBlur}px`);
 
-    const top = window.scrollY + rect.top - 46;
+    const top = toolbarPosition === 'below'
+      ? window.scrollY + rect.bottom + 10
+      : window.scrollY + rect.top - 46;
     const left = window.scrollX + rect.left + rect.width / 2;
 
     this.toolbar.style.top = `${Math.max(10, top)}px`;
