@@ -6,6 +6,7 @@
 import { Icons } from '../shared/icons.js';
 import { Storage } from '../shared/storage.js';
 import { getSelectionTooltipI18n } from '../shared/i18n.js';
+import { TOOLBAR_ITEM_ICONS, normalizeToolbarLayout } from '../shared/toolbar-items.js';
 
 class SelectionTooltip {
   constructor() {
@@ -78,6 +79,7 @@ class SelectionTooltip {
       toolbarSize = 'normal',
       toolbarTheme = 'glass-light',
       toolbarPosition = 'above',
+      toolbarLayout,
       uiLanguage = 'en',
     } = await Storage.get();
 
@@ -86,6 +88,7 @@ class SelectionTooltip {
     if (epoch !== this.epoch) return;
 
     const dict = getSelectionTooltipI18n(uiLanguage);
+    const layout = normalizeToolbarLayout(toolbarLayout);
 
     this.toolbar = document.createElement('div');
     this.toolbar.className = `hw-selection-toolbar size-${toolbarSize} theme-${toolbarTheme}`;
@@ -107,25 +110,18 @@ class SelectionTooltip {
 
     const iconOnlyCls = toolbarShowText ? '' : 'icon-only';
 
+    const mainButtonsHtml = layout
+      .filter((item) => item.area === 'main')
+      .map(({ id }) => `
+        <button class="hw-tb-btn ${iconOnlyCls}" data-action="${id}" title="${dict[id]}">
+          ${Icons[TOOLBAR_ITEM_ICONS[id]](14)} <span class="hw-tb-label">${dict[id]}</span>
+        </button>
+      `)
+      .join('');
+
     this.toolbar.innerHTML = `
       <div class="hw-tb-logo">${Icons.appLogo(18)}</div>
-      
-      <button class="hw-tb-btn ${iconOnlyCls}" data-action="answer" title="${dict.answer}">
-        ${Icons.messageCircle(14)} <span class="hw-tb-label">${dict.answer}</span>
-      </button>
-
-      <button class="hw-tb-btn ${iconOnlyCls}" data-action="copy" title="${dict.copy}">
-        ${Icons.copy(14)} <span class="hw-tb-label">${dict.copy}</span>
-      </button>
-
-      <button class="hw-tb-btn ${iconOnlyCls}" data-action="search" title="${dict.search}">
-        ${Icons.globe(14)} <span class="hw-tb-label">${dict.search}</span>
-      </button>
-
-      <button class="hw-tb-btn ${iconOnlyCls}" data-action="translate" title="${dict.translate}">
-        ${Icons.languages(14)} <span class="hw-tb-label">${dict.translate}</span>
-      </button>
-
+      ${mainButtonsHtml}
       <button class="hw-tb-btn hw-tb-more-btn" id="hwTbMoreBtn" title="${dict.more}">
         ${Icons.chevronUp(14)}
       </button>
@@ -160,28 +156,30 @@ class SelectionTooltip {
     }
 
     const epoch = this.epoch;
-    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const { uiLanguage = 'en', toolbarLayout } = await Storage.get(['uiLanguage', 'toolbarLayout']);
 
     // Toolbar may have been removed (or replaced by a newer render) while we waited —
     // bail out instead of touching a null/stale this.toolbar.
     if (epoch !== this.epoch || !this.toolbar || this.dropdown) return;
 
     const dict = getSelectionTooltipI18n(uiLanguage);
+    const layout = normalizeToolbarLayout(toolbarLayout);
 
     this.dropdown = document.createElement('div');
     this.dropdown.className = 'hw-tb-dropdown';
     this.dropdown.addEventListener('mousedown', (e) => e.stopPropagation());
 
+    const dropdownItemsHtml = layout
+      .filter((item) => item.area === 'dropdown')
+      .map(({ id }) => `
+        <button class="hw-tb-menu-item" data-action="${id}">
+          <div class="hw-tb-menu-item-left">${Icons[TOOLBAR_ITEM_ICONS[id]](15)} ${dict[id]}</div>
+        </button>
+      `)
+      .join('');
+
     this.dropdown.innerHTML = `
-      <button class="hw-tb-menu-item" data-action="explain">
-        <div class="hw-tb-menu-item-left">${Icons.helpCircle(15)} ${dict.explain}</div>
-      </button>
-      <button class="hw-tb-menu-item" data-action="summarize">
-        <div class="hw-tb-menu-item-left">${Icons.bookOpen(15)} ${dict.summarize}</div>
-      </button>
-      <button class="hw-tb-menu-item" data-action="grammar">
-        <div class="hw-tb-menu-item-left">${Icons.edit(15)} ${dict.grammar}</div>
-      </button>
+      ${dropdownItemsHtml}
       <div class="hw-tb-menu-item" id="hwTbDisableItem">
         <div class="hw-tb-menu-item-left">${Icons.slash(15)} ${dict.disable}</div>
         ${Icons.chevronRight(13)}

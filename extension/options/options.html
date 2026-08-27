@@ -511,6 +511,25 @@
                   </div>
                   <input type="range" id="optRangeToolbarBlur" min="0" max="30" value="10" class="opt-range">
                 </div>
+
+                <div>
+                  <div class="opt-setting-title" id="optLabelToolbarLayout">Sắp xếp Toolbar &amp; Menu "Tùy chọn khác"</div>
+                  <div class="opt-setting-desc" id="optLabelToolbarLayoutDesc" style="margin-bottom:10px;">Kéo thả để chọn công cụ nào hiện trực tiếp trên toolbar, công cụ nào nằm trong menu "Tùy chọn khác", và thứ tự hiển thị của chúng.</div>
+                  <div class="opt-tb-layout-editor">
+                    <div class="opt-tb-layout-lane">
+                      <div class="opt-tb-layout-lane-title" id="optLayoutLaneMainTitle">Trên Toolbar</div>
+                      <ul class="opt-tb-layout-list" id="optLayoutMainList" data-area="main"></ul>
+                    </div>
+                    <div class="opt-tb-layout-lane">
+                      <div class="opt-tb-layout-lane-title" id="optLayoutLaneDropdownTitle">Trong menu "Tùy chọn khác"</div>
+                      <ul class="opt-tb-layout-list" id="optLayoutDropdownList" data-area="dropdown"></ul>
+                      <div class="opt-tb-layout-lane-note" id="optLayoutDropdownNote">"Tắt công cụ" luôn nằm cuối menu này.</div>
+                    </div>
+                  </div>
+                  <button type="button" class="opt-btn-secondary" id="optBtnResetToolbarLayout" style="margin-top:10px;">
+                    <span id="optIconResetToolbarLayout"></span> <span id="optBtnResetToolbarLayoutText">Khôi phục mặc định</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -568,13 +587,13 @@
                   <p class="highlight-text" id="prevDemoHighlight">According to Leibniz Integral Rule, we differentiate the upper limit...</p>
                 </div>
 
-                <!-- Preview Selection Toolbar -->
+                <!-- Preview Selection Toolbar. #prevTbItems is populated from the
+                     current toolbarLayout by AppearanceTab so this mirrors the
+                     drag-and-drop editor above (which tools, which order) —
+                     see initToolbarLayoutEditor() in tabs/appearance-tab.js. -->
                 <div class="opt-preview-toolbar" id="prevToolbar">
                   <div class="prev-tb-logo" id="prevTbLogo"></div>
-                  <div class="prev-tb-btn"><span id="prevIconAnswer"></span><span class="prev-tb-label" id="prevTbLabelAnswer">Answer</span></div>
-                  <div class="prev-tb-btn"><span id="prevIconCopy"></span><span class="prev-tb-label" id="prevTbLabelCopy">Copy</span></div>
-                  <div class="prev-tb-btn"><span id="prevIconSearch"></span><span class="prev-tb-label" id="prevTbLabelSearch">Search</span></div>
-                  <div class="prev-tb-btn"><span id="prevIconTranslate"></span><span class="prev-tb-label" id="prevTbLabelTranslate">Translate</span></div>
+                  <div class="prev-tb-items" id="prevTbItems"></div>
                   <div class="prev-tb-btn"><span id="prevIconMore"></span></div>
                 </div>
 

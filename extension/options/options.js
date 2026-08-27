@@ -98,6 +98,7 @@ export class OptionsController {
     setInner('optIconDownloadCore', Icons.download(14));
     setInner('optIconCorePackage', Icons.checkCircle(18, 'text-green-600'));
     setInner('optIconOcrExplain', Icons.helpCircle(18));
+    setInner('optIconResetToolbarLayout', Icons.refresh(14));
 
     // Local Model (Ollama / LM Studio) Panel & Guide Icons
     setInner('optIconServer', Icons.server(16));
@@ -114,10 +115,8 @@ export class OptionsController {
 
     // Live Preview Icons
     setInner('prevTbLogo', Icons.appLogo(16));
-    setInner('prevIconAnswer', Icons.messageCircle(13));
-    setInner('prevIconCopy', Icons.copy(13));
-    setInner('prevIconSearch', Icons.globe(13));
-    setInner('prevIconTranslate', Icons.languages(13));
+    // The 4 main-toolbar preview buttons are no longer static — AppearanceTab
+    // renders them into #prevTbItems from the current toolbarLayout.
     setInner('prevIconMore', Icons.chevronUp(13));
 
     setInner('prevIconSparkles', Icons.appLogo(16));
@@ -333,6 +332,12 @@ export class OptionsController {
     setText('optLabelToolbarOpacityDesc', dict.labelToolbarOpacityDesc);
     setText('optLabelToolbarBlur', dict.labelToolbarBlur);
     setText('optLabelToolbarBlurDesc', dict.labelToolbarBlurDesc);
+    setText('optLabelToolbarLayout', dict.labelToolbarLayout);
+    setText('optLabelToolbarLayoutDesc', dict.labelToolbarLayoutDesc);
+    setText('optLayoutLaneMainTitle', dict.toolbarLayoutLaneMain);
+    setText('optLayoutLaneDropdownTitle', dict.toolbarLayoutLaneDropdown);
+    setText('optLayoutDropdownNote', dict.toolbarLayoutDropdownNote);
+    setText('optBtnResetToolbarLayoutText', dict.toolbarLayoutResetBtn);
     setText('optCardPopupTitle', dict.cardPopupTitle);
     setText('optLabelPopupCardSize', dict.labelPopupCardSize);
     setText('optLabelPopupCardSizeDesc', dict.labelPopupCardSizeDesc);
@@ -366,10 +371,6 @@ export class OptionsController {
     setText('prevDemoQuestion', dict.previewDemoQuestion);
     setText('prevDemoHighlight', dict.previewDemoHighlight);
     setText('prevDemoStep', dict.previewDemoStep);
-    setText('prevTbLabelAnswer', tooltipDict.answer);
-    setText('prevTbLabelCopy', tooltipDict.copy);
-    setText('prevTbLabelSearch', tooltipDict.search);
-    setText('prevTbLabelTranslate', tooltipDict.translate);
     setText('prevPopupTitle', popupDict.helperTitle);
     setText('prevPopupAnswerHeading', tooltipDict.answer);
     setText('prevPopupNextQuestion', popupDict.nextQuestion);

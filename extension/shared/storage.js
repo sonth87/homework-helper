@@ -4,6 +4,7 @@
  */
 
 import { isSingleWord, buildWordLookupPrompt, buildSentenceTranslatePrompt, DICTIONARY_SCHEMA } from './dictionary.js';
+import { DEFAULT_TOOLBAR_LAYOUT } from './toolbar-items.js';
 
 export const DEFAULT_PROVIDERS = [
   {
@@ -255,6 +256,7 @@ export const DEFAULT_SETTINGS = {
   toolbarSize: "normal", // 'compact' | 'normal' | 'large'
   toolbarTheme: "glass-light", // 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple'
   toolbarCustomColor: "#0284c7",
+  toolbarLayout: DEFAULT_TOOLBAR_LAYOUT, // ordered [{ id, area: 'main' | 'dropdown' }] — see shared/toolbar-items.js
   routingStrategy: "prefer_config", // 'prefer_config' (recommended) | 'prefer_nano' | 'nano_only' | 'config_only'
   installedOcrModels: {
     vie: {

@@ -1,4 +1,7 @@
+import { Icons } from '../../shared/icons.js';
 import { Storage } from '../../shared/storage.js';
+import { getSelectionTooltipI18n } from '../../shared/i18n.js';
+import { TOOLBAR_ITEM_ICONS, DEFAULT_TOOLBAR_LAYOUT, normalizeToolbarLayout } from '../../shared/toolbar-items.js';
 
 export class AppearanceTab {
   constructor(optionsController) {
@@ -24,6 +27,8 @@ export class AppearanceTab {
       toolbarPosition = 'above',
       toolbarOpacity = 90,
       toolbarBlur = 14,
+      toolbarLayout,
+      uiLanguage = 'vi',
     } = await Storage.get();
 
     // DOM Controls
@@ -86,6 +91,8 @@ export class AppearanceTab {
       rangePopupBlur.value = popupBlur;
       if (valPopupBlur) valPopupBlur.textContent = `${popupBlur}px`;
     }
+
+    this.initToolbarLayoutEditor(normalizeToolbarLayout(toolbarLayout), getSelectionTooltipI18n(uiLanguage));
 
     // Live update function
     const updatePreview = () => {
@@ -237,6 +244,132 @@ export class AppearanceTab {
       if (valPopupBlur) valPopupBlur.textContent = `${rangePopupBlur.value}px`;
       Storage.set({ popupBlur: parseInt(rangePopupBlur.value, 10) });
       updatePreview();
+    });
+  }
+
+  // Drag-and-drop editor for which selection-toolbar tools sit directly on
+  // the toolbar vs. inside its "..." dropdown, and their order within each.
+  // Plain HTML5 drag-and-drop (no library): dragging a row over a lane
+  // relocates it live via insertBefore/appendChild, and every drop persists
+  // the two <ul>s' current DOM order straight to storage as the new layout.
+  initToolbarLayoutEditor(layout, dict) {
+    const mainList = document.getElementById('optLayoutMainList');
+    const dropdownList = document.getElementById('optLayoutDropdownList');
+    const resetBtn = document.getElementById('optBtnResetToolbarLayout');
+    if (!mainList || !dropdownList) return;
+
+    const lists = [mainList, dropdownList];
+
+    const buildItem = (id) => {
+      const li = document.createElement('li');
+      li.className = 'opt-tb-layout-item';
+      li.draggable = true;
+      li.dataset.id = id;
+      const iconFn = Icons[TOOLBAR_ITEM_ICONS[id]];
+      li.innerHTML = `
+        <span class="opt-tb-layout-drag-handle">${Icons.gripHorizontal(14)}</span>
+        <span class="opt-tb-layout-item-icon">${iconFn ? iconFn(15) : ''}</span>
+        <span class="opt-tb-layout-item-label">${dict[id] || id}</span>
+      `;
+      li.addEventListener('dragstart', onDragStart);
+      li.addEventListener('dragend', onDragEnd);
+      return li;
+    };
+
+    const render = (layoutToRender) => {
+      mainList.innerHTML = '';
+      dropdownList.innerHTML = '';
+      layoutToRender.forEach(({ id, area }) => {
+        (area === 'main' ? mainList : dropdownList).appendChild(buildItem(id));
+      });
+    };
+
+    // Mirrors the editor's current state into the "Live Preview" toolbar on
+    // the right (#prevTbItems — logo and the "..." button stay static, only
+    // this wrapper's contents change) so dragging a tool between lanes shows
+    // up there immediately, not just after leaving the page and coming back.
+    const updateLivePreview = (currentLayout) => {
+      const prevItems = document.getElementById('prevTbItems');
+      if (!prevItems) return;
+      prevItems.innerHTML = currentLayout
+        .filter((item) => item.area === 'main')
+        .map(({ id }) => {
+          const iconFn = Icons[TOOLBAR_ITEM_ICONS[id]];
+          return `<div class="prev-tb-btn">${iconFn ? iconFn(13) : ''}<span class="prev-tb-label">${dict[id] || id}</span></div>`;
+        })
+        .join('');
+      // A fresh set of buttons needs the current "show text" toggle applied —
+      // the toggle's own change handler only updates labels that already
+      // existed when it last ran.
+      const showText = document.getElementById('optCheckToolbarText')?.checked ?? true;
+      prevItems.querySelectorAll('.prev-tb-label').forEach((lbl) => {
+        lbl.style.display = showText ? 'inline' : 'none';
+      });
+    };
+
+    const persist = () => {
+      const result = [];
+      lists.forEach((list) => {
+        list.querySelectorAll('.opt-tb-layout-item').forEach((li) => {
+          result.push({ id: li.dataset.id, area: list.dataset.area });
+        });
+      });
+      Storage.set({ toolbarLayout: result });
+      updateLivePreview(result);
+    };
+
+    const getDragAfterElement = (list, y) => {
+      const items = [...list.querySelectorAll('.opt-tb-layout-item:not(.dragging)')];
+      return items.reduce(
+        (closest, child) => {
+          const box = child.getBoundingClientRect();
+          const offset = y - box.top - box.height / 2;
+          return offset < 0 && offset > closest.offset ? { offset, element: child } : closest;
+        },
+        { offset: Number.NEGATIVE_INFINITY, element: null }
+      ).element;
+    };
+
+    let draggedEl = null;
+
+    function onDragStart(e) {
+      draggedEl = e.currentTarget;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', draggedEl.dataset.id); // required by Firefox to start a drag
+      requestAnimationFrame(() => draggedEl?.classList.add('dragging'));
+    }
+
+    function onDragEnd() {
+      draggedEl?.classList.remove('dragging');
+      draggedEl = null;
+      lists.forEach((l) => l.classList.remove('drag-over'));
+    }
+
+    lists.forEach((list) => {
+      list.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (!draggedEl) return;
+        list.classList.add('drag-over');
+        const afterEl = getDragAfterElement(list, e.clientY);
+        if (afterEl == null) list.appendChild(draggedEl);
+        else list.insertBefore(draggedEl, afterEl);
+      });
+      list.addEventListener('dragleave', (e) => {
+        if (e.target === list) list.classList.remove('drag-over');
+      });
+      list.addEventListener('drop', (e) => {
+        e.preventDefault();
+        list.classList.remove('drag-over');
+        persist();
+      });
+    });
+
+    render(layout);
+    updateLivePreview(layout);
+
+    resetBtn?.addEventListener('click', () => {
+      render(DEFAULT_TOOLBAR_LAYOUT.map((entry) => ({ ...entry })));
+      persist();
     });
   }
 }
