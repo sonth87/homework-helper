@@ -4,7 +4,7 @@
 
 import { Icons } from '../../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES, buildNanoPrompts } from '../../shared/storage.js';
-import { formatDictionaryEntry } from '../../shared/markdown-katex.js';
+import { renderAnswer } from '../../shared/markdown-katex.js';
 import { getFloatingPopupI18n, getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
 
@@ -566,7 +566,7 @@ export class OverlayFloatingCard {
           const targetLangObj = SUPPORTED_LANGUAGES.find((l) => l.id === outputLanguage);
           const targetLangName = targetLangObj ? targetLangObj.name : 'English';
 
-          const { sysPrompt: nanoSysPrompt, userPrompt: nanoPrompt } = buildNanoPrompts(
+          const { sysPrompt: nanoSysPrompt, userPrompt: nanoPrompt, responseConstraint: nanoConstraint } = buildNanoPrompts(
             studyMode,
             prompt,
             ocrText,
@@ -580,6 +580,7 @@ export class OverlayFloatingCard {
                 prompt: nanoPrompt,
                 requestId: this.overlay.drawer.activeRequestId,
                 systemPrompt: nanoSysPrompt,
+            responseConstraint: nanoConstraint,
               },
             })
           );
@@ -752,7 +753,7 @@ export class OverlayFloatingCard {
         ru: 'Russian',
       };
       const targetLangName = (effectiveOutputLanguage && effectiveOutputLanguage !== 'auto') ? (langNames[effectiveOutputLanguage] || effectiveOutputLanguage) : 'English';
-      const { sysPrompt: nanoSysPrompt, userPrompt: nanoPrompt } = buildNanoPrompts(studyMode, prompt, '', targetLangName, nanoSystemPrompt);
+      const { sysPrompt: nanoSysPrompt, userPrompt: nanoPrompt, responseConstraint: nanoConstraint } = buildNanoPrompts(studyMode, prompt, '', targetLangName, nanoSystemPrompt);
 
       window.dispatchEvent(
         new CustomEvent('HOMEWORK_AI_NANO_EXEC', {
@@ -760,6 +761,7 @@ export class OverlayFloatingCard {
             prompt: nanoPrompt,
             requestId: this.overlay.drawer.activeRequestId,
             systemPrompt: nanoSysPrompt,
+            responseConstraint: nanoConstraint,
           },
         })
       );
@@ -858,11 +860,12 @@ export class OverlayFloatingCard {
 
         const ansContent = this.shadow.getElementById('hwCardAnswerContent');
         const replyText = lastAssistant?.content || lastUser?.content || 'Hội thoại rỗng';
-        // History doesn't track which studyMode produced a message, so detect
-        // a dictionary-shaped reply (**word** /phonetic/...) the same way
-        // formatDictionaryEntry() itself does, just to scope the dict-mode CSS.
+        // History doesn't record which studyMode produced a message. The
+        // dict-mode class only scopes the styling for the older markdown-shaped
+        // replies still sitting in saved conversations — structured JSON
+        // entries carry their own layout classes and need no such hint.
         ansContent.classList.toggle('hw-dict-mode', /^\*\*.+?\*\*\s*\/[^/\n]+\//.test(replyText.trim()));
-        ansContent.innerHTML = formatDictionaryEntry(replyText);
+        ansContent.innerHTML = renderAnswer(replyText, { allowMarkdownDict: true });
         this.activeCardResponseText = replyText;
       });
 

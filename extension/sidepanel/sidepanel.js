@@ -5,7 +5,7 @@
 
 import { Icons } from '../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
-import { formatMarkdownAndMath } from '../shared/markdown-katex.js';
+import { formatMarkdownAndMath, renderAnswer } from '../shared/markdown-katex.js';
 import { getI18n } from '../shared/i18n.js';
 import { SidePanelTooltips } from './sidepanel-tooltips.js';
 import { SidePanelKeysModal } from './sidepanel-keys-modal.js';
@@ -470,7 +470,7 @@ export class SidePanelController {
     const content = this.activeAiBubble.querySelector('.sp-ai-content');
     if (content) {
       content.style.color = 'inherit';
-      content.innerHTML = formatMarkdownAndMath(this.currentResponseText);
+      content.innerHTML = renderAnswer(this.currentResponseText);
     }
 
     const body = document.getElementById('spChatBody');
@@ -657,7 +657,7 @@ export class SidePanelController {
         el.innerHTML = `
           <div class="sp-msg-bubble">
             ${imgHtml}
-            <div class="${msg.role === 'assistant' ? 'sp-ai-content' : ''}">${formatMarkdownAndMath(msg.content)}</div>
+            <div class="${msg.role === 'assistant' ? 'sp-ai-content' : ''}">${msg.role === 'assistant' ? renderAnswer(msg.content) : formatMarkdownAndMath(msg.content)}</div>
             ${footerHtml}
           </div>
         `;

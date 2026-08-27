@@ -8,6 +8,7 @@ import { keyRotator } from './key-rotator.js';
 import { Storage, DEFAULT_NANO_SYSTEM_PROMPT } from '../shared/storage.js';
 import { formatStudyPrompt } from '../shared/study-prompt.js';
 import { streamViaOffscreen } from './offscreen-ai-bridge.js';
+import { isSingleWord, DICTIONARY_SCHEMA } from '../shared/dictionary.js';
 
 export class AiEngine {
   /**
@@ -182,7 +183,23 @@ export class AiEngine {
       });
 
       if (typeof session.promptStreaming === 'function') {
-        const stream = session.promptStreaming(fullPrompt, { signal });
+        // A single-word lookup asks the Prompt API to constrain output to the
+        // dictionary schema. responseConstraint only exists on newer Chrome
+        // builds, and this codebase still supports the older ai.languageModel
+        // shape — so fall back to an unconstrained call rather than failing
+        // the lookup outright when the option isn't understood.
+        const wantsSchema = studyMode === 'translate' && isSingleWord(prompt);
+        let stream;
+        try {
+          stream = session.promptStreaming(
+            fullPrompt,
+            wantsSchema ? { signal, responseConstraint: DICTIONARY_SCHEMA } : { signal }
+          );
+        } catch (constraintErr) {
+          if (!wantsSchema) throw constraintErr;
+          console.warn('[AiEngine] Nano rejected responseConstraint, retrying unconstrained:', constraintErr);
+          stream = session.promptStreaming(fullPrompt, { signal });
+        }
         let accumulated = '';
         for await (const chunk of stream) {
           let delta = '';

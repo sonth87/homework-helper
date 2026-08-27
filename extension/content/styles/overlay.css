@@ -568,6 +568,17 @@
   line-height: 1.5;
 }
 
+.hw-card-answer-content .hw-dict-desc-term {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hw-text-main);
+  margin-bottom: 4px;
+}
+
+.hw-card-answer-content .hw-dict-desc-text {
+  color: var(--hw-text-muted);
+}
+
 .hw-loading-text {
   display: inline-flex;
   align-items: center;

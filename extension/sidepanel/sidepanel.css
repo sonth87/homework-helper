@@ -1002,3 +1002,84 @@ body {
 }
 
 
+
+/* Dictionary card for single-word translations. Same class names and layout
+   as the in-page overlay (see overlay.css) so a lookup looks identical
+   whether it was opened in the popup card or continued here in the panel. */
+.sp-ai-content .hw-dict-headword {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.sp-ai-content .hw-dict-phonetic {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.sp-ai-content .hw-dict-sense {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.sp-ai-content .hw-dict-sense:last-of-type {
+  margin-bottom: 0;
+}
+
+.sp-ai-content .hw-dict-pos {
+  flex: 0 0 30px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding-top: 2px;
+}
+
+.sp-ai-content .hw-dict-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.sp-ai-content .hw-dict-gloss {
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.sp-ai-content .hw-dict-example {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.sp-ai-content .hw-dict-example code.inline-code {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.sp-ai-content .hw-dict-desc {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.sp-ai-content .hw-dict-desc-term {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.sp-ai-content .hw-dict-desc-text {
+  color: var(--text-muted);
+}

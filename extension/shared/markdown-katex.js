@@ -3,6 +3,8 @@
  * Converts Markdown and LaTeX math expressions to sanitized HTML using KaTeX.
  */
 
+import { parseDictionaryEntry, looksLikeDictionaryJson } from './dictionary.js';
+
 // Escape HTML utility
 export function escapeHtml(str) {
   return str
@@ -175,18 +177,70 @@ function formatInline(text) {
   html = html.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+
+  // The dictionary-example prompt asks the model to backtick-highlight only
+  // the single target word/term — some models (esp. weaker/local ones)
+  // ignore that and wrap the whole example sentence instead, turning it
+  // entirely blue/bold. A real highlight is a small fraction of the line; a
+  // mis-wrapped whole sentence is roughly half of it or more — render that
+  // case as plain text instead of visually shouting the entire sentence.
+  const totalWords = text.trim().split(/\s+/).filter(Boolean).length;
+  html = html.replace(/`([^`]+)`/g, (m, c) => {
+    const wordCount = c.trim().split(/\s+/).filter(Boolean).length;
+    if (wordCount > 5 || (totalWords > 0 && wordCount / totalWords > 0.45)) return c;
+    return `<code class="inline-code">${c}</code>`;
+  });
   return html;
+}
+
+// Known part-of-speech abbreviations the translate prompt asks for — used to
+// recognize a sense line even when a model drops the *italic* markers around
+// it (weaker/local models frequently do), without also matching ordinary
+// prose that happens to start with a short word + period ("A. " outlines, etc).
+const POS_ABBR = 'n|v|adj|adv|prep|conj|pron|interj|num|art|det';
+const LENIENT_SENSE_RE = new RegExp(`^(${POS_ABBR})\\.,?\\s*(.+)$`, 'i');
+
+// Renders the closing description block of a dictionary entry. The prompt
+// asks for a "**translated term**" heading line immediately followed by the
+// description sentence (no blank line between them, same pairing convention
+// as the part-of-speech + example lines above it) — pull that term out into
+// its own styled heading when present, so the box reads like "người phát
+// triển" / description rather than just a bare paragraph.
+function formatDictDesc(paraText) {
+  const lines = paraText.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (lines.length < 2) {
+    return `<div class="hw-dict-desc">${formatInline(paraText.replace(/\n/g, ' '))}</div>`;
+  }
+
+  const boldWrap = lines[0].match(/^\*\*(.+)\*\*$/) || lines[0].match(/^\*(.+)\*$/);
+  const term = (boldWrap ? boldWrap[1] : lines[0]).trim();
+  // A real translated-term heading is a short label, not a full sentence —
+  // guards against a model (esp. weaker/local ones) that skipped the bold
+  // marker but still wrote a normal multi-line description paragraph.
+  const looksLikeTerm = boldWrap || (term.length > 0 && term.length <= 40 && !/[.?!:;]$/.test(term));
+  if (!looksLikeTerm) {
+    return `<div class="hw-dict-desc">${formatInline(paraText.replace(/\n/g, ' '))}</div>`;
+  }
+
+  const rest = lines.slice(1).join(' ');
+  return `<div class="hw-dict-desc"><div class="hw-dict-desc-term">${formatInline(term)}</div>${rest ? `<div class="hw-dict-desc-text">${formatInline(rest)}</div>` : ''}</div>`;
 }
 
 /**
  * Renders a single-word translate/dictionary result (see the 'translate'
  * studyMode prompt in study-prompt.js) into the two-column dictionary layout:
- * **word** /phonetic/, then one row per sense with *pos.* on the left and the
- * bolded gloss + example on the right, then a plain description paragraph.
+ * word /phonetic/, then one row per sense with the part-of-speech on the left
+ * and the gloss + example on the right, then a plain description paragraph.
  * Falls back to the regular formatMarkdownAndMath() renderer whenever the
  * text doesn't actually match that structure (phrase/sentence translations,
- * a model that ignored the format, or a still-incomplete streaming chunk).
+ * a still-incomplete streaming chunk, or clearly not a single-word entry).
+ *
+ * The headword/sense matching is intentionally lenient — weaker or local
+ * models (Gemini Nano, small Ollama/LM Studio checkpoints) often get the
+ * gist right but drop the exact bold / italic markup the prompt asked for
+ * (plain "Framework" instead of "**Framework**", "n., ..." instead of
+ * "*n.* **...**"). Matching those near-misses still gets a clean structured
+ * card instead of falling all the way back to raw, unstyled text.
  */
 export function formatDictionaryEntry(text) {
   if (!text) return '';
@@ -194,21 +248,42 @@ export function formatDictionaryEntry(text) {
   const paragraphs = text.trim().split(/\n\s*\n/).filter((p) => p.trim());
   if (paragraphs.length < 2) return formatMarkdownAndMath(text);
 
-  const headwordMatch = paragraphs[0].trim().match(/^\*\*(.+?)\*\*\s*(\/[^/\n]+\/)?/);
-  if (!headwordMatch) return formatMarkdownAndMath(text);
+  // Headword: normally "**word** /phonetic/" on one line, but tolerate a
+  // missing bold marker and/or the phonetic sitting on its own line right
+  // after the word instead of the same line.
+  const firstPara = paragraphs[0].trim();
+  const firstParaLines = firstPara.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (!firstParaLines.length) return formatMarkdownAndMath(text);
 
-  const [, word, phonetic] = headwordMatch;
-  let html = `<div class="hw-dict-headword"><strong>${escapeHtml(word.trim())}</strong>${phonetic ? ` <span class="hw-dict-phonetic">${escapeHtml(phonetic)}</span>` : ''}</div>`;
+  const phoneticMatch = firstPara.match(/\/[^/\n]+\//);
+  const phonetic = phoneticMatch ? phoneticMatch[0] : '';
+  const wordLine = firstParaLines[0].replace(/\/[^/\n]+\/\s*$/, '').trim(); // strip a same-line trailing phonetic
+  // Only unwrap a genuine matching pair of ** or * markers around the whole
+  // line — a blind strip-from-both-ends would leave a stray trailing marker
+  // behind whenever the phonetic (already removed above) sat right after it.
+  const boldWrap = wordLine.match(/^\*\*(.+)\*\*$/) || wordLine.match(/^\*(.+)\*$/);
+  const word = (boldWrap ? boldWrap[1] : wordLine).trim();
 
-  const senseRe = /^\*([^*\n]+?)\.?\*\s*\*\*([^*\n]+?)\*\*/;
+  // A real headword is a single token (no spaces) — a multi-word first line
+  // means the model ignored the "single word only" rule (or this is actually
+  // a phrase/sentence reply), so don't force a dictionary layout onto it.
+  if (!word || /\s/.test(word)) return formatMarkdownAndMath(text);
+
+  let html = `<div class="hw-dict-headword"><strong>${escapeHtml(word)}</strong>${phonetic ? ` <span class="hw-dict-phonetic">${escapeHtml(phonetic)}</span>` : ''}</div>`;
+
+  const strictSenseRe = /^\*([^*\n]+?)\.?\*\s*\*\*([^*\n]+?)\*\*/;
+  let senseCount = 0;
+  let body = '';
 
   for (let i = 1; i < paragraphs.length; i++) {
     const lines = paragraphs[i].trim().split('\n');
     const firstLine = lines[0].trim();
-    const senseMatch = firstLine.match(senseRe);
+    const strictMatch = firstLine.match(strictSenseRe);
+    const lenientMatch = !strictMatch && firstLine.match(LENIENT_SENSE_RE);
 
-    if (senseMatch) {
-      const [full, pos, gloss] = senseMatch;
+    if (strictMatch || lenientMatch) {
+      const [full, pos, gloss] = strictMatch || lenientMatch;
+      senseCount++;
       const exampleParts = [];
       const restFirstLine = firstLine.slice(full.length).trim();
       if (restFirstLine) exampleParts.push(formatInline(restFirstLine));
@@ -217,7 +292,7 @@ export function formatDictionaryEntry(text) {
         if (t) exampleParts.push(formatInline(t));
       }
 
-      html += `<div class="hw-dict-sense">
+      body += `<div class="hw-dict-sense">
         <div class="hw-dict-pos">${escapeHtml(pos.trim())}.</div>
         <div class="hw-dict-body">
           <div class="hw-dict-gloss">${formatInline(gloss.trim())}</div>
@@ -225,9 +300,97 @@ export function formatDictionaryEntry(text) {
         </div>
       </div>`;
     } else {
-      html += `<div class="hw-dict-desc">${formatInline(paragraphs[i].trim())}</div>`;
+      body += formatDictDesc(paragraphs[i].trim());
     }
   }
 
+  // Zero recognized senses means this almost certainly isn't a dictionary
+  // entry at all (e.g. a short phrase translation whose first line just
+  // happened to be a single word) — plain rendering fits it better than a
+  // headword box sitting over unrelated description-styled paragraphs.
+  if (senseCount === 0) return formatMarkdownAndMath(text);
+
+  return html + body;
+}
+
+/**
+ * Wraps the target word inside an example sentence. The model supplies the
+ * sentence and, separately, the word to highlight — it never marks up the
+ * sentence itself, because that is precisely what used to produce whole
+ * sentences rendered as one highlight. Anything that isn't genuinely a small
+ * span inside the sentence is rendered plain rather than trusted.
+ */
+function renderExample(sentence, highlight) {
+  if (!sentence) return '';
+  const h = (highlight || '').trim();
+  if (!h) return escapeHtml(sentence);
+
+  const idx = sentence.toLowerCase().indexOf(h.toLowerCase());
+  if (idx < 0) return escapeHtml(sentence);
+  if (h.length / sentence.length > 0.6) return escapeHtml(sentence);
+
+  return escapeHtml(sentence.slice(0, idx))
+    + `<code class="inline-code">${escapeHtml(sentence.slice(idx, idx + h.length))}</code>`
+    + escapeHtml(sentence.slice(idx + h.length));
+}
+
+/**
+ * Renders a normalized dictionary entry (see shared/dictionary.js) to HTML.
+ *
+ * This is the single layout for a word lookup. Every field is optional at
+ * render time because the entry may still be streaming in — a missing field
+ * simply doesn't draw, so the card fills downward rather than switching
+ * between different-looking layouts as it completes.
+ */
+export function renderDictionaryEntry(entry) {
+  if (!entry || !entry.word) return '';
+
+  let html = `<div class="hw-dict-headword"><strong>${escapeHtml(entry.word)}</strong>`;
+  if (entry.phonetic) {
+    html += ` <span class="hw-dict-phonetic">${escapeHtml(entry.phonetic)}</span>`;
+  }
+  html += '</div>';
+
+  for (const sense of entry.senses || []) {
+    const example = renderExample(sense.example, sense.exampleHighlight);
+    const translated = renderExample(sense.exampleTranslation, sense.exampleTranslationHighlight);
+    const exampleHtml = [example, translated].filter(Boolean).join('<br>');
+
+    html += `<div class="hw-dict-sense">
+      <div class="hw-dict-pos">${escapeHtml(sense.pos || '')}</div>
+      <div class="hw-dict-body">
+        ${sense.gloss ? `<div class="hw-dict-gloss">${escapeHtml(sense.gloss)}</div>` : ''}
+        ${exampleHtml ? `<div class="hw-dict-example">${exampleHtml}</div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  if (entry.translation || entry.description) {
+    html += `<div class="hw-dict-desc">
+      ${entry.translation ? `<div class="hw-dict-desc-term">${escapeHtml(entry.translation)}</div>` : ''}
+      ${entry.description ? `<div class="hw-dict-desc-text">${escapeHtml(entry.description)}</div>` : ''}
+    </div>`;
+  }
+
   return html;
+}
+
+/**
+ * The one entry point every surface should use to render an AI reply, so the
+ * same content can never come out looking like two different things.
+ *
+ * A structured dictionary reply is detected by shape and rendered through the
+ * deterministic layout above. `allowMarkdownDict` additionally permits the
+ * legacy markdown-shaped dictionary parser, which stays available for
+ * providers that rejected the schema — it is off by default so an ordinary
+ * homework answer can never be coerced into a dictionary card.
+ */
+export function renderAnswer(text, { allowMarkdownDict = false } = {}) {
+  const entry = parseDictionaryEntry(text);
+  if (entry) return renderDictionaryEntry(entry);
+  // A structured reply that hasn't yielded a usable entry yet — still
+  // streaming its first field — must not fall through to the text renderers,
+  // which would flash raw JSON at the user for a few frames.
+  if (looksLikeDictionaryJson(text)) return '';
+  return allowMarkdownDict ? formatDictionaryEntry(text) : formatMarkdownAndMath(text);
 }

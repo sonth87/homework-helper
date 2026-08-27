@@ -4,7 +4,7 @@
 
 import { Icons } from '../../shared/icons.js';
 import { Storage, DEFAULT_NANO_SYSTEM_PROMPT, buildNanoPrompts } from '../../shared/storage.js';
-import { formatMarkdownAndMath, formatDictionaryEntry } from '../../shared/markdown-katex.js';
+import { formatMarkdownAndMath, renderAnswer } from '../../shared/markdown-katex.js';
 import { getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
 
@@ -363,7 +363,7 @@ export class OverlayDrawer {
         }
       }
 
-      const { sysPrompt: nanoSysPrompt, userPrompt: nanoPrompt } = buildNanoPrompts(
+      const { sysPrompt: nanoSysPrompt, userPrompt: nanoPrompt, responseConstraint: nanoConstraint } = buildNanoPrompts(
         this.currentStudyMode || 'step-by-step',
         prompt,
         ocrText,
@@ -377,6 +377,7 @@ export class OverlayDrawer {
             prompt: nanoPrompt,
             requestId: this.activeRequestId,
             systemPrompt: nanoSysPrompt,
+            responseConstraint: nanoConstraint,
           },
         })
       );
@@ -479,9 +480,10 @@ export class OverlayDrawer {
       this.overlay.floatingCard.activeCardResponseText += chunk;
       const content = this.shadow.getElementById('hwCardAnswerContent');
       if (content) {
-        content.innerHTML = content.classList.contains('hw-dict-mode')
-          ? formatDictionaryEntry(this.overlay.floatingCard.activeCardResponseText)
-          : formatMarkdownAndMath(this.overlay.floatingCard.activeCardResponseText);
+        content.innerHTML = renderAnswer(
+          this.overlay.floatingCard.activeCardResponseText,
+          { allowMarkdownDict: content.classList.contains('hw-dict-mode') }
+        );
       }
       return;
     }
@@ -493,7 +495,7 @@ export class OverlayDrawer {
     const content = this.activeAiBubble.querySelector('.hw-ai-content');
     if (content) {
       content.style.color = 'var(--hw-text-main)';
-      content.innerHTML = formatMarkdownAndMath(this.currentDrawerResponseText);
+      content.innerHTML = renderAnswer(this.currentDrawerResponseText);
     }
 
     const body = this.shadow.getElementById('hwChatBody');
@@ -626,7 +628,7 @@ export class OverlayDrawer {
         el.innerHTML = `
           <div class="hw-msg-bubble">
             ${imgHtml}
-            <div class="${msg.role === 'assistant' ? 'hw-ai-content' : ''}">${formatMarkdownAndMath(msg.content)}</div>
+            <div class="${msg.role === 'assistant' ? 'hw-ai-content' : ''}">${msg.role === 'assistant' ? renderAnswer(msg.content) : formatMarkdownAndMath(msg.content)}</div>
             ${footerHtml}
           </div>
         `;

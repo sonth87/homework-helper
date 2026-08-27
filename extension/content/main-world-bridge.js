@@ -40,7 +40,7 @@
 
   // Handle Prompt Execution & Streaming
   window.addEventListener('HOMEWORK_AI_NANO_EXEC', async (e) => {
-    const { prompt, requestId, systemPrompt } = e.detail || {};
+    const { prompt, requestId, systemPrompt, responseConstraint } = e.detail || {};
     const aiModel = getAiModel();
 
     if (!aiModel) {
@@ -58,7 +58,18 @@
       });
 
       if (typeof session.promptStreaming === 'function') {
-        const stream = session.promptStreaming(prompt);
+        // For a single-word dictionary lookup the caller passes a JSON schema
+        // to constrain the output. responseConstraint is only available on
+        // newer Chrome builds, so retry without it rather than failing.
+        let stream;
+        try {
+          stream = responseConstraint
+            ? session.promptStreaming(prompt, { responseConstraint })
+            : session.promptStreaming(prompt);
+        } catch (constraintErr) {
+          if (!responseConstraint) throw constraintErr;
+          stream = session.promptStreaming(prompt);
+        }
         let accumulated = '';
         for await (const chunk of stream) {
           let delta = '';

@@ -16,11 +16,36 @@
 import { formatStudyPrompt } from '../shared/study-prompt.js';
 import { runOcrInOffscreen } from '../background/ocr-bridge.js';
 import { getThinkingDisableValue } from '../shared/thinking-control.js';
+import { isSingleWord, DICTIONARY_SCHEMA } from '../shared/dictionary.js';
 
 console.log('[Offscreen AI Stream] Initialized in extension origin.');
 
 const HEARTBEAT_INTERVAL_MS = 15000;
 const activeControllers = new Map(); // requestId -> AbortController
+const DICTIONARY_TOOL_NAME = 'render_dictionary_entry';
+
+// A single-word translate lookup is the one case where the reply must be
+// structured JSON (see shared/dictionary.js) — everything else stays free
+// text. Constrained decoding is what makes small local models emit a usable
+// shape at all, so it's worth asking for wherever the provider supports it.
+function wantsDictionarySchema(studyMode, prompt) {
+  return studyMode === 'translate' && isSingleWord(prompt);
+}
+
+/**
+ * Runs a request that asked for structured output, retrying once as plain
+ * text if the endpoint rejected the schema. Older Ollama/LM Studio builds and
+ * some custom gateways 400 on response_format they don't implement — falling
+ * back keeps the lookup working (via the markdown renderer) instead of
+ * surfacing an error for what is only a formatting preference.
+ */
+async function fetchWithSchemaFallback(doFetch, wantsSchema) {
+  const response = await doFetch(wantsSchema);
+  if (response.ok || !wantsSchema) return response;
+  if (response.status !== 400 && response.status !== 422) return response;
+  console.warn('[Offscreen AI Stream] Endpoint rejected structured output, retrying as plain text.');
+  return doFetch(false);
+}
 
 /**
  * Google Gemini SSE Stream
@@ -54,18 +79,24 @@ async function streamGemini(config, { prompt, imageBase64, studyMode, outputLang
     if (level) generationConfig.thinkingConfig = { thinkingLevel: level };
   }
 
-  const payload = {
+  const wantsSchema = wantsDictionarySchema(studyMode, prompt);
+  const buildPayload = (useSchema) => ({
     contents: [{ role: 'user', parts }],
     system_instruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
-    generationConfig,
-  };
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-    signal,
+    generationConfig: useSchema
+      ? { ...generationConfig, responseMimeType: 'application/json', responseSchema: DICTIONARY_SCHEMA }
+      : generationConfig,
   });
+
+  const response = await fetchWithSchemaFallback(
+    (useSchema) => fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(buildPayload(useSchema)),
+      signal,
+    }),
+    wantsSchema
+  );
 
   if (!response.ok) {
     const errText = await response.text();
@@ -172,6 +203,20 @@ async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, 
     }
   }
 
+  const wantsSchema = wantsDictionarySchema(studyMode, effectivePrompt);
+  const buildBody = (useSchema) => JSON.stringify(
+    useSchema
+      ? {
+          ...payload,
+          response_format: {
+            type: 'json_schema',
+            json_schema: { name: 'dictionary_entry', schema: DICTIONARY_SCHEMA },
+          },
+        }
+      : payload
+  );
+
+
   const headers = {
     'Content-Type': 'application/json',
   };
@@ -192,12 +237,15 @@ async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, 
 
   let response;
   try {
-    response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
-      signal: fetchSignal,
-    });
+    response = await fetchWithSchemaFallback(
+      (useSchema) => fetch(url, {
+        method: 'POST',
+        headers,
+        body: buildBody(useSchema),
+        signal: fetchSignal,
+      }),
+      wantsSchema
+    );
   } catch (fetchErr) {
     if (timeoutController.signal.aborted && !signal?.aborted) {
       const timeoutErr = new Error(
@@ -290,17 +338,38 @@ async function streamClaude(config, { prompt, imageBase64, studyMode, outputLang
     if (level) payload.effort = level;
   }
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': config.apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify(payload),
-    signal,
-  });
+  // Claude has no response_format; forcing a single tool call is the
+  // supported way to constrain output to a schema. The arguments then arrive
+  // as input_json_delta rather than text deltas (handled in the loop below).
+  const wantsSchema = wantsDictionarySchema(studyMode, prompt);
+  const buildBody = (useSchema) => JSON.stringify(
+    useSchema
+      ? {
+          ...payload,
+          tools: [{
+            name: DICTIONARY_TOOL_NAME,
+            description: 'Return the dictionary entry for the requested word.',
+            input_schema: DICTIONARY_SCHEMA,
+          }],
+          tool_choice: { type: 'tool', name: DICTIONARY_TOOL_NAME },
+        }
+      : payload
+  );
+
+  const response = await fetchWithSchemaFallback(
+    (useSchema) => fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': config.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: buildBody(useSchema),
+      signal,
+    }),
+    wantsSchema
+  );
 
   if (!response.ok) {
     const errText = await response.text();
@@ -327,8 +396,13 @@ async function streamClaude(config, { prompt, imageBase64, studyMode, outputLang
         const jsonStr = trimmed.slice(6).trim();
         try {
           const data = JSON.parse(jsonStr);
-          if (data.type === 'content_block_delta' && data.delta?.text) {
-            onChunk(data.delta.text, { status: 'streaming', model });
+          if (data.type === 'content_block_delta') {
+            // Plain answers stream as text deltas; a forced tool call streams
+            // its arguments as partial_json instead — which is exactly the
+            // dictionary JSON the renderer is waiting for, so pass it through
+            // the same way.
+            const piece = data.delta?.text ?? data.delta?.partial_json;
+            if (piece) onChunk(piece, { status: 'streaming', model });
           }
         } catch (e) {
           // ignore partial JSON

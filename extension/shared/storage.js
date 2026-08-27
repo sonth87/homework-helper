@@ -3,6 +3,8 @@
  * Persists user models, API keys, rotation strategy, and preferences in chrome.storage.local
  */
 
+import { isSingleWord, buildWordLookupPrompt, buildSentenceTranslatePrompt, DICTIONARY_SCHEMA } from './dictionary.js';
+
 export const DEFAULT_PROVIDERS = [
   {
     id: "chrome-builtin",
@@ -178,6 +180,7 @@ export function buildNanoPrompts(studyMode = 'step-by-step', prompt = '', ocrTex
 
   let sysPrompt = customSysPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
   let userPrompt = '';
+  let responseConstraint = null;
 
   if (studyMode === 'direct') {
     sysPrompt = `You are a precise, concise direct-answer AI for quizzes and homework.
@@ -196,8 +199,16 @@ CRITICAL RULES:
     sysPrompt = `You are an educator AI. Explain the underlying scientific/mathematical theory and principles clearly in ${targetLangName}.`;
     userPrompt = `[Question]:\n${contentText}\n\n[REQUIREMENT]: Explain in depth the underlying theory and knowledge behind this problem.\n[Language]: ${targetLangName}`;
   } else if (studyMode === 'translate') {
+    // Same word-vs-phrase routing as formatStudyPrompt (the cloud path) so
+    // the on-device model gets an identically shaped task; for a word lookup
+    // the schema below is handed to the Prompt API as a responseConstraint.
     sysPrompt = `You are a translation tool and bilingual dictionary, not a homework-solving assistant. No preamble, no restating the request, no explaining the task — go straight to the requested content.`;
-    userPrompt = `Content to process:\n${contentText}\n\n[RULES]:\n- If this is a SINGLE STANDALONE WORD (exactly 1 word, not a multi-word phrase): reply in EXACTLY this structure, nothing else (each part below is its own paragraph, separated from the next by ONE blank line):\n\n**<word>** /<IPA phonetic transcription>/\n\n*<part-of-speech abbreviation, e.g. n., v., adj., adv.>* **<short gloss of that meaning, written in ${targetLangName}>**\n<one example sentence in the original language, wrapping ONLY the target word (or its inflected form) in backticks, e.g. \`word\`> — <its translation into ${targetLangName}, wrapping ONLY the corresponding translated word/phrase in backticks>\n\n<repeat the paragraph above ONLY if the word has a second distinct common meaning/part of speech (max 2 total); otherwise skip straight to the last paragraph>\n\n<one short overall description/definition of the word, written in ${targetLangName}, as a plain sentence with no bold or backticks>\n\nFormatting rules: the part-of-speech tag and its example sentence go on two consecutive lines with NO blank line between them; every other part (headword, each meaning+example pair, the final description) is separated by exactly one blank line.\n- If this is a PHRASE (2+ words), a sentence, a paragraph, or longer text: reply with ONLY the accurate translation into ${targetLangName}. Do NOT add IPA phonetics, do NOT add examples, do NOT use bold/backticks formatting, no explanation, no notes — no matter how short the term or phrase is.`;
+    if (isSingleWord(contentText)) {
+      userPrompt = buildWordLookupPrompt(contentText.trim(), targetLangName);
+      responseConstraint = DICTIONARY_SCHEMA;
+    } else {
+      userPrompt = buildSentenceTranslatePrompt(contentText, targetLangName);
+    }
   } else {
     // step-by-step
     sysPrompt = `${sysPrompt}\n\n[MULTIPLE-CHOICE RULE]: If options are present, clearly conclude with the selected option from the list.\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;
@@ -205,7 +216,7 @@ CRITICAL RULES:
   }
 
   const finalSysPrompt = `${sysPrompt}\n\n[LANGUAGE REQUIREMENT]: Reply in ${targetLangName}.`.trim();
-  return { sysPrompt: finalSysPrompt, userPrompt };
+  return { sysPrompt: finalSysPrompt, userPrompt, responseConstraint };
 }
 
 export const DEFAULT_SETTINGS = {
