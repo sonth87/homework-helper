@@ -186,6 +186,30 @@
   animation: hwDropFade 0.12s ease-out;
 }
 
+/* Transparent bridge over the 6px gap (plus the dropdown's own padding and
+   border) between the "disable" row and this submenu. A pointer travelling
+   toward the submenu hit-tests onto the bridge instead of the dropdown behind
+   it, so it never counts as having left both elements at once — which used to
+   close the submenu before any of its items could be clicked. */
+.hw-tb-submenu::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 100%;
+  width: 18px;
+  height: 100%;
+}
+
+/* Opened leftwards when there is no room on the right (set from JS). */
+.hw-tb-submenu.flip-left {
+  left: auto;
+  right: calc(100% + 6px);
+}
+.hw-tb-submenu.flip-left::before {
+  right: auto;
+  left: 100%;
+}
+
 .hw-tb-sub-item {
   padding: 8px 12px;
   border-radius: 8px;

@@ -41,6 +41,16 @@ class InPageOverlay {
 
     this.shadow = this.host.attachShadow({ mode: 'open' });
 
+    // A <link> inside a shadow root does not block that tree from painting, so
+    // the wrapper below would render for a few frames with no CSS at all — the
+    // FAB showing up as a row of bare buttons in the top-left corner before
+    // snapping to the screen edge. This inline rule applies synchronously and
+    // holds the UI back until the real sheet has landed (see reveal below).
+    const bootStyle = document.createElement('style');
+    bootStyle.textContent =
+      '.hw-overlay-wrapper{visibility:hidden}.hw-overlay-wrapper.hw-styles-ready{visibility:visible}';
+    this.shadow.appendChild(bootStyle);
+
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = chrome.runtime.getURL('content/styles/overlay.css');
@@ -276,6 +286,19 @@ class InPageOverlay {
     `;
 
     this.shadow.appendChild(container);
+
+    // Reveal as soon as overlay.css is in. katex.min.css is deliberately not
+    // waited on — it only matters inside a rendered answer and is far heavier,
+    // so gating the FAB on it would trade a flash for a stall. An error or a
+    // slow fetch reveals anyway: the UI must never end up stuck invisible.
+    const reveal = () => container.classList.add('hw-styles-ready');
+    if (link.sheet) {
+      reveal();
+    } else {
+      link.addEventListener('load', reveal, { once: true });
+      link.addEventListener('error', reveal, { once: true });
+      setTimeout(reveal, 2000);
+    }
   }
 
   mountSubcomponents() {
@@ -300,7 +323,12 @@ class InPageOverlay {
     window.addEventListener('HOMEWORK_AI_OPEN_POPUP', (e) => {
       const { type, text, rect } = e.detail || {};
       if (text) {
-        this.floatingCard.openActionPopup(type, text, rect);
+        // openActionPopup is async, so anything it throws would otherwise
+        // surface only as an unhandled rejection — the toolbar would vanish on
+        // click with no card and no clue why. Log it loudly instead.
+        this.floatingCard.openActionPopup(type, text, rect).catch((err) => {
+          console.error('[HomeworkAI] Failed to open the action popup:', type, err);
+        });
       }
     });
 

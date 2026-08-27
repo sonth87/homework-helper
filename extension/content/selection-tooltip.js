@@ -35,11 +35,11 @@ class SelectionTooltip {
       return;
     }
 
-    // Check if disabled for this site or globally
+    // Check if disabled for this page, site, session or globally
     const currentHost = window.location.hostname;
     const { enableTextTooltip = true, disabledSites = [] } = await Storage.get(['enableTextTooltip', 'disabledSites']);
 
-    if (!enableTextTooltip || disabledSites.includes(currentHost) || sessionStorage.getItem('hw_disabled_session')) {
+    if (!enableTextTooltip || disabledSites.includes(currentHost) || this.isDisabledForSession()) {
       this.removeToolbar();
       return;
     }
@@ -197,17 +197,52 @@ class SelectionTooltip {
       </div>
     `;
 
-    // Submenu hover logic
+    // Submenu open/close.
+    //
+    // The submenu sits 6px to the right of the row that opens it, and that gap
+    // belongs to neither element: a pointer heading for the submenu left the
+    // row first, so a bare mouseleave closed the menu before it could ever be
+    // reached — the whole "disable" branch was unclickable. Three things fix
+    // it: a transparent bridge across the gap (.hw-tb-submenu::before), a short
+    // grace period before closing, and click-to-toggle so the row works
+    // without hovering at all (touch, trackpad taps, keyboard).
     const disableItem = this.dropdown.querySelector('#hwTbDisableItem');
     const submenu = this.dropdown.querySelector('#hwTbSubmenu');
+    let submenuCloseTimer = null;
 
-    disableItem.addEventListener('mouseenter', () => {
+    const openSubmenu = () => {
+      clearTimeout(submenuCloseTimer);
+      submenu.classList.remove('flip-left');
       submenu.style.display = 'flex';
-    });
-    disableItem.addEventListener('mouseleave', (e) => {
-      if (!submenu.contains(e.relatedTarget)) {
-        submenu.style.display = 'none';
+      // Flip to the left when the toolbar sits close enough to the right edge
+      // that the submenu would open off-screen.
+      if (submenu.getBoundingClientRect().right > window.innerWidth - 8) {
+        submenu.classList.add('flip-left');
       }
+    };
+    const hideSubmenu = () => {
+      clearTimeout(submenuCloseTimer);
+      submenu.style.display = 'none';
+    };
+    const hideSubmenuSoon = () => {
+      clearTimeout(submenuCloseTimer);
+      submenuCloseTimer = setTimeout(hideSubmenu, 200);
+    };
+
+    disableItem.addEventListener('mouseenter', openSubmenu);
+    disableItem.addEventListener('mouseleave', hideSubmenuSoon);
+    submenu.addEventListener('mouseenter', openSubmenu);
+    submenu.addEventListener('mouseleave', hideSubmenuSoon);
+
+    // Opens only, never toggles: a mouse click is always preceded by the
+    // hover that already opened the submenu, so toggling here would close it
+    // the instant it was clicked. Closing is mouseleave's job (or picking one
+    // of the items).
+    disableItem.addEventListener('click', (e) => {
+      if (submenu.contains(e.target)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openSubmenu();
     });
 
     // Disable actions
@@ -234,11 +269,27 @@ class SelectionTooltip {
     this.toolbar.appendChild(this.dropdown);
   }
 
+  // 'session' and 'page' both live in sessionStorage; the page key was being
+  // written by handleDisable but never read back, so "disable for this page"
+  // silently did nothing.
+  isDisabledForSession() {
+    try {
+      return !!(
+        sessionStorage.getItem('hw_disabled_session') ||
+        sessionStorage.getItem(`hw_disabled_${window.location.pathname}`)
+      );
+    } catch (e) {
+      // sessionStorage throws on pages with storage blocked (sandboxed iframes,
+      // strict privacy settings) — treat that as "not disabled".
+      return false;
+    }
+  }
+
   async handleDisable(type) {
     if (type === 'session') {
-      sessionStorage.setItem('hw_disabled_session', 'true');
+      try { sessionStorage.setItem('hw_disabled_session', 'true'); } catch (e) { /* storage blocked */ }
     } else if (type === 'page') {
-      sessionStorage.setItem(`hw_disabled_${window.location.pathname}`, 'true');
+      try { sessionStorage.setItem(`hw_disabled_${window.location.pathname}`, 'true'); } catch (e) { /* storage blocked */ }
     } else if (type === 'site') {
       const { disabledSites = [] } = await Storage.get(['disabledSites']);
       const currentHost = window.location.hostname;

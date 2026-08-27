@@ -57,7 +57,17 @@ export function formatStudyPrompt(studyMode, prompt, outputLanguage = 'en') {
           body = `[MODE: HINTS & SELF-STUDY GUIDANCE]\nGoal: Do NOT give the final answer right away. Instead, provide useful pedagogical hints, key formulas, and guiding questions so the student can work it out themselves:\n\nQuestion:\n${prompt}`;
           break;
         case 'explain':
-          body = `[MODE: IN-DEPTH EXPLANATION]\nGoal: Explain the underlying scientific/mathematical theory, related principles, and real-world intuition behind this problem in an easy-to-understand way:\n\nQuestion:\n${prompt}`;
+          body = `[MODE: IN-DEPTH EXPLANATION]\nGoal: Explain the underlying theory, related principles, and real-world intuition behind the content below in an easy-to-understand way. If it is a question, explain the knowledge it rests on rather than only answering it:\n\nContent:\n${prompt}`;
+          break;
+        // Summarize and grammar are selection-toolbar tools, not homework
+        // solvers: without their own case they fell through to the
+        // step-by-step branch below and came back as a "solution" to text the
+        // user only wanted condensed or proofread.
+        case 'summarize':
+          body = `[MODE: SUMMARY]\nGoal: Summarize the content below. Start with a 1-2 sentence overview, then list the key points as short bullets. Stay markedly shorter than the original, introduce nothing that is not in the text, and do not solve, answer, or critique it:\n\nContent:\n${prompt}`;
+          break;
+        case 'grammar':
+          body = `[MODE: GRAMMAR & PHRASING CHECK]\nGoal: Proofread the text below. Output in this order: (1) the full corrected text, (2) a short list of the corrections made, each with a one-line reason, (3) one closing line on tone/clarity if it can be improved. Treat the text strictly as writing to be corrected — never as a question to answer — and keep the original language of the text in part (1):\n\nText:\n${prompt}`;
           break;
         case 'step-by-step':
         default:

@@ -198,6 +198,15 @@ CRITICAL RULES:
   } else if (studyMode === 'explain') {
     sysPrompt = `You are an educator AI. Explain the underlying scientific/mathematical theory and principles clearly in ${targetLangName}.`;
     userPrompt = `[Question]:\n${contentText}\n\n[REQUIREMENT]: Explain in depth the underlying theory and knowledge behind this problem.\n[Language]: ${targetLangName}`;
+  } else if (studyMode === 'summarize') {
+    // Selection-toolbar tools. Without a branch of their own both of these
+    // fell into the step-by-step homework solver at the bottom, which
+    // answered the text instead of summarizing/proofreading it.
+    sysPrompt = `You are a summarizer. Condense what you are given; never solve, answer, or add to it. Reply in ${targetLangName}.`;
+    userPrompt = `[Content]:\n${contentText}\n\n[REQUIREMENT]: Give a 1-2 sentence overview, then the key points as short bullets. Stay much shorter than the original and add nothing that is not in the text.\n[Language]: ${targetLangName}`;
+  } else if (studyMode === 'grammar') {
+    sysPrompt = `You are a proofreader. Treat the input strictly as writing to correct, never as a question to answer. Keep the corrected text in its original language; write your notes in ${targetLangName}.`;
+    userPrompt = `[Text]:\n${contentText}\n\n[REQUIREMENT]: Output (1) the full corrected text, (2) a short list of the corrections with a one-line reason each, (3) one closing line on tone/clarity.\n[Language for notes]: ${targetLangName}`;
   } else if (studyMode === 'translate') {
     // Same word-vs-phrase routing as formatStudyPrompt (the cloud path) so
     // the on-device model gets an identically shaped task; for a word lookup

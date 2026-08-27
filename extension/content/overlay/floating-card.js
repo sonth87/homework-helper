@@ -710,18 +710,15 @@ export class OverlayFloatingCard {
       prompt = `Search, verify facts, and solve this homework question:\n\n${text}`;
       studyMode = 'direct';
       userLabel = `[Search & Solve]: ${text}`;
-    } else if (type === 'explain') {
-      prompt = `Provide a comprehensive educational explanation of the following concept:\n\n${text}`;
-      studyMode = 'explain';
-      userLabel = `[Deep Explanation]: ${text}`;
-    } else if (type === 'summarize') {
-      prompt = `Summarize the following text concisely with key points:\n\n${text}`;
-      studyMode = 'summarize';
-      userLabel = `[Summarize]: ${text}`;
-    } else if (type === 'grammar') {
-      prompt = `Check and correct grammar, spelling, and phrasing in the following text. Highlight improvements:\n\n${text}`;
-      studyMode = 'explain';
-      userLabel = `[Grammar Checker]: ${text}`;
+    } else if (type === 'explain' || type === 'summarize' || type === 'grammar') {
+      // Same rule as translate above: the selected text goes through raw and
+      // the instruction comes from the study mode alone. Wrapping it here as
+      // well produced two competing instructions — and 'grammar' additionally
+      // used to be sent as studyMode 'explain', so a proofreading request came
+      // back as a theory lecture about the sentence.
+      prompt = text;
+      studyMode = type;
+      userLabel = `${{ explain: '[Deep Explanation]', summarize: '[Summarize]', grammar: '[Grammar Checker]' }[type]}: ${text}`;
     }
 
     Storage.addChatMessage({
