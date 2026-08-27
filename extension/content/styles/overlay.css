@@ -677,9 +677,9 @@
 /* any of the card's content (translate-bar included) and never  */
 /* resizes the popup itself. The history/collapse/close icons    */
 /* form a small always-on cluster pinned over the top-right of   */
-/* the content. The footer's secondary buttons keep their spot   */
-/* and fade in/out with opacity. The primary CTA (Next Question  */
-/* / Continue in chat) stays visible at all times.               */
+/* the content. The whole footer (secondary Copy/Retry buttons    */
+/* and the primary Next Question / Continue in chat CTA) fades    */
+/* in/out with opacity on hover, same as the floating title tab.  */
 /* ========================================================= */
 .hw-solution-card.hw-card-compact .hw-card-header {
   padding: 0;
@@ -707,18 +707,6 @@
   display: none;
 }
 
-.hw-solution-card.hw-card-compact .hw-card-actions-left {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
-}
-
-.hw-solution-card.hw-card-compact:hover .hw-card-actions-left,
-.hw-solution-card.hw-card-compact:focus-within .hw-card-actions-left {
-  opacity: 1;
-  pointer-events: auto;
-}
-
 .hw-solution-card.hw-card-compact .hw-card-body {
   padding: 6px 8px;
   gap: 5px;
@@ -730,10 +718,19 @@
 
 .hw-solution-card.hw-card-compact .hw-card-footer {
   padding: 2px 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.hw-solution-card.hw-card-compact:hover .hw-card-footer,
+.hw-solution-card.hw-card-compact:focus-within .hw-card-footer {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .hw-solution-card.hw-card-compact .hw-btn-card-primary {
-  padding: 2px 8x;
+  padding: 2px 8px;
   font-size: 11px;
 }
 
