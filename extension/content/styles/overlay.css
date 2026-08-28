@@ -812,10 +812,18 @@
 }
 
 .hw-drawer {
+  --hw-drawer-width: 480px;
   position: fixed;
   top: 0;
-  right: -500px;
-  width: 480px;
+  /* Derived from the same variable as width, so the "closed" off-screen
+     offset always fully clears the drawer no matter how it's been resized
+     — a hardcoded offset (e.g. -500px) would leave a resized-wider drawer
+     peeking in from the edge while "closed". The extra 60px clears the
+     box-shadow's blur radius too. */
+  right: calc(-1 * var(--hw-drawer-width) - 60px);
+  width: var(--hw-drawer-width);
+  min-width: 380px;
+  max-width: 820px;
   height: 100vh;
   background: rgba(var(--hw-glass-rgb), 0.95);
   backdrop-filter: blur(20px) saturate(180%);
@@ -830,6 +838,30 @@
 
 .hw-drawer.open {
   right: 0;
+}
+
+.hw-drawer.resizing {
+  transition: none;
+}
+
+/* Drag handle to widen/narrow the drawer — a thin strip along its left edge. */
+.hw-drawer-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  cursor: ew-resize;
+  /* Above .hw-modal-backdrop (z-index: 200) so the drawer stays resizable
+     even while the Quick Guide / Config modal is open on top of it. */
+  z-index: 210;
+  background: transparent;
+  touch-action: none;
+}
+
+.hw-drawer-resize-handle:hover,
+.hw-drawer-resize-handle.active {
+  background: rgba(var(--hw-accent-rgb), 0.35);
 }
 
 .hw-drawer:not(.open) .hw-drawer-edge-close {

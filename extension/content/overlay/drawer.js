@@ -30,6 +30,61 @@ export class OverlayDrawer {
 
   init() {
     this.setupListeners();
+    this.applyDrawerWidth();
+    this.makeDrawerResizable();
+  }
+
+  async applyDrawerWidth() {
+    const { drawerWidth } = await Storage.get(['drawerWidth']);
+    const drawer = this.shadow.getElementById('hwDrawer');
+    if (drawer && typeof drawerWidth === 'number') {
+      drawer.style.setProperty('--hw-drawer-width', `${drawerWidth}px`);
+    }
+  }
+
+  // Drag the left-edge handle to widen/narrow the drawer; the chosen width is
+  // saved and restored on the next page load — mirrors how the FAB cluster's
+  // dragged position persists (see fabs.js makeFabContainerDraggable()).
+  //
+  // Sets the --hw-drawer-width custom property rather than .style.width
+  // directly: overlay.css derives the drawer's off-screen "closed" offset
+  // from that same variable via calc(), so the hidden position always
+  // fully clears the drawer at whatever width it's been resized to. Setting
+  // .style.width directly here would silently desync the two and leave a
+  // resized-wider drawer peeking in from the edge while "closed".
+  makeDrawerResizable() {
+    const drawer = this.shadow.getElementById('hwDrawer');
+    const handle = this.shadow.getElementById('hwDrawerResizeHandle');
+    if (!drawer || !handle) return;
+
+    const MIN_WIDTH = 380;
+    const MAX_WIDTH = 820;
+    let isResizing = false;
+    let currentWidth = null;
+
+    handle.addEventListener('mousedown', (e) => {
+      isResizing = true;
+      handle.classList.add('active');
+      drawer.classList.add('resizing');
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      const maxAllowed = Math.min(MAX_WIDTH, window.innerWidth - 80);
+      currentWidth = Math.max(MIN_WIDTH, Math.min(maxAllowed, window.innerWidth - e.clientX));
+      drawer.style.setProperty('--hw-drawer-width', `${currentWidth}px`);
+    });
+
+    window.addEventListener('mouseup', async () => {
+      if (!isResizing) return;
+      isResizing = false;
+      handle.classList.remove('active');
+      drawer.classList.remove('resizing');
+      document.body.style.userSelect = '';
+      if (currentWidth) await Storage.set({ drawerWidth: currentWidth });
+    });
   }
 
   // Rotates through a set of short "thinking..." phrases every 5s while

@@ -247,6 +247,7 @@ export const DEFAULT_SETTINGS = {
   fabSize: "normal", // 'tiny' | 'small' | 'normal' | 'large'
   fabOpacity: 90, // 30 - 100% (Liquid Glass background alpha)
   fabPosition: null, // null (default docked position) | { dock: 'left' | 'right', top: number(px) } — set by dragging the FAB cluster
+  drawerWidth: null, // null (default 480px from CSS) | number(px) — set by dragging the drawer's left-edge resize handle
   popupOpacity: 92, // 40 - 100% (Liquid Glass background alpha)
   popupBlur: 16, // 0 - 30px
   popupCardSize: "normal", // 'normal' | 'compact' (compact hides secondary buttons until hover, tighter padding)
@@ -257,6 +258,17 @@ export const DEFAULT_SETTINGS = {
   toolbarTheme: "glass-light", // 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple'
   toolbarCustomColor: "#0284c7",
   toolbarLayout: DEFAULT_TOOLBAR_LAYOUT, // ordered [{ id, area: 'main' | 'dropdown' }] — see shared/toolbar-items.js
+  enableHoverTranslate: false, // hover-to-translate on any webpage text (see content/hover-translate.js)
+  hoverTranslateModifiers: ["ctrl"], // subset of ['ctrl','shift','alt','meta']; [] = fires on hover alone, no key needed
+  hoverTranslateGranularity: "sentence", // 'word' | 'sentence' | 'paragraph'
+  hoverTranslateDelay: 350, // ms the pointer must stay still before a lookup fires
+  hoverTranslateOpacity: 96, // 40 - 100%
+  hoverTranslateBlur: 18, // 0 - 30px
+  hoverTranslateFontSize: 13, // 11 - 16px
+  hoverTranslateMaxWidth: 300, // 220 - 420px
+  hoverTranslateTheme: "glass-light", // 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple'
+  hoverTranslateHighlight: true, // marker-style background tint over the word/sentence/paragraph being translated
+  hoverTranslateAnimation: "draw", // 'none' | 'pulse' | 'glow' | 'sweep' | 'draw' — effect played on that text while holding the trigger key
   routingStrategy: "prefer_config", // 'prefer_config' (recommended) | 'prefer_nano' | 'nano_only' | 'config_only'
   nanoDownloadState: { inProgress: false, percent: null, updatedAt: 0 }, // shared cross-tab flag: is Gemini Nano's on-device model actively downloading right now
   installedOcrModels: {

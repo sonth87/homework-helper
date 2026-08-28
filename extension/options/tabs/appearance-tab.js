@@ -1,5 +1,5 @@
 import { Icons } from '../../shared/icons.js';
-import { Storage } from '../../shared/storage.js';
+import { Storage, DEFAULT_SETTINGS } from '../../shared/storage.js';
 import { getSelectionTooltipI18n } from '../../shared/i18n.js';
 import { TOOLBAR_ITEM_ICONS, DEFAULT_TOOLBAR_LAYOUT, normalizeToolbarLayout } from '../../shared/toolbar-items.js';
 
@@ -28,6 +28,17 @@ export class AppearanceTab {
       toolbarOpacity = 90,
       toolbarBlur = 14,
       toolbarLayout,
+      enableHoverTranslate = false,
+      hoverTranslateModifiers = ['alt'],
+      hoverTranslateGranularity = 'word',
+      hoverTranslateDelay = 350,
+      hoverTranslateTheme = 'glass-light',
+      hoverTranslateHighlight = true,
+      hoverTranslateAnimation = 'none',
+      hoverTranslateOpacity = 96,
+      hoverTranslateBlur = 18,
+      hoverTranslateFontSize = 13,
+      hoverTranslateMaxWidth = 300,
       uiLanguage = 'vi',
     } = await Storage.get();
 
@@ -46,6 +57,30 @@ export class AppearanceTab {
     const valToolbarOpacity = document.getElementById('valToolbarOpacity');
     const rangeToolbarBlur = document.getElementById('optRangeToolbarBlur');
     const valToolbarBlur = document.getElementById('valToolbarBlur');
+
+    const checkHoverTranslateInline = document.getElementById('optCheckHoverTranslateInline');
+    const checkHoverMods = {
+      ctrl: document.getElementById('optHoverModCtrl'),
+      shift: document.getElementById('optHoverModShift'),
+      alt: document.getElementById('optHoverModAlt'),
+      meta: document.getElementById('optHoverModMeta'),
+    };
+    const hoverGranularitySelect = document.getElementById('optHoverGranularitySelect');
+    const rangeHoverDelay = document.getElementById('optRangeHoverDelay');
+    const valHoverDelay = document.getElementById('valHoverDelay');
+    const checkHoverHighlight = document.getElementById('optCheckHoverHighlight');
+    const hoverAnimationSelect = document.getElementById('optHoverAnimationSelect');
+    const hoverThemeSelect = document.getElementById('optHoverThemeSelect');
+    const rangeHoverOpacity = document.getElementById('optRangeHoverOpacity');
+    const valHoverOpacity = document.getElementById('valHoverOpacity');
+    const rangeHoverBlur = document.getElementById('optRangeHoverBlur');
+    const valHoverBlur = document.getElementById('valHoverBlur');
+    const rangeHoverFontSize = document.getElementById('optRangeHoverFontSize');
+    const valHoverFontSize = document.getElementById('valHoverFontSize');
+    const rangeHoverMaxWidth = document.getElementById('optRangeHoverMaxWidth');
+    const valHoverMaxWidth = document.getElementById('valHoverMaxWidth');
+    const btnResetHover = document.getElementById('optBtnResetHover');
+    const prevHoverTip = document.getElementById('prevHoverTip');
 
     const popupCardSizeSelect = document.getElementById('optPopupCardSizeSelect');
     const rangePopupOpacity = document.getElementById('optRangePopupOpacity');
@@ -80,6 +115,35 @@ export class AppearanceTab {
     if (rangeToolbarBlur) {
       rangeToolbarBlur.value = toolbarBlur;
       if (valToolbarBlur) valToolbarBlur.textContent = `${toolbarBlur}px`;
+    }
+
+    if (checkHoverTranslateInline) checkHoverTranslateInline.checked = enableHoverTranslate;
+    Object.entries(checkHoverMods).forEach(([mod, el]) => {
+      if (el) el.checked = hoverTranslateModifiers.includes(mod);
+    });
+    if (hoverGranularitySelect) hoverGranularitySelect.value = hoverTranslateGranularity;
+    if (rangeHoverDelay) {
+      rangeHoverDelay.value = hoverTranslateDelay;
+      if (valHoverDelay) valHoverDelay.textContent = `${hoverTranslateDelay}ms`;
+    }
+    if (checkHoverHighlight) checkHoverHighlight.checked = hoverTranslateHighlight;
+    if (hoverAnimationSelect) hoverAnimationSelect.value = hoverTranslateAnimation;
+    if (hoverThemeSelect) hoverThemeSelect.value = hoverTranslateTheme;
+    if (rangeHoverOpacity) {
+      rangeHoverOpacity.value = hoverTranslateOpacity;
+      if (valHoverOpacity) valHoverOpacity.textContent = `${hoverTranslateOpacity}%`;
+    }
+    if (rangeHoverBlur) {
+      rangeHoverBlur.value = hoverTranslateBlur;
+      if (valHoverBlur) valHoverBlur.textContent = `${hoverTranslateBlur}px`;
+    }
+    if (rangeHoverFontSize) {
+      rangeHoverFontSize.value = hoverTranslateFontSize;
+      if (valHoverFontSize) valHoverFontSize.textContent = `${hoverTranslateFontSize}px`;
+    }
+    if (rangeHoverMaxWidth) {
+      rangeHoverMaxWidth.value = hoverTranslateMaxWidth;
+      if (valHoverMaxWidth) valHoverMaxWidth.textContent = `${hoverTranslateMaxWidth}px`;
     }
 
     if (popupCardSizeSelect) popupCardSizeSelect.value = popupCardSize;
@@ -164,6 +228,50 @@ export class AppearanceTab {
         }
       }
 
+      // 2.5a Hover-translate highlight/animation preview — reuses the existing
+      // .highlight-text demo paragraph as a stand-in for "text on the page",
+      // since applyTextEffects() in hover-translate.js styles real page text
+      // directly rather than a tooltip; there's nothing else in this mock to
+      // point it at.
+      const prevDemoHighlight = document.getElementById('prevDemoHighlight');
+      if (prevDemoHighlight) {
+        prevDemoHighlight.classList.remove('opt-preview-hl-on', 'opt-preview-anim-pulse', 'opt-preview-anim-glow', 'opt-preview-anim-sweep', 'opt-preview-anim-draw');
+        if (checkHoverHighlight?.checked) prevDemoHighlight.classList.add('opt-preview-hl-on');
+        const animVal = hoverAnimationSelect?.value || 'none';
+        if (animVal !== 'none') prevDemoHighlight.classList.add(`opt-preview-anim-${animVal}`);
+      }
+
+      // 2.5 Quick Hover Translate tooltip
+      if (prevHoverTip && rangeHoverOpacity && rangeHoverBlur && hoverThemeSelect) {
+        const htAlpha = (parseInt(rangeHoverOpacity.value, 10) / 100).toFixed(2);
+        const htBlurVal = parseInt(rangeHoverBlur.value, 10);
+        const htFontSize = rangeHoverFontSize ? parseInt(rangeHoverFontSize.value, 10) : 13;
+        const htMaxWidth = rangeHoverMaxWidth ? parseInt(rangeHoverMaxWidth.value, 10) : 300;
+        const htTheme = hoverThemeSelect.value;
+
+        prevHoverTip.style.setProperty('--ht-max-width', `${htMaxWidth}px`);
+        prevHoverTip.style.fontSize = `${htFontSize}px`;
+        prevHoverTip.style.backdropFilter = `blur(${htBlurVal}px) saturate(180%)`;
+        prevHoverTip.style.webkitBackdropFilter = `blur(${htBlurVal}px) saturate(180%)`;
+
+        if (htTheme === 'glass-dark') {
+          prevHoverTip.style.background = `rgba(15, 23, 42, ${htAlpha})`;
+          prevHoverTip.style.color = '#f8fafc';
+        } else if (htTheme === 'cyber-blue') {
+          prevHoverTip.style.background = `rgba(2, 132, 199, ${htAlpha})`;
+          prevHoverTip.style.color = '#ffffff';
+        } else if (htTheme === 'emerald') {
+          prevHoverTip.style.background = `rgba(5, 150, 105, ${htAlpha})`;
+          prevHoverTip.style.color = '#ffffff';
+        } else if (htTheme === 'purple') {
+          prevHoverTip.style.background = `rgba(124, 58, 237, ${htAlpha})`;
+          prevHoverTip.style.color = '#ffffff';
+        } else {
+          prevHoverTip.style.background = `rgba(255, 255, 255, ${htAlpha})`;
+          prevHoverTip.style.color = '#1e293b';
+        }
+      }
+
       // 3. Popup
       if (prevPopup && rangePopupOpacity && rangePopupBlur) {
         const popAlpha = (parseInt(rangePopupOpacity.value, 10) / 100).toFixed(2);
@@ -226,6 +334,118 @@ export class AppearanceTab {
     rangeToolbarBlur?.addEventListener('input', () => {
       if (valToolbarBlur) valToolbarBlur.textContent = `${rangeToolbarBlur.value}px`;
       Storage.set({ toolbarBlur: parseInt(rangeToolbarBlur.value, 10) });
+      updatePreview();
+    });
+
+    checkHoverTranslateInline?.addEventListener('change', () => {
+      Storage.set({ enableHoverTranslate: checkHoverTranslateInline.checked });
+      const generalCheck = document.getElementById('optCheckHoverTranslate');
+      if (generalCheck) generalCheck.checked = checkHoverTranslateInline.checked;
+    });
+
+    Object.entries(checkHoverMods).forEach(([mod, el]) => {
+      el?.addEventListener('change', () => {
+        const active = Object.entries(checkHoverMods)
+          .filter(([, m]) => m?.checked)
+          .map(([key]) => key);
+        Storage.set({ hoverTranslateModifiers: active });
+      });
+    });
+
+    hoverGranularitySelect?.addEventListener('change', () => {
+      Storage.set({ hoverTranslateGranularity: hoverGranularitySelect.value });
+    });
+
+    rangeHoverDelay?.addEventListener('input', () => {
+      if (valHoverDelay) valHoverDelay.textContent = `${rangeHoverDelay.value}ms`;
+      Storage.set({ hoverTranslateDelay: parseInt(rangeHoverDelay.value, 10) });
+    });
+
+    checkHoverHighlight?.addEventListener('change', () => {
+      Storage.set({ hoverTranslateHighlight: checkHoverHighlight.checked });
+      updatePreview();
+    });
+
+    hoverAnimationSelect?.addEventListener('change', () => {
+      Storage.set({ hoverTranslateAnimation: hoverAnimationSelect.value });
+      updatePreview();
+    });
+
+    hoverThemeSelect?.addEventListener('change', () => {
+      Storage.set({ hoverTranslateTheme: hoverThemeSelect.value });
+      updatePreview();
+    });
+
+    rangeHoverOpacity?.addEventListener('input', () => {
+      if (valHoverOpacity) valHoverOpacity.textContent = `${rangeHoverOpacity.value}%`;
+      Storage.set({ hoverTranslateOpacity: parseInt(rangeHoverOpacity.value, 10) });
+      updatePreview();
+    });
+
+    rangeHoverBlur?.addEventListener('input', () => {
+      if (valHoverBlur) valHoverBlur.textContent = `${rangeHoverBlur.value}px`;
+      Storage.set({ hoverTranslateBlur: parseInt(rangeHoverBlur.value, 10) });
+      updatePreview();
+    });
+
+    rangeHoverFontSize?.addEventListener('input', () => {
+      if (valHoverFontSize) valHoverFontSize.textContent = `${rangeHoverFontSize.value}px`;
+      Storage.set({ hoverTranslateFontSize: parseInt(rangeHoverFontSize.value, 10) });
+      updatePreview();
+    });
+
+    rangeHoverMaxWidth?.addEventListener('input', () => {
+      if (valHoverMaxWidth) valHoverMaxWidth.textContent = `${rangeHoverMaxWidth.value}px`;
+      Storage.set({ hoverTranslateMaxWidth: parseInt(rangeHoverMaxWidth.value, 10) });
+      updatePreview();
+    });
+
+    // Resets every control in this card back to DEFAULT_SETTINGS — deliberately
+    // leaves enableHoverTranslate untouched, since on/off is a separate decision
+    // from "what should the default behavior/appearance be".
+    btnResetHover?.addEventListener('click', () => {
+      const d = DEFAULT_SETTINGS;
+
+      Object.entries(checkHoverMods).forEach(([mod, el]) => {
+        if (el) el.checked = d.hoverTranslateModifiers.includes(mod);
+      });
+      if (hoverGranularitySelect) hoverGranularitySelect.value = d.hoverTranslateGranularity;
+      if (rangeHoverDelay) {
+        rangeHoverDelay.value = d.hoverTranslateDelay;
+        if (valHoverDelay) valHoverDelay.textContent = `${d.hoverTranslateDelay}ms`;
+      }
+      if (checkHoverHighlight) checkHoverHighlight.checked = d.hoverTranslateHighlight;
+      if (hoverAnimationSelect) hoverAnimationSelect.value = d.hoverTranslateAnimation;
+      if (hoverThemeSelect) hoverThemeSelect.value = d.hoverTranslateTheme;
+      if (rangeHoverOpacity) {
+        rangeHoverOpacity.value = d.hoverTranslateOpacity;
+        if (valHoverOpacity) valHoverOpacity.textContent = `${d.hoverTranslateOpacity}%`;
+      }
+      if (rangeHoverBlur) {
+        rangeHoverBlur.value = d.hoverTranslateBlur;
+        if (valHoverBlur) valHoverBlur.textContent = `${d.hoverTranslateBlur}px`;
+      }
+      if (rangeHoverFontSize) {
+        rangeHoverFontSize.value = d.hoverTranslateFontSize;
+        if (valHoverFontSize) valHoverFontSize.textContent = `${d.hoverTranslateFontSize}px`;
+      }
+      if (rangeHoverMaxWidth) {
+        rangeHoverMaxWidth.value = d.hoverTranslateMaxWidth;
+        if (valHoverMaxWidth) valHoverMaxWidth.textContent = `${d.hoverTranslateMaxWidth}px`;
+      }
+
+      Storage.set({
+        hoverTranslateModifiers: [...d.hoverTranslateModifiers],
+        hoverTranslateGranularity: d.hoverTranslateGranularity,
+        hoverTranslateDelay: d.hoverTranslateDelay,
+        hoverTranslateHighlight: d.hoverTranslateHighlight,
+        hoverTranslateAnimation: d.hoverTranslateAnimation,
+        hoverTranslateTheme: d.hoverTranslateTheme,
+        hoverTranslateOpacity: d.hoverTranslateOpacity,
+        hoverTranslateBlur: d.hoverTranslateBlur,
+        hoverTranslateFontSize: d.hoverTranslateFontSize,
+        hoverTranslateMaxWidth: d.hoverTranslateMaxWidth,
+      });
       updatePreview();
     });
 

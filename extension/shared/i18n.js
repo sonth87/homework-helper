@@ -80,3 +80,11 @@ export function getFloatingPopupI18n(lang = 'en') {
   const loc = LOCALES[lang] || LOCALES[lang?.split('-')[0]] || LOCALES.en;
   return loc.floatingPopup || LOCALES.en.floatingPopup;
 }
+
+/**
+ * Get quick hover-translate tooltip dictionary
+ */
+export function getHoverTranslateI18n(lang = 'en') {
+  const loc = LOCALES[lang] || LOCALES[lang?.split('-')[0]] || LOCALES.en;
+  return loc.hoverTranslate || LOCALES.en.hoverTranslate;
+}

@@ -157,6 +157,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  // Quick Hover Translate (content/hover-translate.js) — plain machine
+  // translation via the free, unauthenticated Google Translate endpoint, not
+  // the AI Key Pool: firing on every hovered word needs to be instant and
+  // free, not an LLM call per lookup. Same host_permissions/CORS reasoning
+  // as DETECT_LOCAL_MODELS above — must run from the background, not the
+  // content script's origin.
+  if (action === 'QUICK_TRANSLATE') {
+    const { text, targetLang } = payload || {};
+    (async () => {
+      try {
+        const tl = (targetLang && targetLang !== 'auto') ? targetLang : 'en';
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(tl)}&dt=t&q=${encodeURIComponent(text || '')}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const translation = (data[0] || []).map((seg) => seg[0] || '').join('');
+        sendResponse({ success: true, translation, detectedLang: data[2] || null });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+
   // Abort ongoing stream
   if (action === 'ABORT_STREAM') {
     const { requestId } = payload || {};

@@ -169,6 +169,7 @@ class SelectionTooltip {
     this.toolbar.addEventListener('mousedown', (e) => e.stopPropagation());
 
     const iconOnlyCls = toolbarShowText ? '' : 'icon-only';
+    const hasMainItems = layout.some((item) => item.area === 'main');
 
     const mainButtonsHtml = layout
       .filter((item) => item.area === 'main')
@@ -187,13 +188,19 @@ class SelectionTooltip {
       ? `<span class="hw-tb-status-pill" title="${dict.nanoDownloadingTooltip || ''}">${Icons.download(11)}${this.nanoDownloadState?.percent != null ? ` ${this.nanoDownloadState.percent}%` : ''}</span>`
       : '';
 
+    // With every tool moved into the dropdown (drag-and-drop layout editor,
+    // Options > Appearance), the main bar has nothing to show but the logo
+    // and a "..." button that would just duplicate what the logo itself can
+    // trigger — so the chevron button is dropped and the logo becomes the
+    // hover-to-open trigger instead (see the mouseenter wiring below).
     this.toolbar.innerHTML = `
-      <div class="hw-tb-logo">${Icons.appLogo(18)}</div>
+      <div class="hw-tb-logo${hasMainItems ? '' : ' hw-tb-logo-hoverable'}" id="hwTbLogo">${Icons.appLogo(18)}</div>
       ${statusPillHtml}
       ${mainButtonsHtml}
+      ${hasMainItems ? `
       <button class="hw-tb-btn hw-tb-more-btn" id="hwTbMoreBtn" title="${dict.more}">
         ${Icons.chevronUp(14)}
-      </button>
+      </button>` : ''}
     `;
 
     // Action button listeners
@@ -206,13 +213,38 @@ class SelectionTooltip {
       });
     });
 
-    // Expand More Menu
-    const moreBtn = this.toolbar.querySelector('#hwTbMoreBtn');
-    moreBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.toggleDropdown(rect);
-    });
+    if (hasMainItems) {
+      // Expand More Menu
+      const moreBtn = this.toolbar.querySelector('#hwTbMoreBtn');
+      moreBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleDropdown(rect);
+      });
+    } else {
+      // Hover the smiley logo itself to open the dropdown. Same "grace
+      // period before closing" idea as the disable submenu below: the
+      // dropdown is appended as a child of this.toolbar, so as long as the
+      // pointer is anywhere inside the toolbar+dropdown, this.toolbar still
+      // matches :hover and the close is skipped.
+      const logo = this.toolbar.querySelector('#hwTbLogo');
+      let closeTimer = null;
+      const scheduleClose = () => {
+        clearTimeout(closeTimer);
+        closeTimer = setTimeout(() => {
+          if (this.dropdown && !this.toolbar?.matches(':hover')) {
+            this.dropdown.remove();
+            this.dropdown = null;
+          }
+        }, 200);
+      };
+      logo.addEventListener('mouseenter', () => {
+        clearTimeout(closeTimer);
+        if (!this.dropdown) this.toggleDropdown(rect);
+      });
+      logo.addEventListener('mouseleave', scheduleClose);
+      this.toolbar.addEventListener('mouseleave', scheduleClose);
+    }
 
     document.body.appendChild(this.toolbar);
   }

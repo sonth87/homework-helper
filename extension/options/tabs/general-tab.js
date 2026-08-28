@@ -11,7 +11,7 @@ export class GeneralTab {
   }
 
   async loadGeneralSettings() {
-    const { enableFormsAdapter = true, enableTextTooltip = true, uiLanguage = 'en', outputLanguage = 'en', disabledSites = [] } = await Storage.get();
+    const { enableFormsAdapter = true, enableTextTooltip = true, enableHoverTranslate = false, uiLanguage = 'en', outputLanguage = 'en', disabledSites = [] } = await Storage.get();
 
     const uiLangSelect = document.getElementById('optUiLanguageSelect');
     if (uiLangSelect) {
@@ -51,6 +51,16 @@ export class GeneralTab {
     if (checkTooltip) {
       checkTooltip.checked = enableTextTooltip;
       checkTooltip.onchange = () => Storage.set({ enableTextTooltip: checkTooltip.checked });
+    }
+
+    const checkHoverTranslate = document.getElementById('optCheckHoverTranslate');
+    if (checkHoverTranslate) {
+      checkHoverTranslate.checked = enableHoverTranslate;
+      checkHoverTranslate.onchange = () => {
+        Storage.set({ enableHoverTranslate: checkHoverTranslate.checked });
+        const inlineCheck = document.getElementById('optCheckHoverTranslateInline');
+        if (inlineCheck) inlineCheck.checked = checkHoverTranslate.checked;
+      };
     }
 
     // Disabled sites

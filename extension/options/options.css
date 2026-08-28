@@ -221,6 +221,75 @@ body {
   width: fit-content;
 }
 
+/* Hover-translate highlight/animation live preview — mirrors the .hw-hlbox
+   effects in content/styles/tooltip.css (applied to real page text), reused
+   here on an in-flow demo paragraph since there is no real overlay box to
+   point the preview at. */
+.opt-preview-hl-on {
+  background: rgba(254, 240, 138, 0.6);
+}
+
+.opt-preview-anim-pulse {
+  animation: hwHlPulse 1.1s ease-in-out infinite;
+}
+@keyframes hwHlPulse {
+  0%, 100% { background-color: rgba(254, 240, 138, 0.22); }
+  50% { background-color: rgba(254, 240, 138, 0.65); }
+}
+
+.opt-preview-anim-glow {
+  animation: hwHlGlow 1.3s ease-in-out infinite;
+}
+@keyframes hwHlGlow {
+  0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+  50% { box-shadow: 0 0 10px 3px rgba(245, 158, 11, 0.55); }
+}
+
+.opt-preview-anim-draw {
+  display: inline-block;
+  background: rgba(254, 240, 138, 0.6);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: hwHlDraw 0.35s ease-out forwards;
+}
+@keyframes hwHlDraw {
+  to { transform: scaleX(1); }
+}
+
+.opt-preview-anim-sweep {
+  position: relative;
+}
+.opt-preview-anim-sweep::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 100%;
+  background: #f59e0b;
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: hwHlSweep 0.5s ease-out forwards;
+}
+@keyframes hwHlSweep {
+  to { transform: scaleX(1); }
+}
+
+/* Preview Quick Hover Translate tooltip */
+.opt-preview-hover-tip {
+  position: relative;
+  z-index: 5;
+  margin-top: 10px;
+  display: inline-flex;
+  max-width: var(--ht-max-width, 300px);
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
 /* Preview Toolbar */
 .opt-preview-toolbar {
   position: relative;
@@ -1268,6 +1337,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  cursor: pointer;
+}
+
+.opt-hover-modifier-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.opt-hover-modifier-group label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
   cursor: pointer;
 }
 

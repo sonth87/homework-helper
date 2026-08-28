@@ -6,6 +6,7 @@
 import { inPageOverlay } from './overlay.js';
 import { screenCropper } from './cropper.js';
 import { selectionTooltip } from './selection-tooltip.js';
+import { hoverTranslate } from './hover-translate.js';
 import { googleFormsAdapter } from './forms-adapter.js';
 
 console.log('[HomeworkAI] Content scripts loaded and active.');

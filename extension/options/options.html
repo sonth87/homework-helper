@@ -557,6 +557,123 @@
               </div>
             </div>
 
+            <!-- 2.5 Quick Hover Translate -->
+            <div class="opt-card">
+              <h3 class="opt-card-title" id="optCardHoverTitle" style="margin-bottom:12px;">Dịch nhanh khi di chuột</h3>
+              <div class="opt-settings-list">
+                <label class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title" id="optHoverTranslateEnableTitle">Bật Dịch nhanh khi di chuột</div>
+                    <div class="opt-setting-desc" id="optHoverTranslateEnableDesc">Bật/tắt toàn bộ tính năng dịch nhanh khi rê chuột trên trang web.</div>
+                  </div>
+                  <input type="checkbox" id="optCheckHoverTranslateInline">
+                </label>
+
+                <div>
+                  <div class="opt-setting-title" id="optLabelHoverModifier">Phím giữ để kích hoạt</div>
+                  <div class="opt-setting-desc" id="optLabelHoverModifierDesc" style="margin-bottom:8px;">Giữ (các) phím này trong khi di chuột để dịch nhanh. Không chọn phím nào = dịch ngay khi di chuột tới.</div>
+                  <div class="opt-hover-modifier-group">
+                    <label><input type="checkbox" id="optHoverModCtrl" value="ctrl"> <span id="optHoverModCtrlLabel">Ctrl</span></label>
+                    <label><input type="checkbox" id="optHoverModShift" value="shift"> <span id="optHoverModShiftLabel">Shift</span></label>
+                    <label><input type="checkbox" id="optHoverModAlt" value="alt"> <span id="optHoverModAltLabel">Alt / Option</span></label>
+                    <label><input type="checkbox" id="optHoverModMeta" value="meta"> <span id="optHoverModMetaLabel">Cmd / Win</span></label>
+                  </div>
+                </div>
+
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title" id="optLabelHoverGranularity">Phạm vi nhận diện</div>
+                    <div class="opt-setting-desc" id="optLabelHoverGranularityDesc">Lượng văn bản được dịch quanh vị trí con trỏ.</div>
+                  </div>
+                  <select id="optHoverGranularitySelect" class="opt-select">
+                    <option value="word" id="optHoverGranOptWord">Từ</option>
+                    <option value="sentence" id="optHoverGranOptSentence">Câu</option>
+                    <option value="paragraph" id="optHoverGranOptParagraph">Đoạn văn</option>
+                  </select>
+                </div>
+
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title"><span id="optLabelHoverDelay">Độ trễ trước khi dịch:</span> <span id="valHoverDelay">350ms</span></div>
+                    <div class="opt-setting-desc" id="optLabelHoverDelayDesc">Thời gian con trỏ phải đứng yên trước khi tooltip xuất hiện.</div>
+                  </div>
+                  <input type="range" id="optRangeHoverDelay" min="150" max="800" step="50" value="350" class="opt-range">
+                </div>
+
+                <label class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title" id="optLabelHoverHighlight">Tô sáng văn bản đang dịch</div>
+                    <div class="opt-setting-desc" id="optLabelHoverHighlightDesc">Bôi màu bút highlight lên đúng từ/câu/đoạn văn đang được dịch trên trang.</div>
+                  </div>
+                  <input type="checkbox" id="optCheckHoverHighlight" checked>
+                </label>
+
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title" id="optLabelHoverAnimation">Hiệu ứng khi giữ phím + hover</div>
+                    <div class="opt-setting-desc" id="optLabelHoverAnimationDesc">Hiệu ứng chạy trên văn bản khi giữ phím tắt và rê chuột vào.</div>
+                  </div>
+                  <select id="optHoverAnimationSelect" class="opt-select">
+                    <option value="none" id="optHoverAnimOptNone">Không có</option>
+                    <option value="pulse" id="optHoverAnimOptPulse">Nhấp nháy</option>
+                    <option value="glow" id="optHoverAnimOptGlow">Phát sáng</option>
+                    <option value="sweep" id="optHoverAnimOptSweep">Quét gạch chân</option>
+                    <option value="draw" id="optHoverAnimOptDraw">Tô từ đầu đến cuối</option>
+                  </select>
+                </div>
+
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title" id="optLabelHoverTheme">Chủ đề màu Tooltip</div>
+                    <div class="opt-setting-desc" id="optLabelHoverThemeDesc">Phong cách Liquid Glass cho tooltip kết quả dịch.</div>
+                  </div>
+                  <select id="optHoverThemeSelect" class="opt-select">
+                    <option value="glass-light" id="optHoverThemeOptLight">Liquid Glass Light</option>
+                    <option value="glass-dark" id="optHoverThemeOptDark">Liquid Glass Dark</option>
+                    <option value="cyber-blue" id="optHoverThemeOptBlue">Cyber Blue</option>
+                    <option value="emerald" id="optHoverThemeOptGreen">Emerald Green</option>
+                    <option value="purple" id="optHoverThemeOptPurple">Purple Glass</option>
+                  </select>
+                </div>
+
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title"><span id="optLabelHoverOpacity">Độ trong suốt nền Tooltip:</span> <span id="valHoverOpacity">96%</span></div>
+                    <div class="opt-setting-desc" id="optLabelHoverOpacityDesc">Độ mờ kính của tooltip dịch nhanh.</div>
+                  </div>
+                  <input type="range" id="optRangeHoverOpacity" min="40" max="100" value="96" class="opt-range">
+                </div>
+
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title"><span id="optLabelHoverBlur">Độ mờ hậu cảnh Tooltip:</span> <span id="valHoverBlur">18px</span></div>
+                    <div class="opt-setting-desc" id="optLabelHoverBlurDesc">Hiệu ứng làm mờ trang web phía sau tooltip.</div>
+                  </div>
+                  <input type="range" id="optRangeHoverBlur" min="0" max="30" value="18" class="opt-range">
+                </div>
+
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title"><span id="optLabelHoverFontSize">Cỡ chữ Tooltip:</span> <span id="valHoverFontSize">13px</span></div>
+                    <div class="opt-setting-desc" id="optLabelHoverFontSizeDesc">Kích thước chữ bên trong tooltip dịch nhanh.</div>
+                  </div>
+                  <input type="range" id="optRangeHoverFontSize" min="11" max="16" value="13" class="opt-range">
+                </div>
+
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title"><span id="optLabelHoverMaxWidth">Chiều rộng tối đa Tooltip:</span> <span id="valHoverMaxWidth">300px</span></div>
+                    <div class="opt-setting-desc" id="optLabelHoverMaxWidthDesc">Chiều rộng tối đa trước khi văn bản dịch tự xuống dòng.</div>
+                  </div>
+                  <input type="range" id="optRangeHoverMaxWidth" min="220" max="420" step="10" value="300" class="opt-range">
+                </div>
+
+                <button type="button" class="opt-btn-secondary" id="optBtnResetHover" style="margin-top:4px; align-self:flex-start;">
+                  <span id="optIconResetHover"></span> <span id="optBtnResetHoverText">Khôi phục mặc định</span>
+                </button>
+              </div>
+            </div>
+
             <!-- 3. Homework Helper Popup -->
             <div class="opt-card">
               <h3 class="opt-card-title" id="optCardPopupTitle" style="margin-bottom:12px;">Homework Helper Popup</h3>
@@ -619,6 +736,11 @@
                   <div class="prev-tb-logo" id="prevTbLogo"></div>
                   <div class="prev-tb-items" id="prevTbItems"></div>
                   <div class="prev-tb-btn"><span id="prevIconMore"></span></div>
+                </div>
+
+                <!-- Preview Quick Hover Translate tooltip -->
+                <div class="opt-preview-hover-tip" id="prevHoverTip">
+                  <span id="prevHoverTipText">Bản dịch nhanh sẽ hiện ở đây</span>
                 </div>
 
                 <!-- Preview Homework Helper Popup -->
@@ -824,6 +946,14 @@
               <div class="opt-setting-desc" id="optTooltipDesc">Kích hoạt thanh công cụ nổi khi bôi đen văn bản.</div>
             </div>
             <input type="checkbox" id="optCheckTooltip" checked>
+          </label>
+
+          <label class="opt-setting-row">
+            <div>
+              <div class="opt-setting-title" id="optHoverTranslateTitle">Quick Hover Translate</div>
+              <div class="opt-setting-desc" id="optHoverTranslateDesc">Rê chuột vào văn bản trên trang web để xem bản dịch nhanh, không cần bôi đen.</div>
+            </div>
+            <input type="checkbox" id="optCheckHoverTranslate">
           </label>
         </div>
 

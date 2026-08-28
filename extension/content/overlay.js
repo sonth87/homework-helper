@@ -5,7 +5,7 @@
 
 import { Icons } from '../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
-import { getI18n, getFloatingPopupI18n } from '../shared/i18n.js';
+import { getI18n, getFloatingPopupI18n, getOptionsI18n } from '../shared/i18n.js';
 import { getOverlayThemeAttr } from '../shared/theme.js';
 import { OverlayFabs } from './overlay/fabs.js';
 import { OverlayDrawer } from './overlay/drawer.js';
@@ -166,6 +166,9 @@ class InPageOverlay {
 
       <!-- Slide-over Drawer Assistant -->
       <div class="hw-drawer" id="hwDrawer">
+        <!-- Resize Handle (drag to widen/narrow the drawer) -->
+        <div class="hw-drawer-resize-handle" id="hwDrawerResizeHandle"></div>
+
         <!-- Edge Collapse Handle -->
         <button class="hw-drawer-edge-close" id="hwDrawerEdgeClose" data-tooltip-title="Đóng chat panel (Alt+K)" data-tooltip-desc="Thu gọn ngăn kéo vào cạnh màn hình.">
           ${Icons.chevronRight(18)}
@@ -452,8 +455,9 @@ class InPageOverlay {
 
   // topic: 'features' (Model row "?") | 'providers' (Config modal "?")
   async showGuideModal(topic) {
-    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const { uiLanguage = 'en', hoverTranslateModifiers = ['ctrl'] } = await Storage.get(['uiLanguage', 'hoverTranslateModifiers']);
     const dict = getI18n(uiLanguage);
+    const optDict = getOptionsI18n(uiLanguage);
     const modal = this.shadow.getElementById('hwGuideModal');
     const titleEl = this.shadow.getElementById('hwGuideModalTitle');
     const bodyEl = this.shadow.getElementById('hwGuideModalBody');
@@ -483,10 +487,24 @@ class InPageOverlay {
     } else {
       const g = dict.guideFeatures || {};
       titleEl.textContent = g.title || '';
+
+      // Reflects whatever modifier keys are currently configured in
+      // Options > Appearance > "Dịch nhanh khi di chuột" — re-read fresh
+      // every time the guide is opened, so switching e.g. Ctrl -> Alt there
+      // shows up here on the next open without any extra wiring.
+      const modKeyLabels = { ctrl: optDict.hoverModCtrl, shift: optDict.hoverModShift, alt: optDict.hoverModAlt, meta: optDict.hoverModMeta };
+      const hoverAction = (hoverTranslateModifiers && hoverTranslateModifiers.length > 0)
+        ? {
+            title: g.hoverTranslateTitle || '',
+            desc: (g.hoverTranslateDescKey || '').replace('{key}', hoverTranslateModifiers.map((m) => modKeyLabels[m] || m).join(' + ')),
+          }
+        : { title: g.hoverTranslateTitle || '', desc: g.hoverTranslateDescNoKey || '' };
+      const actions = [...(g.actions || []), hoverAction];
+
       bodyEl.innerHTML = `
         <table style="width:100%; border-collapse:collapse;">
           ${renderGroupRows(g.providersTitle, g.providers)}
-          ${renderGroupRows(g.actionsTitle, g.actions)}
+          ${renderGroupRows(g.actionsTitle, actions)}
           ${renderGroupRows(g.modesTitle, g.modes)}
         </table>
       `;

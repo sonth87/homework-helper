@@ -100,6 +100,7 @@ export class OptionsController {
     setInner('optIconCorePackage', Icons.checkCircle(18, 'text-green-600'));
     setInner('optIconOcrExplain', Icons.helpCircle(18));
     setInner('optIconResetToolbarLayout', Icons.refresh(14));
+    setInner('optIconResetHover', Icons.refresh(14));
 
     // Local Model (Ollama / LM Studio) Panel & Guide Icons
     setInner('optIconServer', Icons.server(16));
@@ -346,6 +347,54 @@ export class OptionsController {
     setText('optLabelToolbarBlurDesc', dict.labelToolbarBlurDesc);
     setText('optLabelToolbarLayout', dict.labelToolbarLayout);
     setText('optLabelToolbarLayoutDesc', dict.labelToolbarLayoutDesc);
+
+    // Quick Hover Translate card
+    setText('optCardHoverTitle', dict.cardHoverTitle);
+    setText('optHoverTranslateEnableTitle', dict.hoverTranslateTitle);
+    setText('optHoverTranslateEnableDesc', dict.hoverTranslateDesc);
+    setText('optLabelHoverModifier', dict.labelHoverModifier);
+    setText('optLabelHoverModifierDesc', dict.labelHoverModifierDesc);
+    setText('optHoverModCtrlLabel', dict.hoverModCtrl);
+    setText('optHoverModShiftLabel', dict.hoverModShift);
+    setText('optHoverModAltLabel', dict.hoverModAlt);
+    setText('optHoverModMetaLabel', dict.hoverModMeta);
+    setText('optLabelHoverGranularity', dict.labelHoverGranularity);
+    setText('optLabelHoverGranularityDesc', dict.labelHoverGranularityDesc);
+    setText('optHoverGranOptWord', dict.hoverGranOptWord);
+    setText('optHoverGranOptSentence', dict.hoverGranOptSentence);
+    setText('optHoverGranOptParagraph', dict.hoverGranOptParagraph);
+    setText('optLabelHoverDelay', dict.labelHoverDelay);
+    setText('optLabelHoverDelayDesc', dict.labelHoverDelayDesc);
+    setText('optLabelHoverHighlight', dict.labelHoverHighlight);
+    setText('optLabelHoverHighlightDesc', dict.labelHoverHighlightDesc);
+    setText('optLabelHoverAnimation', dict.labelHoverAnimation);
+    setText('optLabelHoverAnimationDesc', dict.labelHoverAnimationDesc);
+    setText('optHoverAnimOptNone', dict.hoverAnimOptNone);
+    setText('optHoverAnimOptPulse', dict.hoverAnimOptPulse);
+    setText('optHoverAnimOptGlow', dict.hoverAnimOptGlow);
+    setText('optHoverAnimOptSweep', dict.hoverAnimOptSweep);
+    setText('optHoverAnimOptDraw', dict.hoverAnimOptDraw);
+    // Reuses the toolbar layout editor's own "Restore Default" string —
+    // same generic action, no need for a second near-identical i18n key.
+    setText('optBtnResetHoverText', dict.toolbarLayoutResetBtn);
+    setText('optLabelHoverTheme', dict.labelHoverTheme);
+    setText('optLabelHoverThemeDesc', dict.labelHoverThemeDesc);
+    // Reuses the Selection Toolbar's own theme-option strings (same 5 values).
+    setText('optHoverThemeOptLight', dict.toolbarThemeOptLight);
+    setText('optHoverThemeOptDark', dict.toolbarThemeOptDark);
+    setText('optHoverThemeOptBlue', dict.toolbarThemeOptBlue);
+    setText('optHoverThemeOptGreen', dict.toolbarThemeOptGreen);
+    setText('optHoverThemeOptPurple', dict.toolbarThemeOptPurple);
+    setText('optLabelHoverOpacity', dict.labelHoverOpacity);
+    setText('optLabelHoverOpacityDesc', dict.labelHoverOpacityDesc);
+    setText('optLabelHoverBlur', dict.labelHoverBlur);
+    setText('optLabelHoverBlurDesc', dict.labelHoverBlurDesc);
+    setText('optLabelHoverFontSize', dict.labelHoverFontSize);
+    setText('optLabelHoverFontSizeDesc', dict.labelHoverFontSizeDesc);
+    setText('optLabelHoverMaxWidth', dict.labelHoverMaxWidth);
+    setText('optLabelHoverMaxWidthDesc', dict.labelHoverMaxWidthDesc);
+    const prevHoverTipText = document.getElementById('prevHoverTipText');
+    if (prevHoverTipText && dict.previewHoverTipText) prevHoverTipText.textContent = dict.previewHoverTipText;
     setText('optLayoutLaneMainTitle', dict.toolbarLayoutLaneMain);
     setText('optLayoutLaneDropdownTitle', dict.toolbarLayoutLaneDropdown);
     setText('optLayoutDropdownNote', dict.toolbarLayoutDropdownNote);
@@ -443,6 +492,8 @@ export class OptionsController {
     setText('optFormsDesc', dict.formsDesc);
     setText('optTooltipTitle', dict.tooltipTitle);
     setText('optTooltipDesc', dict.tooltipDesc);
+    setText('optHoverTranslateTitle', dict.hoverTranslateTitle);
+    setText('optHoverTranslateDesc', dict.hoverTranslateDesc);
     setText('optDisabledSitesTitle', dict.disabledSitesTitle);
     setText('optDisabledSitesDesc', dict.disabledSitesDesc);
     setText('optBackupTitle', dict.backupTitle);
