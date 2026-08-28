@@ -9,6 +9,7 @@ import { Storage, DEFAULT_NANO_SYSTEM_PROMPT } from '../shared/storage.js';
 import { formatStudyPrompt } from '../shared/study-prompt.js';
 import { streamViaOffscreen } from './offscreen-ai-bridge.js';
 import { isSingleWord, DICTIONARY_SCHEMA } from '../shared/dictionary.js';
+import { checkNanoAvailability, NANO_STATUS } from '../shared/nano-status.js';
 
 export class AiEngine {
   /**
@@ -176,11 +177,42 @@ export class AiEngine {
     const aiModel = getAi();
 
     if (aiModel && typeof aiModel.create === 'function') {
-      const session = await aiModel.create({
-        systemPrompt: systemPrompt || undefined,
-        temperature: 0.4,
-        topK: 3,
-      });
+      const status = await checkNanoAvailability(aiModel);
+      if (status === NANO_STATUS.UNAVAILABLE) {
+        throw new Error('CHROME_AI_UNAVAILABLE: Gemini Nano is not available on this device (unsupported hardware/OS, or required Chrome flags are disabled).');
+      }
+
+      const isDownloading = status !== NANO_STATUS.AVAILABLE;
+      if (isDownloading) {
+        const initialPercent = status === NANO_STATUS.DOWNLOADING ? null : 0;
+        await chrome.storage.local.set({ nanoDownloadState: { inProgress: true, percent: initialPercent, updatedAt: Date.now() } });
+        onChunk('', { status: 'downloading', percent: initialPercent, model: 'Gemini Nano (On-Device)', isBuiltin: true });
+      }
+
+      let session;
+      try {
+        session = await aiModel.create({
+          systemPrompt: systemPrompt || undefined,
+          temperature: 0.4,
+          topK: 3,
+          monitor(m) {
+            // Chrome fires a trivial 0%→100% downloadprogress pair on every single
+            // create() call, even when the model is already fully available and
+            // nothing is actually being downloaded — only surface progress when
+            // checkNanoAvailability() told us beforehand that a real download is expected.
+            if (!isDownloading) return;
+            m.addEventListener('downloadprogress', (ev) => {
+              const percent = Math.round((ev.loaded || 0) * 100);
+              chrome.storage.local.set({ nanoDownloadState: { inProgress: true, percent, updatedAt: Date.now() } });
+              onChunk('', { status: 'downloading', percent, model: 'Gemini Nano (On-Device)', isBuiltin: true });
+            });
+          },
+        });
+      } finally {
+        if (isDownloading) {
+          await chrome.storage.local.set({ nanoDownloadState: { inProgress: false, percent: null, updatedAt: Date.now() } });
+        }
+      }
 
       if (typeof session.promptStreaming === 'function') {
         // A single-word lookup asks the Prompt API to constrain output to the

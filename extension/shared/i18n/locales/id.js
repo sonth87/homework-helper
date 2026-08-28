@@ -18,6 +18,40 @@ export default {
     modelNanoClick:
       "Klik untuk melihat panduan aktivasi Gemini Nano di Pengaturan",
     modelAutoRotate: "Rotasi Kunci Otomatis",
+    modelNanoDownloading: "Mengunduh model AI on-device",
+    modelNanoUnavailable: "Gemini Nano tidak tersedia di perangkat ini",
+    aiUnavailableToast: "Belum ada AI yang siap — buka Pengaturan untuk menambahkannya",
+    guideFeatures: {
+      title: "Panduan Singkat",
+      providersTitle: "3 cara mengatur AI",
+      providers: [
+        { title: "API Key Cloud", desc: "Paling cepat dan akurat, perlu kunci dari Gemini, OpenAI, Claude, dll." },
+        { title: "Local Model", desc: "Menjalankan AI di komputer Anda sendiri melalui Ollama atau LM Studio, gratis dan bisa offline." },
+        { title: "Gemini Nano Bawaan Chrome", desc: "Sudah tersedia di Chrome, tanpa instalasi tambahan, tapi penggunaan pertama memerlukan waktu bagi browser untuk mengunduh model." },
+      ],
+      actionsTitle: "Fitur utama",
+      actions: [
+        { title: "Selesaikan Soal", desc: "Kirim pertanyaan atau foto soal agar diselesaikan oleh AI." },
+        { title: "Terjemahkan", desc: "Menerjemahkan dengan cepat satu kata atau blok teks yang dipilih." },
+        { title: "Tangkap Layar", desc: "Potong bagian layar yang berisi soal untuk langsung diselesaikan." },
+      ],
+      modesTitle: "Mode penyelesaian soal",
+      modes: [
+        { title: "Langkah demi Langkah", desc: "Menampilkan solusi rinci yang dibagi per langkah." },
+        { title: "Jawaban Langsung", desc: "Hanya memberi jawaban akhir, tanpa penjelasan." },
+        { title: "Petunjuk", desc: "Memberi petunjuk agar Anda terus berpikir, bukan langsung diselesaikan." },
+        { title: "Penjelasan Mendalam", desc: "Menganalisis konsep terkait pertanyaan secara mendalam." },
+      ],
+    },
+    guideProviders: {
+      title: "Apa itu API Key, Local Model & Gemini Nano?",
+      sections: [
+        { title: "API Key", desc: "Kode akses dari penyedia AI cloud seperti Google Gemini, OpenAI, atau Anthropic Claude. Memberikan hasil cepat dan akurat, banyak yang punya paket gratis." },
+        { title: "Local Model (Server Lokal)", desc: "AI yang berjalan langsung di komputer Anda melalui Ollama atau LM Studio. Gratis dan bisa offline, tapi perlu komputer yang cukup kuat dan mengunduh model terlebih dahulu." },
+        { title: "Gemini Nano Bawaan Chrome", desc: "Model AI bawaan Chrome yang berjalan langsung di perangkat Anda, tanpa perlu instalasi tambahan. Penggunaan pertama mungkin perlu waktu untuk mengunduh model." },
+        { title: "Sebaiknya pilih yang mana?", desc: "Anda bisa memakai beberapa sekaligus. API Key cocok saat butuh akurasi tertinggi. Gemini Nano adalah pilihan gratis dan bawaan untuk pertanyaan berupa teks saja, tanpa perlu pengaturan. Local Model menjadi penting saat Anda ingin menganalisis foto soal, karena Gemini Nano saat ini hanya memproses teks, belum bisa membaca gambar." },
+      ],
+    },
     emptyHistory:
       "Belum ada riwayat percakapan tersimpan.<br>Mulai obrolan baru untuk memulai!",
     loadingHistory: "Memuat riwayat obrolan...",
@@ -111,6 +145,10 @@ export default {
         title: "Buka Panel Obrolan (Alt+K)",
         desc: "Buka asisten belajar untuk bertanya dan menyelesaikan soal.",
       },
+      guide: {
+        title: "Lihat panduan singkat",
+        desc: "Menjelaskan cara mengatur AI dan fitur-fitur utama.",
+      },
     },
     modalConfigTitle: "Konfigurasi Model AI & Kunci API",
     modalConfigDesc:
@@ -173,6 +211,8 @@ export default {
     disableSite: "Nonaktifkan untuk situs web ini",
     disableGlobal: "Nonaktifkan secara global",
     disableFooter: "Dapat diaktifkan kembali di Pengaturan",
+    aiUnavailableTooltip: "AI tidak tersedia — belum ada penyedia yang dikonfigurasi dan Gemini Nano tidak didukung di sini. Buka Pengaturan.",
+    nanoDownloadingTooltip: "Gemini Nano sedang diunduh di latar belakang — penggunaan pertama mungkin lebih lambat.",
   },
   cropper: {
     tip: "Klik dan seret untuk memilih soal atau rumus (ESC untuk membatalkan)",
@@ -482,6 +522,18 @@ export default {
       "Model AI lokal yang berjalan 100% di komputer Anda. Tanpa perlu kunci API, sepenuhnya gratis & bekerja offline.",
     btnOpenFlags: "Buka chrome://flags",
     btnTestBuiltinAI: "Uji Model Bawaan",
+    btnDownloadNanoNow: "Unduh Sekarang",
+    statusDownloadable: "Belum diunduh",
+    statusDownloading: "Mengunduh model...",
+    statusUnavailable: "Tidak tersedia di perangkat ini",
+    onboarding3ProvidersTitle: "Pilih cara kerja AI",
+    onboarding3ProvidersDesc: "Anda bisa menggunakan salah satu cara di bawah ini — gabungkan atau pilih salah satu saja:",
+    onboardingCloudTitle: "Kunci API Cloud",
+    onboardingCloudDesc: "Tercepat dan paling akurat; sebagian besar penyedia punya paket gratis — tambahkan di bawah.",
+    onboardingLocalTitle: "Server Lokal",
+    onboardingLocalDesc: "Berjalan di komputer Anda melalui Ollama/LM Studio — gratis dan offline.",
+    onboardingNanoTitle: "Gemini Nano Bawaan Chrome",
+    onboardingNanoDesc: "Sudah tersedia di Chrome, tanpa perlu diatur — mungkin perlu mengunduh model saat pertama kali digunakan.",
     guideNanoStepsTitle:
       "Cara mengaktifkan Chrome Gemini Nano (Klik tautan untuk langsung membuka flag):",
     guideNanoStep1:

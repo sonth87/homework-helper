@@ -17,6 +17,40 @@ export default {
     modelNanoSetup: "Chrome Gemini Nano (要設定)",
     modelNanoClick: "設定でGemini Nanoの有効化ガイドを確認",
     modelAutoRotate: "自動ローテーション",
+    modelNanoDownloading: "オンデバイス AI モデルをダウンロード中",
+    modelNanoUnavailable: "このデバイスでは Gemini Nano を利用できません",
+    aiUnavailableToast: "利用可能な AI がまだありません —— 設定から追加してください",
+    guideFeatures: {
+      title: "クイックガイド",
+      providersTitle: "AIを設定する3つの方法",
+      providers: [
+        { title: "クラウド API キー", desc: "最も速く正確。Gemini、OpenAI、Claudeなどのキーが必要です。" },
+        { title: "Local Model", desc: "OllamaやLM Studioを使って自分のパソコンでAIを実行。無料でオフライン動作。" },
+        { title: "Chrome 内蔵 Gemini Nano", desc: "Chromeに標準搭載、追加インストール不要ですが、初回利用時はブラウザがモデルをダウンロードする時間が必要です。" },
+      ],
+      actionsTitle: "主な機能",
+      actions: [
+        { title: "解答", desc: "質問や問題の写真を送るとAIが解いてくれます。" },
+        { title: "翻訳", desc: "選択した単語や文章をすぐに翻訳します。" },
+        { title: "スクリーンショット", desc: "問題が含まれる画面の範囲を切り取ってその場で解きます。" },
+      ],
+      modesTitle: "解答モード",
+      modes: [
+        { title: "ステップごと", desc: "解答をステップごとに詳しく示します。" },
+        { title: "直接回答", desc: "説明なしで最終的な答えだけを出します。" },
+        { title: "ヒント", desc: "すぐに解かず、考え続けられるようヒントを出します。" },
+        { title: "深い解説", desc: "問題に関連する概念を詳しく分析します。" },
+      ],
+    },
+    guideProviders: {
+      title: "API キー、Local Model、Gemini Nano とは？",
+      sections: [
+        { title: "API キー", desc: "Google Gemini、OpenAI、Anthropic Claudeなどクラウド AI プロバイダーから発行されるアクセスキー。速く正確な結果が得られ、多くは無料枠があります。" },
+        { title: "Local Model（ローカルサーバー）", desc: "OllamaやLM Studioを使って自分のパソコン上で直接動くAI。無料でオフライン動作しますが、それなりの性能のパソコンと事前のモデルダウンロードが必要です。" },
+        { title: "Chrome 内蔵 Gemini Nano", desc: "Chromeに標準搭載されたAIモデルで、デバイス上で直接動作し、追加インストール不要です。初回利用時はモデルのダウンロードに少し時間がかかることがあります。" },
+        { title: "どれを選べばいい?", desc: "複数を同時に使うこともできます。最高の精度が必要な場合はAPIキーが適しています。Gemini Nanoはテキストのみの質問に向いた無料の標準機能で、設定は不要です。問題の写真を解析したい場合はLocal Modelが必要です。Gemini Nanoは現在テキストのみに対応しており、画像はまだ読み取れません。" },
+      ],
+    },
     emptyHistory:
       "保存された履歴はありません。<br>新規チャットを開始してください！",
     loadingHistory: "履歴を読み込み中...",
@@ -109,6 +143,10 @@ export default {
         title: "チャットパネルを開く (Alt+K)",
         desc: "AI学習アシスタントを開いて宿題を質問・解答します。",
       },
+      guide: {
+        title: "クイックガイドを見る",
+        desc: "AIの設定方法と主な機能を説明します。",
+      },
     },
     modalConfigTitle: "AIモデルとAPIキー設定",
     modalConfigDesc:
@@ -171,6 +209,8 @@ export default {
     disableSite: "このサイトで無効化",
     disableGlobal: "全体で無効化",
     disableFooter: "設定からいつでも再有効化できます",
+    aiUnavailableTooltip: "AI が利用できません —— プロバイダーが未設定で、ここでは Gemini Nano もサポートされていません。設定を開いてください。",
+    nanoDownloadingTooltip: "Gemini Nano はバックグラウンドでダウンロード中です —— 初回利用は時間がかかる場合があります。",
   },
   cropper: {
     tip: "クリック＆ドラッグで問題や数式を選択 (ESCでキャンセル)",
@@ -466,6 +506,18 @@ export default {
       "パソコン本体で完全に動作するローカルAIモデル。APIキー不要・完全無料・オフライン対応。キー未設定時は自動でこのモデルが利用されます。",
     btnOpenFlags: "chrome://flags を開く",
     btnTestBuiltinAI: "内蔵モデルをテスト",
+    btnDownloadNanoNow: "今すぐダウンロード",
+    statusDownloadable: "未ダウンロード",
+    statusDownloading: "モデルをダウンロード中...",
+    statusUnavailable: "このデバイスでは利用不可",
+    onboarding3ProvidersTitle: "AI の動作方法を選択",
+    onboarding3ProvidersDesc: "以下のいずれも利用できます —— 組み合わせても、1つだけ選んでも構いません:",
+    onboardingCloudTitle: "クラウド API キー",
+    onboardingCloudDesc: "最速かつ最も正確；ほとんどのプロバイダーに無料枠があります —— 下記から追加。",
+    onboardingLocalTitle: "ローカルサーバー",
+    onboardingLocalDesc: "Ollama/LM Studio でお使いのパソコン上で実行 —— 無料でオフライン動作。",
+    onboardingNanoTitle: "Chrome 内蔵 Gemini Nano",
+    onboardingNanoDesc: "Chrome に標準搭載、設定不要 —— 初回利用時にモデルのダウンロードが必要な場合があります。",
     guideNanoStepsTitle:
       "Chrome Gemini Nano の有効化手順（リンクをクリックして設定フラグを開く）：",
     guideNanoStep1:

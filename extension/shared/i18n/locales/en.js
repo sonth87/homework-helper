@@ -17,6 +17,40 @@ export default {
     modelNanoSetup: "Chrome Gemini Nano (Setup Required)",
     modelNanoClick: "Click to view Gemini Nano activation guide in Settings",
     modelAutoRotate: "Auto-Rotate Keys",
+    modelNanoDownloading: "Downloading the on-device AI model",
+    modelNanoUnavailable: "Gemini Nano unavailable on this device",
+    aiUnavailableToast: "No AI provider ready yet — open Settings to add one.",
+    guideFeatures: {
+      title: "Quick Guide",
+      providersTitle: "3 ways to configure AI",
+      providers: [
+        { title: "Cloud API Key", desc: "Fastest and most accurate, requires a key from Gemini, OpenAI, Claude, etc." },
+        { title: "Local Model", desc: "Runs AI on your own computer via Ollama or LM Studio, free, works offline." },
+        { title: "Chrome Gemini Nano", desc: "Built into Chrome, no extra install needed, but the first use requires the browser to download the model." },
+      ],
+      actionsTitle: "Main features",
+      actions: [
+        { title: "Solve", desc: "Send a question or a photo of the problem for the AI to solve." },
+        { title: "Translate", desc: "Quickly translate a word or a selected block of text." },
+        { title: "Screenshot", desc: "Crop a region of the screen containing the problem to solve it directly." },
+      ],
+      modesTitle: "Solving modes",
+      modes: [
+        { title: "Step-by-Step", desc: "Shows a detailed solution broken down into steps." },
+        { title: "Direct Answer", desc: "Gives only the final answer, no explanation." },
+        { title: "Hint", desc: "Gives a hint so you can keep thinking, instead of solving it outright." },
+        { title: "Deep Explanation", desc: "Analyzes the concepts related to the question in depth." },
+      ],
+    },
+    guideProviders: {
+      title: "What are API Key, Local Model & Gemini Nano?",
+      sections: [
+        { title: "API Key", desc: "An access code from a cloud AI provider such as Google Gemini, OpenAI, or Anthropic Claude. Gives fast, accurate results, and many providers offer a free tier." },
+        { title: "Local Model (Local Server)", desc: "AI running directly on your computer via Ollama or LM Studio. Free and works offline, but needs a reasonably powerful machine and downloading the model first." },
+        { title: "Chrome Gemini Nano", desc: "An AI model built into Chrome, running directly on your device with nothing extra to install. The first use may need some time to download the model." },
+        { title: "Which one should I pick?", desc: "You can use several at once. API Key suits cases needing the highest accuracy. Gemini Nano is the free, built-in default for text-only questions — no setup needed. Local Model becomes necessary when you want to analyze a photo of the problem, since Gemini Nano currently only handles text, not images." },
+      ],
+    },
     emptyHistory: "No conversations saved yet.<br>Start a new chat to begin!",
     loadingHistory: "Loading conversations...",
     chips: [
@@ -152,6 +186,10 @@ export default {
         title: "Open Chat Panel (Alt+K)",
         desc: "Open AI drawer assistant to solve homework and ask questions.",
       },
+      guide: {
+        title: "View quick guide",
+        desc: "Explains the AI setup options and main features.",
+      },
     },
   },
   selectionTooltip: {
@@ -169,6 +207,8 @@ export default {
     disableSite: "Disable on this website",
     disableGlobal: "Disable globally",
     disableFooter: "Can be re-enabled in Settings",
+    aiUnavailableTooltip: "AI unavailable — no provider configured and Gemini Nano isn't supported here. Open Settings.",
+    nanoDownloadingTooltip: "Gemini Nano is downloading in the background — first use may take longer.",
   },
   cropper: {
     tip: "Click and drag to crop a problem or formula (ESC to cancel)",
@@ -257,6 +297,18 @@ export default {
       "Local on-device AI model running 100% on your machine. No API key required, completely free & works offline. The extension automatically routes to this model when no keys are configured.",
     btnOpenFlags: "Open chrome://flags",
     btnTestBuiltinAI: "Test Built-in Model",
+    btnDownloadNanoNow: "Download Now",
+    statusDownloadable: "Not downloaded yet",
+    statusDownloading: "Downloading model...",
+    statusUnavailable: "Unavailable on this device",
+    onboarding3ProvidersTitle: "Choose how the AI should work",
+    onboarding3ProvidersDesc: "You can use any of these — mix and match, or just pick one:",
+    onboardingCloudTitle: "Cloud API Key",
+    onboardingCloudDesc: "Fastest & most accurate; most providers have a free tier — add one below.",
+    onboardingLocalTitle: "Local Server",
+    onboardingLocalDesc: "Runs on your computer via Ollama/LM Studio — free & offline.",
+    onboardingNanoTitle: "Chrome Gemini Nano",
+    onboardingNanoDesc: "Built into Chrome, zero setup — may need to download the model on first use.",
     guideNanoStepsTitle:
       "How to activate Chrome Gemini Nano (Click links to open flag tabs directly):",
     guideNanoStep1:

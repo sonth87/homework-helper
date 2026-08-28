@@ -258,6 +258,7 @@ export const DEFAULT_SETTINGS = {
   toolbarCustomColor: "#0284c7",
   toolbarLayout: DEFAULT_TOOLBAR_LAYOUT, // ordered [{ id, area: 'main' | 'dropdown' }] — see shared/toolbar-items.js
   routingStrategy: "prefer_config", // 'prefer_config' (recommended) | 'prefer_nano' | 'nano_only' | 'config_only'
+  nanoDownloadState: { inProgress: false, percent: null, updatedAt: 0 }, // shared cross-tab flag: is Gemini Nano's on-device model actively downloading right now
   installedOcrModels: {
     vie: {
       lang: "vie",

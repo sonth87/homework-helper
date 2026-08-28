@@ -38,6 +38,12 @@ chrome.runtime.onInstalled.addListener(async (details) => {
       console.log('SidePanel behavior note:', err);
     });
   }
+
+  // First-run onboarding: land directly on the Nano setup card so a fresh
+  // install doesn't silently fall back to on-device AI with zero guidance.
+  if (details.reason === 'install') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html#builtin-nano') });
+  }
 });
 
 // 2. Context Menu Click Listener

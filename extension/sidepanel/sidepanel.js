@@ -7,6 +7,7 @@ import { Icons } from '../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
 import { formatMarkdownAndMath, renderAnswer } from '../shared/markdown-katex.js';
 import { getI18n } from '../shared/i18n.js';
+import { checkNanoAvailability, NANO_STATUS } from '../shared/nano-status.js';
 import { SidePanelTooltips } from './sidepanel-tooltips.js';
 import { SidePanelKeysModal } from './sidepanel-keys-modal.js';
 import { SidePanelHistory } from './sidepanel-history.js';
@@ -121,6 +122,53 @@ export class SidePanelController {
     setInner('spBtnSend', `<span>Ask AI</span> ${Icons.send(13)}`);
     setInner('spBtnCloseModal', Icons.x(16));
     setInner('spBtnCloseHistoryModal', Icons.x(16));
+    setInner('spBtnModelGuide', Icons.helpCircle(14));
+    setInner('spBtnConfigGuide', Icons.helpCircle(16));
+    setInner('spBtnCloseGuideModal', Icons.x(16));
+  }
+
+  // topic: 'features' (Model row "?") | 'providers' (Config modal "?")
+  async showGuideModal(topic) {
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const dict = getI18n(uiLanguage);
+    const modal = document.getElementById('spGuideModal');
+    const titleEl = document.getElementById('spGuideModalTitle');
+    const bodyEl = document.getElementById('spGuideModalBody');
+    if (!modal || !titleEl || !bodyEl) return;
+
+    const renderSections = (sections) => (sections || []).map((s) => `
+      <div style="margin-bottom:10px;">
+        <div style="font-weight:600; font-size:13px; margin-bottom:2px;">${s.title}</div>
+        <div style="font-size:12.5px; color:var(--text-muted); line-height:1.5;">${s.desc}</div>
+      </div>
+    `).join('');
+
+    const renderGroupRows = (title, items) => `
+      <tr><td colspan="2" style="padding:10px 6px 4px; font-weight:700; font-size:12.5px; color:var(--accent);">${title || ''}</td></tr>
+      ${(items || []).map((s) => `
+        <tr>
+          <td style="padding:5px 8px 5px 6px; font-weight:600; font-size:12.5px; white-space:nowrap; vertical-align:top; border-bottom:1px solid var(--border-color);">${s.title}</td>
+          <td style="padding:5px 6px; font-size:12.5px; color:var(--text-muted); line-height:1.4; border-bottom:1px solid var(--border-color);">${s.desc}</td>
+        </tr>
+      `).join('')}
+    `;
+
+    if (topic === 'providers') {
+      const g = dict.guideProviders || {};
+      titleEl.textContent = g.title || '';
+      bodyEl.innerHTML = renderSections(g.sections);
+    } else {
+      const g = dict.guideFeatures || {};
+      titleEl.textContent = g.title || '';
+      bodyEl.innerHTML = `
+        <table style="width:100%; border-collapse:collapse;">
+          ${renderGroupRows(g.providersTitle, g.providers)}
+          ${renderGroupRows(g.actionsTitle, g.actions)}
+          ${renderGroupRows(g.modesTitle, g.modes)}
+        </table>
+      `;
+    }
+    modal.style.display = 'flex';
   }
 
   setupEventListeners() {
@@ -220,6 +268,13 @@ export class SidePanelController {
       document.getElementById('spHistoryModal').style.display = 'none';
     });
 
+    // Quick guide modal
+    document.getElementById('spBtnModelGuide')?.addEventListener('click', () => this.showGuideModal('features'));
+    document.getElementById('spBtnConfigGuide')?.addEventListener('click', () => this.showGuideModal('providers'));
+    document.getElementById('spBtnCloseGuideModal')?.addEventListener('click', () => {
+      document.getElementById('spGuideModal').style.display = 'none';
+    });
+
     document.getElementById('spBtnOptions')?.addEventListener('click', () => chrome.runtime.openOptionsPage());
 
     // Listen for AI responses from background worker
@@ -259,7 +314,7 @@ export class SidePanelController {
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local') {
-          if (changes.apiConfigs || changes.activeConfigId || changes.isNanoReady) {
+          if (changes.apiConfigs || changes.activeConfigId || changes.isNanoReady || changes.nanoDownloadState) {
             this.updateModelBadge();
           }
           if (changes.uiLanguage) {
@@ -270,9 +325,16 @@ export class SidePanelController {
     }
   }
 
+  getNanoAiModel() {
+    if (typeof chrome !== 'undefined' && chrome.aiOriginTrial?.languageModel) return chrome.aiOriginTrial.languageModel;
+    if (typeof ai !== 'undefined' && ai?.languageModel) return ai.languageModel;
+    const g = typeof window !== 'undefined' ? window : (typeof self !== 'undefined' ? self : {});
+    return g.ai?.languageModel || g.ai?.assistant || g.LanguageModel || null;
+  }
+
   async updateModelBadge() {
     const { apiConfigs = [], activeConfigId, rotationStrategy } = await Storage.getApiConfigs();
-    const { isNanoReady } = await Storage.get(['isNanoReady']);
+    const { nanoDownloadState } = await Storage.get(['nanoDownloadState']);
     const tag = document.getElementById('spModelTag');
     if (!tag) return;
 
@@ -281,22 +343,12 @@ export class SidePanelController {
     const enabledCount = apiConfigs.filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')).length;
 
     if (enabledCount === 0) {
-      let isReady = !!isNanoReady;
-      try {
-        if (!isReady) {
-          if (typeof chrome !== 'undefined' && chrome.aiOriginTrial?.languageModel) {
-            isReady = true;
-          } else if (typeof ai !== 'undefined' && ai?.languageModel) {
-            isReady = true;
-          }
-        }
-      } catch (e) {
-        if (typeof chrome !== 'undefined' && chrome.aiOriginTrial?.languageModel) {
-          isReady = true;
-        }
-      }
+      // Always re-probe live — isNanoReady never gets cleared once set, so trusting
+      // it here would keep showing "Ready" even after the model files are deleted.
+      let status = await checkNanoAvailability(this.getNanoAiModel());
+      if (nanoDownloadState?.inProgress) status = NANO_STATUS.DOWNLOADING;
 
-      if (isReady) {
+      if (status === NANO_STATUS.AVAILABLE) {
         Storage.set({ isNanoReady: true });
         tag.innerHTML = `${Icons.cpu(12)} ${dict.modelNanoReady || 'Chrome Gemini Nano (Ready On-Device)'}`;
         tag.style.background = 'rgba(34, 197, 94, 0.15)';
@@ -305,6 +357,25 @@ export class SidePanelController {
         tag.style.cursor = 'default';
         tag.title = '';
         tag.onclick = null;
+      } else if (status === NANO_STATUS.DOWNLOADING) {
+        const pct = nanoDownloadState?.percent;
+        tag.innerHTML = `${Icons.download(12)} ${dict.modelNanoDownloading || 'Downloading Gemini Nano'}${pct != null ? ` (${pct}%)` : '...'}`;
+        tag.style.background = 'rgba(234, 179, 8, 0.15)';
+        tag.style.color = '#a16207';
+        tag.style.border = '1px solid rgba(234, 179, 8, 0.4)';
+        tag.style.cursor = 'default';
+        tag.title = '';
+        tag.onclick = null;
+      } else if (status === NANO_STATUS.UNAVAILABLE) {
+        tag.innerHTML = `${Icons.alertCircle(12)} ${dict.modelNanoUnavailable || 'Gemini Nano unavailable on this device'}`;
+        tag.style.background = 'rgba(239, 68, 68, 0.12)';
+        tag.style.color = '#ef4444';
+        tag.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+        tag.style.cursor = 'pointer';
+        tag.title = dict.modelNanoClick || 'Click to view guide in Settings';
+        tag.onclick = () => {
+          chrome.runtime.sendMessage({ action: 'OPEN_OPTIONS', hash: 'builtin-nano' });
+        };
       } else {
         tag.innerHTML = `${Icons.alertCircle(12)} ${dict.modelNanoSetup || 'Chrome Gemini Nano (Setup Required)'}`;
         tag.style.background = 'rgba(234, 179, 8, 0.15)';
@@ -381,7 +452,18 @@ export class SidePanelController {
 
     const { outputLanguage = 'en', uiLanguage = 'en' } = await Storage.get(['outputLanguage', 'uiLanguage']);
     const dict = getI18n(uiLanguage);
+    this.currentDict = dict;
     this.startLoadingSteps(this.activeAiBubble?.querySelector('.sp-ai-content'), dict.loadingSteps);
+
+    const { apiConfigs = [], nanoDownloadState } = await Storage.get(['apiConfigs', 'nanoDownloadState']);
+    const enabledCount = apiConfigs.filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')).length;
+    if (enabledCount === 0 && !nanoDownloadState?.inProgress) {
+      const status = await checkNanoAvailability(this.getNanoAiModel());
+      if (status === NANO_STATUS.UNAVAILABLE) {
+        this.handleError('CHROME_AI_UNAVAILABLE: Gemini Nano is not available on this device, and no Cloud/Local API key is configured.');
+        return;
+      }
+    }
 
     chrome.runtime.sendMessage({
       action: 'ASK_AI',
@@ -458,6 +540,16 @@ export class SidePanelController {
       this.currentNotices = this.currentNotices || [];
       this.currentNotices.push(meta.notice);
       this.updateNoticeIcon(this.activeAiBubble, this.currentNotices);
+    }
+
+    if (meta?.status === 'downloading') {
+      this.stopLoadingSteps();
+      const content = this.activeAiBubble.querySelector('.sp-ai-content');
+      if (content) {
+        const pctTxt = meta.percent != null ? ` ${meta.percent}%` : '';
+        content.innerHTML = `${Icons.download(14)} ${this.currentDict?.modelNanoDownloading || 'Downloading the on-device model'}${pctTxt}`;
+      }
+      return;
     }
 
     // ai-engine.js also sends onChunk('', {status: 'connecting'|'switching', ...})
@@ -576,6 +668,11 @@ export class SidePanelController {
 
       document.getElementById('spBtnOptions')?.setAttribute('data-tooltip-title', t.options?.title || 'Trang Cài đặt & Cấu hình');
       document.getElementById('spBtnOptions')?.setAttribute('data-tooltip-desc', t.options?.desc || 'Mở trang cài đặt chi tiết để quản lý API Key, bật AI nội bộ và tùy biến giao diện.');
+
+      document.getElementById('spBtnModelGuide')?.setAttribute('data-tooltip-title', t.guide?.title || 'Xem hướng dẫn nhanh');
+      document.getElementById('spBtnModelGuide')?.setAttribute('data-tooltip-desc', t.guide?.desc || '');
+      document.getElementById('spBtnConfigGuide')?.setAttribute('data-tooltip-title', t.guide?.title || 'Xem hướng dẫn nhanh');
+      document.getElementById('spBtnConfigGuide')?.setAttribute('data-tooltip-desc', t.guide?.desc || '');
 
       document.getElementById('spBtnCapture')?.setAttribute('data-tooltip-title', t.capture?.title || 'Chụp màn hình (Alt+C)');
       document.getElementById('spBtnCapture')?.setAttribute('data-tooltip-desc', t.capture?.desc || 'Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.');

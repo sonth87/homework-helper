@@ -7,6 +7,7 @@ import { Icons } from '../shared/icons.js';
 import { Storage } from '../shared/storage.js';
 import { getSelectionTooltipI18n } from '../shared/i18n.js';
 import { TOOLBAR_ITEM_ICONS, normalizeToolbarLayout } from '../shared/toolbar-items.js';
+import { NANO_STATUS } from '../shared/nano-status.js';
 
 class SelectionTooltip {
   constructor() {
@@ -15,6 +16,10 @@ class SelectionTooltip {
     this.submenu = null;
     this.selectedText = '';
     this.epoch = 0;
+    this.isAiBlocked = false;
+    this.nanoStatus = null;
+    this.nanoDownloadState = null;
+    this._lastRect = null;
     this.init();
   }
 
@@ -22,6 +27,59 @@ class SelectionTooltip {
     document.addEventListener('mouseup', this.handleMouseUp.bind(this));
     document.addEventListener('mousedown', this.handleMouseDown.bind(this));
     window.addEventListener('HOMEWORK_AI_HIDE_ALL_UI', () => this.removeToolbar());
+
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && (changes.apiConfigs || changes.nanoDownloadState || changes.isNanoReady)) {
+          this.refreshGatingState().then(() => {
+            if (this.toolbar && this._lastRect) this.renderToolbar(this._lastRect);
+          });
+        }
+      });
+    }
+  }
+
+  // A standalone singleton (no reference to OverlayDrawer), so this small
+  // CustomEvent round-trip intentionally mirrors drawer.js's checkNanoAvailability()
+  // rather than reaching across modules for it.
+  async probeNanoStatus() {
+    return new Promise((resolve) => {
+      let resolved = false;
+      const handler = (e) => {
+        window.removeEventListener('HOMEWORK_AI_NANO_RESPONSE', handler);
+        resolved = true;
+        resolve(e.detail?.hasAi ? (e.detail?.status || NANO_STATUS.UNAVAILABLE) : NANO_STATUS.UNAVAILABLE);
+      };
+      window.addEventListener('HOMEWORK_AI_NANO_RESPONSE', handler);
+      window.dispatchEvent(new CustomEvent('HOMEWORK_AI_NANO_CHECK'));
+      setTimeout(() => {
+        if (!resolved) {
+          window.removeEventListener('HOMEWORK_AI_NANO_RESPONSE', handler);
+          resolve(null);
+        }
+      }, 300);
+    });
+  }
+
+  async refreshGatingState() {
+    const { apiConfigs = [], nanoDownloadState } = await Storage.get(['apiConfigs', 'nanoDownloadState']);
+    const enabledCount = apiConfigs.filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')).length;
+    this.nanoDownloadState = nanoDownloadState;
+
+    if (nanoDownloadState?.inProgress) {
+      this.isAiBlocked = false;
+      this.nanoStatus = NANO_STATUS.DOWNLOADING;
+      return;
+    }
+    if (enabledCount > 0) {
+      this.isAiBlocked = false;
+      this.nanoStatus = null;
+      return;
+    }
+
+    const status = await this.probeNanoStatus();
+    this.nanoStatus = status;
+    this.isAiBlocked = status === NANO_STATUS.UNAVAILABLE;
   }
 
   handleMouseDown(e) {
@@ -71,6 +129,8 @@ class SelectionTooltip {
   async renderToolbar(rect) {
     this.removeToolbar();
     const epoch = ++this.epoch;
+    this._lastRect = rect;
+    await this.refreshGatingState();
 
     const {
       toolbarOpacity = 90,
@@ -112,15 +172,24 @@ class SelectionTooltip {
 
     const mainButtonsHtml = layout
       .filter((item) => item.area === 'main')
-      .map(({ id }) => `
-        <button class="hw-tb-btn ${iconOnlyCls}" data-action="${id}" title="${dict[id]}">
+      .map(({ id }) => {
+        const disabled = id !== 'copy' && this.isAiBlocked;
+        const title = disabled ? (dict.aiUnavailableTooltip || dict[id]) : dict[id];
+        return `
+        <button class="hw-tb-btn ${iconOnlyCls} ${disabled ? 'hw-tb-disabled' : ''}" data-action="${id}" ${disabled ? 'disabled' : ''} title="${title}">
           ${Icons[TOOLBAR_ITEM_ICONS[id]](14)} <span class="hw-tb-label">${dict[id]}</span>
         </button>
-      `)
+      `;
+      })
       .join('');
+
+    const statusPillHtml = this.nanoStatus === NANO_STATUS.DOWNLOADING
+      ? `<span class="hw-tb-status-pill" title="${dict.nanoDownloadingTooltip || ''}">${Icons.download(11)}${this.nanoDownloadState?.percent != null ? ` ${this.nanoDownloadState.percent}%` : ''}</span>`
+      : '';
 
     this.toolbar.innerHTML = `
       <div class="hw-tb-logo">${Icons.appLogo(18)}</div>
+      ${statusPillHtml}
       ${mainButtonsHtml}
       <button class="hw-tb-btn hw-tb-more-btn" id="hwTbMoreBtn" title="${dict.more}">
         ${Icons.chevronUp(14)}
@@ -171,11 +240,15 @@ class SelectionTooltip {
 
     const dropdownItemsHtml = layout
       .filter((item) => item.area === 'dropdown')
-      .map(({ id }) => `
-        <button class="hw-tb-menu-item" data-action="${id}">
+      .map(({ id }) => {
+        const disabled = id !== 'copy' && this.isAiBlocked;
+        const title = disabled ? (dict.aiUnavailableTooltip || '') : '';
+        return `
+        <button class="hw-tb-menu-item ${disabled ? 'hw-tb-disabled' : ''}" data-action="${id}" ${disabled ? 'disabled' : ''} title="${title}">
           <div class="hw-tb-menu-item-left">${Icons[TOOLBAR_ITEM_ICONS[id]](15)} ${dict[id]}</div>
         </button>
-      `)
+      `;
+      })
       .join('');
 
     this.dropdown.innerHTML = `
@@ -300,6 +373,8 @@ class SelectionTooltip {
   }
 
   triggerAction(action, rect) {
+    if (action !== 'copy' && this.isAiBlocked) return;
+
     const text = this.selectedText;
     this.removeToolbar();
 

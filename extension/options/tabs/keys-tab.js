@@ -2,6 +2,7 @@ import { Icons } from '../../shared/icons.js';
 import { Storage } from '../../shared/storage.js';
 import { getOptionsI18n } from '../../shared/i18n.js';
 import { isLocalProvider, createKeyCard, createLocalKeyCard, wireLocalModelPanel } from '../../shared/api-config-ui.js';
+import { checkNanoAvailability, normalizeAvailability, NANO_STATUS } from '../../shared/nano-status.js';
 
 export class KeysTab {
   constructor(optionsController) {
@@ -124,11 +125,12 @@ export class KeysTab {
           world: 'MAIN',
           func: async () => {
             const g = typeof window !== 'undefined' ? window : (typeof self !== 'undefined' ? self : {});
-            const aiModel = g.ai?.languageModel || g.ai?.assistant || (typeof ai !== 'undefined' ? (ai.languageModel || ai.assistant) : null);
+            const aiModel = g.ai?.languageModel || g.ai?.assistant || (typeof ai !== 'undefined' ? (ai.languageModel || ai.assistant) : null) || g.LanguageModel;
             if (!aiModel) return { available: false };
             try {
+              if (typeof aiModel.availability === 'function') return { available: true, raw: await aiModel.availability() };
               const caps = typeof aiModel.capabilities === 'function' ? await aiModel.capabilities() : {};
-              return { available: true, caps };
+              return { available: true, raw: caps };
             } catch (e) {
               return { available: true, error: e.message };
             }
@@ -141,43 +143,39 @@ export class KeysTab {
     };
 
     const updateStatus = async () => {
+      const downloadBtn = document.getElementById('btnDownloadNanoNow');
       try {
-        let aiModel = getAiModel();
-        let isTabAi = false;
-        let tabCaps = null;
+        const aiModel = getAiModel();
+        let status;
 
-        if (!aiModel) {
+        if (aiModel) {
+          status = await checkNanoAvailability(aiModel);
+        } else {
           const tabRes = await checkViaActiveTab();
-          if (tabRes?.available) {
-            isTabAi = true;
-            tabCaps = tabRes.caps || {};
-          }
+          status = tabRes?.available ? normalizeAvailability(tabRes.raw) : NANO_STATUS.UNAVAILABLE;
         }
 
-        if (!aiModel && !isTabAi) {
+        if (downloadBtn) downloadBtn.style.display = status === NANO_STATUS.DOWNLOADABLE ? 'inline-flex' : 'none';
+
+        if (status === NANO_STATUS.AVAILABLE) {
           badge.textContent = d.statusReady || 'Ready On-Device';
           badge.style.background = '#dcfce7';
           badge.style.color = '#16a34a';
-          return;
-        }
-
-        const caps = isTabAi ? tabCaps : (typeof aiModel.capabilities === 'function' ? await aiModel.capabilities() : {});
-        const avail = caps?.available || caps?.availability || 'readily';
-
-        if (avail === 'readily') {
-          badge.textContent = d.statusReady || 'Ready On-Device';
-          badge.style.background = '#dcfce7';
-          badge.style.color = '#16a34a';
-        } else if (avail === 'after-download') {
-          badge.textContent = 'Downloading model files...';
+        } else if (status === NANO_STATUS.DOWNLOADING) {
+          badge.textContent = d.statusDownloading || 'Downloading model...';
+          badge.style.background = '#fef3c7';
+          badge.style.color = '#d97706';
+        } else if (status === NANO_STATUS.DOWNLOADABLE) {
+          badge.textContent = d.statusDownloadable || 'Not downloaded yet';
           badge.style.background = '#fef3c7';
           badge.style.color = '#d97706';
         } else {
-          badge.textContent = d.statusReady || 'Ready On-Device';
-          badge.style.background = '#dcfce7';
-          badge.style.color = '#16a34a';
+          badge.textContent = d.statusUnavailable || 'Unavailable on this device';
+          badge.style.background = '#fee2e2';
+          badge.style.color = '#dc2626';
         }
       } catch (e) {
+        if (downloadBtn) downloadBtn.style.display = 'none';
         badge.textContent = d.statusReady || 'Ready On-Device';
         badge.style.background = '#dcfce7';
         badge.style.color = '#16a34a';
@@ -200,6 +198,36 @@ export class KeysTab {
 
     document.getElementById('btnOpenComponents')?.addEventListener('click', () => {
       chrome.runtime.sendMessage({ action: 'OPEN_CHROME_FLAGS', url: 'chrome://components' });
+    });
+
+    document.getElementById('btnDownloadNanoNow')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      const progressEl = document.getElementById('builtinNanoDownloadProgress');
+      btn.disabled = true;
+      try {
+        const aiModel = getAiModel();
+        if (!aiModel) throw new Error('window.ai not available in this context.');
+        await aiModel.create({
+          monitor(m) {
+            m.addEventListener('downloadprogress', (ev) => {
+              const pct = Math.round((ev.loaded || 0) * 100);
+              if (progressEl) progressEl.textContent = `${pct}%`;
+              chrome.storage.local.set({ nanoDownloadState: { inProgress: true, percent: pct, updatedAt: Date.now() } });
+            });
+          },
+        });
+        await chrome.storage.local.set({
+          nanoDownloadState: { inProgress: false, percent: 100, updatedAt: Date.now() },
+          isNanoReady: true,
+        });
+      } catch (err) {
+        alert(`Download failed: ${err.message}`);
+        await chrome.storage.local.set({ nanoDownloadState: { inProgress: false, percent: null, updatedAt: Date.now() } });
+      } finally {
+        btn.disabled = false;
+        if (progressEl) progressEl.textContent = '';
+        await updateStatus();
+      }
     });
 
     testBtn?.addEventListener('click', async () => {

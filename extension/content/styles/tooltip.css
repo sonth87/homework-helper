@@ -112,6 +112,34 @@
   padding: 5px 6px;
 }
 
+.hw-tb-btn:disabled,
+.hw-tb-btn.hw-tb-disabled,
+.hw-tb-menu-item:disabled,
+.hw-tb-menu-item.hw-tb-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hw-tb-btn:disabled:hover,
+.hw-tb-btn.hw-tb-disabled:hover {
+  background: transparent;
+  color: #334155;
+}
+
+.hw-tb-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: rgba(217, 119, 6, 0.15);
+  color: #d97706;
+  margin-right: 2px;
+  white-space: nowrap;
+}
+
 /* Dropdown Flyout Menu (Liquid Glass) */
 .hw-tb-dropdown {
   position: absolute;

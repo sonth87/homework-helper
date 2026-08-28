@@ -210,6 +210,7 @@ class InPageOverlay {
           <span class="hw-model-tag" id="hwModelTag">
             ${Icons.layers(12)} Đang tải cấu hình Model...
           </span>
+          <button class="hw-icon-btn" id="hwBtnModelGuide" style="margin-left:auto; width:24px; height:24px;" data-tooltip-title="Xem hướng dẫn nhanh" data-tooltip-desc="Giải thích các cách cấu hình AI và các tính năng chính.">${Icons.helpCircle(14)}</button>
         </div>
 
         <!-- Chat Body -->
@@ -275,9 +276,25 @@ class InPageOverlay {
               <div style="font-weight: 700; display:flex; align-items:center; gap:6px;">
                 ${Icons.settings(16)} <span id="hwConfigModalTitle">Cấu hình AI Models & API Keys</span>
               </div>
-              <button class="hw-icon-btn" id="hwBtnCloseModal">${Icons.x(16)}</button>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <button class="hw-icon-btn" id="hwBtnConfigGuide" data-tooltip-title="Xem hướng dẫn nhanh" data-tooltip-desc="Giải thích API Key, Local Model, và Gemini Nano là gì.">${Icons.helpCircle(16)}</button>
+                <button class="hw-icon-btn" id="hwBtnCloseModal">${Icons.x(16)}</button>
+              </div>
             </div>
             <div class="hw-modal-body" id="hwModalBody">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Guide Modal (Model row "?" and Config modal "?") -->
+        <div class="hw-modal-backdrop" id="hwGuideModal" style="display: none;">
+          <div class="hw-modal-content" style="max-width: 460px;">
+            <div class="hw-modal-header">
+              <div style="font-weight: 700;" id="hwGuideModalTitle"></div>
+              <button class="hw-icon-btn" id="hwBtnCloseGuideModal">${Icons.x(16)}</button>
+            </div>
+            <div class="hw-modal-body" id="hwGuideModalBody" style="max-height:60vh; overflow-y:auto;">
               <!-- Populated dynamically -->
             </div>
           </div>
@@ -361,6 +378,7 @@ class InPageOverlay {
 
     // Main World Bridge Nano Listeners
     window.addEventListener('HOMEWORK_AI_NANO_CHUNK', (e) => {
+      this.clearNanoDownloadState();
       const { requestId, chunk } = e.detail || {};
       if (this.drawer.isStreaming && (!this.drawer.activeRequestId || this.drawer.activeRequestId === requestId)) {
         this.drawer.appendStreamChunk(chunk, { model: 'Gemini Nano (On-Device)', isBuiltin: true });
@@ -368,6 +386,7 @@ class InPageOverlay {
     });
 
     window.addEventListener('HOMEWORK_AI_NANO_FINISH', (e) => {
+      this.clearNanoDownloadState();
       const { requestId } = e.detail || {};
       if (this.drawer.isStreaming && (!this.drawer.activeRequestId || this.drawer.activeRequestId === requestId)) {
         this.drawer.finalizeStream();
@@ -375,9 +394,25 @@ class InPageOverlay {
     });
 
     window.addEventListener('HOMEWORK_AI_NANO_ERROR', (e) => {
+      this.clearNanoDownloadState();
       const { requestId, error } = e.detail || {};
       if (this.drawer.isStreaming && (!this.drawer.activeRequestId || this.drawer.activeRequestId === requestId)) {
         this.drawer.handleStreamError(error);
+      }
+    });
+
+    // Model not downloaded yet — a request is about to trigger the download.
+    window.addEventListener('HOMEWORK_AI_NANO_DOWNLOAD_START', (e) => {
+      const { status } = e.detail || {};
+      Storage.set({ nanoDownloadState: { inProgress: true, percent: status === 'downloading' ? null : 0, updatedAt: Date.now() } });
+    });
+
+    // Live download progress ticks (from the MAIN-world create() monitor).
+    window.addEventListener('HOMEWORK_AI_NANO_PROGRESS', (e) => {
+      const { requestId, percent } = e.detail || {};
+      Storage.set({ nanoDownloadState: { inProgress: true, percent, updatedAt: Date.now() } });
+      if (this.drawer.isStreaming && (!this.drawer.activeRequestId || this.drawer.activeRequestId === requestId)) {
+        this.drawer.appendStreamChunk('', { status: 'downloading', percent });
       }
     });
 
@@ -391,8 +426,9 @@ class InPageOverlay {
           if (changes.uiLanguage) {
             this.applyLanguageI18n(changes.uiLanguage.newValue);
           }
-          if (changes.isNanoReady || changes.apiConfigs) {
+          if (changes.isNanoReady || changes.apiConfigs || changes.nanoDownloadState) {
             this.drawer.updateActiveModelBadge();
+            this.fabs.updateGatingVisual?.();
           }
           if ((changes.chatHistory || changes.activeConversationId || changes.conversations) && this.drawer.isOpen && !this.drawer.isStreaming) {
             this.drawer.loadInitialHistory();
@@ -400,6 +436,62 @@ class InPageOverlay {
         }
       });
     }
+
+    // Quick guide modal
+    this.shadow.getElementById('hwBtnModelGuide')?.addEventListener('click', () => this.showGuideModal('features'));
+    this.shadow.getElementById('hwBtnConfigGuide')?.addEventListener('click', () => this.showGuideModal('providers'));
+    this.shadow.getElementById('hwBtnCloseGuideModal')?.addEventListener('click', () => {
+      const modal = this.shadow.getElementById('hwGuideModal');
+      if (modal) modal.style.display = 'none';
+    });
+  }
+
+  clearNanoDownloadState() {
+    Storage.set({ nanoDownloadState: { inProgress: false, percent: null, updatedAt: Date.now() } });
+  }
+
+  // topic: 'features' (Model row "?") | 'providers' (Config modal "?")
+  async showGuideModal(topic) {
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const dict = getI18n(uiLanguage);
+    const modal = this.shadow.getElementById('hwGuideModal');
+    const titleEl = this.shadow.getElementById('hwGuideModalTitle');
+    const bodyEl = this.shadow.getElementById('hwGuideModalBody');
+    if (!modal || !titleEl || !bodyEl) return;
+
+    const renderSections = (sections) => (sections || []).map((s) => `
+      <div style="margin-bottom:10px;">
+        <div style="font-weight:600; font-size:13px; color:var(--hw-text-main); margin-bottom:2px;">${s.title}</div>
+        <div style="font-size:12.5px; color:var(--hw-text-muted); line-height:1.5;">${s.desc}</div>
+      </div>
+    `).join('');
+
+    const renderGroupRows = (title, items) => `
+      <tr><td colspan="2" style="padding:10px 6px 4px; font-weight:700; font-size:12.5px; color:var(--hw-accent);">${title || ''}</td></tr>
+      ${(items || []).map((s) => `
+        <tr>
+          <td style="padding:5px 8px 5px 6px; font-weight:600; font-size:12.5px; color:var(--hw-text-main); white-space:nowrap; vertical-align:top; border-bottom:1px solid var(--hw-border-color);">${s.title}</td>
+          <td style="padding:5px 6px; font-size:12.5px; color:var(--hw-text-muted); line-height:1.4; border-bottom:1px solid var(--hw-border-color);">${s.desc}</td>
+        </tr>
+      `).join('')}
+    `;
+
+    if (topic === 'providers') {
+      const g = dict.guideProviders || {};
+      titleEl.textContent = g.title || '';
+      bodyEl.innerHTML = renderSections(g.sections);
+    } else {
+      const g = dict.guideFeatures || {};
+      titleEl.textContent = g.title || '';
+      bodyEl.innerHTML = `
+        <table style="width:100%; border-collapse:collapse;">
+          ${renderGroupRows(g.providersTitle, g.providers)}
+          ${renderGroupRows(g.actionsTitle, g.actions)}
+          ${renderGroupRows(g.modesTitle, g.modes)}
+        </table>
+      `;
+    }
+    modal.style.display = 'flex';
   }
 
   showToast(msg) {
@@ -556,6 +648,11 @@ class InPageOverlay {
 
       s.getElementById('hwBtnSidePanel')?.setAttribute('data-tooltip-title', t.options?.title || 'Trang Cài đặt & Cấu hình');
       s.getElementById('hwBtnSidePanel')?.setAttribute('data-tooltip-desc', t.options?.desc || 'Mở trang cài đặt chi tiết để quản lý API Key, bật AI nội bộ và tùy biến giao diện.');
+
+      s.getElementById('hwBtnModelGuide')?.setAttribute('data-tooltip-title', t.guide?.title || 'Xem hướng dẫn nhanh');
+      s.getElementById('hwBtnModelGuide')?.setAttribute('data-tooltip-desc', t.guide?.desc || '');
+      s.getElementById('hwBtnConfigGuide')?.setAttribute('data-tooltip-title', t.guide?.title || 'Xem hướng dẫn nhanh');
+      s.getElementById('hwBtnConfigGuide')?.setAttribute('data-tooltip-desc', t.guide?.desc || '');
 
       s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-title', t.capture?.title || 'Chụp màn hình (Alt+C)');
       s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-desc', t.capture?.desc || 'Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.');

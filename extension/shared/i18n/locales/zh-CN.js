@@ -17,6 +17,40 @@ export default {
     modelNanoSetup: "Chrome Gemini Nano (需配置)",
     modelNanoClick: "点击查看设置中的 Gemini Nano 激活指南",
     modelAutoRotate: "自动轮换密钥",
+    modelNanoDownloading: "正在下载本地 AI 模型",
+    modelNanoUnavailable: "此设备不支持 Gemini Nano",
+    aiUnavailableToast: "尚无可用的 AI —— 请打开设置添加一个",
+    guideFeatures: {
+      title: "快速指南",
+      providersTitle: "3 种配置 AI 的方式",
+      providers: [
+        { title: "云端 API Key", desc: "速度最快、最准确，需要 Gemini、OpenAI、Claude 等的密钥。" },
+        { title: "Local Model（本地模型）", desc: "通过 Ollama 或 LM Studio 在你自己的电脑上运行 AI，免费且可离线使用。" },
+        { title: "Chrome 内置 Gemini Nano", desc: "Chrome 自带，无需额外安装，但首次使用需要浏览器先下载模型。" },
+      ],
+      actionsTitle: "主要功能",
+      actions: [
+        { title: "解题", desc: "发送问题或题目照片，交给 AI 解答。" },
+        { title: "翻译", desc: "快速翻译选中的单词或一段文字。" },
+        { title: "截图", desc: "截取屏幕上含有题目的区域，直接求解。" },
+      ],
+      modesTitle: "解题模式",
+      modes: [
+        { title: "分步讲解", desc: "按步骤详细展示解题过程。" },
+        { title: "直接答案", desc: "只给出最终答案，不作解释。" },
+        { title: "提示", desc: "给出提示引导继续思考，而不是直接解答。" },
+        { title: "深入讲解", desc: "深入分析与问题相关的概念。" },
+      ],
+    },
+    guideProviders: {
+      title: "API Key、Local Model 和 Gemini Nano 是什么？",
+      sections: [
+        { title: "API Key", desc: "来自云端 AI 服务商（如 Google Gemini、OpenAI、Anthropic Claude）的访问密钥。结果快速准确，很多服务商提供免费额度。" },
+        { title: "Local Model（本地服务器）", desc: "通过 Ollama 或 LM Studio 直接在你的电脑上运行的 AI。免费且可离线使用，但需要配置较好的电脑，并需提前下载模型。" },
+        { title: "Chrome 内置 Gemini Nano", desc: "Chrome 自带的 AI 模型，直接在设备上运行，无需额外安装。首次使用可能需要一些时间下载模型。" },
+        { title: "该怎么选？", desc: "可以同时使用多种方式。需要最高准确度时适合用 API Key。Gemini Nano 是免费、内置的默认选项，适合纯文本问题，无需设置。当你想分析题目照片时才需要 Local Model，因为 Gemini Nano 目前只能处理文本，无法读取图片。" },
+      ],
+    },
     emptyHistory: "暂无保存的历史对话。<br>开始新对话以记录解题过程！",
     loadingHistory: "正在加载历史对话列表...",
     chips: [
@@ -152,6 +186,10 @@ export default {
         title: "打开聊天面板 (Alt+K)",
         desc: "打开 AI 抽屉助手以进行题目求解与答疑。",
       },
+      guide: {
+        title: "查看快速指南",
+        desc: "说明 AI 配置方式和主要功能。",
+      },
     },
   },
   selectionTooltip: {
@@ -169,6 +207,8 @@ export default {
     disableSite: "在此网站禁用",
     disableGlobal: "全局禁用",
     disableFooter: "可在设置中重新开启",
+    aiUnavailableTooltip: "AI 不可用 —— 未配置任何提供商，且此处不支持 Gemini Nano。请打开设置。",
+    nanoDownloadingTooltip: "Gemini Nano 正在后台下载 —— 首次使用可能会较慢。",
   },
   cropper: {
     tip: "点击并拖拽框选题目或公式 (按 ESC 取消)",
@@ -256,6 +296,18 @@ export default {
       "运行在设备本地的 AI 模型。无需 API Key，完全免费且支持离线。在未配置云端 Key 时会自动调用。",
     btnOpenFlags: "打开 chrome://flags",
     btnTestBuiltinAI: "测试本地模型",
+    btnDownloadNanoNow: "立即下载",
+    statusDownloadable: "尚未下载",
+    statusDownloading: "正在下载模型...",
+    statusUnavailable: "此设备不可用",
+    onboarding3ProvidersTitle: "选择 AI 的运行方式",
+    onboarding3ProvidersDesc: "以下方式均可使用 —— 可以组合使用，也可以只选一种：",
+    onboardingCloudTitle: "云端 API Key",
+    onboardingCloudDesc: "速度最快、最准确；大多数服务商提供免费额度 —— 在下方添加。",
+    onboardingLocalTitle: "本地服务器",
+    onboardingLocalDesc: "通过 Ollama/LM Studio 在你的电脑上运行 —— 免费且离线。",
+    onboardingNanoTitle: "Chrome 内置 Gemini Nano",
+    onboardingNanoDesc: "Chrome 自带，无需设置 —— 首次使用可能需要下载模型。",
     guideNanoStepsTitle:
       "激活 Chrome Gemini Nano 指南 (点击链接直接跳转相应设置)：",
     guideNanoStep1:

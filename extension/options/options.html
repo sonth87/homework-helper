@@ -52,6 +52,26 @@
           </div>
         </div>
 
+        <!-- Onboarding: 3 ways to power the AI -->
+        <div class="opt-card" id="optOnboarding3ProvidersCard" style="border-left: 4px solid #64748b;">
+          <h3 class="opt-card-title" id="optOnboarding3ProvidersTitle">Chọn cách bạn muốn AI hoạt động</h3>
+          <p class="opt-card-desc" id="optOnboarding3ProvidersDesc" style="margin-top:4px;">Bạn có thể dùng bất kỳ cách nào dưới đây — kết hợp nhiều cách hoặc chỉ chọn 1:</p>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-top:12px;">
+            <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; background:#fff;">
+              <strong id="optOnboardingCloudTitle" style="font-size:13px; color:#0f172a;">Cloud API Key</strong>
+              <div id="optOnboardingCloudDesc" style="font-size:11.5px; color:#64748b; margin-top:2px;"></div>
+            </div>
+            <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; background:#fff;">
+              <strong id="optOnboardingLocalTitle" style="font-size:13px; color:#0f172a;">Local Server</strong>
+              <div id="optOnboardingLocalDesc" style="font-size:11.5px; color:#64748b; margin-top:2px;"></div>
+            </div>
+            <div style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; background:#fff;">
+              <strong id="optOnboardingNanoTitle" style="font-size:13px; color:#0f172a;">Chrome Gemini Nano</strong>
+              <div id="optOnboardingNanoDesc" style="font-size:11.5px; color:#64748b; margin-top:2px;"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- AI Routing Strategy Box -->
         <div class="opt-card" style="border-left: 4px solid #3b82f6;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
@@ -147,6 +167,10 @@
               </p>
             </div>
             <div style="display:flex; gap:8px; flex-shrink:0;">
+              <button class="opt-btn-primary" id="btnDownloadNanoNow" style="white-space:nowrap; padding:6px 12px; font-size:12px; display:none;">
+                <span id="optIconDownloadNano"></span> <span id="btnDownloadNanoNowText">Tải mô hình ngay</span>
+                <span id="builtinNanoDownloadProgress" style="margin-left:4px; font-weight:700;"></span>
+              </button>
               <button class="opt-btn-secondary" id="btnOpenFlagsFromOptions" style="white-space:nowrap; padding:6px 12px; font-size:12px;">
                 Mở chrome://flags
               </button>

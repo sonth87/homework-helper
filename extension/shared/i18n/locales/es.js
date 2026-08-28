@@ -17,6 +17,40 @@ export default {
     modelNanoSetup: "Chrome Gemini Nano (Requiere configuración)",
     modelNanoClick: "Clic para ver la guía de activación de Gemini Nano",
     modelAutoRotate: "Rotación automática",
+    modelNanoDownloading: "Descargando el modelo de IA local",
+    modelNanoUnavailable: "Gemini Nano no está disponible en este dispositivo",
+    aiUnavailableToast: "Todavía no hay ninguna IA lista — abre Ajustes para añadir una",
+    guideFeatures: {
+      title: "Guía rápida",
+      providersTitle: "3 formas de configurar la IA",
+      providers: [
+        { title: "Clave de API en la nube", desc: "La más rápida y precisa, requiere una clave de Gemini, OpenAI, Claude, etc." },
+        { title: "Local Model", desc: "Ejecuta la IA en tu propio ordenador vía Ollama o LM Studio, gratis y funciona sin conexión." },
+        { title: "Gemini Nano de Chrome", desc: "Integrado en Chrome, sin instalación adicional, pero el primer uso requiere que el navegador descargue el modelo." },
+      ],
+      actionsTitle: "Funciones principales",
+      actions: [
+        { title: "Resolver", desc: "Envía una pregunta o una foto del problema para que la IA lo resuelva." },
+        { title: "Traducir", desc: "Traduce rápidamente una palabra o un bloque de texto seleccionado." },
+        { title: "Captura de pantalla", desc: "Recorta una zona de la pantalla con el problema para resolverlo al instante." },
+      ],
+      modesTitle: "Modos de resolución",
+      modes: [
+        { title: "Paso a paso", desc: "Muestra una solución detallada dividida en pasos." },
+        { title: "Respuesta directa", desc: "Da solo la respuesta final, sin explicación." },
+        { title: "Pista", desc: "Da una pista para que sigas pensando, en vez de resolverlo directamente." },
+        { title: "Explicación profunda", desc: "Analiza a fondo los conceptos relacionados con la pregunta." },
+      ],
+    },
+    guideProviders: {
+      title: "¿Qué son la clave de API, el Local Model y Gemini Nano?",
+      sections: [
+        { title: "Clave de API", desc: "Un código de acceso de un proveedor de IA en la nube como Google Gemini, OpenAI o Anthropic Claude. Da resultados rápidos y precisos, y muchos ofrecen un nivel gratuito." },
+        { title: "Local Model (servidor local)", desc: "IA que se ejecuta directamente en tu ordenador vía Ollama o LM Studio. Gratis y funciona sin conexión, pero necesita un equipo razonablemente potente y descargar antes el modelo." },
+        { title: "Gemini Nano de Chrome", desc: "Un modelo de IA integrado en Chrome que se ejecuta directamente en tu dispositivo, sin nada más que instalar. El primer uso puede tardar un poco en descargar el modelo." },
+        { title: "¿Cuál debería elegir?", desc: "Puedes usar varias a la vez. La clave de API es ideal cuando necesitas la máxima precisión. Gemini Nano es la opción gratuita e integrada por defecto para preguntas de solo texto, sin necesidad de configuración. Local Model se vuelve necesario cuando quieres analizar una foto del problema, ya que Gemini Nano por ahora solo procesa texto, no imágenes." },
+      ],
+    },
     emptyHistory:
       "No hay conversaciones guardadas.<br>¡Inicia un nuevo chat para comenzar!",
     loadingHistory: "Cargando historial...",
@@ -109,6 +143,10 @@ export default {
         title: "Abrir panel de chat (Alt+K)",
         desc: "Abre el asistente de estudio para resolver tareas y hacer preguntas.",
       },
+      guide: {
+        title: "Ver guía rápida",
+        desc: "Explica las formas de configurar la IA y las funciones principales.",
+      },
     },
     modalConfigTitle: "Configuración de modelos y claves API",
     modalConfigDesc:
@@ -171,6 +209,8 @@ export default {
     disableSite: "Desactivar para este sitio web",
     disableGlobal: "Desactivar globalmente",
     disableFooter: "Puedes reactivar en la configuración",
+    aiUnavailableTooltip: "IA no disponible — no hay ningún proveedor configurado y Gemini Nano no es compatible aquí. Abre Ajustes.",
+    nanoDownloadingTooltip: "Gemini Nano se está descargando en segundo plano — el primer uso puede tardar más.",
   },
   cropper: {
     tip: "Haz clic y arrastra para seleccionar el problema o fórmula (ESC para cancelar)",
@@ -479,6 +519,18 @@ export default {
       "Modelo de IA local que se ejecuta 100% en tu ordenador. Sin necesidad de clave API, completamente gratis y funciona sin conexión.",
     btnOpenFlags: "Abrir chrome://flags",
     btnTestBuiltinAI: "Probar modelo integrado",
+    btnDownloadNanoNow: "Descargar ahora",
+    statusDownloadable: "Aún no descargado",
+    statusDownloading: "Descargando modelo...",
+    statusUnavailable: "No disponible en este dispositivo",
+    onboarding3ProvidersTitle: "Elige cómo quieres que funcione la IA",
+    onboarding3ProvidersDesc: "Puedes usar cualquiera de estas opciones — combínalas o elige solo una:",
+    onboardingCloudTitle: "Clave de API en la nube",
+    onboardingCloudDesc: "La más rápida y precisa; la mayoría de proveedores tienen un nivel gratuito — añade una abajo.",
+    onboardingLocalTitle: "Servidor local",
+    onboardingLocalDesc: "Se ejecuta en tu ordenador vía Ollama/LM Studio — gratis y sin conexión.",
+    onboardingNanoTitle: "Gemini Nano de Chrome",
+    onboardingNanoDesc: "Integrado en Chrome, sin configuración — puede requerir descargar el modelo la primera vez.",
     guideNanoStepsTitle:
       "Cómo activar Chrome Gemini Nano (Haz clic en los enlaces para abrir las pestañas de configuración):",
     guideNanoStep1:

@@ -94,6 +94,7 @@ export class OptionsController {
     setInner('optIconThinking', Icons.sparkles(18));
     setInner('optIconStrategy', Icons.checkCircle(18, 'text-green-600'));
     setInner('optIconBuiltinNano', Icons.cpu(18));
+    setInner('optIconDownloadNano', Icons.download(14));
     setInner('optIconCheckUpdates', Icons.refresh(14));
     setInner('optIconDownloadCore', Icons.download(14));
     setInner('optIconCorePackage', Icons.checkCircle(18, 'text-green-600'));
@@ -256,6 +257,17 @@ export class OptionsController {
     setText('builtinNanoDesc', dict.builtinNanoDesc);
     setText('btnOpenFlagsFromOptions', dict.btnOpenFlags);
     setText('btnTestBuiltinAI', dict.btnTestBuiltinAI);
+    setText('btnDownloadNanoNowText', dict.btnDownloadNanoNow);
+
+    // Onboarding: 3 ways to power the AI
+    setText('optOnboarding3ProvidersTitle', dict.onboarding3ProvidersTitle);
+    setText('optOnboarding3ProvidersDesc', dict.onboarding3ProvidersDesc);
+    setText('optOnboardingCloudTitle', dict.onboardingCloudTitle);
+    setText('optOnboardingCloudDesc', dict.onboardingCloudDesc);
+    setText('optOnboardingLocalTitle', dict.onboardingLocalTitle);
+    setText('optOnboardingLocalDesc', dict.onboardingLocalDesc);
+    setText('optOnboardingNanoTitle', dict.onboardingNanoTitle);
+    setText('optOnboardingNanoDesc', dict.onboardingNanoDesc);
 
     // Gemini Nano 5-step activation guide
     setText('optNanoGuideIntro', dict.guideNanoIntro);

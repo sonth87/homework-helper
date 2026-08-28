@@ -420,6 +420,7 @@ export class OverlayFloatingCard {
     ]);
     const cardDict = getFloatingPopupI18n(uiLanguage);
     const genDict = getI18n(uiLanguage);
+    this.overlay.drawer.currentDict = genDict;
     const studyMode = mode === 'translate' ? 'translate' : savedStudyMode;
 
     s.getElementById('hwPopupTitle').textContent = mode === 'translate' ? cardDict.translateTitle : cardDict.helperTitle;
@@ -473,6 +474,11 @@ export class OverlayFloatingCard {
     const enabledKeys = (apiConfigs || []).filter(
       (c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')
     );
+
+    if (await this.overlay.drawer.isNanoHardBlocked(enabledKeys.length)) {
+      this.overlay.drawer.handleStreamError('CHROME_AI_UNAVAILABLE: Gemini Nano is not available on this device, and no Cloud/Local API key is configured.');
+      return;
+    }
 
     // If running in Gemini Nano mode (no keys or nano_only), run Local OCR first!
     if (enabledKeys.length === 0 || routingStrategy === 'nano_only') {
@@ -681,6 +687,7 @@ export class OverlayFloatingCard {
     const { uiLanguage = 'en', studyMode: savedStudyMode = 'step-by-step' } = await Storage.get(['uiLanguage', 'studyMode']);
     const cardDict = getFloatingPopupI18n(uiLanguage);
     const genDict = getI18n(uiLanguage);
+    this.overlay.drawer.currentDict = genDict;
 
     const content = s.getElementById('hwCardAnswerContent');
     this.startLoadingSteps(content, genDict.loadingSteps);
@@ -728,6 +735,11 @@ export class OverlayFloatingCard {
 
     const { apiConfigs = [], systemPrompt, nanoSystemPrompt, outputLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'outputLanguage']);
     const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin'));
+
+    if (await this.overlay.drawer.isNanoHardBlocked(enabledKeys.length)) {
+      this.overlay.drawer.handleStreamError('CHROME_AI_UNAVAILABLE: Gemini Nano is not available on this device, and no Cloud/Local API key is configured.');
+      return;
+    }
 
     // For translate mode the "language to reply in" IS the chosen translate
     // target — reusing the general outputLanguage setting here would tell

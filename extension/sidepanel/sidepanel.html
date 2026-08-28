@@ -31,6 +31,7 @@
     <div class="sp-model-bar" id="spModelBar">
       <span class="sp-model-label">Model:</span>
       <span class="sp-model-tag" id="spModelTag"></span>
+      <button class="sp-icon-btn" id="spBtnModelGuide" style="margin-left:auto; width:24px; height:24px;" data-tooltip-title="Xem hướng dẫn nhanh" data-tooltip-desc="Giải thích các cách cấu hình AI và các tính năng chính."></button>
     </div>
 
     <!-- Chat Messages Scroll Area -->
@@ -81,7 +82,10 @@
       <div class="sp-modal-card">
         <div class="sp-modal-header">
           <div class="sp-modal-title" id="spModalTitle"></div>
-          <button class="sp-icon-btn" id="spBtnCloseModal"></button>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <button class="sp-icon-btn" id="spBtnConfigGuide" data-tooltip-title="Xem hướng dẫn nhanh" data-tooltip-desc="Giải thích API Key, Local Model, và Gemini Nano là gì."></button>
+            <button class="sp-icon-btn" id="spBtnCloseModal"></button>
+          </div>
         </div>
         <div class="sp-modal-body" id="spModalBody">
           <!-- Populated by sidepanel.js -->
@@ -97,6 +101,19 @@
           <button class="sp-icon-btn" id="spBtnCloseHistoryModal"></button>
         </div>
         <div class="sp-history-body" id="spHistoryModalBody" style="padding: 14px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px;">
+          <!-- Populated by sidepanel.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Guide Modal (Model row "?" and Config modal "?") -->
+    <div class="sp-modal-backdrop" id="spGuideModal" style="display: none;">
+      <div class="sp-modal-card" style="max-width: 460px;">
+        <div class="sp-modal-header">
+          <div class="sp-modal-title" id="spGuideModalTitle"></div>
+          <button class="sp-icon-btn" id="spBtnCloseGuideModal"></button>
+        </div>
+        <div class="sp-modal-body" id="spGuideModalBody" style="max-height:60vh; overflow-y:auto;">
           <!-- Populated by sidepanel.js -->
         </div>
       </div>

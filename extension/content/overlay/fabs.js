@@ -3,6 +3,8 @@
  */
 
 import { Storage } from '../../shared/storage.js';
+import { getI18n } from '../../shared/i18n.js';
+import { NANO_STATUS } from '../../shared/nano-status.js';
 
 export class OverlayFabs {
   constructor(overlay) {
@@ -24,12 +26,22 @@ export class OverlayFabs {
     // Crop trigger
     const triggerCrop = async () => {
       if (this.suppressNextClick) { this.suppressNextClick = false; return; }
-      const { routingStrategy = 'prefer_nano', apiConfigs = [] } = await Storage.get(['routingStrategy', 'apiConfigs']);
+      const { routingStrategy = 'prefer_nano', apiConfigs = [], nanoDownloadState } = await Storage.get(['routingStrategy', 'apiConfigs', 'nanoDownloadState']);
       const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin'));
 
       if (routingStrategy === 'config_only' && enabledKeys.length === 0) {
         chrome.runtime.sendMessage({ action: 'OPEN_OPTIONS' });
         return;
+      }
+
+      if (enabledKeys.length === 0 && !nanoDownloadState?.inProgress) {
+        const blocked = await this.overlay.drawer.isNanoHardBlocked(enabledKeys.length);
+        if (blocked) {
+          const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+          this.overlay.showToast(getI18n(uiLanguage).aiUnavailableToast || 'No AI provider ready — open Settings to add one.');
+          chrome.runtime.sendMessage({ action: 'OPEN_OPTIONS', hash: 'builtin-nano' });
+          return;
+        }
       }
 
       if (this.overlay.drawer.isOpen) {
@@ -44,6 +56,7 @@ export class OverlayFabs {
 
     this.makeFabContainerDraggable();
     Storage.get(['fabPosition']).then(({ fabPosition }) => this.applyPosition(fabPosition));
+    this.updateGatingVisual();
 
     window.addEventListener('HOMEWORK_AI_START_CROP', () => {
       if (this.overlay.drawer.isOpen) {
@@ -75,6 +88,18 @@ export class OverlayFabs {
         }
       });
     });
+  }
+
+  async updateGatingVisual() {
+    const crop = this.shadow.getElementById('hwFabCrop');
+    if (!crop) return;
+    const { apiConfigs = [], nanoDownloadState } = await Storage.get(['apiConfigs', 'nanoDownloadState']);
+    const enabledCount = (apiConfigs || []).filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')).length;
+    let blocked = false;
+    if (enabledCount === 0 && !nanoDownloadState?.inProgress) {
+      blocked = await this.overlay.drawer.isNanoHardBlocked(enabledCount);
+    }
+    crop.classList.toggle('hw-fab-blocked', blocked);
   }
 
   applyAppearance(enableFloatingButton = true, fabSize = 'normal', fabOpacity = 90) {

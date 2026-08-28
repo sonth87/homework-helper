@@ -7,6 +7,7 @@ import { Storage, DEFAULT_NANO_SYSTEM_PROMPT, buildNanoPrompts } from '../../sha
 import { formatMarkdownAndMath, renderAnswer } from '../../shared/markdown-katex.js';
 import { getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
+import { NANO_STATUS } from '../../shared/nano-status.js';
 
 export class OverlayDrawer {
   constructor(overlay) {
@@ -245,34 +246,43 @@ export class OverlayDrawer {
       const handler = (e) => {
         window.removeEventListener('HOMEWORK_AI_NANO_RESPONSE', handler);
         resolved = true;
-        resolve(e.detail?.hasAi && e.detail?.available !== 'no');
+        resolve(e.detail?.hasAi ? (e.detail?.status || NANO_STATUS.UNAVAILABLE) : NANO_STATUS.UNAVAILABLE);
       };
       window.addEventListener('HOMEWORK_AI_NANO_RESPONSE', handler);
       window.dispatchEvent(new CustomEvent('HOMEWORK_AI_NANO_CHECK'));
       setTimeout(() => {
         if (!resolved) {
           window.removeEventListener('HOMEWORK_AI_NANO_RESPONSE', handler);
-          resolve(false);
+          resolve(null); // unknown/timeout — callers must not treat this as a hard block
         }
       }, 300);
     });
   }
 
+  // Only used by callers (fabs.js, floating-card.js) deciding whether to hard-block
+  // an AI action: a null/unknown probe must fail OPEN, not block the user.
+  async isNanoHardBlocked(enabledCount) {
+    if (enabledCount > 0) return false;
+    const status = await this.checkNanoAvailability();
+    return status === NANO_STATUS.UNAVAILABLE;
+  }
+
   async updateActiveModelBadge() {
     const { apiConfigs = [] } = await Storage.getApiConfigs();
-    const { isNanoReady, uiLanguage = 'en' } = await Storage.get(['isNanoReady', 'uiLanguage']);
+    const { uiLanguage = 'en', nanoDownloadState } = await Storage.get(['uiLanguage', 'nanoDownloadState']);
     const dict = getI18n(uiLanguage);
     const tag = this.shadow.getElementById('hwModelTag');
     if (!tag) return;
     const enabledCount = apiConfigs.filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')).length;
 
     if (enabledCount === 0) {
-      let isReady = !!isNanoReady;
-      if (!isReady) {
-        isReady = await this.checkNanoAvailability();
-      }
+      // Always re-probe live — isNanoReady is a one-way "seen ready once" flag that
+      // never gets cleared, so trusting it here would keep showing "Ready" forever
+      // even after the on-device model files are deleted/reset outside the extension.
+      let status = await this.checkNanoAvailability();
+      if (nanoDownloadState?.inProgress) status = NANO_STATUS.DOWNLOADING;
 
-      if (isReady) {
+      if (status === NANO_STATUS.AVAILABLE) {
         Storage.set({ isNanoReady: true });
         tag.innerHTML = `${Icons.cpu(12)} ${dict.modelNanoReady || 'Chrome Gemini Nano (Sẵn sàng On-Device)'}`;
         tag.style.background = 'rgba(var(--hw-success-rgb), 0.15)';
@@ -281,6 +291,25 @@ export class OverlayDrawer {
         tag.style.cursor = 'default';
         tag.title = '';
         tag.onclick = null;
+      } else if (status === NANO_STATUS.DOWNLOADING) {
+        const pct = nanoDownloadState?.percent;
+        tag.innerHTML = `${Icons.download(12)} ${dict.modelNanoDownloading || 'Downloading Gemini Nano'}${pct != null ? ` (${pct}%)` : '...'}`;
+        tag.style.background = 'rgba(var(--hw-warning-rgb), 0.15)';
+        tag.style.color = 'var(--hw-warning)';
+        tag.style.border = '1px solid rgba(var(--hw-warning-rgb), 0.4)';
+        tag.style.cursor = 'default';
+        tag.title = '';
+        tag.onclick = null;
+      } else if (status === NANO_STATUS.UNAVAILABLE) {
+        tag.innerHTML = `${Icons.alertCircle(12)} ${dict.modelNanoUnavailable || 'Gemini Nano unavailable on this device'}`;
+        tag.style.background = 'rgba(var(--hw-danger-rgb), 0.12)';
+        tag.style.color = 'var(--hw-danger)';
+        tag.style.border = '1px solid rgba(var(--hw-danger-rgb), 0.35)';
+        tag.style.cursor = 'pointer';
+        tag.title = dict.modelNanoClick || 'Click to view Gemini Nano guide in Settings';
+        tag.onclick = () => {
+          chrome.runtime.sendMessage({ action: 'OPEN_OPTIONS', hash: 'builtin-nano' });
+        };
       } else {
         tag.innerHTML = `${Icons.alertCircle(12)} ${dict.modelNanoSetup || 'Chrome Gemini Nano (Yêu cầu thiết lập)'}`;
         tag.style.background = 'rgba(var(--hw-warning-rgb), 0.15)';
@@ -332,6 +361,7 @@ export class OverlayDrawer {
 
     const { apiConfigs = [], systemPrompt, nanoSystemPrompt, outputLanguage = 'en', uiLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'outputLanguage', 'uiLanguage']);
     const dict = getI18n(uiLanguage);
+    this.currentDict = dict;
     this.startLoadingSteps(this.activeAiBubble?.querySelector('.hw-ai-content'), dict.loadingSteps);
     const enabledKeys = (apiConfigs || []).filter(
       (c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')
@@ -464,6 +494,22 @@ export class OverlayDrawer {
         this.currentNotices.push(meta.notice);
         this.updateNoticeIcon(this.activeAiBubble, this.currentNotices);
       }
+    }
+
+    if (meta?.status === 'downloading') {
+      const dict = this.currentDict || {};
+      const pctTxt = meta.percent != null ? ` ${meta.percent}%` : '';
+      const label = `${Icons.download(14)} ${dict.modelNanoDownloading || 'Downloading the on-device model'}${pctTxt}`;
+      if (this.activeTarget === 'card') {
+        this.overlay.floatingCard.stopLoadingSteps();
+        const content = this.shadow.getElementById('hwCardAnswerContent');
+        if (content) content.innerHTML = `<span style="color:var(--hw-text-muted);">${label}</span>`;
+      } else if (this.activeAiBubble) {
+        this.stopLoadingSteps();
+        const content = this.activeAiBubble.querySelector('.hw-ai-content');
+        if (content) content.innerHTML = `<span style="color:var(--hw-text-muted);">${label}</span>`;
+      }
+      return;
     }
 
     // ai-engine.js also calls onChunk('', {status: 'connecting'|'switching', ...})

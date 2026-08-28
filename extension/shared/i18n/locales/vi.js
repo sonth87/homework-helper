@@ -17,6 +17,40 @@ export default {
     modelNanoSetup: "Chrome Gemini Nano (Cần cấu hình)",
     modelNanoClick: "Nhấn để xem hướng dẫn kích hoạt Gemini Nano trong Cài đặt",
     modelAutoRotate: "Tự động xoay vòng",
+    modelNanoDownloading: "Đang tải mô hình AI cục bộ",
+    modelNanoUnavailable: "Gemini Nano không khả dụng trên thiết bị này",
+    aiUnavailableToast: "Chưa có AI nào sẵn sàng — mở Cài đặt để thêm",
+    guideFeatures: {
+      title: "Hướng dẫn nhanh",
+      providersTitle: "3 cách cấu hình AI",
+      providers: [
+        { title: "API Key đám mây", desc: "Nhanh và chính xác nhất, cần đăng ký key từ Gemini, OpenAI, Claude..." },
+        { title: "Local Model", desc: "Chạy AI ngay trên máy qua Ollama hoặc LM Studio, miễn phí, hoạt động offline." },
+        { title: "Chrome Gemini Nano", desc: "Có sẵn trong Chrome, không cần cài thêm phần mềm, nhưng lần đầu dùng trình duyệt cần thời gian tự tải model về máy." },
+      ],
+      actionsTitle: "Các tính năng chính",
+      actions: [
+        { title: "Giải bài", desc: "Gửi câu hỏi hoặc ảnh chụp đề để AI giải." },
+        { title: "Dịch", desc: "Dịch nhanh 1 từ hoặc cả đoạn văn bản đã bôi đen." },
+        { title: "Chụp ảnh", desc: "Cắt vùng màn hình chứa đề bài để giải trực tiếp." },
+      ],
+      modesTitle: "Các chế độ giải bài",
+      modes: [
+        { title: "Từng bước", desc: "Trình bày lời giải chi tiết theo từng bước." },
+        { title: "Đáp án ngay", desc: "Chỉ đưa đáp án cuối cùng, không giải thích." },
+        { title: "Gợi ý", desc: "Đưa gợi ý để tự suy nghĩ tiếp, không giải sẵn." },
+        { title: "Giải thích sâu", desc: "Phân tích kỹ khái niệm liên quan đến câu hỏi." },
+      ],
+    },
+    guideProviders: {
+      title: "API Key, Local Model & Gemini Nano là gì?",
+      sections: [
+        { title: "API Key", desc: "Mã truy cập lấy từ nhà cung cấp AI đám mây như Google Gemini, OpenAI, Anthropic Claude. Cho kết quả nhanh, chính xác, nhiều nơi có gói miễn phí." },
+        { title: "Local Model (Máy chủ cục bộ)", desc: "AI chạy ngay trên máy tính qua Ollama hoặc LM Studio. Miễn phí, hoạt động offline, nhưng cần máy đủ mạnh và tự tải model trước." },
+        { title: "Chrome Gemini Nano", desc: "Mô hình AI có sẵn trong Chrome, chạy ngay trên thiết bị, không cần cài thêm. Lần đầu dùng có thể cần thời gian tải model." },
+        { title: "Nên chọn cách nào?", desc: "Có thể dùng cùng lúc nhiều cách. API Key phù hợp khi cần độ chính xác cao nhất. Gemini Nano là lựa chọn mặc định miễn phí, có sẵn, không cần cài đặt cho câu hỏi văn bản. Local Model cần thiết khi muốn phân tích ảnh chụp bài tập, vì Gemini Nano hiện chỉ xử lý được văn bản, chưa đọc được hình ảnh." },
+      ],
+    },
     emptyHistory:
       "Chưa có hội thoại nào được lưu.<br>Hãy tạo đoạn chat mới để bắt đầu!",
     loadingHistory: "Đang tải danh sách hội thoại...",
@@ -155,6 +189,10 @@ export default {
         title: "Mở chat panel (Alt+K)",
         desc: "Mở ngăn kéo AI hỗ trợ giải bài tập chi tiết và đặt câu hỏi.",
       },
+      guide: {
+        title: "Xem hướng dẫn nhanh",
+        desc: "Giải thích các cách cấu hình AI và các tính năng chính.",
+      },
     },
   },
   selectionTooltip: {
@@ -172,6 +210,8 @@ export default {
     disableSite: "Tắt cho website này",
     disableGlobal: "Tắt trên toàn bộ",
     disableFooter: "Có thể bật lại trong Cài đặt",
+    aiUnavailableTooltip: "Chưa có AI khả dụng — chưa cấu hình nhà cung cấp nào và Gemini Nano không được hỗ trợ ở đây. Mở Cài đặt.",
+    nanoDownloadingTooltip: "Gemini Nano đang tải ngầm — lần dùng đầu tiên có thể chậm hơn.",
   },
   cropper: {
     tip: "Nhấp và kéo để khoanh vùng bài tập hoặc công thức (ESC để hủy)",
@@ -261,6 +301,18 @@ export default {
       "Mô hình AI nội bộ chạy 100% trên thiết bị của bạn. Không cần API Key, hoàn toàn miễn phí & hoạt động Offline. Tiện ích tự động sử dụng model này khi chưa có Key nào được thêm hoặc khi tất cả các Key đám mây bị cạn hạn ngạch (Rate Limit).",
     btnOpenFlags: "Mở chrome://flags",
     btnTestBuiltinAI: "Kiểm tra Model Nội bộ",
+    btnDownloadNanoNow: "Tải mô hình ngay",
+    statusDownloadable: "Chưa tải mô hình",
+    statusDownloading: "Đang tải mô hình...",
+    statusUnavailable: "Không khả dụng trên thiết bị này",
+    onboarding3ProvidersTitle: "Chọn cách bạn muốn AI hoạt động",
+    onboarding3ProvidersDesc: "Bạn có thể dùng bất kỳ cách nào dưới đây — kết hợp nhiều cách hoặc chỉ chọn 1:",
+    onboardingCloudTitle: "API Key đám mây",
+    onboardingCloudDesc: "Nhanh và chính xác nhất; hầu hết nhà cung cấp có gói miễn phí — thêm key bên dưới.",
+    onboardingLocalTitle: "Máy chủ cục bộ",
+    onboardingLocalDesc: "Chạy ngay trên máy bạn qua Ollama/LM Studio — miễn phí và offline.",
+    onboardingNanoTitle: "Chrome Gemini Nano",
+    onboardingNanoDesc: "Có sẵn trong Chrome, không cần cài đặt — có thể cần tải mô hình khi dùng lần đầu.",
     guideNanoStepsTitle:
       "Hướng dẫn kích hoạt Gemini Nano (Nhấn vào từng link để mở trực tiếp tab cờ tương ứng):",
     guideNanoStep1:
