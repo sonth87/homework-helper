@@ -93,4 +93,9 @@ export default {
   intentExplain: 'Jelaskan',
   intentRewrite: 'Tulis ulang',
   intentChat: 'Obrolan',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: 'Pintasan',
+  setHotkeys: 'Pintasan global',
+  setHotkeysDesc: 'Tombol yang berfungsi dari aplikasi mana pun. Kosongkan untuk menonaktifkan pintasan.',
 } as const satisfies Dictionary;

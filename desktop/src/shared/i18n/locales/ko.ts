@@ -93,4 +93,9 @@ export default {
   intentExplain: '설명',
   intentRewrite: '다시 쓰기',
   intentChat: '대화',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: '단축키',
+  setHotkeys: '전역 단축키',
+  setHotkeysDesc: '어떤 앱에서도 쓸 수 있는 키입니다. 비워 두면 해당 단축키가 꺼집니다.',
 } as const satisfies Dictionary;

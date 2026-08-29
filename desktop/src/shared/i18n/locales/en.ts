@@ -92,4 +92,9 @@ export default {
   intentExplain: 'Explain',
   intentRewrite: 'Rewrite',
   intentChat: 'Chat',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: 'Shortcuts',
+  setHotkeys: 'Global shortcuts',
+  setHotkeysDesc: 'Keys that work from any application. Leave empty to disable a shortcut.',
 } as const;

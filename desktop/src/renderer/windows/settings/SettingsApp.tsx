@@ -10,6 +10,16 @@ import { UI_GROUPS, DEFAULT_SETTINGS } from '@config/settings';
 import type { Settings } from '@config/settings';
 import { createTranslator } from '@shared/i18n';
 import { SettingControl } from './controls/SettingControl';
+import { HotkeyControl } from './controls/HotkeyControl';
+import { INTENTS } from '@config/intents.config';
+import type { Intent } from '@shared/types/intent';
+import './settings.css';
+
+/** Nhãn cho từng phím tắt, dựng từ intent registry — không hardcode. */
+const HOTKEY_LABELS = [
+  ...(Object.keys(INTENTS) as Intent[]).map((id) => ({ id: `intent.${id}`, i18n: INTENTS[id].i18n })),
+  { id: 'app.openSettings', i18n: 'groupSystem' as const },
+];
 
 export function SettingsApp() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -17,6 +27,8 @@ export function SettingsApp() {
 
   useEffect(() => {
     window.api?.invoke('settings:get').then(setSettings).catch(console.error);
+    // Cửa sổ khác đổi cấu hình thì cửa sổ này phải theo — nếu không hai nơi lệch nhau.
+    return window.api?.onSettingsChanged(setSettings);
   }, []);
 
   const t = createTranslator(settings.uiLanguage);
@@ -46,16 +58,29 @@ export function SettingsApp() {
 
       <main className="settings__panel">
         <h1>{group ? t(group.i18n) : ''}</h1>
-        {group?.items.map(({ key, def }) => (
-          <SettingControl
-            key={key}
-            settingKey={key}
-            def={def}
-            value={settings[key as keyof Settings]}
-            t={t}
-            onChange={(v) => patch(key, v)}
-          />
-        ))}
+        {group?.items.map(({ key, def }) =>
+          key === 'hotkeys' ? (
+            <div className="setting" key={key}>
+              <span className="setting__label">{t(def.i18n)}</span>
+              {def.i18nDesc && <span className="setting__desc">{t(def.i18nDesc)}</span>}
+              <HotkeyControl
+                bindings={settings.hotkeys}
+                labels={HOTKEY_LABELS}
+                t={t}
+                onChange={(v) => patch('hotkeys', v)}
+              />
+            </div>
+          ) : (
+            <SettingControl
+              key={key}
+              settingKey={key}
+              def={def}
+              value={settings[key as keyof Settings]}
+              t={t}
+              onChange={(v) => patch(key, v)}
+            />
+          ),
+        )}
       </main>
     </div>
   );

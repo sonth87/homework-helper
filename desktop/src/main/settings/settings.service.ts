@@ -9,6 +9,8 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { app } from 'electron';
 import { DEFAULT_SETTINGS, migrateSettings } from '@config/settings';
+import { allDefaultHotkeys } from '@config/hotkeys.config';
+import type { Platform } from '@config/hotkeys.config';
 import type { Settings } from '@config/settings';
 import { logger } from '../logging/logger';
 
@@ -21,14 +23,36 @@ export class SettingsService {
     const stored = await this.read();
     const { settings, added, removed, repaired } = migrateSettings(stored);
 
-    if (added.length || removed.length || repaired.length) {
-      logger.info('Đã migrate cấu hình', { added, removed, repaired });
-      this.settings = settings as Settings;
+    const next = settings as Settings;
+    const filled = this.fillPlatformHotkeys(next);
+
+    if (added.length || removed.length || repaired.length || filled.length) {
+      logger.info('Đã migrate cấu hình', { added, removed, repaired, hotkeys: filled });
+      this.settings = next;
       await this.write();
     } else {
-      this.settings = settings as Settings;
+      this.settings = next;
     }
     return this.settings;
+  }
+
+  /**
+   * Điền phím tắt mặc định theo nền tảng cho những khoá CHƯA TỒN TẠI.
+   *
+   * Chỉ main process biết `process.platform` — config/ phải isomorphic vì
+   * renderer cũng import nó. Không ghi đè khoá đã có, kể cả khi giá trị là
+   * chuỗi rỗng: đó là người dùng chủ động tắt phím tắt.
+   */
+  private fillPlatformHotkeys(settings: Settings): string[] {
+    const defaults = allDefaultHotkeys(process.platform as Platform);
+    const filled: string[] = [];
+
+    for (const [id, accelerator] of Object.entries(defaults)) {
+      if (id in settings.hotkeys) continue;
+      settings.hotkeys[id] = accelerator;
+      filled.push(id);
+    }
+    return filled;
   }
 
   get(): Settings {

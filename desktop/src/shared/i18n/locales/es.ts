@@ -93,4 +93,9 @@ export default {
   intentExplain: 'Explicar',
   intentRewrite: 'Reescribir',
   intentChat: 'Chat',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: 'Atajos',
+  setHotkeys: 'Atajos globales',
+  setHotkeysDesc: 'Teclas que funcionan desde cualquier aplicación. Déjalo vacío para desactivar un atajo.',
 } as const satisfies Dictionary;

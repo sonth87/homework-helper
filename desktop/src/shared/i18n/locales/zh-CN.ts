@@ -93,4 +93,9 @@ export default {
   intentExplain: '讲解',
   intentRewrite: '改写',
   intentChat: '对话',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: '快捷键',
+  setHotkeys: '全局快捷键',
+  setHotkeysDesc: '在任何应用中都可使用的按键。留空即停用该快捷键。',
 } as const satisfies Dictionary;

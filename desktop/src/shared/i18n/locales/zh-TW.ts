@@ -93,4 +93,9 @@ export default {
   intentExplain: '講解',
   intentRewrite: '改寫',
   intentChat: '對話',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: '快速鍵',
+  setHotkeys: '全域快速鍵',
+  setHotkeysDesc: '在任何應用程式中都可使用的按鍵。留空即停用該快速鍵。',
 } as const satisfies Dictionary;

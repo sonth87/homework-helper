@@ -93,4 +93,9 @@ export default {
   intentExplain: '解説',
   intentRewrite: '書き直し',
   intentChat: 'チャット',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: 'ショートカット',
+  setHotkeys: 'グローバルショートカット',
+  setHotkeysDesc: 'どのアプリからでも使えるキーです。空欄にするとそのショートカットを無効にします。',
 } as const satisfies Dictionary;

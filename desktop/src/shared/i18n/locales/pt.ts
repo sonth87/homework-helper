@@ -93,4 +93,9 @@ export default {
   intentExplain: 'Explicar',
   intentRewrite: 'Reescrever',
   intentChat: 'Conversa',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: 'Atalhos',
+  setHotkeys: 'Atalhos globais',
+  setHotkeysDesc: 'Teclas que funcionam a partir de qualquer aplicativo. Deixe vazio para desativar um atalho.',
 } as const satisfies Dictionary;

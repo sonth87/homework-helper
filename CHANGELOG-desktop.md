@@ -41,8 +41,10 @@ này dựa vào:
   gửi an toàn khi `webContents` đã destroy
 - `guards.ts` cưỡng chế bất biến ADR-0003 + hạn mức request/phút
 
-Còn lại: SQLite thay JSON, cửa sổ Cài đặt hoàn chỉnh, handler streaming cho AI,
-cho phép người dùng đổi phím tắt.
+- Cửa sổ Cài đặt render hoàn toàn từ schema, đổi ngôn ngữ có hiệu lực ngay
+- Phím tắt tuỳ biến được: ghi bằng cách bấm phím thật, cảnh báo khi trùng nhau
+
+Còn lại: SQLite thay JSON, màn hình quản lý API key, handler streaming cho AI.
 
 Bản phát hành đầu tiên sẽ là **`0.1.0`** khi hoàn tất Phase 1.
 

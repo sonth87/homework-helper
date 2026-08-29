@@ -93,4 +93,9 @@ export default {
   intentExplain: 'อธิบาย',
   intentRewrite: 'เขียนใหม่',
   intentChat: 'สนทนา',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: 'ปุ่มลัด',
+  setHotkeys: 'ปุ่มลัดทั่วระบบ',
+  setHotkeysDesc: 'ปุ่มที่ใช้ได้จากทุกแอป เว้นว่างไว้เพื่อปิดปุ่มลัดนั้น',
 } as const satisfies Dictionary;

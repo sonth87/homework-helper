@@ -93,4 +93,9 @@ export default {
   intentExplain: 'Erklären',
   intentRewrite: 'Umformulieren',
   intentChat: 'Chat',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: 'Tastenkürzel',
+  setHotkeys: 'Globale Tastenkürzel',
+  setHotkeysDesc: 'Tasten, die aus jeder Anwendung heraus funktionieren. Leer lassen, um ein Kürzel zu deaktivieren.',
 } as const satisfies Dictionary;

@@ -4,6 +4,7 @@
  */
 
 import { aiSettings } from './ai.settings';
+import { hotkeySettings } from './hotkey.settings';
 import { languageSettings } from './language.settings';
 import { privacySettings } from './privacy.settings';
 import { systemSettings } from './system.settings';
@@ -13,6 +14,7 @@ import type { SettingsGroup, SettingsOf } from './define';
 export const SETTINGS_GROUPS = [
   languageSettings,
   aiSettings,
+  hotkeySettings,
   privacySettings,
   systemSettings,
 ] as const;

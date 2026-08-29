@@ -93,4 +93,9 @@ export default {
   intentExplain: 'Expliquer',
   intentRewrite: 'Réécrire',
   intentChat: 'Discussion',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: 'Raccourcis',
+  setHotkeys: 'Raccourcis globaux',
+  setHotkeysDesc: "Touches utilisables depuis n'importe quelle application. Laissez vide pour désactiver un raccourci.",
 } as const satisfies Dictionary;

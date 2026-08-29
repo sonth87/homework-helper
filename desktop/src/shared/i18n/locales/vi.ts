@@ -91,4 +91,9 @@ export default {
   intentExplain: 'Giải thích',
   intentRewrite: 'Viết lại',
   intentChat: 'Trò chuyện',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: 'Phím tắt',
+  setHotkeys: 'Phím tắt toàn cục',
+  setHotkeysDesc: 'Phím dùng được từ bất kỳ ứng dụng nào. Để trống là tắt phím tắt đó.',
 } as const satisfies Dictionary;

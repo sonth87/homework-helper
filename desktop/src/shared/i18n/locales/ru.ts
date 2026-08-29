@@ -93,4 +93,9 @@ export default {
   intentExplain: 'Объяснить',
   intentRewrite: 'Переписать',
   intentChat: 'Чат',
+
+  // ── Phím tắt ──────────────────────────────────────────────────────────────
+  groupHotkeys: 'Горячие клавиши',
+  setHotkeys: 'Глобальные горячие клавиши',
+  setHotkeysDesc: 'Клавиши, работающие из любого приложения. Оставьте пустым, чтобы отключить сочетание.',
 } as const satisfies Dictionary;

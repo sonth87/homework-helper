@@ -13,7 +13,7 @@ import tseslint from 'typescript-eslint';
  * Xem roadmap/desktop-app-structure.md mục 7.
  */
 export default tseslint.config(
-  { ignores: ['out/**', 'dist/**', 'node_modules/**', '*.config.js'] },
+  { ignores: ['out/**', 'dist/**', 'node_modules/**', '*.config.mjs', '*.config.ts'] },
 
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -42,13 +42,20 @@ export default tseslint.config(
   // Chỉ cần một `import { app } from 'electron'` lọt vào shared/ là bundle
   // renderer vỡ ở BẢN ĐÓNG GÓI, không phải lúc dev. Đây là lỗi tốn thời gian
   // nhất trong ba luật phân tầng.
+  //
+  // config/ nằm trong danh sách này vì nó cũng được CẢ hai process import.
+  // Lỗ hổng này đã thật sự cắn: hotkey.settings.ts dùng `process.platform`,
+  // typecheck và lint đều pass, build pass — nhưng renderer trắng trang với
+  // "ReferenceError: process is not defined". Chỉ lộ ra khi chạy thật.
   {
-    files: ['src/shared/**/*.ts'],
+    files: ['src/shared/**/*.ts', 'config/**/*.ts'],
     rules: {
+      // `process` không tồn tại trong renderer (contextIsolation, không nodeIntegration).
+      'no-restricted-globals': ['error', { name: 'process', message: 'shared/ và config/ phải isomorphic — process chỉ có ở main. Để main truyền giá trị xuống.' }],
       'no-restricted-imports': ['error', {
         patterns: [
-          { group: ['electron', 'electron/*'], message: 'shared/ phải isomorphic — chuyển sang src/main/ hoặc src/renderer/' },
-          { group: ['node:*', 'fs', 'path', 'os', 'child_process'], message: 'shared/ phải isomorphic — không dùng API Node' },
+          { group: ['electron', 'electron/*'], message: 'shared/ và config/ phải isomorphic — chuyển sang src/main/ hoặc src/renderer/' },
+          { group: ['node:*', 'fs', 'path', 'os', 'child_process'], message: 'shared/ và config/ phải isomorphic — không dùng API Node' },
           { group: ['@main/*'], message: 'shared/ không được phụ thuộc main/' },
           { group: ['@renderer/*'], message: 'shared/ không được phụ thuộc renderer/' },
         ],
