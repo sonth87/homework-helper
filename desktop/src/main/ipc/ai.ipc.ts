@@ -3,6 +3,7 @@ import { PROVIDERS } from '@config/providers.config';
 import type { ProviderId } from '@shared/types/ai';
 import { LIMITS } from '@config/limits.config';
 import { keychain } from '../secrets/keychain';
+import { adapterFor } from '../ai/providers';
 
 type TestParams = { provider: ProviderId; configId: string; baseUrl?: string };
 type TestResult = { ok: true; latencyMs: number; model: string } | { ok: false; error: string };
@@ -24,7 +25,7 @@ export function registerAiIpc(): void {
       if (info.requiresKey && !apiKey) return { ok: false, error: 'Chưa có API key cho cấu hình này.' };
 
       const res = await fetch(`${url}/models`, {
-        headers: authHeaders(provider, apiKey),
+        headers: adapterFor(provider).authHeaders(apiKey),
         signal: AbortSignal.timeout(LIMITS.fastLane.timeoutMs * 2),
       });
 
@@ -43,13 +44,6 @@ export function registerAiIpc(): void {
       };
     }
   });
-}
-
-function authHeaders(provider: ProviderId, apiKey: string | null): Record<string, string> {
-  if (!apiKey) return {};
-  if (provider === 'gemini') return { 'x-goog-api-key': apiKey };
-  if (provider === 'claude') return { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' };
-  return { Authorization: `Bearer ${apiKey}` };
 }
 
 /** Thông báo theo mã lỗi — "401" một mình không cho người dùng biết phải làm gì. */

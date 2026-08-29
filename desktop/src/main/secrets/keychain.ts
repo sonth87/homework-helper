@@ -11,6 +11,17 @@
  *
  * Key KHÔNG BAO GIỜ đi qua kênh settings. Renderer chỉ hỏi được "có key chưa"
  * (secrets:hasApiKey), không bao giờ đọc lại được giá trị.
+ *
+ * CẠM BẪY KHI VIẾT TEST TRÊN macOS
+ * ---------------------------------
+ * Quyền truy cập keychain gắn với TÊN ỨNG DỤNG (`name` trong package.json mà
+ * Electron đang chạy). Nếu một harness test chạy dưới tên khác, macOS coi đó là
+ * ứng dụng mới xin quyền và hiện hộp thoại hệ thống — trong môi trường không có
+ * giao diện thì `safeStorage.encryptString()` TREO VÔ HẠN, không lỗi, không
+ * timeout, không log.
+ *
+ * Triệu chứng: `secrets:setApiKey` không bao giờ resolve. Cách sửa: đặt `name`
+ * của harness trùng với tên app thật.
  */
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
