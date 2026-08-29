@@ -32,7 +32,14 @@ export type OcrResult = {
 
 export type AccessibilityText = {
   text: string;
-  bounds: Rect<'screen-physical'>;
+  /**
+   * screen-logical, KHÔNG PHẢI screen-physical — đã kiểm chứng thực nghiệm:
+   * AXUIElement/Quartz trả toạ độ theo "points" (đơn vị logic của macOS),
+   * cùng đơn vị với screen.getCursorScreenPoint() của Electron, không phải
+   * pixel vật lý sau khi nhân scaleFactor. Khai báo ban đầu ở Phase 0 (trước
+   * khi có bằng chứng thực nghiệm) từng ghi nhầm là screen-physical.
+   */
+  bounds: Rect<'screen-logical'>;
   role?: string;
 };
 
@@ -42,7 +49,13 @@ export type AcquiredContent = {
   /** Ảnh — công dân hạng nhất, không phải phương án phụ. Đồ thị, hình học, công
    *  thức hoá học sẽ MẤT thông tin nếu ép qua OCR thành text. */
   imageBase64?: string;
-  bounds: Rect<'screen-physical'>;
+  /**
+   * screen-logical, chuẩn hoá cho MỌI nguồn — kể cả khi nguồn gốc (capture) tự
+   * nhiên ra pixel vật lý. Lý do: người tiêu thụ thật sự (định vị cửa sổ
+   * HoverOverlay) cần đơn vị logic, và tại thời điểm quyết định (chưa có nơi
+   * nào đọc bounds) chưa có lý do giữ pixel vật lý xuyên suốt.
+   */
+  bounds: Rect<'screen-logical'>;
   source: AcquisitionStrategy;
   confidence?: number;
   app?: ApplicationInfo;

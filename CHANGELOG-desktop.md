@@ -70,7 +70,21 @@ này dựa vào:
 - Phát hiện Ollama / LM Studio đang chạy và liệt kê model đã nạp — thay vai trò
   "dùng được ngay không cần key" mà Gemini Nano đảm nhiệm ở extension.
 
-**Phase 2 hoàn tất.** Còn lại cho Phase 3: Accessibility, OCR, dịch khi rê chuột.
+**Phase 2 hoàn tất.**
+
+### Phase 3 — Accessibility macOS (đang làm)
+
+- Kiểm chứng thực nghiệm: AX API đọc được text từ ứng dụng Electron/Chromium
+  (Chrome, VS Code) sau khi kích hoạt `AXManualAccessibility` — câu hỏi rủi ro
+  lớn nhất của toàn dự án (ADR-0004) giờ có câu trả lời dứt khoát.
+- Helper Swift độc lập (`native/accessibility-macos/`), sống lâu dài, giao tiếp
+  qua JSON stdio — không native Node addon, tránh rủi ro ABI như ADR-0005.
+- Xác nhận toạ độ Electron khớp tuyệt đối với Quartz, không cần quy đổi.
+- `AccessibilityProvider` interface chung (macOS xong, Windows để Phase 4),
+  nối vào tầng thu nhận nội dung cho Lane A.
+
+Còn lại: mouse tracking + debounce, OCR, dịch (Google Translate + cache theo
+thiết kế đã chốt), sentence detection, wiring HoverOverlay.
 
 Bản phát hành đầu tiên sẽ là **`0.1.0`** khi hoàn tất Phase 1.
 
