@@ -96,19 +96,66 @@ model local (liên quan trực tiếp tới mối lo hiệu năng ở mục 1).
 | **Lane B — giải bài (có ảnh)** | Ảnh crop lần sau hiếm khi trùng bit-for-bit với lần trước dù người dùng "làm y hệt" | Thấp | Ưu tiên thấp — cache key phức tạp (hash ảnh+prompt+model) mà lợi ích nhỏ |
 | **Lane B — chat (text thuần)** | Hỏi lại đúng câu vẫn có thể xảy ra | Trung bình | Cân nhắc riêng, không gộp chung với giải bài có ảnh |
 
+### Thiết kế khoá cache — đã thảo luận và chốt hình dạng (2026-08-30)
+
+Áp dụng **chung một cơ chế cho cả dịch (Lane A) lẫn giải bài dạng text (Lane B)**,
+không tách riêng như bản ghi đầu tiên từng viết. Khoá bắt buộc gồm 4 trục —
+thiếu trục nào thì cache trả **sai**, không chỉ chậm hơn:
+
+```
+hash(text đã chuẩn hoá + provider/model + intent/studyMode + outputLanguage)
+```
+
+- **Đổi ngôn ngữ đầu ra** → miss, gọi lại bình thường.
+- **Đổi study mode** (`direct` vs `step-by-step`...) → miss.
+- **Đổi model** → miss.
+- **Đổi provider/baseUrl** → miss. Riêng `custom`/OpenRouter, cùng một model id
+  có thể trỏ qua nhiều `baseUrl` khác nhau — khoá phải tính `provider`/`baseUrl`,
+  không chỉ `model`, để không lẫn hai cấu hình khác nhau.
+
+### Ảnh chụp + OCR fallback — tự động hưởng lợi từ cache text, KHÔNG cần logic riêng
+
+Nhánh model local không có vision (`isLocalTextOnly` ở
+[ai-stream.js:150-165](../extension/offscreen/ai-stream.js#L150)) đã OCR ảnh
+thành text **trước khi** build request gửi model:
+
+```js
+effectivePrompt = `${prompt}
+
+[Nội dung câu hỏi & các phương án từ ảnh]:
+${ocrText.trim()}`
+```
+
+Nếu điểm tra cache đặt **sau** bước OCR fallback này (tra theo text cuối cùng
+thực sự gửi đi, không tra theo ảnh gốc), nó tự động khớp khi OCR ra đúng text đã
+cache trước đó — không cần viết thêm logic riêng cho "trường hợp ảnh". Cache chỉ
+cần biết một chuỗi text, không cần biết chuỗi đó tới từ gõ tay, bôi đen, hay OCR.
+
+**Giới hạn quan trọng:** lợi ích này CHỈ tự nhiên xảy ra ở nhánh local-không-vision,
+vì đó là nhánh duy nhất ảnh bị OCR thành text trong luồng bình thường. Với model
+có vision (đa số cloud, và đúng loại câu hỏi cần vision nhất — đồ thị, công thức,
+chữ viết tay, sơ đồ hoá học), ảnh gửi thẳng dạng bytes, không có text nào để tra.
+
+**Hai quyết định tách biệt, không gộp ngầm:**
+1. Cache hưởng lợi tự nhiên ở nhánh local-text-only-OCR-fallback — gần như miễn
+   phí (OCR đã chạy sẵn cho mục đích khác), **nên làm**.
+2. Chủ động chạy OCR chỉ để dò khoá cache trên nhánh có vision — rủi ro riêng:
+   tốn OCR mỗi lần kể cả cache miss (không tiết kiệm gì), và OCR yếu đúng với
+   loại nội dung mà người dùng chọn vision model để xử lý → dễ miss liên tục dù
+   tốn thêm compute local. **Cần cân nhắc riêng khi quay lại, chưa quyết.**
+
 ### Việc cần làm khi quay lại
 
 1. Desktop: hoàn thiện `translate.service.ts` (Phase 3) kèm cache ngay từ đầu,
    dùng bảng và `LIMITS.fastLane` đã có sẵn — không phải xây thêm gì mới, chỉ
-   là nối nốt phần đã thiết kế.
-2. Extension: thêm cache in-memory hoặc `chrome.storage` cho `QUICK_TRANSLATE`,
-   khoá theo `hash(text + targetLang)`.
-3. Không làm cache cho Lane B giải bài có ảnh trừ khi có bằng chứng thực tế
-   người dùng lặp lại chính xác cùng một crop — hit-rate lý thuyết thấp không
-   đáng công sức.
-4. Cân nhắc cache cho Lane B chat text thuần như một hạng mục riêng, sau khi đã
-   giải quyết xong mục 1 (ngữ cảnh hội thoại) — vì cache key của chat phụ thuộc
-   vào cách xử lý `messages[]` cuối cùng chọn ở mục 1.
+   là nối nốt phần đã thiết kế. Mở rộng khoá cache cho cả Lane B text (không chỉ Lane A).
+2. Extension: thêm cache in-memory hoặc `chrome.storage`, khoá theo 4 trục ở trên.
+   Đặt điểm tra cache SAU bước OCR fallback trong `ai-stream.js`.
+3. Không làm cache cho Lane B giải bài có ảnh gửi trực tiếp (vision) trừ khi
+   quyết định làm mục "hai" ở trên — hit-rate lý thuyết thấp, rủi ro riêng.
+4. Chat text thuần (Lane B, không ảnh) dùng chung cơ chế cache trên, nhưng khoá
+   phụ thuộc cách xử lý `messages[]` cuối cùng chọn ở mục 1 — làm sau khi mục 1
+   đã chốt.
 
 ---
 
