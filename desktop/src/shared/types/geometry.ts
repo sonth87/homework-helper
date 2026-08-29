@@ -74,9 +74,14 @@ const mkPoint = <S extends Space>(x: number, y: number): Point<S> =>
 const mkRect = <S extends Space>(x: number, y: number, width: number, height: number): Rect<S> =>
   ({ x, y, width, height }) as unknown as Rect<S>;
 
-/** Gỡ brand để truyền cho API bên ngoài (Electron, native addon). */
-export function raw<S extends Space>(p: Point<S>): { x: number; y: number };
+/**
+ * Gỡ brand để truyền cho API bên ngoài (Electron, native addon).
+ *
+ * Overload Rect phải đứng TRƯỚC: `Rect` khớp cấu trúc với `Point` (đều có x, y),
+ * nên nếu Point đứng trước thì mọi Rect sẽ rơi vào nhánh Point và mất width/height.
+ */
 export function raw<S extends Space>(r: Rect<S>): { x: number; y: number; width: number; height: number };
+export function raw<S extends Space>(p: Point<S>): { x: number; y: number };
 export function raw(v: { x: number; y: number; width?: number; height?: number }) {
   const { x, y, width, height } = v;
   return width === undefined || height === undefined ? { x, y } : { x, y, width, height };

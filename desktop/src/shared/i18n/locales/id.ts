@@ -117,4 +117,14 @@ export default {
   keysLabel: 'Nama',
   keysEnabled: 'Aktif',
   keysVision: 'Bisa membaca gambar',
+
+  // ── Tác vụ & chế độ học tập ───────────────────────────────────────────────
+  groupIntent: 'Tugas',
+  setStudyMode: 'Mode belajar bawaan',
+  setStudyModeDesc: 'Cara AI menjawab secara bawaan. Bisa diubah per jawaban.',
+  modeStepByStep: 'Langkah demi langkah',
+  modeDirect: 'Jawaban saja',
+  modeHint: 'Petunjuk saja',
+  modeExplain: 'Penjelasan mendalam',
+  modeTranslate: 'Terjemahan akademis',
 } as const satisfies Dictionary;

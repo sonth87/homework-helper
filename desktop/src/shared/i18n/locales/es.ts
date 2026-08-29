@@ -117,4 +117,14 @@ export default {
   keysLabel: 'Nombre',
   keysEnabled: 'Activado',
   keysVision: 'Lee imágenes',
+
+  // ── Tác vụ & chế độ học tập ───────────────────────────────────────────────
+  groupIntent: 'Tareas',
+  setStudyMode: 'Modo de estudio predeterminado',
+  setStudyModeDesc: 'Cómo responde la IA por defecto. Puedes cambiarlo en cada respuesta.',
+  modeStepByStep: 'Paso a paso',
+  modeDirect: 'Solo la respuesta',
+  modeHint: 'Pistas, sin respuesta',
+  modeExplain: 'Explicación a fondo',
+  modeTranslate: 'Traducción académica',
 } as const satisfies Dictionary;

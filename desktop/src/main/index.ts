@@ -27,8 +27,8 @@ async function main(): Promise<void> {
 
   const settings = await initSettings();
   initIpc(settings);
-  initTray(settings, (intent) => handleIntent(intent, 'tray', settings.get()));
-  initHotkeys(settings, (intent) => handleIntent(intent, 'hotkey', settings.get()));
+  initTray(settings, (intent) => void handleIntent(intent, 'tray', settings.get()));
+  initHotkeys(settings, (intent) => void handleIntent(intent, 'hotkey', settings.get()));
   await initWindows();
 
   app.on('activate', () => void initWindows());

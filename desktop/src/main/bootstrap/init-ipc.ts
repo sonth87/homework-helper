@@ -3,6 +3,7 @@ import { registerSecretsIpc } from '../ipc/secrets.ipc';
 import { registerAiIpc } from '../ipc/ai.ipc';
 import { registerShellIpc } from '../ipc/shell.ipc';
 import { registerAiStreamIpc } from '../ipc/ai-stream.ipc';
+import { registerCaptureIpc } from '../ipc/capture.ipc';
 import type { SettingsService } from '../settings/settings.service';
 
 /**
@@ -15,4 +16,5 @@ export function initIpc(settings: SettingsService): void {
   registerAiIpc();
   registerShellIpc();
   registerAiStreamIpc(settings);
+  registerCaptureIpc();
 }

@@ -117,4 +117,14 @@ export default {
   keysLabel: 'Название',
   keysEnabled: 'Включено',
   keysVision: 'Читает изображения',
+
+  // ── Tác vụ & chế độ học tập ───────────────────────────────────────────────
+  groupIntent: 'Задачи',
+  setStudyMode: 'Режим обучения по умолчанию',
+  setStudyModeDesc: 'Как ИИ отвечает по умолчанию. Можно менять для каждого ответа.',
+  modeStepByStep: 'По шагам',
+  modeDirect: 'Только ответ',
+  modeHint: 'Только подсказки',
+  modeExplain: 'Подробное объяснение',
+  modeTranslate: 'Академический перевод',
 } as const satisfies Dictionary;

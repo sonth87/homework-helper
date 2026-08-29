@@ -115,4 +115,14 @@ export default {
   keysLabel: 'Tên gọi',
   keysEnabled: 'Bật',
   keysVision: 'Đọc được ảnh',
+
+  // ── Tác vụ & chế độ học tập ───────────────────────────────────────────────
+  groupIntent: 'Tác vụ',
+  setStudyMode: 'Chế độ học tập mặc định',
+  setStudyModeDesc: 'Cách AI trả lời mặc định. Bạn vẫn đổi được cho từng lời giải.',
+  modeStepByStep: 'Giải từng bước',
+  modeDirect: 'Chỉ đáp án',
+  modeHint: 'Gợi ý, không đáp án',
+  modeExplain: 'Giải thích chuyên sâu',
+  modeTranslate: 'Dịch học thuật',
 } as const satisfies Dictionary;

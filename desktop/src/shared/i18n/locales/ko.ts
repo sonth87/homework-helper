@@ -117,4 +117,14 @@ export default {
   keysLabel: '이름',
   keysEnabled: '사용',
   keysVision: '이미지 인식 가능',
+
+  // ── Tác vụ & chế độ học tập ───────────────────────────────────────────────
+  groupIntent: '작업',
+  setStudyMode: '기본 학습 모드',
+  setStudyModeDesc: 'AI가 기본으로 답하는 방식입니다. 답변마다 바꿀 수도 있습니다.',
+  modeStepByStep: '단계별 풀이',
+  modeDirect: '답만',
+  modeHint: '힌트만',
+  modeExplain: '심화 설명',
+  modeTranslate: '학술 번역',
 } as const satisfies Dictionary;

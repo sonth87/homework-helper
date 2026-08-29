@@ -116,4 +116,14 @@ export default {
   keysLabel: 'Label',
   keysEnabled: 'Enabled',
   keysVision: 'Reads images',
+
+  // ── Tác vụ & chế độ học tập ───────────────────────────────────────────────
+  groupIntent: 'Tasks',
+  setStudyMode: 'Default study mode',
+  setStudyModeDesc: 'How the AI should answer by default. You can change it per answer.',
+  modeStepByStep: 'Step by step',
+  modeDirect: 'Answer only',
+  modeHint: 'Hints, no answer',
+  modeExplain: 'In-depth explanation',
+  modeTranslate: 'Academic translation',
 } as const;

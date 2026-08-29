@@ -117,4 +117,14 @@ export default {
   keysLabel: '名前',
   keysEnabled: '有効',
   keysVision: '画像を読める',
+
+  // ── Tác vụ & chế độ học tập ───────────────────────────────────────────────
+  groupIntent: 'タスク',
+  setStudyMode: '既定の学習モード',
+  setStudyModeDesc: 'AI が既定でどう答えるか。回答ごとに変更もできます。',
+  modeStepByStep: '手順を追って解く',
+  modeDirect: '答えのみ',
+  modeHint: 'ヒントのみ',
+  modeExplain: '詳しい解説',
+  modeTranslate: '学術翻訳',
 } as const satisfies Dictionary;

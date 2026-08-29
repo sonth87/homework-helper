@@ -10,7 +10,7 @@
 
 import type { Settings } from '../config/settings';
 import { DEFAULT_SETTINGS } from '../config/settings';
-import { point, toPhysical } from '../src/shared/types/geometry';
+import { point, raw, rect, toPhysical } from '../src/shared/types/geometry';
 import type { RendererApi } from '../src/shared/ipc/channels';
 
 // ── Settings suy ra từ schema, không phải any ───────────────────────────────
@@ -33,6 +33,12 @@ const physical = toPhysical(logical, 2);
 // mà branded type sinh ra để chặn (xem geometry.ts)
 const doubleConverted = toPhysical(physical, 2);
 
+// raw() phải giữ width/height cho Rect. Overload Point đứng trước sẽ nuốt mất
+// hai trường này mà KHÔNG báo lỗi ở chỗ khai báo — chỉ lộ ra ở nơi dùng.
+const box = rect('image', { x: 0, y: 0, width: 10, height: 20 });
+const rawBox: { x: number; y: number; width: number; height: number } = raw(box);
+const rawPt: { x: number; y: number } = raw(point('window', 1, 2));
+
 // ── IPC contract phân biệt request và stream ────────────────────────────────
 declare const api: RendererApi;
 const settings: Promise<Settings> = api.invoke('settings:get');
@@ -42,6 +48,7 @@ const badChannel = api.invoke('khong:ton:tai');
 const wrongKind = api.invoke('ai:ask', { intent: 'solve', prompt: 'x' });
 
 export {
+  box, rawBox, rawPt,
   uiLang, retries, thinking, excluded, badLang, badRetries, badKey,
   logical, physical, doubleConverted, settings, badChannel, wrongKind,
 };

@@ -117,4 +117,14 @@ export default {
   keysLabel: '名稱',
   keysEnabled: '啟用',
   keysVision: '可讀取影像',
+
+  // ── Tác vụ & chế độ học tập ───────────────────────────────────────────────
+  groupIntent: '任務',
+  setStudyMode: '預設學習模式',
+  setStudyModeDesc: 'AI 預設的回答方式。每次解答仍可單獨變更。',
+  modeStepByStep: '逐步解題',
+  modeDirect: '僅給答案',
+  modeHint: '只給提示',
+  modeExplain: '深入講解',
+  modeTranslate: '學術翻譯',
 } as const satisfies Dictionary;

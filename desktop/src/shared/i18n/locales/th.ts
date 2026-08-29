@@ -117,4 +117,14 @@ export default {
   keysLabel: 'ชื่อเรียก',
   keysEnabled: 'เปิดใช้',
   keysVision: 'อ่านรูปภาพได้',
+
+  // ── Tác vụ & chế độ học tập ───────────────────────────────────────────────
+  groupIntent: 'งาน',
+  setStudyMode: 'โหมดการเรียนเริ่มต้น',
+  setStudyModeDesc: 'วิธีที่ AI ตอบโดยค่าเริ่มต้น เปลี่ยนเป็นรายคำตอบได้',
+  modeStepByStep: 'แก้ทีละขั้น',
+  modeDirect: 'เฉพาะคำตอบ',
+  modeHint: 'ใบ้ ไม่บอกคำตอบ',
+  modeExplain: 'อธิบายเชิงลึก',
+  modeTranslate: 'แปลเชิงวิชาการ',
 } as const satisfies Dictionary;

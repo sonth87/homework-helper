@@ -1,7 +1,8 @@
 import { ipcRenderer } from 'electron';
 import { IPC } from '@shared/ipc/channels';
 import type {
-  ChunkOf, RendererApi, ReqOf, RequestChannelName, ResOf, StreamChannelName,
+  ChunkOf, PayloadOf, RendererApi, ReqOf, RequestChannelName, ResOf,
+  SendChannelName, StreamChannelName,
 } from '@shared/ipc/channels';
 import type { Settings } from '@config/settings';
 
@@ -43,6 +44,11 @@ export function createApi(): RendererApi {
         done,
         abort: () => ipcRenderer.send(`${channel}:abort`, { requestId }),
       };
+    },
+
+    send<K extends SendChannelName>(channel: K, payload: PayloadOf<K>) {
+      if (!(channel in IPC)) throw new Error(`Kênh IPC chưa khai báo: ${String(channel)}`);
+      ipcRenderer.send(channel, payload);
     },
 
     onSettingsChanged(cb: (settings: Settings) => void) {

@@ -6,6 +6,7 @@
 import { aiSettings } from './ai.settings';
 import { apiKeySettings } from './apikeys.settings';
 import { hotkeySettings } from './hotkey.settings';
+import { intentSettings } from './intent.settings';
 import { languageSettings } from './language.settings';
 import { privacySettings } from './privacy.settings';
 import { systemSettings } from './system.settings';
@@ -16,6 +17,7 @@ export const SETTINGS_GROUPS = [
   languageSettings,
   aiSettings,
   apiKeySettings,
+  intentSettings,
   hotkeySettings,
   privacySettings,
   systemSettings,

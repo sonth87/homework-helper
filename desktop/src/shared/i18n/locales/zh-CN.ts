@@ -117,4 +117,14 @@ export default {
   keysLabel: '名称',
   keysEnabled: '启用',
   keysVision: '可读取图像',
+
+  // ── Tác vụ & chế độ học tập ───────────────────────────────────────────────
+  groupIntent: '任务',
+  setStudyMode: '默认学习模式',
+  setStudyModeDesc: 'AI 默认的回答方式。每次解答仍可单独更改。',
+  modeStepByStep: '逐步解题',
+  modeDirect: '仅给答案',
+  modeHint: '只给提示',
+  modeExplain: '深入讲解',
+  modeTranslate: '学术翻译',
 } as const satisfies Dictionary;

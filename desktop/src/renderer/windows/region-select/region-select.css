@@ -1,0 +1,47 @@
+html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+
+.region {
+  position: fixed;
+  inset: 0;
+  cursor: crosshair;
+  /* Nền gần như trong suốt: cần một lớp để nhận sự kiện chuột, nhưng không
+     được che khuất nội dung người dùng đang muốn khoanh. */
+  background: rgba(0, 0, 0, 0.001);
+  user-select: none;
+  font: 12px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Làm tối phần NGOÀI vùng chọn, để vùng chọn giữ nguyên màu thật — người dùng
+   nhìn rõ mình đang lấy đúng cái gì. */
+.region__shade { position: fixed; background: rgba(0, 0, 0, 0.42); }
+
+.region__box {
+  position: fixed;
+  border: 1.5px solid #38bdf8;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.region__size {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: rgba(12, 14, 18, 0.9);
+  color: #eceef2;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.region__hint {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: rgba(12, 14, 18, 0.82);
+  backdrop-filter: blur(12px);
+  color: #eceef2;
+}

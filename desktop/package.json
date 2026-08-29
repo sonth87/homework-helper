@@ -15,11 +15,14 @@
     "lint": "eslint .",
     "check:settings-i18n": "tsx scripts/check-settings-i18n.ts",
     "check:locale-parity": "tsx scripts/check-locale-parity.ts",
-    "check": "npm run typecheck && npm run lint && npm run check:settings-i18n && npm run check:locale-parity",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run check:settings-i18n && npm run check:locale-parity",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
+    "katex": "^0.18.4",
+    "marked": "^18.0.11",
     "zod": "^3.24.1"
   },
   "devDependencies": {

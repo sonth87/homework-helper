@@ -25,8 +25,12 @@ export type RequestChannel<Req, Res> = { kind: 'request'; __req?: Req; __res?: R
 /** Kênh streaming: gửi đi, nhận nhiều mảnh dữ liệu cho tới khi xong hoặc bị huỷ. */
 export type StreamChannel<Req, Chunk> = { kind: 'stream'; __req?: Req; __chunk?: Chunk };
 
+/** Kênh một chiều: renderer báo cho main, không chờ kết quả. */
+export type SendChannel<Payload> = { kind: 'send'; __payload?: Payload };
+
 const req = <Req = void, Res = void>(): RequestChannel<Req, Res> => ({ kind: 'request' });
 const stream = <Req, Chunk>(): StreamChannel<Req, Chunk> => ({ kind: 'stream' });
+const send = <Payload>(): SendChannel<Payload> => ({ kind: 'send' });
 
 // ── Payload ─────────────────────────────────────────────────────────────────
 
@@ -105,6 +109,10 @@ export const IPC = {
   'history:clear': req<void, void>(),
 
   // Vỏ ứng dụng
+  // Cửa sổ chọn vùng báo kết quả về. Một chiều vì cửa sổ tự đóng ngay sau đó,
+  // không có ai chờ giá trị trả về.
+  'region:done': send<{ x: number; y: number; width: number; height: number } | null>(),
+
   'shell:openExternal': req<{ url: string }, void>(),
   'shell:openSettings': req<void, void>(),
   'permissions:check': req<void, { accessibility: boolean; screenRecording: boolean }>(),
@@ -121,6 +129,13 @@ export type RequestChannelName = {
 export type StreamChannelName = {
   [K in Channel]: (typeof IPC)[K] extends StreamChannel<unknown, unknown> ? K : never;
 }[Channel];
+
+export type SendChannelName = {
+  [K in Channel]: (typeof IPC)[K] extends SendChannel<unknown> ? K : never;
+}[Channel];
+
+export type PayloadOf<K extends SendChannelName> =
+  (typeof IPC)[K] extends SendChannel<infer P> ? P : never;
 
 export type ReqOf<K extends Channel> =
   (typeof IPC)[K] extends RequestChannel<infer R, unknown> ? R
@@ -145,6 +160,8 @@ export type RendererApi = {
     payload: ReqOf<K>,
     onChunk: (chunk: ChunkOf<K>) => void,
   ): { done: Promise<void>; abort: () => void };
+
+  send<K extends SendChannelName>(channel: K, payload: PayloadOf<K>): void;
 
   onSettingsChanged(cb: (settings: Settings) => void): () => void;
 };

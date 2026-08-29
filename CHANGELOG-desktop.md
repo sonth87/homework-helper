@@ -52,7 +52,21 @@ này dựa vào:
   cả ứng dụng toàn màn hình.
 - Nâng Electron 33 → 37 (Node 22.21) để dùng được `node:sqlite`.
 
-**Phase 1 hoàn tất.** Còn lại cho Phase 2: provider adapter và handler streaming AI.
+**Phase 1 hoàn tất.**
+
+### Phase 2 — Crop & Solve (đang làm)
+
+- Provider registry: 3 họ adapter (Gemini, tương thích OpenAI, Claude) thay cho
+  `switch`. Họ tương thích OpenAI phục vụ 6 nhà cung cấp.
+- KeyRotator với cooldown theo loại lỗi; lỗi cấu hình không kích hoạt cooldown.
+- Đọc SSE chịu được chunk cắt lệch ranh giới dòng, timeout byte đầu tách khỏi
+  timeout tổng, huỷ giải phóng kết nối.
+- Chụp màn hình + khoanh vùng: kéo mọi hướng, Esc huỷ, hiện kích thước vùng.
+- Cửa sổ kết quả: markdown + KaTeX streaming, tách phần suy luận, bám đáy khi
+  cuộn nhưng không cướp vị trí nếu người dùng đã cuộn lên.
+- Chế độ học tập (5 chế độ) trong Cài đặt.
+
+Còn lại: cửa sổ chat đa hội thoại, phát hiện Ollama/LM Studio.
 
 Bản phát hành đầu tiên sẽ là **`0.1.0`** khi hoàn tất Phase 1.
 
