@@ -134,4 +134,19 @@ export default {
   setMaxConversationsDesc: 'При превышении лимита старые беседы удаляются.',
   setCacheTtl: 'Срок жизни кеша переводов',
   setCacheTtlDesc: 'Сколько дней сохранённый перевод остаётся действительным.',
+
+  // ── Dịch khi rê chuột ─────────────────────────────────────────────────────
+  groupAcquisition: 'Перевод при наведении',
+  setHoverEnabled: 'Включить перевод при наведении',
+  setHoverEnabledDesc: 'Показывать перевод при наведении курсора на текст на экране.',
+  setHoverDelay: 'Задержка срабатывания',
+  setHoverDelayDesc: 'Сколько курсор должен оставаться неподвижным перед поиском перевода.',
+  setHoverTolerance: 'Допуск движения',
+  setHoverToleranceDesc: 'Небольшое дрожание в этом радиусе всё ещё считается неподвижностью.',
+  setHoverModifiers: 'Клавиши активации',
+  setHoverModifiersDesc: 'Клавиши, которые нужно удерживать при наведении. Оставьте пустым, чтобы срабатывало просто при наведении.',
+  modCommand: 'Command',
+  modControl: 'Control',
+  modOption: 'Option',
+  modShift: 'Shift',
 } as const satisfies Dictionary;

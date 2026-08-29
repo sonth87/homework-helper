@@ -134,4 +134,19 @@ export default {
   setMaxConversationsDesc: '이 한도를 넘으면 오래된 대화부터 삭제됩니다.',
   setCacheTtl: '번역 캐시 유효 기간',
   setCacheTtlDesc: '캐시된 번역을 다시 가져오기까지 유지되는 일수입니다.',
+
+  // ── Dịch khi rê chuột ─────────────────────────────────────────────────────
+  groupAcquisition: '호버 번역',
+  setHoverEnabled: '호버 번역 사용',
+  setHoverEnabledDesc: '화면의 텍스트 위에 마우스를 올리면 번역을 표시합니다.',
+  setHoverDelay: '실행 지연 시간',
+  setHoverDelayDesc: '번역을 조회하기까지 커서가 멈춰 있어야 하는 시간입니다.',
+  setHoverTolerance: '이동 허용 범위',
+  setHoverToleranceDesc: '이 반경 내의 작은 떨림은 정지로 간주합니다.',
+  setHoverModifiers: '실행 키',
+  setHoverModifiersDesc: '호버 중 눌러야 하는 키입니다. 비워 두면 키 없이 호버만으로 실행됩니다.',
+  modCommand: 'Command',
+  modControl: 'Control',
+  modOption: 'Option',
+  modShift: 'Shift',
 } as const satisfies Dictionary;

@@ -133,4 +133,19 @@ export default {
   setMaxConversationsDesc: 'Older conversations are removed once this limit is passed.',
   setCacheTtl: 'Translation cache lifetime',
   setCacheTtlDesc: 'Days a cached translation stays valid before being fetched again.',
+
+  // ── Dịch khi rê chuột ─────────────────────────────────────────────────────
+  groupAcquisition: 'Hover Translate',
+  setHoverEnabled: 'Enable hover translation',
+  setHoverEnabledDesc: 'Show a translation when you hover text anywhere on screen.',
+  setHoverDelay: 'Trigger delay',
+  setHoverDelayDesc: 'How long the cursor must stay still before looking up a translation.',
+  setHoverTolerance: 'Movement tolerance',
+  setHoverToleranceDesc: 'Small cursor jitter within this radius still counts as staying still.',
+  setHoverModifiers: 'Trigger keys',
+  setHoverModifiersDesc: 'Keys that must be held while hovering. Leave empty to trigger on hover alone.',
+  modCommand: 'Command',
+  modControl: 'Control',
+  modOption: 'Option',
+  modShift: 'Shift',
 } as const;

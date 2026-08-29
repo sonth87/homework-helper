@@ -134,4 +134,19 @@ export default {
   setMaxConversationsDesc: 'Ältere Gespräche werden gelöscht, sobald dieses Limit überschritten ist.',
   setCacheTtl: 'Gültigkeit des Übersetzungs-Caches',
   setCacheTtlDesc: 'Tage, die eine zwischengespeicherte Übersetzung gültig bleibt.',
+
+  // ── Dịch khi rê chuột ─────────────────────────────────────────────────────
+  groupAcquisition: 'Übersetzung beim Überfahren',
+  setHoverEnabled: 'Übersetzung beim Überfahren aktivieren',
+  setHoverEnabledDesc: 'Zeigt eine Übersetzung, wenn Sie mit dem Mauszeiger über Text fahren.',
+  setHoverDelay: 'Auslöseverzögerung',
+  setHoverDelayDesc: 'Wie lange der Zeiger stillstehen muss, bevor eine Übersetzung gesucht wird.',
+  setHoverTolerance: 'Bewegungstoleranz',
+  setHoverToleranceDesc: 'Leichtes Zittern innerhalb dieses Radius zählt weiterhin als still.',
+  setHoverModifiers: 'Auslösetasten',
+  setHoverModifiersDesc: 'Tasten, die beim Überfahren gehalten werden müssen. Leer lassen, um allein durch Überfahren auszulösen.',
+  modCommand: 'Command',
+  modControl: 'Control',
+  modOption: 'Option',
+  modShift: 'Shift',
 } as const satisfies Dictionary;

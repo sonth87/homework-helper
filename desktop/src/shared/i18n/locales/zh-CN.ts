@@ -134,4 +134,19 @@ export default {
   setMaxConversationsDesc: '超出此上限时，较旧的对话会被删除。',
   setCacheTtl: '翻译缓存有效期',
   setCacheTtlDesc: '缓存的译文在重新获取前可用的天数。',
+
+  // ── Dịch khi rê chuột ─────────────────────────────────────────────────────
+  groupAcquisition: '悬停翻译',
+  setHoverEnabled: '启用悬停翻译',
+  setHoverEnabledDesc: '将鼠标悬停在屏幕上任意文字时显示译文。',
+  setHoverDelay: '触发延迟',
+  setHoverDelayDesc: '光标需静止多久才会查询译文。',
+  setHoverTolerance: '移动容差',
+  setHoverToleranceDesc: '此半径内的轻微抖动仍视为静止。',
+  setHoverModifiers: '触发按键',
+  setHoverModifiersDesc: '悬停时需按住的按键。留空则悬停即触发，无需按键。',
+  modCommand: 'Command',
+  modControl: 'Control',
+  modOption: 'Option',
+  modShift: 'Shift',
 } as const satisfies Dictionary;

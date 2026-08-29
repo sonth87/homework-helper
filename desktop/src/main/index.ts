@@ -12,6 +12,7 @@ import { initIpc } from './bootstrap/init-ipc';
 import { initTray } from './bootstrap/init-tray';
 import { initHotkeys } from './bootstrap/init-hotkeys';
 import { initWindows } from './bootstrap/init-windows';
+import { initMouseTracker } from './bootstrap/init-mouse-tracker';
 import { handleIntent } from './pipeline/task-pipeline';
 import { abortAllStreams } from './ipc/stream-handler';
 import { closeDatabase } from './db/connection';
@@ -29,6 +30,7 @@ async function main(): Promise<void> {
   initIpc(settings);
   initTray(settings, (intent) => void handleIntent(intent, 'tray', settings.get()));
   initHotkeys(settings, (intent) => void handleIntent(intent, 'hotkey', settings.get()));
+  initMouseTracker(settings);
   await initWindows();
 
   app.on('activate', () => void initWindows());

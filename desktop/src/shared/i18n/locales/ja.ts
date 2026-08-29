@@ -134,4 +134,19 @@ export default {
   setMaxConversationsDesc: 'この上限を超えると古い会話から削除されます。',
   setCacheTtl: '翻訳キャッシュの有効期間',
   setCacheTtlDesc: 'キャッシュした訳文を再取得するまでの日数です。',
+
+  // ── Dịch khi rê chuột ─────────────────────────────────────────────────────
+  groupAcquisition: 'ホバー翻訳',
+  setHoverEnabled: 'ホバー翻訳を有効化',
+  setHoverEnabledDesc: '画面上の文字にカーソルを重ねると翻訳を表示します。',
+  setHoverDelay: '発動までの遅延',
+  setHoverDelayDesc: '翻訳を調べるまでカーソルが静止している必要がある時間です。',
+  setHoverTolerance: '移動許容範囲',
+  setHoverToleranceDesc: 'この半径内の小さな揺れは静止とみなします。',
+  setHoverModifiers: '発動キー',
+  setHoverModifiersDesc: 'ホバー中に押しておくキーです。空欄にするとキー不要でホバーだけで発動します。',
+  modCommand: 'Command',
+  modControl: 'Control',
+  modOption: 'Option',
+  modShift: 'Shift',
 } as const satisfies Dictionary;

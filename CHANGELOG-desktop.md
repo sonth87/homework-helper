@@ -83,8 +83,15 @@ này dựa vào:
 - `AccessibilityProvider` interface chung (macOS xong, Windows để Phase 4),
   nối vào tầng thu nhận nội dung cho Lane A.
 
-Còn lại: mouse tracking + debounce, OCR, dịch (Google Translate + cache theo
-thiết kế đã chốt), sentence detection, wiring HoverOverlay.
+- Mouse tracking + debounce: theo dõi chuột toàn cục bằng polling, thuật toán
+  quyết định "đã đứng yên đủ lâu chưa" tách thuần, kiểm thử bằng 8 unit test
+  không cần chuột thật. Đã kiểm chứng E2E: 4 lần hover riêng biệt trên các
+  app/ngữ cảnh khác nhau (TeamViewer, VS Code, menu hệ thống) đều đọc đúng text
+  đúng vị trí qua Accessibility.
+- Nhóm setting mới: bật/tắt hover, độ trễ, dung sai di chuyển, phím kích hoạt.
+
+Còn lại: OCR, dịch (Google Translate + cache theo thiết kế đã chốt), sentence
+detection, wiring HoverOverlay hiển thị kết quả.
 
 Bản phát hành đầu tiên sẽ là **`0.1.0`** khi hoàn tất Phase 1.
 

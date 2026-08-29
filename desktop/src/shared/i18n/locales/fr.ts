@@ -134,4 +134,19 @@ export default {
   setMaxConversationsDesc: 'Les conversations les plus anciennes sont supprimées au-delà de cette limite.',
   setCacheTtl: 'Durée du cache de traduction',
   setCacheTtlDesc: 'Nombre de jours pendant lesquels une traduction en cache reste valable.',
+
+  // ── Dịch khi rê chuột ─────────────────────────────────────────────────────
+  groupAcquisition: 'Traduction au survol',
+  setHoverEnabled: 'Activer la traduction au survol',
+  setHoverEnabledDesc: 'Affiche une traduction lorsque vous survolez du texte à l\'écran.',
+  setHoverDelay: 'Délai de déclenchement',
+  setHoverDelayDesc: 'Durée pendant laquelle le curseur doit rester immobile avant de chercher la traduction.',
+  setHoverTolerance: 'Tolérance de mouvement',
+  setHoverToleranceDesc: 'Un léger tremblement dans ce rayon compte toujours comme immobile.',
+  setHoverModifiers: 'Touches de déclenchement',
+  setHoverModifiersDesc: 'Touches à maintenir pendant le survol. Laissez vide pour déclencher au simple survol.',
+  modCommand: 'Command',
+  modControl: 'Control',
+  modOption: 'Option',
+  modShift: 'Shift',
 } as const satisfies Dictionary;

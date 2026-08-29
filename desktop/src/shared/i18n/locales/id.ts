@@ -134,4 +134,19 @@ export default {
   setMaxConversationsDesc: 'Percakapan lama dihapus saat melewati batas ini.',
   setCacheTtl: 'Masa berlaku cache terjemahan',
   setCacheTtlDesc: 'Jumlah hari terjemahan tersimpan masih berlaku sebelum diambil ulang.',
+
+  // ── Dịch khi rê chuột ─────────────────────────────────────────────────────
+  groupAcquisition: 'Terjemahan Arahkan Kursor',
+  setHoverEnabled: 'Aktifkan terjemahan arahkan kursor',
+  setHoverEnabledDesc: 'Tampilkan terjemahan saat kursor diarahkan ke teks di layar.',
+  setHoverDelay: 'Jeda pemicu',
+  setHoverDelayDesc: 'Lama kursor harus diam sebelum mencari terjemahan.',
+  setHoverTolerance: 'Toleransi gerakan',
+  setHoverToleranceDesc: 'Getaran kecil dalam radius ini masih dihitung diam.',
+  setHoverModifiers: 'Tombol pemicu',
+  setHoverModifiersDesc: 'Tombol yang harus ditahan saat mengarahkan kursor. Kosongkan untuk memicu hanya dengan mengarahkan kursor.',
+  modCommand: 'Command',
+  modControl: 'Control',
+  modOption: 'Option',
+  modShift: 'Shift',
 } as const satisfies Dictionary;

@@ -132,4 +132,19 @@ export default {
   setMaxConversationsDesc: 'Hội thoại cũ hơn sẽ bị xoá khi vượt quá giới hạn này.',
   setCacheTtl: 'Thời hạn cache dịch',
   setCacheTtlDesc: 'Số ngày một bản dịch đã lưu còn dùng được trước khi tra lại.',
+
+  // ── Dịch khi rê chuột ─────────────────────────────────────────────────────
+  groupAcquisition: 'Dịch khi rê chuột',
+  setHoverEnabled: 'Bật dịch khi rê chuột',
+  setHoverEnabledDesc: 'Hiện bản dịch khi rê chuột lên văn bản bất kỳ trên màn hình.',
+  setHoverDelay: 'Độ trễ kích hoạt',
+  setHoverDelayDesc: 'Thời gian con trỏ phải đứng yên trước khi tra bản dịch.',
+  setHoverTolerance: 'Dung sai di chuyển',
+  setHoverToleranceDesc: 'Rung tay nhỏ trong bán kính này vẫn tính là đứng yên.',
+  setHoverModifiers: 'Phím kích hoạt',
+  setHoverModifiersDesc: 'Phím phải giữ khi rê chuột. Để trống là kích hoạt ngay khi rê, không cần giữ phím.',
+  modCommand: 'Command',
+  modControl: 'Control',
+  modOption: 'Option',
+  modShift: 'Shift',
 } as const satisfies Dictionary;

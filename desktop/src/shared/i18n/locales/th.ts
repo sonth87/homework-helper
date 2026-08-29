@@ -134,4 +134,19 @@ export default {
   setMaxConversationsDesc: 'บทสนทนาเก่าจะถูกลบเมื่อเกินขีดจำกัดนี้',
   setCacheTtl: 'อายุแคชการแปล',
   setCacheTtlDesc: 'จำนวนวันที่คำแปลในแคชยังใช้ได้ก่อนจะดึงใหม่',
+
+  // ── Dịch khi rê chuột ─────────────────────────────────────────────────────
+  groupAcquisition: 'แปลเมื่อชี้เมาส์',
+  setHoverEnabled: 'เปิดการแปลเมื่อชี้เมาส์',
+  setHoverEnabledDesc: 'แสดงคำแปลเมื่อคุณชี้เมาส์ไปที่ข้อความบนหน้าจอ',
+  setHoverDelay: 'ระยะหน่วงก่อนทำงาน',
+  setHoverDelayDesc: 'ระยะเวลาที่เคอร์เซอร์ต้องนิ่งก่อนค้นหาคำแปล',
+  setHoverTolerance: 'ระยะยอมรับการขยับ',
+  setHoverToleranceDesc: 'การสั่นเล็กน้อยภายในระยะนี้ยังถือว่านิ่ง',
+  setHoverModifiers: 'ปุ่มกระตุ้น',
+  setHoverModifiersDesc: 'ปุ่มที่ต้องกดค้างขณะชี้เมาส์ เว้นว่างไว้เพื่อทำงานทันทีเมื่อชี้',
+  modCommand: 'Command',
+  modControl: 'Control',
+  modOption: 'Option',
+  modShift: 'Shift',
 } as const satisfies Dictionary;

@@ -28,12 +28,17 @@ export class MacAccessibility {
   private readyPromise: Promise<void> | null = null;
 
   private binaryPath(): string {
-    // Dev: __dirname là out/main (rollup gộp thành 1 file) — lên 2 cấp là
-    // desktop/, rồi vào native/. Bản đóng gói sẽ nằm trong Resources — xử lý
-    // khi tới bước electron-builder (chưa tới Phase 3 này).
+    // KHÔNG dùng __dirname: electron-vite có thể tách code thành nhiều chunk
+    // (đã xảy ra thật — out/main/chunks/ xuất hiện khi code đủ lớn), nên
+    // __dirname của module này thay đổi tuỳ chunk nó rơi vào, làm phép đếm
+    // "../../ " ra vị trí sai một cách âm thầm (ENOENT) tuỳ thời điểm build.
+    //
+    // app.getAppPath() là điểm neo ỔN ĐỊNH của Electron — luôn là thư mục gốc
+    // chứa package.json ở dev, hoặc thư mục app.asar/Resources khi đóng gói.
+    // Không phụ thuộc bundler chia chunk thế nào.
     return app.isPackaged
       ? join(process.resourcesPath, 'accessibility-helper')
-      : join(__dirname, '../../native/accessibility-macos/accessibility-helper');
+      : join(app.getAppPath(), 'native/accessibility-macos/accessibility-helper');
   }
 
   private ensureStarted(): Promise<void> {

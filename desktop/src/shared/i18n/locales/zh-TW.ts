@@ -134,4 +134,19 @@ export default {
   setMaxConversationsDesc: '超出此上限時，較舊的對話會被刪除。',
   setCacheTtl: '翻譯快取有效期',
   setCacheTtlDesc: '快取的譯文在重新取得前可用的天數。',
+
+  // ── Dịch khi rê chuột ─────────────────────────────────────────────────────
+  groupAcquisition: '懸停翻譯',
+  setHoverEnabled: '啟用懸停翻譯',
+  setHoverEnabledDesc: '將滑鼠懸停在螢幕上任意文字時顯示譯文。',
+  setHoverDelay: '觸發延遲',
+  setHoverDelayDesc: '游標需靜止多久才會查詢譯文。',
+  setHoverTolerance: '移動容差',
+  setHoverToleranceDesc: '此半徑內的輕微抖動仍視為靜止。',
+  setHoverModifiers: '觸發按鍵',
+  setHoverModifiersDesc: '懸停時需按住的按鍵。留空則懸停即觸發，不需按鍵。',
+  modCommand: 'Command',
+  modControl: 'Control',
+  modOption: 'Option',
+  modShift: 'Shift',
 } as const satisfies Dictionary;

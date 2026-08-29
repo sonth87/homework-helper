@@ -134,4 +134,19 @@ export default {
   setMaxConversationsDesc: 'Las conversaciones más antiguas se eliminan al superar este límite.',
   setCacheTtl: 'Vigencia de la caché de traducción',
   setCacheTtlDesc: 'Días que una traducción en caché sigue siendo válida.',
+
+  // ── Dịch khi rê chuột ─────────────────────────────────────────────────────
+  groupAcquisition: 'Traducción al pasar el cursor',
+  setHoverEnabled: 'Activar traducción al pasar el cursor',
+  setHoverEnabledDesc: 'Muestra una traducción al pasar el cursor sobre cualquier texto en pantalla.',
+  setHoverDelay: 'Retraso de activación',
+  setHoverDelayDesc: 'Tiempo que el cursor debe permanecer quieto antes de buscar la traducción.',
+  setHoverTolerance: 'Tolerancia de movimiento',
+  setHoverToleranceDesc: 'Un ligero temblor dentro de este radio sigue contando como quieto.',
+  setHoverModifiers: 'Teclas de activación',
+  setHoverModifiersDesc: 'Teclas que deben mantenerse pulsadas. Déjalo vacío para activar solo con el cursor.',
+  modCommand: 'Command',
+  modControl: 'Control',
+  modOption: 'Option',
+  modShift: 'Shift',
 } as const satisfies Dictionary;
