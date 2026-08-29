@@ -1,0 +1,26 @@
+/* Nền PHẢI trong suốt hoàn toàn — cửa sổ là transparent, mọi màu nền sẽ hiện
+   thành một khối chữ nhật đục trôi trên màn hình. */
+html, body, .hover-body { margin: 0; background: transparent; overflow: hidden; }
+
+.hover {
+  margin: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  color: #16181d;
+}
+
+/* Chưa có nội dung thì không vẽ gì — tránh nháy một khung trắng rỗng. */
+.hover--idle { display: none; }
+
+.hover__translated { margin: 0; font-weight: 550; }
+.hover__source { margin: 4px 0 0; color: #61656e; font-size: 12px; }
+
+@media (prefers-color-scheme: dark) {
+  .hover { background: rgba(38, 41, 48, 0.94); border-color: rgba(255, 255, 255, 0.1); color: #eceef2; }
+  .hover__source { color: #9aa0ab; }
+}

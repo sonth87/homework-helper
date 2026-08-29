@@ -97,4 +97,23 @@ export default {
   groupHotkeys: 'Shortcuts',
   setHotkeys: 'Global shortcuts',
   setHotkeysDesc: 'Keys that work from any application. Leave empty to disable a shortcut.',
+
+  // ── Nhà cung cấp AI & khoá ────────────────────────────────────────────────
+  groupApiKeys: 'AI Providers & Keys',
+  setApiConfigs: 'Configured models',
+  keysAdd: 'Add model',
+  keysEmpty: 'No models configured yet. Add one to start.',
+  keysTest: 'Test connection',
+  keysTesting: 'Testing…',
+  keysOk: 'Connected',
+  keysRemove: 'Remove',
+  keysKeySaved: 'Key saved',
+  keysKeyPlaceholder: 'Paste API key',
+  keysGetKey: 'Get a key',
+  keysNoKeyNeeded: 'No key required — runs on your machine',
+  keysModel: 'Model',
+  keysBaseUrl: 'Address',
+  keysLabel: 'Label',
+  keysEnabled: 'Enabled',
+  keysVision: 'Reads images',
 } as const;

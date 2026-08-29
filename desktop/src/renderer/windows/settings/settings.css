@@ -168,3 +168,78 @@ body {
 /* Electron im lặng từ chối đăng ký phím tắt thứ hai khi trùng — phải báo cho
    người dùng thấy, nếu không họ tưởng ứng dụng hỏng. */
 .hotkeys__field.is-duplicate { border-color: var(--danger); color: var(--danger); }
+
+/* ── Quản lý key pool ───────────────────────────────────────────────────── */
+
+.keys { display: grid; gap: 12px; }
+.keys__empty { color: var(--text-dim); padding: 20px; text-align: center; }
+
+.keys__card {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--panel);
+  backdrop-filter: blur(var(--blur));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.keys__card.is-off { opacity: 0.55; }
+
+.keys__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.keys__head select { flex: 0 1 auto; }
+
+.keys__tag {
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.keys__toggle { display: flex; align-items: center; gap: 5px; margin-left: auto; color: var(--text-dim); }
+.keys__remove { border: 0; background: transparent; color: var(--danger); cursor: pointer; font: inherit; }
+
+.keys__card label { display: grid; gap: 4px; }
+.keys__card label > span:first-child { color: var(--text-dim); font-size: 12px; }
+
+.keys__card input,
+.keys__card select {
+  appearance: none;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  width: 100%;
+}
+
+.keys__keyrow { display: flex; gap: 8px; }
+.keys__keyrow input { flex: 1; }
+
+.keys__local { margin: 0; color: var(--text-dim); font-size: 12px; }
+
+.keys__foot { display: flex; align-items: center; gap: 10px; }
+
+.keys__foot button,
+.keys__keyrow button,
+.keys__add {
+  appearance: none;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.keys__foot button:hover,
+.keys__keyrow button:hover,
+.keys__add:hover { border-color: var(--accent); color: var(--accent); }
+.keys__foot button:disabled { opacity: 0.5; cursor: default; }
+
+.keys__result { color: var(--text-dim); font-size: 12px; }
+.keys__add { justify-self: start; }

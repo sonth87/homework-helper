@@ -98,4 +98,23 @@ export default {
   groupHotkeys: '快速鍵',
   setHotkeys: '全域快速鍵',
   setHotkeysDesc: '在任何應用程式中都可使用的按鍵。留空即停用該快速鍵。',
+
+  // ── Nhà cung cấp AI & khoá ────────────────────────────────────────────────
+  groupApiKeys: 'AI 服務商與金鑰',
+  setApiConfigs: '已設定的模型',
+  keysAdd: '新增模型',
+  keysEmpty: '尚未設定任何模型。新增一個即可開始。',
+  keysTest: '測試連線',
+  keysTesting: '測試中…',
+  keysOk: '已連線',
+  keysRemove: '移除',
+  keysKeySaved: '金鑰已儲存',
+  keysKeyPlaceholder: '貼上 API 金鑰',
+  keysGetKey: '取得金鑰',
+  keysNoKeyNeeded: '不需金鑰 — 在你的裝置上執行',
+  keysModel: '模型',
+  keysBaseUrl: '位址',
+  keysLabel: '名稱',
+  keysEnabled: '啟用',
+  keysVision: '可讀取影像',
 } as const satisfies Dictionary;

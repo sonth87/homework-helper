@@ -4,6 +4,7 @@
  */
 
 import { aiSettings } from './ai.settings';
+import { apiKeySettings } from './apikeys.settings';
 import { hotkeySettings } from './hotkey.settings';
 import { languageSettings } from './language.settings';
 import { privacySettings } from './privacy.settings';
@@ -14,6 +15,7 @@ import type { SettingsGroup, SettingsOf } from './define';
 export const SETTINGS_GROUPS = [
   languageSettings,
   aiSettings,
+  apiKeySettings,
   hotkeySettings,
   privacySettings,
   systemSettings,
@@ -33,4 +35,5 @@ export function migrateSettings(stored: Record<string, unknown>) {
 }
 
 export { defineSettings } from './define';
+export type { ApiConfig } from './apikeys.settings';
 export type { SettingDef, SettingsGroup, UiGroup } from './define';

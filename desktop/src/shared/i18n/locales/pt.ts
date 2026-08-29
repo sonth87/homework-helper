@@ -98,4 +98,23 @@ export default {
   groupHotkeys: 'Atalhos',
   setHotkeys: 'Atalhos globais',
   setHotkeysDesc: 'Teclas que funcionam a partir de qualquer aplicativo. Deixe vazio para desativar um atalho.',
+
+  // ── Nhà cung cấp AI & khoá ────────────────────────────────────────────────
+  groupApiKeys: 'Provedores de IA e chaves',
+  setApiConfigs: 'Modelos configurados',
+  keysAdd: 'Adicionar modelo',
+  keysEmpty: 'Nenhum modelo configurado ainda. Adicione um para começar.',
+  keysTest: 'Testar conexão',
+  keysTesting: 'Testando…',
+  keysOk: 'Conectado',
+  keysRemove: 'Remover',
+  keysKeySaved: 'Chave salva',
+  keysKeyPlaceholder: 'Cole a chave de API',
+  keysGetKey: 'Obter chave',
+  keysNoKeyNeeded: 'Sem chave — roda no seu computador',
+  keysModel: 'Modelo',
+  keysBaseUrl: 'Endereço',
+  keysLabel: 'Nome',
+  keysEnabled: 'Ativado',
+  keysVision: 'Lê imagens',
 } as const satisfies Dictionary;

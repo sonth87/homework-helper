@@ -96,4 +96,23 @@ export default {
   groupHotkeys: 'Phím tắt',
   setHotkeys: 'Phím tắt toàn cục',
   setHotkeysDesc: 'Phím dùng được từ bất kỳ ứng dụng nào. Để trống là tắt phím tắt đó.',
+
+  // ── Nhà cung cấp AI & khoá ────────────────────────────────────────────────
+  groupApiKeys: 'Nhà cung cấp AI & Khoá',
+  setApiConfigs: 'Mô hình đã cấu hình',
+  keysAdd: 'Thêm mô hình',
+  keysEmpty: 'Chưa cấu hình mô hình nào. Thêm một cái để bắt đầu.',
+  keysTest: 'Kiểm tra kết nối',
+  keysTesting: 'Đang kiểm tra…',
+  keysOk: 'Đã kết nối',
+  keysRemove: 'Xoá',
+  keysKeySaved: 'Đã lưu khoá',
+  keysKeyPlaceholder: 'Dán API key',
+  keysGetKey: 'Lấy khoá',
+  keysNoKeyNeeded: 'Không cần khoá — chạy trên máy bạn',
+  keysModel: 'Mô hình',
+  keysBaseUrl: 'Địa chỉ',
+  keysLabel: 'Tên gọi',
+  keysEnabled: 'Bật',
+  keysVision: 'Đọc được ảnh',
 } as const satisfies Dictionary;

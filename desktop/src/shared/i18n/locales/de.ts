@@ -98,4 +98,23 @@ export default {
   groupHotkeys: 'Tastenkürzel',
   setHotkeys: 'Globale Tastenkürzel',
   setHotkeysDesc: 'Tasten, die aus jeder Anwendung heraus funktionieren. Leer lassen, um ein Kürzel zu deaktivieren.',
+
+  // ── Nhà cung cấp AI & khoá ────────────────────────────────────────────────
+  groupApiKeys: 'KI-Anbieter und Schlüssel',
+  setApiConfigs: 'Eingerichtete Modelle',
+  keysAdd: 'Modell hinzufügen',
+  keysEmpty: 'Noch keine Modelle eingerichtet. Fügen Sie eines hinzu.',
+  keysTest: 'Verbindung testen',
+  keysTesting: 'Wird getestet…',
+  keysOk: 'Verbunden',
+  keysRemove: 'Entfernen',
+  keysKeySaved: 'Schlüssel gespeichert',
+  keysKeyPlaceholder: 'API-Schlüssel einfügen',
+  keysGetKey: 'Schlüssel holen',
+  keysNoKeyNeeded: 'Kein Schlüssel nötig — läuft auf Ihrem Gerät',
+  keysModel: 'Modell',
+  keysBaseUrl: 'Adresse',
+  keysLabel: 'Name',
+  keysEnabled: 'Aktiv',
+  keysVision: 'Liest Bilder',
 } as const satisfies Dictionary;

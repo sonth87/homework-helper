@@ -44,7 +44,15 @@ này dựa vào:
 - Cửa sổ Cài đặt render hoàn toàn từ schema, đổi ngôn ngữ có hiệu lực ngay
 - Phím tắt tuỳ biến được: ghi bằng cách bấm phím thật, cảnh báo khi trùng nhau
 
-Còn lại: SQLite thay JSON, màn hình quản lý API key, handler streaming cho AI.
+- Màn hình quản lý key pool: thêm/xoá/bật-tắt, chọn model, kiểm tra kết nối.
+  API key lưu trong OS keychain, không bao giờ lọt vào file cấu hình.
+- SQLite qua `node:sqlite` dựng sẵn — 5 bảng, WAL, migration runner đánh số.
+  Tự nhập cấu hình từ `settings.json` cũ rồi xoá file.
+- `HoverOverlay`: cửa sổ trong suốt, click-through, không cướp focus, nổi trên
+  cả ứng dụng toàn màn hình.
+- Nâng Electron 33 → 37 (Node 22.21) để dùng được `node:sqlite`.
+
+**Phase 1 hoàn tất.** Còn lại cho Phase 2: provider adapter và handler streaming AI.
 
 Bản phát hành đầu tiên sẽ là **`0.1.0`** khi hoàn tất Phase 1.
 

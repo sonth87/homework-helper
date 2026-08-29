@@ -98,4 +98,23 @@ export default {
   groupHotkeys: 'ショートカット',
   setHotkeys: 'グローバルショートカット',
   setHotkeysDesc: 'どのアプリからでも使えるキーです。空欄にするとそのショートカットを無効にします。',
+
+  // ── Nhà cung cấp AI & khoá ────────────────────────────────────────────────
+  groupApiKeys: 'AI プロバイダーとキー',
+  setApiConfigs: '設定済みのモデル',
+  keysAdd: 'モデルを追加',
+  keysEmpty: 'モデルがまだ設定されていません。追加して始めましょう。',
+  keysTest: '接続をテスト',
+  keysTesting: 'テスト中…',
+  keysOk: '接続済み',
+  keysRemove: '削除',
+  keysKeySaved: 'キーを保存しました',
+  keysKeyPlaceholder: 'API キーを貼り付け',
+  keysGetKey: 'キーを取得',
+  keysNoKeyNeeded: 'キー不要 — お使いの端末で動作します',
+  keysModel: 'モデル',
+  keysBaseUrl: 'アドレス',
+  keysLabel: '名前',
+  keysEnabled: '有効',
+  keysVision: '画像を読める',
 } as const satisfies Dictionary;

@@ -98,4 +98,23 @@ export default {
   groupHotkeys: 'Горячие клавиши',
   setHotkeys: 'Глобальные горячие клавиши',
   setHotkeysDesc: 'Клавиши, работающие из любого приложения. Оставьте пустым, чтобы отключить сочетание.',
+
+  // ── Nhà cung cấp AI & khoá ────────────────────────────────────────────────
+  groupApiKeys: 'Поставщики ИИ и ключи',
+  setApiConfigs: 'Настроенные модели',
+  keysAdd: 'Добавить модель',
+  keysEmpty: 'Модели ещё не настроены. Добавьте одну, чтобы начать.',
+  keysTest: 'Проверить подключение',
+  keysTesting: 'Проверка…',
+  keysOk: 'Подключено',
+  keysRemove: 'Удалить',
+  keysKeySaved: 'Ключ сохранён',
+  keysKeyPlaceholder: 'Вставьте API-ключ',
+  keysGetKey: 'Получить ключ',
+  keysNoKeyNeeded: 'Ключ не нужен — работает на вашем устройстве',
+  keysModel: 'Модель',
+  keysBaseUrl: 'Адрес',
+  keysLabel: 'Название',
+  keysEnabled: 'Включено',
+  keysVision: 'Читает изображения',
 } as const satisfies Dictionary;

@@ -5,10 +5,12 @@
  * đổi hai phương thức `read`/`write` bên dưới, phần còn lại không đổi.
  */
 
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { readFile, unlink } from 'node:fs/promises';
+import { join } from 'node:path';
 import { app } from 'electron';
 import { DEFAULT_SETTINGS, migrateSettings } from '@config/settings';
+import { openDatabase } from '../db/connection';
+import { SettingsRepo } from '../db/repositories/settings.repo';
 import { allDefaultHotkeys } from '@config/hotkeys.config';
 import type { Platform } from '@config/hotkeys.config';
 import type { Settings } from '@config/settings';
@@ -16,8 +18,14 @@ import { logger } from '../logging/logger';
 
 export class SettingsService {
   private settings: Settings = DEFAULT_SETTINGS;
-  private readonly file = join(app.getPath('userData'), 'settings.json');
   private readonly listeners = new Set<(s: Settings) => void>();
+  private repo: SettingsRepo | null = null;
+
+  /** Lazy: openDatabase() cần app.getPath(), chỉ có sau whenReady. */
+  private get store(): SettingsRepo {
+    this.repo ??= new SettingsRepo(openDatabase());
+    return this.repo;
+  }
 
   async load(): Promise<Settings> {
     const stored = await this.read();
@@ -80,15 +88,27 @@ export class SettingsService {
 
   /** Cấu hình hỏng không được phép chặn app khởi động — luôn rơi về mặc định. */
   private async read(): Promise<Record<string, unknown>> {
+    const fromDb = this.store.readAll();
+    if (Object.keys(fromDb).length > 0) return fromDb;
+
+    // Lần đầu sau khi chuyển sang SQLite: nhặt cấu hình từ settings.json cũ
+    // rồi xoá file, để người dùng không mất thiết lập đã có.
+    return this.importLegacyJson();
+  }
+
+  private async importLegacyJson(): Promise<Record<string, unknown>> {
+    const legacy = join(app.getPath('userData'), 'settings.json');
     try {
-      return JSON.parse(await readFile(this.file, 'utf8')) as Record<string, unknown>;
+      const parsed = JSON.parse(await readFile(legacy, 'utf8')) as Record<string, unknown>;
+      logger.info('Đã nhập cấu hình từ settings.json cũ', { keys: Object.keys(parsed).length });
+      await unlink(legacy).catch(() => undefined);
+      return parsed;
     } catch {
       return {};
     }
   }
 
   private async write(): Promise<void> {
-    await mkdir(dirname(this.file), { recursive: true });
-    await writeFile(this.file, JSON.stringify(this.settings, null, 2), 'utf8');
+    this.store.writeAll(this.settings as unknown as Record<string, unknown>);
   }
 }

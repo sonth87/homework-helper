@@ -98,4 +98,23 @@ export default {
   groupHotkeys: 'Raccourcis',
   setHotkeys: 'Raccourcis globaux',
   setHotkeysDesc: "Touches utilisables depuis n'importe quelle application. Laissez vide pour désactiver un raccourci.",
+
+  // ── Nhà cung cấp AI & khoá ────────────────────────────────────────────────
+  groupApiKeys: 'Fournisseurs IA et clés',
+  setApiConfigs: 'Modèles configurés',
+  keysAdd: 'Ajouter un modèle',
+  keysEmpty: 'Aucun modèle configuré. Ajoutez-en un pour commencer.',
+  keysTest: 'Tester la connexion',
+  keysTesting: 'Test en cours…',
+  keysOk: 'Connecté',
+  keysRemove: 'Retirer',
+  keysKeySaved: 'Clé enregistrée',
+  keysKeyPlaceholder: 'Collez la clé API',
+  keysGetKey: 'Obtenir une clé',
+  keysNoKeyNeeded: 'Aucune clé requise — fonctionne sur votre machine',
+  keysModel: 'Modèle',
+  keysBaseUrl: 'Adresse',
+  keysLabel: 'Nom',
+  keysEnabled: 'Activé',
+  keysVision: 'Lit les images',
 } as const satisfies Dictionary;

@@ -14,6 +14,7 @@ import { initHotkeys } from './bootstrap/init-hotkeys';
 import { initWindows } from './bootstrap/init-windows';
 import { handleIntent } from './pipeline/task-pipeline';
 import { abortAllStreams } from './ipc/stream-handler';
+import { closeDatabase } from './db/connection';
 import { hotkeyManager } from './hotkeys/hotkey-manager';
 import { logger } from './logging/logger';
 
@@ -40,6 +41,7 @@ app.on('window-all-closed', () => {
 app.on('will-quit', () => {
   hotkeyManager.unregisterAll();
   abortAllStreams();
+  closeDatabase();
 });
 
 main().catch((error: unknown) => {

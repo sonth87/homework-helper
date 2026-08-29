@@ -98,4 +98,23 @@ export default {
   groupHotkeys: 'ปุ่มลัด',
   setHotkeys: 'ปุ่มลัดทั่วระบบ',
   setHotkeysDesc: 'ปุ่มที่ใช้ได้จากทุกแอป เว้นว่างไว้เพื่อปิดปุ่มลัดนั้น',
+
+  // ── Nhà cung cấp AI & khoá ────────────────────────────────────────────────
+  groupApiKeys: 'ผู้ให้บริการ AI และคีย์',
+  setApiConfigs: 'โมเดลที่ตั้งค่าไว้',
+  keysAdd: 'เพิ่มโมเดล',
+  keysEmpty: 'ยังไม่ได้ตั้งค่าโมเดลใด เพิ่มสักตัวเพื่อเริ่มต้น',
+  keysTest: 'ทดสอบการเชื่อมต่อ',
+  keysTesting: 'กำลังทดสอบ…',
+  keysOk: 'เชื่อมต่อแล้ว',
+  keysRemove: 'ลบ',
+  keysKeySaved: 'บันทึกคีย์แล้ว',
+  keysKeyPlaceholder: 'วาง API key',
+  keysGetKey: 'ขอรับคีย์',
+  keysNoKeyNeeded: 'ไม่ต้องใช้คีย์ — ทำงานบนเครื่องของคุณ',
+  keysModel: 'โมเดล',
+  keysBaseUrl: 'ที่อยู่',
+  keysLabel: 'ชื่อเรียก',
+  keysEnabled: 'เปิดใช้',
+  keysVision: 'อ่านรูปภาพได้',
 } as const satisfies Dictionary;

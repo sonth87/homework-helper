@@ -98,4 +98,23 @@ export default {
   groupHotkeys: 'Pintasan',
   setHotkeys: 'Pintasan global',
   setHotkeysDesc: 'Tombol yang berfungsi dari aplikasi mana pun. Kosongkan untuk menonaktifkan pintasan.',
+
+  // ── Nhà cung cấp AI & khoá ────────────────────────────────────────────────
+  groupApiKeys: 'Penyedia AI & Kunci',
+  setApiConfigs: 'Model yang disetel',
+  keysAdd: 'Tambah model',
+  keysEmpty: 'Belum ada model yang disetel. Tambahkan satu untuk mulai.',
+  keysTest: 'Uji koneksi',
+  keysTesting: 'Menguji…',
+  keysOk: 'Terhubung',
+  keysRemove: 'Hapus',
+  keysKeySaved: 'Kunci tersimpan',
+  keysKeyPlaceholder: 'Tempel API key',
+  keysGetKey: 'Dapatkan kunci',
+  keysNoKeyNeeded: 'Tanpa kunci — berjalan di perangkat Anda',
+  keysModel: 'Model',
+  keysBaseUrl: 'Alamat',
+  keysLabel: 'Nama',
+  keysEnabled: 'Aktif',
+  keysVision: 'Bisa membaca gambar',
 } as const satisfies Dictionary;

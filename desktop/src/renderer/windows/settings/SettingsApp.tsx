@@ -11,6 +11,7 @@ import type { Settings } from '@config/settings';
 import { createTranslator } from '@shared/i18n';
 import { SettingControl } from './controls/SettingControl';
 import { HotkeyControl } from './controls/HotkeyControl';
+import { ApiKeysPanel } from './ApiKeysPanel';
 import { INTENTS } from '@config/intents.config';
 import type { Intent } from '@shared/types/intent';
 import './settings.css';
@@ -58,6 +59,10 @@ export function SettingsApp() {
 
       <main className="settings__panel">
         <h1>{group ? t(group.i18n) : ''}</h1>
+        {activeGroup === 'apiKeys' && (
+          <ApiKeysPanel configs={settings.apiConfigs} t={t} onChange={(v) => patch('apiConfigs', v)} />
+        )}
+
         {group?.items.map(({ key, def }) =>
           key === 'hotkeys' ? (
             <div className="setting" key={key}>

@@ -91,7 +91,7 @@ export const IPC = {
 
   // Lane B — suy luận LLM, streaming
   'ai:ask': stream<AskParams, AiDelta>(),
-  'ai:testProvider': req<{ provider: ProviderId; configId: string }, ProviderTestResult>(),
+  'ai:testProvider': req<{ provider: ProviderId; configId: string; baseUrl?: string }, ProviderTestResult>(),
   'ai:detectLocalModels': req<{ baseUrl: string }, string[]>(),
 
   // Thu nhận nội dung từ màn hình

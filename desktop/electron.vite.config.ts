@@ -30,6 +30,7 @@ export default defineConfig({
         // bundle của trang Cài đặt.
         input: {
           settings: resolve('src/renderer/windows/settings/index.html'),
+          hover: resolve('src/renderer/windows/hover/index.html'),
         },
       },
     },

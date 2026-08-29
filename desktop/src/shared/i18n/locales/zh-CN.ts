@@ -98,4 +98,23 @@ export default {
   groupHotkeys: '快捷键',
   setHotkeys: '全局快捷键',
   setHotkeysDesc: '在任何应用中都可使用的按键。留空即停用该快捷键。',
+
+  // ── Nhà cung cấp AI & khoá ────────────────────────────────────────────────
+  groupApiKeys: 'AI 服务商与密钥',
+  setApiConfigs: '已配置的模型',
+  keysAdd: '添加模型',
+  keysEmpty: '尚未配置任何模型。添加一个即可开始。',
+  keysTest: '测试连接',
+  keysTesting: '测试中…',
+  keysOk: '已连接',
+  keysRemove: '移除',
+  keysKeySaved: '密钥已保存',
+  keysKeyPlaceholder: '粘贴 API 密钥',
+  keysGetKey: '获取密钥',
+  keysNoKeyNeeded: '无需密钥 — 在你的设备上运行',
+  keysModel: '模型',
+  keysBaseUrl: '地址',
+  keysLabel: '名称',
+  keysEnabled: '启用',
+  keysVision: '可读取图像',
 } as const satisfies Dictionary;

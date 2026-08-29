@@ -98,4 +98,23 @@ export default {
   groupHotkeys: '단축키',
   setHotkeys: '전역 단축키',
   setHotkeysDesc: '어떤 앱에서도 쓸 수 있는 키입니다. 비워 두면 해당 단축키가 꺼집니다.',
+
+  // ── Nhà cung cấp AI & khoá ────────────────────────────────────────────────
+  groupApiKeys: 'AI 제공자 및 키',
+  setApiConfigs: '설정된 모델',
+  keysAdd: '모델 추가',
+  keysEmpty: '아직 설정된 모델이 없습니다. 하나 추가해 시작하세요.',
+  keysTest: '연결 테스트',
+  keysTesting: '테스트 중…',
+  keysOk: '연결됨',
+  keysRemove: '제거',
+  keysKeySaved: '키를 저장했습니다',
+  keysKeyPlaceholder: 'API 키 붙여넣기',
+  keysGetKey: '키 받기',
+  keysNoKeyNeeded: '키 불필요 — 내 기기에서 실행',
+  keysModel: '모델',
+  keysBaseUrl: '주소',
+  keysLabel: '이름',
+  keysEnabled: '사용',
+  keysVision: '이미지 인식 가능',
 } as const satisfies Dictionary;

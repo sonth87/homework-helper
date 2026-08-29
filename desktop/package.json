@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "Homework Helper Desktop App — trợ lý AI giải bài tập & dịch thuật trên toàn màn hình",
   "private": true,
+  "engines": {
+    "node": ">=22.5"
+  },
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "node scripts/dev.mjs dev",
@@ -24,7 +27,7 @@
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
-    "electron": "^33.3.1",
+    "electron": "^37.10.3",
     "electron-builder": "^25.1.8",
     "electron-vite": "^5.0.0",
     "eslint": "^9.18.0",

@@ -399,7 +399,7 @@ file** và nó tự xuất hiện trong UI Settings với đủ 13 ngôn ngữ.
 |---|---|---|
 | **Lane B bị kích hoạt bởi chuột → cháy chi phí API** | 🔴 Cao | Bất biến kiến trúc: Lane B chỉ nhận intent do người dùng chủ động. Thêm hạn mức request/phút + hiển thị số token đã dùng |
 | Accessibility trên macOS không ổn định với Electron/Chromium app | 🔴 Cao | Đây là rủi ro đã biết của bản gốc §10.4. Phase 2 không phụ thuộc vào nó → sản phẩm vẫn dùng được nếu Phase 3 chậm |
-| Native module (Rust/N-API) làm vỡ packaging & auto-update | 🟠 TB | MVP dùng thư viện Node có sẵn; chỉ viết native khi đã đo được nút thắt |
+| ~~Native module làm vỡ packaging & auto-update~~ | ✅ **Đã giải quyết** | Dùng `node:sqlite` dựng sẵn thay better-sqlite3 — không còn native module nào. Xem [ADR-0005](../dev/decisions/0005-dung-node-sqlite.md) |
 | Streaming qua Electron IPC bị nghẽn/rò | 🟠 TB | Thiết kế `Bus.stream` với backpressure + abort ngay từ Phase 1 |
 | Mất Gemini Nano làm hỏng trải nghiệm "dùng ngay không cần key" | 🟠 TB | Onboarding hướng dẫn cài Ollama; hoặc bundle sẵn một model nhỏ |
 | Quyền Screen Recording khiến người dùng bỏ cuộc ở lần chạy đầu | 🟠 TB | Phase 2 (`solve`) cần quyền này ngay → onboarding phải rất tốt, có màn hình kiểm tra như §95 |

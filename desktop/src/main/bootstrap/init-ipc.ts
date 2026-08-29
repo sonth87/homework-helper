@@ -1,5 +1,7 @@
 import { registerSettingsIpc } from '../ipc/settings.ipc';
 import { registerSecretsIpc } from '../ipc/secrets.ipc';
+import { registerAiIpc } from '../ipc/ai.ipc';
+import { registerShellIpc } from '../ipc/shell.ipc';
 import type { SettingsService } from '../settings/settings.service';
 
 /**
@@ -9,4 +11,6 @@ import type { SettingsService } from '../settings/settings.service';
 export function initIpc(settings: SettingsService): void {
   registerSettingsIpc(settings);
   registerSecretsIpc();
+  registerAiIpc();
+  registerShellIpc();
 }
