@@ -216,6 +216,9 @@ export default {
   hoverTranslate: {
     loadingLabel: "Translating…",
     errorLabel: "Could not translate",
+    granularityWord: "Translate by word",
+    granularitySentence: "Translate by sentence",
+    granularityParagraph: "Translate by paragraph",
   },
   cropper: {
     tip: "Click and drag to crop a problem or formula (ESC to cancel)",

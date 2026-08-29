@@ -13,6 +13,7 @@ import { OverlayDrawerHistory } from './overlay/drawer-history.js';
 import { OverlayFloatingCard } from './overlay/floating-card.js';
 import { OverlayConfigModal } from './overlay/config-modal.js';
 import { OverlayRichTooltips } from './overlay/rich-tooltips.js';
+import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
 
 class InPageOverlay {
   constructor() {
@@ -31,15 +32,8 @@ class InPageOverlay {
   }
 
   createShadowDOM() {
-    this.host = document.createElement('div');
-    this.host.id = 'homework-ai-root';
-    this.host.style.position = 'absolute';
-    this.host.style.top = '0';
-    this.host.style.left = '0';
-    this.host.style.zIndex = '2147483640';
-    document.documentElement.appendChild(this.host);
-
-    this.shadow = this.host.attachShadow({ mode: 'open' });
+    this.shadow = getSharedShadowRoot();
+    this.host = this.shadow.host;
 
     // A <link> inside a shadow root does not block that tree from painting, so
     // the wrapper below would render for a few frames with no CSS at all — the
@@ -51,15 +45,8 @@ class InPageOverlay {
       '.hw-overlay-wrapper{visibility:hidden}.hw-overlay-wrapper.hw-styles-ready{visibility:visible}';
     this.shadow.appendChild(bootStyle);
 
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = chrome.runtime.getURL('content/styles/overlay.css');
-    this.shadow.appendChild(link);
-
-    const katexLink = document.createElement('link');
-    katexLink.rel = 'stylesheet';
-    katexLink.href = chrome.runtime.getURL('shared/katex/katex.min.css');
-    this.shadow.appendChild(katexLink);
+    const link = ensureStylesheet('content/styles/overlay.css');
+    ensureStylesheet('shared/katex/katex.min.css');
 
     const container = document.createElement('div');
     container.className = 'hw-overlay-wrapper';

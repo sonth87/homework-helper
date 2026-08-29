@@ -217,6 +217,9 @@ export default {
   hoverTranslate: {
     loadingLabel: "กำลังแปล…",
     errorLabel: "ไม่สามารถแปลได้",
+    granularityWord: "แปลตามคำ",
+    granularitySentence: "แปลตามประโยค",
+    granularityParagraph: "แปลตามย่อหน้า",
   },
   cropper: {
     tip: "คลิกแล้วลากเพื่อครอบตัดโจทย์หรือสูตร (ESC เพื่อยกเลิก)",

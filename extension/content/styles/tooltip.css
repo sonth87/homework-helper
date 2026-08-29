@@ -337,6 +337,181 @@
   color: #ffffff;
 }
 
+/* Word/Sentence/Paragraph quick switcher (content/hover-translate.js) —
+   collapsed to plain dots so it doesn't compete with the translation itself;
+   hovering the row grows them into icons, each with its own native tooltip.
+   Straddles the tip's bottom edge (half inside, half outside) like a tab
+   hanging off it, rather than taking up space in the flow above the text —
+   the tip has no overflow:hidden, so the outside half stays visible. */
+.hw-ht-gran-switch {
+  position: absolute;
+  right: 10px;
+  bottom: 0;
+  transform: translateY(50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* The row grows a glass pill of its own on hover — without it, the expanded
+   icons would float bare over whatever the page behind the tip's outer half
+   happens to look like, with no contrast guarantee. */
+.hw-ht-gran-switch:hover {
+  background: rgba(255, 255, 255, var(--ht-alpha, 0.96));
+  backdrop-filter: blur(var(--ht-blur, 18px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--ht-blur, 18px)) saturate(180%);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.hw-ht-gran-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(100, 116, 139, 0.4);
+  color: #475569;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: width 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hw-ht-gran-dot svg {
+  width: 0;
+  height: 0;
+  opacity: 0;
+  transition: width 0.15s ease 0.04s, height 0.15s ease 0.04s, opacity 0.15s ease 0.04s;
+}
+
+.hw-ht-gran-dot.active {
+  background: #0284c7;
+}
+
+.hw-ht-gran-switch:hover .hw-ht-gran-dot {
+  width: 22px;
+  height: 22px;
+  background: rgba(100, 116, 139, 0.12);
+}
+
+.hw-ht-gran-switch:hover .hw-ht-gran-dot svg {
+  width: 13px;
+  height: 13px;
+  opacity: 1;
+}
+
+/* Selected granularity reads as a proper "pressed" segmented-control button
+   (solid fill, white icon) instead of a faint tint, so it's obvious at a
+   glance which of the three is active. */
+.hw-ht-gran-switch:hover .hw-ht-gran-dot.active {
+  color: #ffffff;
+  background: #0284c7;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.45);
+}
+
+.hw-ht-gran-dot:hover {
+  background: rgba(2, 132, 199, 0.16) !important;
+  color: #0284c7 !important;
+  transform: scale(1.08);
+}
+
+.hw-ht-gran-switch:hover .hw-ht-gran-dot.active:hover {
+  background: #0369a1 !important;
+  color: #ffffff !important;
+}
+
+.hw-hover-translate-tip.theme-glass-dark .hw-ht-gran-switch:hover {
+  background: rgba(15, 23, 42, var(--ht-alpha, 0.96));
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+.hw-hover-translate-tip.theme-glass-dark .hw-ht-gran-dot {
+  background: rgba(255, 255, 255, 0.28);
+  color: #cbd5e1;
+}
+.hw-hover-translate-tip.theme-glass-dark .hw-ht-gran-switch:hover .hw-ht-gran-dot {
+  background: rgba(255, 255, 255, 0.1);
+}
+.hw-hover-translate-tip.theme-glass-dark .hw-ht-gran-dot.active {
+  background: #38bdf8;
+}
+.hw-hover-translate-tip.theme-glass-dark .hw-ht-gran-switch:hover .hw-ht-gran-dot.active {
+  color: #0f172a;
+  background: #38bdf8;
+  box-shadow: 0 2px 6px rgba(56, 189, 248, 0.5);
+}
+.hw-hover-translate-tip.theme-glass-dark .hw-ht-gran-dot:hover {
+  background: rgba(56, 189, 248, 0.28) !important;
+  color: #38bdf8 !important;
+}
+.hw-hover-translate-tip.theme-glass-dark .hw-ht-gran-switch:hover .hw-ht-gran-dot.active:hover {
+  background: #0ea5e9 !important;
+  color: #0f172a !important;
+}
+
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-switch:hover { background: rgba(2, 132, 199, var(--ht-alpha, 0.96)); }
+.hw-hover-translate-tip.theme-emerald .hw-ht-gran-switch:hover { background: rgba(5, 150, 105, var(--ht-alpha, 0.96)); }
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover { background: rgba(124, 58, 237, var(--ht-alpha, 0.96)); }
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-switch:hover,
+.hw-hover-translate-tip.theme-emerald .hw-ht-gran-switch:hover,
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-dot,
+.hw-hover-translate-tip.theme-emerald .hw-ht-gran-dot,
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-dot {
+  background: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-switch:hover .hw-ht-gran-dot,
+.hw-hover-translate-tip.theme-emerald .hw-ht-gran-switch:hover .hw-ht-gran-dot,
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover .hw-ht-gran-dot {
+  background: rgba(255, 255, 255, 0.18);
+}
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-dot.active,
+.hw-hover-translate-tip.theme-emerald .hw-ht-gran-dot.active,
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-dot.active {
+  background: #ffffff;
+}
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-switch:hover .hw-ht-gran-dot.active {
+  color: #0284c7;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.hw-hover-translate-tip.theme-emerald .hw-ht-gran-switch:hover .hw-ht-gran-dot.active {
+  color: #059669;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover .hw-ht-gran-dot.active {
+  color: #7c3aed;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-dot:hover,
+.hw-hover-translate-tip.theme-emerald .hw-ht-gran-dot:hover,
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-dot:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-switch:hover .hw-ht-gran-dot.active:hover,
+.hw-hover-translate-tip.theme-emerald .hw-ht-gran-switch:hover .hw-ht-gran-dot.active:hover,
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover .hw-ht-gran-dot.active:hover {
+  background: #f1f5f9 !important;
+}
+
 .hw-ht-body.hw-ht-loading {
   opacity: 0.65;
   font-style: italic;

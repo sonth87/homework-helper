@@ -219,6 +219,9 @@ export default {
   hoverTranslate: {
     loadingLabel: "Đang dịch…",
     errorLabel: "Không thể dịch",
+    granularityWord: "Dịch theo từ",
+    granularitySentence: "Dịch theo câu",
+    granularityParagraph: "Dịch theo đoạn văn",
   },
   cropper: {
     tip: "Nhấp và kéo để khoanh vùng bài tập hoặc công thức (ESC để hủy)",

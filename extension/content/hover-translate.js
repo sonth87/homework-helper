@@ -15,13 +15,13 @@
  * configured, unlike every other AI-backed tool in this extension.
  *
  * Standalone singleton, same shape as selection-tooltip.js: it renders
- * plain DOM nodes appended to document.body (styled by
- * content/styles/tooltip.css, loaded page-wide) rather than into the
- * Shadow DOM overlay.
+ * plain DOM nodes into the shared Shadow DOM root (shadow-root.js), styled
+ * by content/styles/tooltip.css.
  */
 
 import { Storage } from '../shared/storage.js';
 import { getHoverTranslateI18n } from '../shared/i18n.js';
+import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
 
 const SETTINGS_KEYS = [
   'enableHoverTranslate', 'hoverTranslateModifiers', 'hoverTranslateGranularity', 'hoverTranslateDelay',
@@ -31,6 +31,32 @@ const SETTINGS_KEYS = [
 ];
 
 const MODIFIER_EVENT_KEYS = { ctrl: 'ctrlKey', shift: 'shiftKey', alt: 'altKey', meta: 'metaKey' };
+
+// Shared by detectParagraph() and findBlockContainer(): the tags treated as
+// "one block of text" when walking up from a hovered Text node.
+const BLOCK_TAGS = new Set(['P', 'DIV', 'LI', 'TD', 'TH', 'ARTICLE', 'SECTION', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'FIGCAPTION']);
+
+// Quick granularity switcher rendered on the tooltip (see showLoadingTooltip()
+// and changeGranularity()). Icons are a deliberate 1/2/3-line progression —
+// more lines standing in for "more text" — rather than pulling in new global
+// icons from shared/icons.js for a control this narrowly scoped.
+const GRANULARITY_OPTIONS = [
+  {
+    id: 'word',
+    dictKey: 'granularityWord',
+    icon: '<svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="7" x2="9" y2="7"/></svg>',
+  },
+  {
+    id: 'sentence',
+    dictKey: 'granularitySentence',
+    icon: '<svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="5" x2="12" y2="5"/><line x1="2" y1="9" x2="8" y2="9"/></svg>',
+  },
+  {
+    id: 'paragraph',
+    dictKey: 'granularityParagraph',
+    icon: '<svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="2" y1="3.5" x2="12" y2="3.5"/><line x1="2" y1="7" x2="12" y2="7"/><line x1="2" y1="10.5" x2="8" y2="10.5"/></svg>',
+  },
+];
 
 class HoverTranslate {
   constructor() {
@@ -42,11 +68,16 @@ class HoverTranslate {
     this.epoch = 0;
     this._activeRect = null;
     this._lastText = null;
+    this._lastPoint = null;
     this._highlightBoxes = [];
     this.init();
   }
 
   async init() {
+    // Loaded eagerly so the sheet has landed well before the user ever
+    // dwells over text — see shadow-root.js.
+    ensureStylesheet('content/styles/tooltip.css');
+
     await this.loadSettings();
 
     document.addEventListener('mousemove', this.handleMouseMove.bind(this), { passive: true });
@@ -85,7 +116,12 @@ class HoverTranslate {
     clearTimeout(this.dwellTimer);
 
     if (this.tooltip) {
-      const overTooltip = e.target.closest && e.target.closest('.hw-hover-translate-tip');
+      // Not e.target.closest(...): the tip lives inside the shared Shadow
+      // DOM (shadow-root.js), and this listener is on document — outside
+      // that tree — so a mousemove originating inside the tip gets
+      // retargeted to the shadow host, never the tip itself. composedPath()
+      // still carries the real path across the shadow boundary.
+      const overTooltip = e.composedPath ? e.composedPath().includes(this.tooltip) : false;
       const nearWord = this._activeRect && this.pointNearRect(e.clientX, e.clientY, this._activeRect);
       if (!overTooltip && !nearWord) this.hideTooltip();
     }
@@ -130,6 +166,16 @@ class HoverTranslate {
     if (!detection || !detection.text || detection.text.length < 2) return;
     if (detection.text === this._lastText && this.tooltip) return;
 
+    // Kept separate from this.lastPoint (which handleMouseMove overwrites on
+    // every pixel of movement): changeGranularity() needs to re-run
+    // detection at the point the user was originally hovering, not wherever
+    // the cursor ended up after they moved it onto the tooltip to click a
+    // granularity dot.
+    this._lastPoint = { x: p.x, y: p.y };
+    this.renderDetection(detection);
+  }
+
+  renderDetection(detection) {
     this._lastText = detection.text;
     // Order matters: showLoadingTooltip() clears the previous tooltip AND
     // any stale highlight boxes (via removeTooltip()) before either is
@@ -138,6 +184,21 @@ class HoverTranslate {
     this.showLoadingTooltip(detection.rect);
     this.applyTextEffects(detection.range);
     this.runTranslate(detection.text, detection.rect);
+  }
+
+  // Wired to the granularity switcher's dots (showLoadingTooltip()). Persists
+  // the choice as the new default (so Options' own dropdown stays in sync —
+  // loadSettings() is already subscribed to storage.onChanged) and
+  // re-detects at the same anchor point immediately, rather than waiting for
+  // the next hover.
+  async changeGranularity(gran) {
+    if (gran === this.settings.hoverTranslateGranularity || !this._lastPoint) return;
+    this.settings.hoverTranslateGranularity = gran;
+    await Storage.set({ hoverTranslateGranularity: gran });
+
+    const detection = this.detectTextAtPoint(this._lastPoint.x, this._lastPoint.y, gran);
+    if (!detection || !detection.text) return;
+    this.renderDetection(detection);
   }
 
   // ============================================================
@@ -155,9 +216,23 @@ class HoverTranslate {
     return this.detectSegment(range.startContainer, range.startOffset, granularity === 'sentence' ? 'sentence' : 'word');
   }
 
+  // A sentence (or, more rarely, a word) frequently isn't one single DOM
+  // Text node — a <strong>/<a>/<em>/<span> in the middle (bolded keyword, a
+  // link) splits it into several sibling Text nodes even though it reads as
+  // one unbroken sentence. Segmenting only textNode.data, as before, made
+  // the segmenter see nothing but whatever fragment happened to be under the
+  // cursor, so a bolded phrase or a link got detected as its own "sentence".
+  // Fix: flatten the whole containing block's text into one string, segment
+  // that, then map the winning segment's [start,end) back onto a Range that
+  // is free to start in one Text node and end in another.
   detectSegment(textNode, offset, granularity) {
-    const data = textNode.data || '';
-    if (!data.trim()) return null;
+    const container = this.findBlockContainer(textNode);
+    if (!container) return null;
+
+    const { nodes, text } = this.collectTextNodes(container);
+    const entry = nodes.find((n) => n.node === textNode);
+    if (!entry || !text.trim()) return null;
+    const globalOffset = entry.start + offset;
 
     let segStart = -1;
     let segEnd = -1;
@@ -166,9 +241,9 @@ class HoverTranslate {
     if (typeof Intl !== 'undefined' && Intl.Segmenter) {
       try {
         const segmenter = new Intl.Segmenter(undefined, { granularity });
-        for (const s of segmenter.segment(data)) {
+        for (const s of segmenter.segment(text)) {
           const end = s.index + s.segment.length;
-          if (offset >= s.index && offset < end) {
+          if (globalOffset >= s.index && globalOffset < end) {
             if (granularity === 'word' && !s.isWordLike) return null; // hovering whitespace/punctuation
             segStart = s.index;
             segEnd = end;
@@ -184,8 +259,8 @@ class HoverTranslate {
     if (segStart === -1) {
       const re = granularity === 'word' ? /[\p{L}\p{N}_'-]+/gu : /[^.!?…]+[.!?…]*\s*/g;
       let m;
-      while ((m = re.exec(data))) {
-        if (offset >= m.index && offset < m.index + m[0].length) {
+      while ((m = re.exec(text))) {
+        if (globalOffset >= m.index && globalOffset < m.index + m[0].length) {
           segStart = m.index;
           segEnd = m.index + m[0].length;
           segText = m[0];
@@ -196,17 +271,61 @@ class HoverTranslate {
 
     if (segStart === -1 || !segText.trim()) return null;
 
+    const start = this.offsetToBoundary(nodes, segStart);
+    const end = this.offsetToBoundary(nodes, segEnd);
+    if (!start || !end) return null;
+
     const range = document.createRange();
-    range.setStart(textNode, segStart);
-    range.setEnd(textNode, segEnd);
+    range.setStart(start.node, start.offset);
+    range.setEnd(end.node, end.offset);
     const rect = range.getBoundingClientRect();
     if (!rect || (rect.width === 0 && rect.height === 0)) return null;
 
     return { text: segText.trim(), rect, range };
   }
 
+  // Walks up from a hovered Text node to the nearest element worth treating
+  // as "one block of text" for flattening — a recognized block tag, or
+  // <body> as the last resort.
+  findBlockContainer(node) {
+    let el = node.parentElement;
+    let hops = 0;
+    while (el && hops < 8) {
+      if (BLOCK_TAGS.has(el.tagName) || el === document.body) return el;
+      if (!el.parentElement) return el;
+      el = el.parentElement;
+      hops++;
+    }
+    return el;
+  }
+
+  // Flattens every descendant Text node of `container`, in document order,
+  // into one string, recording each node's starting offset within it — the
+  // mapping offsetToBoundary() uses to turn a segment's character range back
+  // into real DOM boundary points.
+  collectTextNodes(container) {
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    let text = '';
+    let n;
+    while ((n = walker.nextNode())) {
+      nodes.push({ node: n, start: text.length });
+      text += n.data;
+    }
+    return { nodes, text };
+  }
+
+  offsetToBoundary(nodes, globalOffset) {
+    for (let i = nodes.length - 1; i >= 0; i--) {
+      const { node, start } = nodes[i];
+      if (globalOffset >= start) {
+        return { node, offset: Math.min(globalOffset - start, node.data.length) };
+      }
+    }
+    return null;
+  }
+
   detectParagraph(textNode) {
-    const BLOCK_TAGS = new Set(['P', 'DIV', 'LI', 'TD', 'TH', 'ARTICLE', 'SECTION', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'FIGCAPTION']);
     let el = textNode.parentElement;
     let hops = 0;
     while (el && hops < 6) {
@@ -245,10 +364,28 @@ class HoverTranslate {
     tip.style.setProperty('--ht-blur', `${this.settings.hoverTranslateBlur ?? 18}px`);
     tip.style.setProperty('--ht-font-size', `${this.settings.hoverTranslateFontSize ?? 13}px`);
     tip.style.setProperty('--ht-max-width', `${this.settings.hoverTranslateMaxWidth ?? 300}px`);
-    tip.innerHTML = `<div class="hw-ht-body hw-ht-loading">${this.dict.loadingLabel || 'Translating…'}</div>`;
-    tip.addEventListener('mousedown', (e) => e.stopPropagation());
 
-    document.body.appendChild(tip);
+    const currentGran = this.settings.hoverTranslateGranularity || 'sentence';
+    const granDotsHtml = GRANULARITY_OPTIONS
+      .map(({ id, dictKey, icon }) => `
+        <button class="hw-ht-gran-dot${id === currentGran ? ' active' : ''}" data-gran="${id}" title="${this.dict[dictKey] || ''}">${icon}</button>
+      `)
+      .join('');
+
+    tip.innerHTML = `
+      <div class="hw-ht-gran-switch">${granDotsHtml}</div>
+      <div class="hw-ht-body hw-ht-loading">${this.dict.loadingLabel || 'Translating…'}</div>
+    `;
+    tip.addEventListener('mousedown', (e) => e.stopPropagation());
+    tip.querySelectorAll('.hw-ht-gran-dot').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.changeGranularity(btn.dataset.gran);
+      });
+    });
+
+    getSharedShadowRoot().appendChild(tip);
     this.tooltip = tip;
     this._activeRect = rect;
     this.positionTooltip(tip, rect);
@@ -266,7 +403,9 @@ class HoverTranslate {
     if (rect.top - th - 10 < margin) {
       top = window.scrollY + rect.bottom + 10;
     }
-    let left = window.scrollX + rect.left;
+    // Centered over the hovered word/sentence/paragraph rather than
+    // left-aligned to its start, then clamped back onto the viewport.
+    let left = window.scrollX + rect.left + rect.width / 2 - tw / 2;
     if (left + tw > window.scrollX + window.innerWidth - margin) {
       left = window.scrollX + window.innerWidth - tw - margin;
     }
@@ -348,7 +487,7 @@ class HoverTranslate {
         box.style.left = `${window.scrollX + r.left}px`;
         box.style.width = `${r.width}px`;
         box.style.height = `${r.height}px`;
-        document.body.appendChild(box);
+        getSharedShadowRoot().appendChild(box);
         return box;
       });
   }

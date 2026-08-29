@@ -218,6 +218,9 @@ export default {
   hoverTranslate: {
     loadingLabel: "翻訳中…",
     errorLabel: "翻訳できませんでした",
+    granularityWord: "単語ごとに翻訳",
+    granularitySentence: "文ごとに翻訳",
+    granularityParagraph: "段落ごとに翻訳",
   },
   cropper: {
     tip: "クリック＆ドラッグで問題や数式を選択 (ESCでキャンセル)",

@@ -219,6 +219,9 @@ export default {
   hoverTranslate: {
     loadingLabel: "Traduction en cours…",
     errorLabel: "Traduction impossible",
+    granularityWord: "Traduire par mot",
+    granularitySentence: "Traduire par phrase",
+    granularityParagraph: "Traduire par paragraphe",
   },
   cropper: {
     tip: "Cliquez et glissez pour sélectionner le problème ou la formule (ÉCHAP pour annuler)",

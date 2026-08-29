@@ -6,6 +6,7 @@
 import { Icons } from '../shared/icons.js';
 import { Storage } from '../shared/storage.js';
 import { getCropperI18n, getI18n } from '../shared/i18n.js';
+import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
 
 const RESIZE_HANDLE_DIRS = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
 const MIN_SELECTION_SIZE = 20;
@@ -24,6 +25,10 @@ class ScreenCropper {
     this.resizeDir = null;
     this.dragStartRect = null;
     this.moveOffset = { x: 0, y: 0 };
+
+    // Loaded eagerly (not on first start()) so the sheet has landed well
+    // before the user ever presses Alt+C — see shadow-root.js.
+    ensureStylesheet('content/styles/cropper.css');
   }
 
   /**
@@ -76,7 +81,7 @@ class ScreenCropper {
     window.addEventListener('mouseup', this.onMouseUp.bind(this));
     window.addEventListener('keydown', this.onKeyDown.bind(this));
 
-    document.body.appendChild(this.overlay);
+    getSharedShadowRoot().appendChild(this.overlay);
   }
 
   clearHandles() {

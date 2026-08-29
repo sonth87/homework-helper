@@ -220,6 +220,9 @@ export default {
   hoverTranslate: {
     loadingLabel: "Menerjemahkan…",
     errorLabel: "Tidak dapat menerjemahkan",
+    granularityWord: "Terjemahkan per kata",
+    granularitySentence: "Terjemahkan per kalimat",
+    granularityParagraph: "Terjemahkan per paragraf",
   },
   cropper: {
     tip: "Klik dan seret untuk memilih soal atau rumus (ESC untuk membatalkan)",

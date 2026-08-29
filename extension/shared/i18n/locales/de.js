@@ -217,6 +217,9 @@ export default {
   hoverTranslate: {
     loadingLabel: "Wird übersetzt…",
     errorLabel: "Übersetzung nicht möglich",
+    granularityWord: "Wortweise übersetzen",
+    granularitySentence: "Satzweise übersetzen",
+    granularityParagraph: "Absatzweise übersetzen",
   },
   cropper: {
     tip: "Klicken und ziehen, um Formel oder Frage auszuwählen (ESC zum Abbrechen)",

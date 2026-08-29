@@ -8,6 +8,7 @@ import { Storage } from '../shared/storage.js';
 import { getSelectionTooltipI18n } from '../shared/i18n.js';
 import { TOOLBAR_ITEM_ICONS, normalizeToolbarLayout } from '../shared/toolbar-items.js';
 import { NANO_STATUS } from '../shared/nano-status.js';
+import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
 
 class SelectionTooltip {
   constructor() {
@@ -24,6 +25,10 @@ class SelectionTooltip {
   }
 
   async init() {
+    // Loaded eagerly (not on first renderToolbar()) so the sheet has landed
+    // well before the user ever selects text — see shadow-root.js.
+    ensureStylesheet('content/styles/tooltip.css');
+
     document.addEventListener('mouseup', this.handleMouseUp.bind(this));
     document.addEventListener('mousedown', this.handleMouseDown.bind(this));
     window.addEventListener('HOMEWORK_AI_HIDE_ALL_UI', () => this.removeToolbar());
@@ -165,8 +170,16 @@ class SelectionTooltip {
     this.toolbar.style.top = `${Math.max(10, top)}px`;
     this.toolbar.style.left = `${Math.max(10, Math.min(window.innerWidth - 360, left - 140))}px`;
 
-    // Stop mousedown inside toolbar from propagating to document
+    // Stop mousedown/mouseup inside the toolbar from propagating to
+    // document. Beyond the original "don't dismiss on our own click" intent,
+    // this now also matters because the toolbar lives inside the shared
+    // Shadow DOM (shadow-root.js): a mousedown/mouseup that reaches all the
+    // way out to a document-level listener gets retargeted to the shadow
+    // host element, so document's handleMouseUp() would see e.target as the
+    // host — never a descendant of this.toolbar — and wrongly treat every
+    // click inside the toolbar as an outside click.
     this.toolbar.addEventListener('mousedown', (e) => e.stopPropagation());
+    this.toolbar.addEventListener('mouseup', (e) => e.stopPropagation());
 
     const iconOnlyCls = toolbarShowText ? '' : 'icon-only';
     const hasMainItems = layout.some((item) => item.area === 'main');
@@ -246,7 +259,7 @@ class SelectionTooltip {
       this.toolbar.addEventListener('mouseleave', scheduleClose);
     }
 
-    document.body.appendChild(this.toolbar);
+    getSharedShadowRoot().appendChild(this.toolbar);
   }
 
   async toggleDropdown(rect) {
@@ -268,7 +281,9 @@ class SelectionTooltip {
 
     this.dropdown = document.createElement('div');
     this.dropdown.className = 'hw-tb-dropdown';
+    // Same reasoning as this.toolbar's guard above.
     this.dropdown.addEventListener('mousedown', (e) => e.stopPropagation());
+    this.dropdown.addEventListener('mouseup', (e) => e.stopPropagation());
 
     const dropdownItemsHtml = layout
       .filter((item) => item.area === 'dropdown')

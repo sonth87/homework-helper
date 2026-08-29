@@ -218,6 +218,9 @@ export default {
   hoverTranslate: {
     loadingLabel: "Перевод…",
     errorLabel: "Не удалось перевести",
+    granularityWord: "Перевести по слову",
+    granularitySentence: "Перевести по предложению",
+    granularityParagraph: "Перевести по абзацу",
   },
   cropper: {
     tip: "Нажмите и потяните, чтобы выделить задачу или формулу (ESC для отмены)",

@@ -218,6 +218,9 @@ export default {
   hoverTranslate: {
     loadingLabel: "번역 중…",
     errorLabel: "번역할 수 없습니다",
+    granularityWord: "단어 단위로 번역",
+    granularitySentence: "문장 단위로 번역",
+    granularityParagraph: "문단 단위로 번역",
   },
   cropper: {
     tip: "문제나 수식을 클릭 & 드래그하여 선택하세요 (ESC로 취소)",

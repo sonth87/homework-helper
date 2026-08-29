@@ -216,6 +216,9 @@ export default {
   hoverTranslate: {
     loadingLabel: "翻譯中…",
     errorLabel: "無法翻譯",
+    granularityWord: "依單字翻譯",
+    granularitySentence: "依句子翻譯",
+    granularityParagraph: "依段落翻譯",
   },
   cropper: {
     tip: "按住並拖曳以框選題目或公式 (按 ESC 取消)",
