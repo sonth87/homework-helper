@@ -8,8 +8,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const LOCALE_DIR = join(import.meta.dirname, '../src/shared/i18n/locales');
-const SETTINGS_DIR = join(import.meta.dirname, '../config/settings');
+const LOCALE_DIR = join(process.cwd(), 'src/shared/i18n/locales');
+const SETTINGS_DIR = join(process.cwd(), 'config/settings');
 const EXPECTED_LOCALES = [
   'en', 'vi', 'th', 'zh-CN', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'de', 'pt', 'id', 'ru',
 ];

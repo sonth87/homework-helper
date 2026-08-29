@@ -9,7 +9,12 @@ import { app } from 'electron';
 import { initEnv } from './bootstrap/init-env';
 import { initSettings } from './bootstrap/init-settings';
 import { initIpc } from './bootstrap/init-ipc';
+import { initTray } from './bootstrap/init-tray';
+import { initHotkeys } from './bootstrap/init-hotkeys';
 import { initWindows } from './bootstrap/init-windows';
+import { handleIntent } from './pipeline/task-pipeline';
+import { abortAllStreams } from './ipc/stream-handler';
+import { hotkeyManager } from './hotkeys/hotkey-manager';
 import { logger } from './logging/logger';
 
 async function main(): Promise<void> {
@@ -21,6 +26,8 @@ async function main(): Promise<void> {
 
   const settings = await initSettings();
   initIpc(settings);
+  initTray(settings, (intent) => handleIntent(intent, 'tray', settings.get()));
+  initHotkeys((intent) => handleIntent(intent, 'hotkey', settings.get()));
   await initWindows();
 
   app.on('activate', () => void initWindows());
@@ -28,7 +35,11 @@ async function main(): Promise<void> {
 
 app.on('window-all-closed', () => {
   // Ứng dụng sống trên tray — đóng hết cửa sổ không có nghĩa là thoát.
-  if (process.platform !== 'darwin') return;
+});
+
+app.on('will-quit', () => {
+  hotkeyManager.unregisterAll();
+  abortAllStreams();
 });
 
 main().catch((error: unknown) => {

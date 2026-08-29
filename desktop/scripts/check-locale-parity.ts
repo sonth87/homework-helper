@@ -12,8 +12,8 @@
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const ROOT = join(import.meta.dirname, '../..');
-const DESKTOP = join(import.meta.dirname, '../src/shared/i18n/locales');
+const ROOT = join(process.cwd(), '..');
+const DESKTOP = join(process.cwd(), 'src/shared/i18n/locales');
 const EXTENSION = join(ROOT, 'extension/shared/i18n/locales');
 
 const GREEN = '\x1b[32m', YELLOW = '\x1b[33m', DIM = '\x1b[2m', OFF = '\x1b[0m';

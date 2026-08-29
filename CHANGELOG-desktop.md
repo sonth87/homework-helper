@@ -29,6 +29,21 @@ này dựa vào:
 - Trang Cài đặt render hoàn toàn từ schema
 - `npm run check` — typecheck + lint + i18n parity + locale parity
 
+### Phase 1 — Khung Electron (đang làm)
+
+Đã xong:
+- Tiến trình chính khởi động, đăng ký 6 phím tắt toàn cục từ intent registry
+- Tray dựng menu từ intent registry, nhãn đổi theo ngôn ngữ người dùng
+- `SettingsService` đọc/ghi + tự migrate theo schema (chỉ chạy khi cần)
+- API key lưu trong OS keychain qua `safeStorage` — không bao giờ ở dạng plaintext,
+  renderer chỉ hỏi được "có key chưa", không đọc lại được giá trị
+- Hạ tầng streaming IPC: huỷ khi đóng cửa sổ, gom chunk theo nhịp ~60fps,
+  gửi an toàn khi `webContents` đã destroy
+- `guards.ts` cưỡng chế bất biến ADR-0003 + hạn mức request/phút
+
+Còn lại: SQLite thay JSON, cửa sổ Cài đặt hoàn chỉnh, handler streaming cho AI,
+cho phép người dùng đổi phím tắt.
+
 Bản phát hành đầu tiên sẽ là **`0.1.0`** khi hoàn tất Phase 1.
 
 ---

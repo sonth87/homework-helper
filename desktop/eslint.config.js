@@ -1,5 +1,6 @@
 // @ts-check
 import js from '@eslint/js';
+import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 /**
@@ -82,9 +83,10 @@ export default tseslint.config(
     },
   },
 
-  // ── Script CLI: console chính là đầu ra, không phải debug sót lại ────────
+  // ── Script CLI: chạy bằng Node, console chính là đầu ra ──────────────────
   {
-    files: ['scripts/**/*.ts'],
+    files: ['scripts/**/*.{ts,mjs}'],
+    languageOptions: { globals: globals.node },
     rules: { 'no-console': 'off' },
   },
 
