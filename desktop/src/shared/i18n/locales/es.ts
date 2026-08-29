@@ -127,4 +127,11 @@ export default {
   modeHint: 'Pistas, sin respuesta',
   modeExplain: 'Explicación a fondo',
   modeTranslate: 'Traducción académica',
+
+  // ── Lưu trữ ───────────────────────────────────────────────────────────────
+  groupStorage: 'Almacenamiento',
+  setMaxConversations: 'Conversaciones a conservar',
+  setMaxConversationsDesc: 'Las conversaciones más antiguas se eliminan al superar este límite.',
+  setCacheTtl: 'Vigencia de la caché de traducción',
+  setCacheTtlDesc: 'Días que una traducción en caché sigue siendo válida.',
 } as const satisfies Dictionary;

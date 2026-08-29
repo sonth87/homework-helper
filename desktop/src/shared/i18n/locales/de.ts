@@ -127,4 +127,11 @@ export default {
   modeHint: 'Nur Hinweise',
   modeExplain: 'Ausführliche Erklärung',
   modeTranslate: 'Wissenschaftliche Übersetzung',
+
+  // ── Lưu trữ ───────────────────────────────────────────────────────────────
+  groupStorage: 'Speicher',
+  setMaxConversations: 'Aufzubewahrende Gespräche',
+  setMaxConversationsDesc: 'Ältere Gespräche werden gelöscht, sobald dieses Limit überschritten ist.',
+  setCacheTtl: 'Gültigkeit des Übersetzungs-Caches',
+  setCacheTtlDesc: 'Tage, die eine zwischengespeicherte Übersetzung gültig bleibt.',
 } as const satisfies Dictionary;

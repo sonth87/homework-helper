@@ -125,4 +125,11 @@ export default {
   modeHint: 'Gợi ý, không đáp án',
   modeExplain: 'Giải thích chuyên sâu',
   modeTranslate: 'Dịch học thuật',
+
+  // ── Lưu trữ ───────────────────────────────────────────────────────────────
+  groupStorage: 'Lưu trữ',
+  setMaxConversations: 'Số hội thoại giữ lại',
+  setMaxConversationsDesc: 'Hội thoại cũ hơn sẽ bị xoá khi vượt quá giới hạn này.',
+  setCacheTtl: 'Thời hạn cache dịch',
+  setCacheTtlDesc: 'Số ngày một bản dịch đã lưu còn dùng được trước khi tra lại.',
 } as const satisfies Dictionary;

@@ -126,4 +126,11 @@ export default {
   modeHint: 'Hints, no answer',
   modeExplain: 'In-depth explanation',
   modeTranslate: 'Academic translation',
+
+  // ── Lưu trữ ───────────────────────────────────────────────────────────────
+  groupStorage: 'Storage',
+  setMaxConversations: 'Conversations to keep',
+  setMaxConversationsDesc: 'Older conversations are removed once this limit is passed.',
+  setCacheTtl: 'Translation cache lifetime',
+  setCacheTtlDesc: 'Days a cached translation stays valid before being fetched again.',
 } as const;

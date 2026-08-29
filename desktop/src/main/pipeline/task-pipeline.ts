@@ -15,6 +15,7 @@ import type { Intent, TriggerSource } from '@shared/types/intent';
 import { checkTrigger } from './guards';
 import { acquire } from '../acquisition/acquire';
 import { showResult } from '../windows/result.window';
+import { openChatWindow } from '../windows/chat.window';
 import { logger } from '../logging/logger';
 
 export async function handleIntent(
@@ -35,6 +36,12 @@ export async function handleIntent(
   if (config.lane === 'fast') {
     // Lane A cần Accessibility/OCR — Phase 3.
     logger.info('Lane nhanh chưa hiện thực', { intent });
+    return;
+  }
+
+  // Chat không thu nhận gì từ màn hình — người dùng gõ trực tiếp.
+  if (config.acquisition.length === 0) {
+    openChatWindow();
     return;
   }
 

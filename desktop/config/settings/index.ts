@@ -9,6 +9,7 @@ import { hotkeySettings } from './hotkey.settings';
 import { intentSettings } from './intent.settings';
 import { languageSettings } from './language.settings';
 import { privacySettings } from './privacy.settings';
+import { storageSettings } from './storage.settings';
 import { systemSettings } from './system.settings';
 import { buildDefaults, buildZodSchema, buildUiGroups, migrate } from './define';
 import type { SettingsGroup, SettingsOf } from './define';
@@ -20,6 +21,7 @@ export const SETTINGS_GROUPS = [
   intentSettings,
   hotkeySettings,
   privacySettings,
+  storageSettings,
   systemSettings,
 ] as const;
 

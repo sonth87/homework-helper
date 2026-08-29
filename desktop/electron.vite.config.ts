@@ -33,6 +33,7 @@ export default defineConfig({
           hover: resolve('src/renderer/windows/hover/index.html'),
           'region-select': resolve('src/renderer/windows/region-select/index.html'),
           result: resolve('src/renderer/windows/result/index.html'),
+          chat: resolve('src/renderer/windows/chat/index.html'),
         },
       },
     },

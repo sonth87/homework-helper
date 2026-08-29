@@ -127,4 +127,11 @@ export default {
   modeHint: 'ใบ้ ไม่บอกคำตอบ',
   modeExplain: 'อธิบายเชิงลึก',
   modeTranslate: 'แปลเชิงวิชาการ',
+
+  // ── Lưu trữ ───────────────────────────────────────────────────────────────
+  groupStorage: 'พื้นที่จัดเก็บ',
+  setMaxConversations: 'จำนวนบทสนทนาที่เก็บไว้',
+  setMaxConversationsDesc: 'บทสนทนาเก่าจะถูกลบเมื่อเกินขีดจำกัดนี้',
+  setCacheTtl: 'อายุแคชการแปล',
+  setCacheTtlDesc: 'จำนวนวันที่คำแปลในแคชยังใช้ได้ก่อนจะดึงใหม่',
 } as const satisfies Dictionary;

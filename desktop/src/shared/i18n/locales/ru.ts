@@ -127,4 +127,11 @@ export default {
   modeHint: 'Только подсказки',
   modeExplain: 'Подробное объяснение',
   modeTranslate: 'Академический перевод',
+
+  // ── Lưu trữ ───────────────────────────────────────────────────────────────
+  groupStorage: 'Хранилище',
+  setMaxConversations: 'Сколько бесед хранить',
+  setMaxConversationsDesc: 'При превышении лимита старые беседы удаляются.',
+  setCacheTtl: 'Срок жизни кеша переводов',
+  setCacheTtlDesc: 'Сколько дней сохранённый перевод остаётся действительным.',
 } as const satisfies Dictionary;

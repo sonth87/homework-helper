@@ -127,4 +127,11 @@ export default {
   modeHint: '힌트만',
   modeExplain: '심화 설명',
   modeTranslate: '학술 번역',
+
+  // ── Lưu trữ ───────────────────────────────────────────────────────────────
+  groupStorage: '저장 공간',
+  setMaxConversations: '보관할 대화 수',
+  setMaxConversationsDesc: '이 한도를 넘으면 오래된 대화부터 삭제됩니다.',
+  setCacheTtl: '번역 캐시 유효 기간',
+  setCacheTtlDesc: '캐시된 번역을 다시 가져오기까지 유지되는 일수입니다.',
 } as const satisfies Dictionary;

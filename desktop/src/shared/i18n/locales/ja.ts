@@ -127,4 +127,11 @@ export default {
   modeHint: 'ヒントのみ',
   modeExplain: '詳しい解説',
   modeTranslate: '学術翻訳',
+
+  // ── Lưu trữ ───────────────────────────────────────────────────────────────
+  groupStorage: 'ストレージ',
+  setMaxConversations: '保持する会話数',
+  setMaxConversationsDesc: 'この上限を超えると古い会話から削除されます。',
+  setCacheTtl: '翻訳キャッシュの有効期間',
+  setCacheTtlDesc: 'キャッシュした訳文を再取得するまでの日数です。',
 } as const satisfies Dictionary;

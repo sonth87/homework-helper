@@ -4,6 +4,7 @@ import type { ProviderId } from '@shared/types/ai';
 import { LIMITS } from '@config/limits.config';
 import { keychain } from '../secrets/keychain';
 import { adapterFor } from '../ai/providers';
+import { detectLocalProviders } from '../ai/local-models';
 
 type TestParams = { provider: ProviderId; configId: string; baseUrl?: string };
 type TestResult = { ok: true; latencyMs: number; model: string } | { ok: false; error: string };
@@ -15,6 +16,10 @@ type TestResult = { ok: true; latencyMs: number; model: string } | { ok: false; 
  * và vẫn xác nhận đủ ba thứ — địa chỉ đúng, khoá hợp lệ, mạng thông.
  */
 export function registerAiIpc(): void {
+  ipcMain.handle('ai:detectLocalModels', (_e, overrides: Record<string, string> = {}) =>
+    detectLocalProviders(overrides),
+  );
+
   ipcMain.handle('ai:testProvider', async (_e, { provider, configId, baseUrl }: TestParams): Promise<TestResult> => {
     const info = PROVIDERS[provider];
     const url = (baseUrl || info.defaultBaseUrl).replace(/\/$/, '');

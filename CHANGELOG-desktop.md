@@ -66,7 +66,11 @@ này dựa vào:
   cuộn nhưng không cướp vị trí nếu người dùng đã cuộn lên.
 - Chế độ học tập (5 chế độ) trong Cài đặt.
 
-Còn lại: cửa sổ chat đa hội thoại, phát hiện Ollama/LM Studio.
+- Cửa sổ chat đa hội thoại, lưu trong SQLite: đóng rồi mở lại vẫn còn nguyên.
+- Phát hiện Ollama / LM Studio đang chạy và liệt kê model đã nạp — thay vai trò
+  "dùng được ngay không cần key" mà Gemini Nano đảm nhiệm ở extension.
+
+**Phase 2 hoàn tất.** Còn lại cho Phase 3: Accessibility, OCR, dịch khi rê chuột.
 
 Bản phát hành đầu tiên sẽ là **`0.1.0`** khi hoàn tất Phase 1.
 

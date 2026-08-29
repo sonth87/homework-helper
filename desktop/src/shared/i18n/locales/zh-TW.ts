@@ -127,4 +127,11 @@ export default {
   modeHint: '只給提示',
   modeExplain: '深入講解',
   modeTranslate: '學術翻譯',
+
+  // ── Lưu trữ ───────────────────────────────────────────────────────────────
+  groupStorage: '儲存',
+  setMaxConversations: '保留的對話數',
+  setMaxConversationsDesc: '超出此上限時，較舊的對話會被刪除。',
+  setCacheTtl: '翻譯快取有效期',
+  setCacheTtlDesc: '快取的譯文在重新取得前可用的天數。',
 } as const satisfies Dictionary;

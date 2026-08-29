@@ -65,6 +65,13 @@ export type CaptureResult = {
 
 export type OcrParams = { imageBase64: string; languages: string[] };
 
+export type LocalProviderStatus = {
+  provider: ProviderId;
+  running: boolean;
+  baseUrl: string;
+  models: string[];
+};
+
 export type ProviderTestResult =
   | { ok: true; latencyMs: number; model: string }
   | { ok: false; error: string };
@@ -72,9 +79,18 @@ export type ProviderTestResult =
 export type Conversation = {
   id: string;
   title: string;
+  intent: Intent;
   createdAt: number;
   updatedAt: number;
   thumbnail?: string;
+};
+
+export type ChatMessage = {
+  id: number;
+  role: 'user' | 'assistant';
+  content: string;
+  image?: string;
+  createdAt: number;
 };
 
 // ── Danh mục kênh ───────────────────────────────────────────────────────────
@@ -96,7 +112,7 @@ export const IPC = {
   // Lane B — suy luận LLM, streaming
   'ai:ask': stream<AskParams, AiDelta>(),
   'ai:testProvider': req<{ provider: ProviderId; configId: string; baseUrl?: string }, ProviderTestResult>(),
-  'ai:detectLocalModels': req<{ baseUrl: string }, string[]>(),
+  'ai:detectLocalModels': req<Partial<Record<ProviderId, string>>, LocalProviderStatus[]>(),
 
   // Thu nhận nội dung từ màn hình
   'capture:region': req<void, CaptureResult | null>(),
@@ -105,6 +121,9 @@ export const IPC = {
 
   // Lịch sử
   'history:list': req<{ limit?: number; offset?: number }, Conversation[]>(),
+  'history:messages': req<{ id: string }, ChatMessage[]>(),
+  'history:create': req<{ intent: Intent; title: string; thumbnail?: string }, string>(),
+  'history:addMessage': req<{ id: string; role: 'user' | 'assistant'; content: string; image?: string }, void>(),
   'history:delete': req<{ id: string }, void>(),
   'history:clear': req<void, void>(),
 

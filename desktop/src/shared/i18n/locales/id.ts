@@ -127,4 +127,11 @@ export default {
   modeHint: 'Petunjuk saja',
   modeExplain: 'Penjelasan mendalam',
   modeTranslate: 'Terjemahan akademis',
+
+  // ── Lưu trữ ───────────────────────────────────────────────────────────────
+  groupStorage: 'Penyimpanan',
+  setMaxConversations: 'Jumlah percakapan disimpan',
+  setMaxConversationsDesc: 'Percakapan lama dihapus saat melewati batas ini.',
+  setCacheTtl: 'Masa berlaku cache terjemahan',
+  setCacheTtlDesc: 'Jumlah hari terjemahan tersimpan masih berlaku sebelum diambil ulang.',
 } as const satisfies Dictionary;

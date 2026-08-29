@@ -127,4 +127,11 @@ export default {
   modeHint: '只给提示',
   modeExplain: '深入讲解',
   modeTranslate: '学术翻译',
+
+  // ── Lưu trữ ───────────────────────────────────────────────────────────────
+  groupStorage: '存储',
+  setMaxConversations: '保留的对话数',
+  setMaxConversationsDesc: '超出此上限时，较旧的对话会被删除。',
+  setCacheTtl: '翻译缓存有效期',
+  setCacheTtlDesc: '缓存的译文在重新获取前可用的天数。',
 } as const satisfies Dictionary;
