@@ -1,0 +1,96 @@
+/**
+ * Bản dịch tiếng Trung giản thể.
+ *
+ * Bộ locale này TÁCH BIỆT HOÀN TOÀN với extension (CLAUDE.md mục 0).
+ * Tên ngôn ngữ (langVi, langEn...) cố ý giữ nguyên dạng bản địa ở mọi locale.
+ */
+import type { Dictionary } from '../keys';
+
+export default {
+  // ── Nhóm cấu hình ─────────────────────────────────────────────────────────
+  groupLanguage: '语言',
+  groupAi: 'AI 与模型',
+  groupPrivacy: '隐私',
+  groupSystem: '系统',
+
+  // ── Ngôn ngữ ──────────────────────────────────────────────────────────────
+  setUiLanguage: '界面语言',
+  setUiLanguageDesc: '应用自身的语言——菜单、标签、提示信息。',
+  setOutputLanguage: '回答语言',
+  setOutputLanguageDesc: 'AI 撰写答案所用的语言，与界面语言相互独立。',
+  setTranslateTarget: '翻译为',
+  setTranslateTargetDesc: '悬停翻译时的默认目标语言。',
+
+  langVi: 'Tiếng Việt', langEn: 'English', langTh: 'ไทย',
+  langZhCN: '简体中文', langZhTW: '繁體中文', langJa: '日本語', langKo: '한국어',
+  langEs: 'Español', langFr: 'Français', langDe: 'Deutsch',
+  langPt: 'Português', langId: 'Bahasa Indonesia', langRu: 'Русский',
+  langAuto: '自动检测',
+
+  // ── AI ────────────────────────────────────────────────────────────────────
+  setRoutingStrategy: '路由策略',
+  setRoutingStrategyDesc: '回答问题时优先使用哪种模型。',
+  routingPreferConfig: '优先使用已配置的密钥',
+  routingPreferLocal: '优先使用本地模型',
+  routingLocalOnly: '仅使用本地模型',
+  routingConfigOnly: '仅使用已配置的密钥',
+
+  setRotationStrategy: '密钥轮换',
+  setRotationStrategyDesc: '启用多个密钥时的选择方式。',
+  rotationRoundRobin: '依次轮换',
+  rotationRandom: '随机',
+  rotationFallback: '仅在出错时切换',
+
+  setRequestTimeout: '请求超时',
+  setRequestTimeoutDesc: '推理模型在给出第一个字之前可能会长时间沉默。',
+  setMaxRetries: '最大重试次数',
+  setMaxRetriesDesc: '放弃前最多尝试多少个密钥。',
+  setThinkingEnabled: '启用深度思考',
+  setThinkingEnabledDesc: '让支持的模型先推理再作答。速度更慢，但更准确。',
+  setMaxRequestsPerMinute: '每分钟请求上限',
+  setMaxRequestsPerMinuteDesc: '防止意外费用的安全网。超出限制的请求会被拒绝。',
+  setMonthlyTokenBudget: '每月 Token 预算',
+  setMonthlyTokenBudgetDesc: '用量接近该数值时发出提醒。填 0 表示不限制。',
+  setOllamaBaseUrl: 'Ollama 地址',
+  setLmStudioBaseUrl: 'LM Studio 地址',
+
+  // ── Riêng tư ──────────────────────────────────────────────────────────────
+  setExcludedApps: '排除的应用',
+  setExcludedAppsDesc: '这些程序处于前台时，本应用绝不读取屏幕。',
+  setPauseWhenScreenSharing: '共享屏幕时暂停',
+  setPauseWhenScreenSharingDesc: '在共享或录制屏幕期间隐藏所有浮层。',
+  setPauseOnSensitiveApps: '敏感应用中暂停',
+  setPauseOnSensitiveAppsDesc: '当密码管理器或银行应用处于前台时自动停止。',
+  setLocalModelsOnly: '仅使用本地模型',
+  setLocalModelsOnlyDesc: '绝不向云端发送任何文字或图像。没有任何内容离开这台设备。',
+  setSaveHistory: '保存对话历史',
+  setSaveHistoryDesc: '保留以往的提问与解答，便于随时回看。',
+  setHistoryRetention: '历史保留天数',
+  setHistoryRetentionDesc: '保留历史记录的天数。填 0 表示永久保留。',
+  setTelemetry: '发送匿名使用数据',
+  setTelemetryDesc: '帮助改进应用。绝不包含屏幕内容或您的提问。',
+
+  // ── Hệ thống ──────────────────────────────────────────────────────────────
+  setLaunchAtLogin: '开机自动启动',
+  setLaunchAtLoginDesc: '登录系统时自动启动本应用。',
+  setHideFromDock: '隐藏程序坞图标',
+  setHideFromDockDesc: '仅在菜单栏运行，不显示程序坞或任务栏图标。',
+  setAutoUpdate: '自动更新',
+  setAutoUpdateDesc: '在后台下载并安装新版本。',
+  setUpdateChannel: '更新通道',
+  setUpdateChannelDesc: 'Beta 通道更早获得新功能，但遇到问题的可能性更高。',
+  channelStable: '稳定版', channelBeta: '测试版',
+  setLogLevel: '日志级别',
+  setLogLevelDesc: '反馈问题时调高此项，日志会记录更多细节。',
+  logError: '仅错误', logWarn: '警告', logInfo: '常规', logDebug: '详细',
+  setDebugOverlay: '调试浮层',
+  setDebugOverlayDesc: '在识别到的文字周围绘制边框。反馈识别问题时很有用。',
+
+  // ── Intent (config/intents.config.ts) ─────────────────────────────────────
+  intentTranslate: '翻译',
+  intentSolve: '解题',
+  intentSummarize: '总结',
+  intentExplain: '讲解',
+  intentRewrite: '改写',
+  intentChat: '对话',
+} as const satisfies Dictionary;

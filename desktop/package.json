@@ -1,0 +1,40 @@
+{
+  "name": "homework-helper-desktop",
+  "version": "0.1.0",
+  "description": "Homework Helper Desktop App — trợ lý AI giải bài tập & dịch thuật trên toàn màn hình",
+  "private": true,
+  "type": "module",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.main.json && tsc --noEmit -p tsconfig.preload.json && tsc --noEmit -p tsconfig.renderer.json",
+    "lint": "eslint .",
+    "check:settings-i18n": "tsx scripts/check-settings-i18n.ts",
+    "check:locale-parity": "tsx scripts/check-locale-parity.ts",
+    "check": "npm run typecheck && npm run lint && npm run check:settings-i18n && npm run check:locale-parity",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^5.0.0",
+    "eslint": "^9.18.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0",
+    "vite": "^6.0.7",
+    "zustand": "^5.0.3"
+  }
+}
