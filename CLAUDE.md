@@ -201,3 +201,4 @@ Trước khi báo cáo xong một thay đổi, đối chiếu bảng này:
 
 ### Chung
 - [roadmap/documentation-plan.md](./roadmap/documentation-plan.md) — kiến trúc tài liệu cho ba đối tượng đọc.
+- [roadmap/known-issues.md](./roadmap/known-issues.md) — vấn đề đã biết ảnh hưởng cả hai app, chờ quay lại bàn (chat thiếu ngữ cảnh, thiếu cache).

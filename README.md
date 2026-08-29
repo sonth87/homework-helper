@@ -94,6 +94,7 @@ Hướng dẫn từng tính năng:
 ### 🗺️ Kế hoạch — [`roadmap/`](roadmap/)
 
 - [Kiến trúc tài liệu](roadmap/documentation-plan.md)
+- [Vấn đề đã biết](roadmap/known-issues.md) — chờ quay lại bàn (chat thiếu ngữ cảnh, thiếu cache)
 
 ---
 
