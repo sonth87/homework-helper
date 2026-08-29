@@ -1,69 +1,113 @@
 # Homework Helper
 
-> **Zero-Fee AI Homework Solver & Academic Assistant for Chrome**
+> **Trợ lý AI giải bài tập, dịch thuật và học tập — miễn phí, ưu tiên quyền riêng tư**
 
-Homework Helper is a fast, privacy-focused Chrome Extension (Manifest V3) that helps students and educators solve homework questions, understand complex math/science formulas with step-by-step KaTeX reasoning, and run on-device AI with Chrome Gemini Nano and offline WebAssembly OCR.
-
----
-
-## ⚡ Quick Start
-
-1. Open Chrome and navigate to `chrome://extensions`.
-2. Enable **Developer mode** (top right).
-3. Click **Load unpacked** and select the **`extension/`** folder.
-4. Press `Alt + C` to crop and solve any homework problem on your screen.
+Giải bài tập từ ảnh chụp, dịch tài liệu, tóm tắt và giải thích nội dung — bằng AI đám mây
+hoặc mô hình chạy hoàn toàn trên máy bạn.
 
 ---
 
-## 🚀 Key Highlights
+## Repo này chứa hai sản phẩm độc lập
 
-- **Dual Engine AI Execution**: Run 100% offline via **Chrome Gemini Nano** or route complex visual questions through **Cloud Vision AI** (Gemini, chatGPT, Claude, DeepSeek R1).
-- **Offline WebAssembly OCR**: Pre-bundled with Vietnamese, English, and Mathematical formula models (`.traineddata`) for instant offline recognition.
-- **KaTeX Step-by-Step Solutions**: High-clarity mathematical rendering with boxed final answers.
-- **Floating Study Drawer & Toolbars**: Seamless in-page experience with multi-session chat history, prompt study modes, and online quiz auto-solving.
-- **Smart Key Pool & Failover**: Automatic round-robin load balancing and instant circuit-breaker failover for rate-limited API keys.
+| | [**Chrome Extension**](#-chrome-extension) | [**Desktop App**](#-desktop-app) |
+|---|---|---|
+| Trạng thái | ✅ Đang phát hành — `1.6.1` | 🚧 Đang lập kế hoạch |
+| Nền tảng | Chrome (Manifest V3) | macOS, Windows (Electron) |
+| Phạm vi | Trong trình duyệt | **Mọi ứng dụng trên màn hình** |
+| Mã nguồn | [`extension/`](extension/) | `desktop/` — chưa khởi tạo |
+
+Hai app **không chia sẻ mã nguồn**, có version và chu kỳ phát hành riêng.
+Xem [ADR-0001](dev/decisions/0001-tach-hoan-toan-hai-app.md) để biết vì sao.
 
 ---
 
-## 📁 Repository Structure
+## 🧩 Chrome Extension
 
+### Cài đặt nhanh
+
+1. Mở Chrome, vào `chrome://extensions`
+2. Bật **Developer mode** (góc trên bên phải)
+3. Bấm **Load unpacked**, chọn thư mục **`extension/`**
+4. Nhấn `Alt + C` (`Cmd + E` trên Mac) để khoanh vùng và giải bài tập bất kỳ
+
+### Tính năng chính
+
+- **Khoanh vùng & giải bài tập** — chụp đề bài trên màn hình, nhận lời giải từng bước
+  với công thức KaTeX
+- **Dịch khi rê chuột** — đưa chuột lên văn bản bất kỳ để xem bản dịch, không cần bôi đen
+- **Chat học tập nổi** — hỏi đáp nhiều lượt, lưu lịch sử hội thoại
+- **Trợ lý trắc nghiệm** — tự nhận diện và gợi ý đáp án trên Google Forms
+- **OCR offline** — nhận diện chữ bằng WebAssembly, không cần mạng
+- **Chạy 100% trên máy** — Gemini Nano, Ollama hoặc LM Studio, không cần API key
+- **13 ngôn ngữ giao diện**, ép ngôn ngữ đầu ra cho mọi mô hình
+
+---
+
+## 🖥️ Desktop App
+
+Đang ở giai đoạn thiết kế. Mục tiêu: mang toàn bộ tính năng trên ra **mọi ứng dụng** —
+PDF, Word, PowerPoint, IDE, phần mềm học offline, máy ảo, remote desktop — những nơi
+extension không với tới được.
+
+Tài liệu kế hoạch: [đặc tả gốc](roadmap/desktop-app.md) ·
+[kế hoạch & lộ trình](roadmap/desktop-app-implementation-plan.md) ·
+[cấu trúc mã nguồn](roadmap/desktop-app-structure.md)
+
+---
+
+## 📚 Tài liệu
+
+Tài liệu chia theo **người đọc**, không theo chủ đề:
+
+### 👤 Cho người dùng — [`docs/`](docs/)
+
+- [Toàn bộ tính năng & 5 chế độ học tập](docs/extension/features/index.md)
+- [Bảng tra cứu cấu hình](docs/extension/configuration.md) — mọi tuỳ chọn và ý nghĩa
+- [Khắc phục sự cố](docs/extension/troubleshooting.md)
+- [Cấu hình API key & bật mô hình chạy nội bộ](docs/shared/api-setup.md)
+- [Quyền riêng tư và dữ liệu được lưu ở đâu](dev/extension/storage-and-privacy.md)
+- [Lịch sử phát hành](CHANGELOG-extension.md)
+
+Hướng dẫn từng tính năng:
+[Khoanh vùng & giải bài](docs/extension/features/01-crop-and-solve.md) ·
+[Chat nổi](docs/extension/features/02-floating-chat-drawer.md) ·
+[Thanh công cụ bôi đen](docs/extension/features/03-selection-toolbar.md) ·
+[Trắc nghiệm](docs/extension/features/04-online-quiz-solver.md) ·
+[Định tuyến AI](docs/extension/features/05-ai-routing-and-models.md) ·
+[OCR offline](docs/extension/features/06-local-ocr-engine.md) ·
+[Tuỳ biến giao diện](docs/extension/features/07-liquid-glass-customization.md) ·
+[Đa ngôn ngữ](docs/extension/features/08-multi-language-support.md)
+
+### 🛠️ Cho lập trình viên — [`dev/`](dev/)
+
+- **[Tôi muốn sửa X — vào file nào?](dev/where.md)** ← bắt đầu từ đây
+- [Kiến trúc kỹ thuật](dev/extension/architecture.md)
+- [Sổ tay phát triển & đóng gói](dev/extension/development.md)
+- [Quyết định kiến trúc (ADR)](dev/decisions/)
+
+### 🤖 Cho AI agent
+
+- [`CLAUDE.md`](CLAUDE.md) — quy tắc bắt buộc: phạm vi app, i18n, bump version, CHANGELOG
+- [`.claude/skills/`](.claude/skills/) — quy trình từng bước cho việc lặp lại
+- [`I18N-GUIDELINES.md`](I18N-GUIDELINES.md) — chi tiết quy tắc đa ngôn ngữ
+
+### 🗺️ Kế hoạch — [`roadmap/`](roadmap/)
+
+- [Kiến trúc tài liệu](roadmap/documentation-plan.md)
+
+---
+
+## 🔧 Lệnh thường dùng
+
+```bash
+npm run check          # kiểm tra i18n + version trước khi commit
+npm run check:i18n     # 13 locale có đồng bộ không
+npm run check:version  # package.json == manifest.json, đã có mục CHANGELOG chưa
+npm run zip            # đóng gói homework-helper.zip để nộp Chrome Web Store
 ```
-homework-ai-extension/
-├── extension/          # The actual Chrome Extension (Load or zip this folder)
-├── docs/               # Technical & architectural documentation
-│   ├── architecture.md # System design & routing strategies
-│   ├── features.md     # Full feature matrix & study modes
-│   ├── api-setup.md    # Guide to obtain free API keys & Gemini Nano setup
-│   └── development.md  # Testing & packaging instructions
-└── README.md
-```
 
 ---
 
-## 📚 Documentation & Detailed Guides
-
-Toàn bộ tài liệu kỹ thuật và hướng dẫn sử dụng chuyên sâu nằm trong thư mục `docs/`:
-
-### 🚀 Hướng Dẫn Tính Năng Chi Tiết:
-
-- [01. Khoanh Vùng Chụp Ảnh & Giải Bài Tập (Crop & Solve)](docs/01-crop-and-solve.md)
-- [02. Ngăn Kéo Chat Học Tập Nổi (Floating Study Drawer)](docs/02-floating-chat-drawer.md)
-- [03. Thanh Công Cụ Bôi Đen Văn Bản (Selection Quick Toolbar)](docs/03-selection-toolbar.md)
-- [04. Trợ Lý Trắc Nghiệm & Quiz Trực Tuyến (Online Quiz & Form Solver)](docs/04-online-quiz-solver.md)
-- [05. Định Tuyến AI Đa Chiến Lược & Xoay Vòng Key Pool (AI Routing & Rotator)](docs/05-ai-routing-and-models.md)
-- [06. Bộ Máy Local WebAssembly OCR & Quản Lý Model (Local OCR Engine)](docs/06-local-ocr-engine.md)
-- [07. Tùy Biến Giao Diện Liquid Glass & Xem Trước Trực Tiếp (UI Customization)](docs/07-liquid-glass-customization.md)
-- [08. Cưỡng Chế Đa Ngôn Ngữ & Bản Địa Hóa (Multilingual Output Engine)](docs/08-multi-language-support.md)
-
-### 🏛️ Kiến Trúc, Cấu Hình & Phát Triển:
-
-- [Kiến trúc Kỹ thuật Toàn diện (System Architecture)](docs/architecture.md)
-- [Hướng dẫn Cấu hình API & Bật Gemini Nano (API Setup & Config)](docs/api-setup.md)
-- [Quyền Riêng tư & Lưu trữ Dữ liệu (Privacy & Storage)](docs/storage-and-privacy.md)
-- [Sổ tay Lập trình viên & Đóng gói Bản phát hành (Developer Guide & Packaging)](docs/development.md)
-
----
-
-## 📜 License
+## 📜 Giấy phép
 
 MIT License.

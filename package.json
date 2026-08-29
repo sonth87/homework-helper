@@ -4,7 +4,11 @@
   "description": "Homework Helper Chrome Extension",
   "scripts": {
     "zip": "node build-zip.js",
-    "build": "node build-zip.js"
+    "build": "node build-zip.js",
+    "check:i18n": "node scripts/check-i18n-parity.mjs",
+    "check:version": "node scripts/check-version-sync.mjs",
+    "check": "npm run check:i18n && npm run check:version && npm run check:links",
+    "check:links": "node scripts/check-doc-links.mjs"
   },
   "devDependencies": {
     "terser": "^5.51.2"
