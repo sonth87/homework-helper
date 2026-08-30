@@ -24,6 +24,8 @@ export type TrackerOptions = {
   tolerancePx: number;
   stableForMs: number;
   onStable: (point: Point<'screen-logical'>) => void;
+  /** Chuột bắt đầu di chuyển lại sau khi đã kích hoạt — dấu hiệu nên ẩn overlay. */
+  onMoveAway: () => void;
 };
 
 export class MouseTracker {
@@ -56,7 +58,10 @@ export class MouseTracker {
     const point = { x, y } as Point<'screen-logical'>;
     const now = Date.now();
 
+    const wasFired = this.debouncer.hasFired();
     const stable = this.debouncer.update(point, now, this.options.tolerancePx, this.options.stableForMs);
+
     if (stable) this.options.onStable(stable);
+    else if (wasFired && !this.debouncer.hasFired()) this.options.onMoveAway();
   }
 }

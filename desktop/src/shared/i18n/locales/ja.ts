@@ -149,4 +149,11 @@ export default {
   modControl: 'Control',
   modOption: 'Option',
   modShift: 'Shift',
+
+  // ── Mức chi tiết hover ────────────────────────────────────────────────────
+  setHoverGranularity: '詳細度',
+  setHoverGranularityDesc: '一度にどれだけの範囲を翻訳するか。',
+  granWord: '単語',
+  granSentence: '文',
+  granParagraph: '段落',
 } as const satisfies Dictionary;

@@ -46,4 +46,10 @@ export class HoverDebouncer<S extends Space> {
     this.anchor = null;
     this.lastFired = null;
   }
+
+  /** true nếu lần update() gần nhất đã từng kích hoạt — dùng để biết khi nào
+   *  cần ẩn overlay (chuột di chuyển ra khỏi vùng vừa hiện kết quả). */
+  hasFired(): boolean {
+    return this.lastFired !== null;
+  }
 }

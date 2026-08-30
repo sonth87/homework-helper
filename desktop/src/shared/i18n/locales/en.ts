@@ -148,4 +148,11 @@ export default {
   modControl: 'Control',
   modOption: 'Option',
   modShift: 'Shift',
+
+  // ── Mức chi tiết hover ────────────────────────────────────────────────────
+  setHoverGranularity: 'Detail level',
+  setHoverGranularityDesc: 'How much text to translate at once.',
+  granWord: 'Word',
+  granSentence: 'Sentence',
+  granParagraph: 'Paragraph',
 } as const;

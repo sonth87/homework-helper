@@ -19,6 +19,15 @@ export const acquisitionSettings = defineSettings('acquisition', 'groupAcquisiti
     type: 'number', default: 6, min: 2, max: 20, unit: 'px',
     i18n: 'setHoverTolerance', i18nDesc: 'setHoverToleranceDesc',
   },
+  hoverGranularity: {
+    type: 'enum', default: 'sentence',
+    options: [
+      { value: 'word', i18n: 'granWord' },
+      { value: 'sentence', i18n: 'granSentence' },
+      { value: 'paragraph', i18n: 'granParagraph' },
+    ],
+    i18n: 'setHoverGranularity', i18nDesc: 'setHoverGranularityDesc',
+  },
   hoverModifiers: {
     type: 'multi',
     default: [] as string[], // rỗng = kích hoạt ngay khi rê, không cần giữ phím

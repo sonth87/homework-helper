@@ -18,7 +18,12 @@ import { logger } from '../../logging/logger';
 
 type PendingResolve = (value: Record<string, unknown>) => void;
 
-const QUERY_TIMEOUT_MS = 800;
+// PHẢI lớn hơn thời gian chờ kích hoạt Chromium tối đa trong main.swift
+// (10 lần thử × 200ms = 2000ms cho ensureActivated()). Từng đặt 800ms — nếu
+// timeout ngoài bắn TRƯỚC khi helper kịp xong lần kích hoạt đầu tiên cho một
+// app mới gặp, request bị reject dù helper sắp trả kết quả đúng. Cộng thêm
+// biên độ cho round-trip IPC + hit-test.
+const QUERY_TIMEOUT_MS = 2500;
 
 export class MacAccessibility {
   private proc: ChildProcessWithoutNullStreams | null = null;

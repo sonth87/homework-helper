@@ -149,4 +149,11 @@ export default {
   modControl: 'Control',
   modOption: 'Option',
   modShift: 'Shift',
+
+  // ── Mức chi tiết hover ────────────────────────────────────────────────────
+  setHoverGranularity: '세부 수준',
+  setHoverGranularityDesc: '한 번에 번역할 텍스트 범위입니다.',
+  granWord: '단어',
+  granSentence: '문장',
+  granParagraph: '단락',
 } as const satisfies Dictionary;

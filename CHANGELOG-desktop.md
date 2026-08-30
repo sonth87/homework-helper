@@ -90,8 +90,15 @@ này dựa vào:
   đúng vị trí qua Accessibility.
 - Nhóm setting mới: bật/tắt hover, độ trễ, dung sai di chuyển, phím kích hoạt.
 
-Còn lại: OCR, dịch (Google Translate + cache theo thiết kế đã chốt), sentence
-detection, wiring HoverOverlay hiển thị kết quả.
+- Cắt văn bản theo từ/câu/đoạn bằng `Intl.Segmenter` — nhận biết đúng ngôn ngữ
+  cho tiếng Việt/Trung/Nhật (không dựa vào dấu câu/khoảng trắng kiểu Latin).
+- Google Translate + cache SQLite, đúng phạm vi Lane A đã chốt trong
+  roadmap/known-issues.md.
+- HoverOverlay hiển thị kết quả dịch thật — đã kiểm chứng E2E toàn chuỗi: rê
+  chuột → Accessibility → cắt đoạn → dịch → cache → hiện overlay đúng vị trí.
+
+Còn lại: OCR (fallback khi Accessibility không có, ví dụ PDF/ảnh/app native
+không hỗ trợ), rồi Phase 3 coi như hoàn tất.
 
 Bản phát hành đầu tiên sẽ là **`0.1.0`** khi hoàn tất Phase 1.
 

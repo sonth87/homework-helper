@@ -147,4 +147,11 @@ export default {
   modControl: 'Control',
   modOption: 'Option',
   modShift: 'Shift',
+
+  // ── Mức chi tiết hover ────────────────────────────────────────────────────
+  setHoverGranularity: 'Mức chi tiết',
+  setHoverGranularityDesc: 'Dịch bao nhiêu văn bản trong một lần.',
+  granWord: 'Từ',
+  granSentence: 'Câu',
+  granParagraph: 'Đoạn',
 } as const satisfies Dictionary;

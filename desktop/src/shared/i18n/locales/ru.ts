@@ -149,4 +149,11 @@ export default {
   modControl: 'Control',
   modOption: 'Option',
   modShift: 'Shift',
+
+  // ── Mức chi tiết hover ────────────────────────────────────────────────────
+  setHoverGranularity: 'Уровень детализации',
+  setHoverGranularityDesc: 'Сколько текста переводить за раз.',
+  granWord: 'Слово',
+  granSentence: 'Предложение',
+  granParagraph: 'Абзац',
 } as const satisfies Dictionary;

@@ -17,7 +17,7 @@ import type { Point, Rect } from '@shared/types/geometry';
 
 let hover: BrowserWindow | null = null;
 
-export function getHoverWindow(): BrowserWindow {
+function getHoverWindow(): BrowserWindow {
   if (hover && !hover.isDestroyed()) return hover;
 
   hover = new BrowserWindow({
@@ -52,17 +52,37 @@ export function getHoverWindow(): BrowserWindow {
   if (url) void hover.loadURL(`${url}/windows/hover/index.html`);
   else void hover.loadFile(join(__dirname, '../renderer/windows/hover/index.html'));
 
+  hover.on('closed', () => {
+    hover = null;
+  });
+
   return hover;
 }
 
+export type HoverContent = { sourceText: string; translatedText: string; sourceLanguage?: string };
+
 /**
- * Đặt overlay cạnh vùng văn bản nguồn, tự lật khi chạm mép màn hình.
+ * Gửi nội dung rồi hiện overlay đúng vị trí — MỘT hàm, không tách rời như
+ * trước, vì thứ tự và việc chờ trang tải xong là bắt buộc, không phải chi
+ * tiết tuỳ chọn.
  *
- * Toạ độ nhận vào là screen-logical vì Electron làm việc bằng điểm logic —
- * branded type chặn việc lỡ tay truyền pixel vật lý vào đây (xem geometry.ts).
+ * BUG THẬT đã gặp: lần đầu tiên trong một phiên (cửa sổ vừa được tạo bằng
+ * `getHoverWindow()`), `loadFile()` chưa xong — script preload chưa kịp đăng
+ * ký listener `hover:update` — thì `webContents.send()` gọi ngay sau đó gửi
+ * vào khoảng không, Electron KHÔNG đệm IPC cho listener chưa sẵn sàng, sự
+ * kiện mất vĩnh viễn. Lần hiện đầu tiên trong mỗi phiên luôn trống, các lần
+ * sau mới đúng — cùng loại lỗi thứ tự mà `result.window.ts` (Phase 2) đã xử
+ * lý bằng cách đợi `did-finish-load`, chỉ là hover.window.ts khi đó thiếu.
  */
-export function showHoverAt(anchor: Rect<'screen-logical'>): void {
+export async function showHoverAt(anchor: Rect<'screen-logical'>, content: HoverContent): Promise<void> {
   const win = getHoverWindow();
+
+  if (win.webContents.isLoading()) {
+    await new Promise<void>((resolve) => win.webContents.once('did-finish-load', () => resolve()));
+  }
+
+  win.webContents.send('hover:update', content);
+
   const [width, height] = win.getSize() as [number, number];
   const area = screen.getDisplayNearestPoint({ x: anchor.x, y: anchor.y }).workArea;
 

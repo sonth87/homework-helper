@@ -149,4 +149,11 @@ export default {
   modControl: 'Control',
   modOption: 'Option',
   modShift: 'Shift',
+
+  // ── Mức chi tiết hover ────────────────────────────────────────────────────
+  setHoverGranularity: 'ระดับรายละเอียด',
+  setHoverGranularityDesc: 'แปลข้อความมากแค่ไหนในแต่ละครั้ง',
+  granWord: 'คำ',
+  granSentence: 'ประโยค',
+  granParagraph: 'ย่อหน้า',
 } as const satisfies Dictionary;
