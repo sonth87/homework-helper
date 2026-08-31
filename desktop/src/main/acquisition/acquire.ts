@@ -4,12 +4,12 @@
  * Thứ tự ưu tiên lấy từ `config/intents.config.ts`, không hardcode ở đây. Thêm
  * một intent mới với chiến lược khác chỉ cần sửa file config đó.
  *
- * Phase 2 đã có `capture`. Phase 3 thêm `accessibility` — đã kiểm chứng thực
- * nghiệm trên macOS (ADR-0006). `ocr` là bước tiếp theo, chưa xây trong file
- * này — khi thiếu, danh sách ưu tiên tự rơi qua chiến lược kế tiếp hoặc báo lỗi.
+ * Phase 2 đã có `capture`. Phase 3 thêm `accessibility` và `ocr` — cả hai đã
+ * kiểm chứng thực nghiệm trên macOS (ADR-0006, ADR-0007).
  */
 
 import { INTENTS } from '@config/intents.config';
+import { LIMITS } from '@config/limits.config';
 import type { Intent } from '@shared/types/intent';
 import type { AcquiredContent } from '@shared/types/content';
 import { rect, rectToLogical } from '@shared/types/geometry';
@@ -18,6 +18,8 @@ import { captureDisplay, cropToBase64 } from './capture/screen-capture';
 import { displayById, displayUnderCursor, selectionToImageRect } from './capture/display';
 import { selectRegion } from '../windows/region-select.window';
 import { getAccessibilityProvider } from './accessibility';
+import { getOcrProvider } from './ocr';
+import { logger } from '../logging/logger';
 
 export type AcquireResult =
   | { ok: true; content: AcquiredContent }
@@ -40,6 +42,12 @@ export async function acquire(intent: Intent, point?: Point<'screen-logical'>): 
       // rơi qua chiến lược tiếp theo (thường là 'ocr') thay vì báo lỗi ngay.
       continue;
     }
+
+    if (strategy === 'ocr' && point) {
+      const viaOcr = await tryOcr(point);
+      if (viaOcr) return { ok: true, content: viaOcr };
+      continue;
+    }
   }
   return { ok: false, cancelled: false, error: `Intent "${intent}" chưa có chiến lược thu nhận nào khả dụng.` };
 }
@@ -57,6 +65,56 @@ async function tryAccessibility(point: Point<'screen-logical'>): Promise<Acquire
     source: 'accessibility',
     ...(result.role ? { app: { name: result.role } } : {}),
   };
+}
+
+/**
+ * Fallback khi Accessibility không đọc được nội dung tại điểm đó — ví dụ
+ * editor ảo hoá cao (đã quan sát: Monaco/VS Code không lộ text qua AX ở vùng
+ * soạn thảo, dù sidebar/terminal của cùng app đọc được), PDF, ảnh, app native
+ * không hỗ trợ accessibility.
+ *
+ * Chụp một vùng NHỎ quanh con trỏ (không phải toàn màn hình) rồi OCR — đủ để
+ * bắt một dòng chữ, giữ nhanh cho Lane A.
+ */
+async function tryOcr(point: Point<'screen-logical'>): Promise<AcquiredContent | null> {
+  const provider = await getOcrProvider();
+  if (!provider) return null;
+
+  const display = displayUnderCursor();
+  const box = rect('screen-logical', {
+    x: point.x - LIMITS.ocr.hoverCaptureWidth / 2,
+    y: point.y - LIMITS.ocr.hoverCaptureHeight / 2,
+    width: LIMITS.ocr.hoverCaptureWidth,
+    height: LIMITS.ocr.hoverCaptureHeight,
+  });
+
+  try {
+    const image = await captureDisplay(display);
+    const imageRegion = selectionToImageRect(box, display);
+    const base64 = cropToBase64(image, imageRegion);
+
+    const result = await provider.recognize(base64);
+    logger.debug('OCR fallback', { textLength: result.text.length, blocks: result.blocks.length, durationMs: result.durationMs });
+    if (!result.text.trim()) return null;
+
+    const bestConfidence = result.blocks.reduce((max, b) => Math.max(max, b.confidence), 0);
+    if (bestConfidence > 0 && bestConfidence < LIMITS.ocr.minConfidence) {
+      logger.debug('OCR confidence quá thấp, bỏ qua', { bestConfidence });
+      return null;
+    }
+
+    return {
+      text: result.text,
+      bounds: box,
+      source: 'ocr',
+      ...(bestConfidence > 0 ? { confidence: bestConfidence } : {}),
+    };
+  } catch (error) {
+    // KHÔNG nuốt lỗi im lặng — thất bại thật (helper không spawn được, capture
+    // lỗi...) phải phân biệt được với "vùng này đơn giản không có chữ".
+    logger.warn('OCR fallback lỗi', error);
+    return null;
+  }
 }
 
 async function captureRegion(): Promise<AcquireResult> {

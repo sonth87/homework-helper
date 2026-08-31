@@ -97,8 +97,13 @@ này dựa vào:
 - HoverOverlay hiển thị kết quả dịch thật — đã kiểm chứng E2E toàn chuỗi: rê
   chuột → Accessibility → cắt đoạn → dịch → cache → hiện overlay đúng vị trí.
 
-Còn lại: OCR (fallback khi Accessibility không có, ví dụ PDF/ảnh/app native
-không hỗ trợ), rồi Phase 3 coi như hoàn tất.
+- OCR macOS (Vision framework) làm fallback khi Accessibility không đọc được —
+  ví dụ vùng soạn thảo Monaco Editor trong VS Code. Đã kiểm chứng E2E thật:
+  hệ thống tự chọn Accessibility trước, OCR chỉ chạy khi cần, cả hai đường đều
+  dịch thành công.
+
+**Phase 3 hoàn tất.** Lane A (dịch khi rê chuột) chạy đầy đủ trên macOS: mouse
+tracking → Accessibility/OCR → cắt đoạn → dịch → cache → hiển thị.
 
 Bản phát hành đầu tiên sẽ là **`0.1.0`** khi hoàn tất Phase 1.
 

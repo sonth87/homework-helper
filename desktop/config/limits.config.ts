@@ -15,7 +15,14 @@ export const LIMITS = {
   llmLane: { firstByteTimeoutMs: 90_000, totalTimeoutMs: 600_000 },
 
   /** Ngưỡng dưới thì coi như OCR không đọc được, chuyển sang chiến lược khác. */
-  ocr: { minConfidence: 0.55, maxRegionPx: 2_000_000 },
+  ocr: {
+    minConfidence: 0.55,
+    maxRegionPx: 2_000_000,
+    /** Vùng chụp quanh con trỏ khi OCR làm fallback cho Lane A (screen-logical
+     *  px). Đủ rộng để bắt một dòng chữ, không quá lớn để giữ OCR nhanh. */
+    hoverCaptureWidth: 500,
+    hoverCaptureHeight: 80,
+  },
 
   /** Vùng dung sai khi dò text quanh con trỏ (logical px). */
   hover: { tolerancePx: 12, minStableFrames: 2 },

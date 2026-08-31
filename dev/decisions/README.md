@@ -11,6 +11,8 @@ thì biết chính xác điều gì cần xem lại.
 | [0003](./0003-hai-lane-thuc-thi.md) | Tách hai lane thực thi: dịch nhanh và suy luận LLM | Đã chấp nhận | 2026-08-29 |
 | [0004](./0004-solve-truoc-translate.md) | Desktop ship Crop & Solve trước Hover Translate | Đã chấp nhận | 2026-08-29 |
 | [0005](./0005-dung-node-sqlite.md) | Dùng `node:sqlite` dựng sẵn, không dùng better-sqlite3 | Đã chấp nhận | 2026-08-29 |
+| [0006](./0006-accessibility-helper-swift-subprocess.md) | Accessibility macOS qua subprocess Swift, không qua native Node addon | Đã chấp nhận | 2026-08-30 |
+| [0007](./0007-ocr-vision-framework-subprocess.md) | OCR macOS qua Vision framework, subprocess riêng khỏi Accessibility | Đã chấp nhận | 2026-08-30 |
 
 ## Khi nào viết ADR mới
 
