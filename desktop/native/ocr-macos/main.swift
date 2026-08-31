@@ -46,6 +46,54 @@ struct RecognizedBlock {
     let y: Double
     let width: Double
     let height: Double
+    /// Khung riêng từng TỪ trong khối — xem `wordBoxes()`. Cho phép tầng trên
+    /// (ocr/blocks.ts) hit-test đúng từ theo trục X thay vì NỘI SUY giả định
+    /// bề rộng ký tự đều nhau (đo thực nghiệm ~93,5% đúng — xem ADR-0008).
+    /// Chính xác TUYỆT ĐỐI vì lấy thẳng từ hộp bao Vision đã nhận diện, không
+    /// suy đoán gì thêm.
+    let words: [RecognizedWord]
+}
+
+struct RecognizedWord {
+    let text: String
+    /// Offset ký tự theo UTF-16 (khớp cách JavaScript đếm `string.length`) —
+    /// KHÔNG phải theo Character/grapheme cluster của Swift. Lệch chỗ này sẽ
+    /// làm offset trả về sai âm thầm với text ngoài ASCII thuần (emoji, một
+    /// số tổ hợp Unicode) dù đúng tuyệt đối với text Latin/số thông thường.
+    let startOffset: Int
+    let endOffset: Int
+    let x: Double
+    let y: Double
+    let width: Double
+    let height: Double
+}
+
+/// Tách một dòng đã nhận diện thành từng TỪ (không phải từng ký tự — payload
+/// nhỏ hơn nhiều, và độ chính xác theo từ là đủ cho mọi granularity đang dùng:
+/// word/sentence/paragraph đều không cần biết chính xác ký tự nào trong một
+/// từ, chỉ cần biết ĐÚNG TỪ). `.byWords` của Foundation nhận diện ranh giới từ
+/// theo ngôn ngữ (tương tự Intl.Segmenter phía JS đã dùng cho text-segment.ts),
+/// không phải chỉ tách theo khoảng trắng kiểu Latin.
+func wordBoxes(for candidate: VNRecognizedText, imageWidth: Int, imageHeight: Int) -> [RecognizedWord] {
+    let string = candidate.string
+    var words: [RecognizedWord] = []
+
+    string.enumerateSubstrings(in: string.startIndex..<string.endIndex, options: .byWords) { substring, range, _, _ in
+        guard let word = substring,
+              let observation = try? candidate.boundingBox(for: range) else { return }
+
+        let box = observation.boundingBox
+        let x = box.origin.x * Double(imageWidth)
+        let y = (1 - box.origin.y - box.height) * Double(imageHeight)
+        let width = box.width * Double(imageWidth)
+        let height = box.height * Double(imageHeight)
+
+        let startOffset = string.utf16.distance(from: string.utf16.startIndex, to: range.lowerBound.samePosition(in: string.utf16) ?? string.utf16.startIndex)
+        let endOffset = string.utf16.distance(from: string.utf16.startIndex, to: range.upperBound.samePosition(in: string.utf16) ?? string.utf16.startIndex)
+
+        words.append(RecognizedWord(text: word, startOffset: startOffset, endOffset: endOffset, x: x, y: y, width: width, height: height))
+    }
+    return words
 }
 
 enum OcrError: Error { case decodeFailed, requestFailed(String) }
@@ -86,7 +134,8 @@ func decodeAndRecognize(base64: String) throws -> (blocks: [RecognizedBlock], im
 
             blocks.append(RecognizedBlock(
                 text: candidate.string, confidence: candidate.confidence,
-                x: x, y: y, width: width, height: height
+                x: x, y: y, width: width, height: height,
+                words: wordBoxes(for: candidate, imageWidth: imageWidth, imageHeight: imageHeight)
             ))
         }
     }
@@ -124,6 +173,12 @@ while let line = readLine(strippingNewline: true) {
                 [
                     "text": b.text, "confidence": b.confidence,
                     "x": b.x, "y": b.y, "width": b.width, "height": b.height,
+                    "words": b.words.map { w -> [String: Any] in
+                        [
+                            "text": w.text, "startOffset": w.startOffset, "endOffset": w.endOffset,
+                            "x": w.x, "y": w.y, "width": w.width, "height": w.height,
+                        ]
+                    },
                 ]
             }
             let fullText = blocks.map { $0.text }.joined(separator: "\n")

@@ -12,11 +12,11 @@ export type GoogleTranslateResult = { translatedText: string; detectedSourceLang
 export async function googleTranslate(
   text: string,
   targetLang: string,
-  timeoutMs: number,
+  signal: AbortSignal,
 ): Promise<GoogleTranslateResult> {
   const url = `${ENDPOINT}?client=gtx&sl=auto&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(text)}`;
 
-  const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+  const res = await fetch(url, { signal });
   if (!res.ok) throw new Error(`Google Translate trả lỗi HTTP ${res.status}`);
 
   const data = (await res.json()) as [[string, string, ...unknown[]][] | null, ...unknown[]];

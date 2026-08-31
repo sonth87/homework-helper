@@ -62,6 +62,42 @@ test('đứng yên ở chỗ mới sau khi đã tra chỗ cũ thì kích hoạt 
   assert.deepEqual(result, P(300, 300));
 });
 
+test('hasFired(): false trước khi kích hoạt lần nào', () => {
+  const d = new HoverDebouncer();
+  assert.equal(d.hasFired(), false);
+  d.update(P(100, 100), 0, TOLERANCE, DELAY);
+  assert.equal(d.hasFired(), false, 'mới đặt mốc, chưa đủ thời gian đứng yên');
+});
+
+test('hasFired(): TRỞ VỀ false khi chuột rời khỏi vùng đã kích hoạt', () => {
+  // Bug thật đã gặp: hasFired() từng chỉ nhìn `lastFired !== null`, mà
+  // `lastFired` chỉ được SET, không bao giờ được xoá khi rời khỏi vùng dung
+  // sai — hasFired() mãi mãi true sau lần kích hoạt đầu tiên trong cả phiên,
+  // khiến tracker.ts không bao giờ gọi onMoveAway(), tooltip không tự ẩn.
+  const d = new HoverDebouncer();
+  d.update(P(100, 100), 0, TOLERANCE, DELAY);
+  d.update(P(100, 100), 400, TOLERANCE, DELAY);
+  assert.equal(d.hasFired(), true, 'đã kích hoạt');
+
+  d.update(P(500, 500), 450, TOLERANCE, DELAY); // rời hẳn khỏi vùng dung sai
+  assert.equal(d.hasFired(), false, 'phải hết fired ngay khi rời vùng dung sai, để tracker.ts biết mà ẩn overlay');
+});
+
+test('quay lại ĐÚNG điểm đã hover trước đó (sau khi đã rời đi) vẫn kích hoạt lại được', () => {
+  // Hệ quả thứ hai của cùng bug trên: lastFired không được xoá khi rời đi thì
+  // dòng chặn "đã tra đúng chỗ này rồi" (test phía trên) sẽ chặn NHẦM cả
+  // trường hợp người dùng rời đi rồi quay lại hover đúng chỗ cũ lần nữa.
+  const d = new HoverDebouncer();
+  d.update(P(100, 100), 0, TOLERANCE, DELAY);
+  d.update(P(100, 100), 400, TOLERANCE, DELAY); // kích hoạt lần 1
+
+  d.update(P(500, 500), 450, TOLERANCE, DELAY); // rời đi
+
+  d.update(P(100, 100), 900, TOLERANCE, DELAY); // quay lại đúng chỗ cũ
+  const result = d.update(P(100, 100), 1300, TOLERANCE, DELAY);
+  assert.deepEqual(result, P(100, 100), 'quay lại đúng chỗ cũ sau khi đã rời đi phải kích hoạt lại được');
+});
+
 test('reset() xoá trạng thái, coi như bắt đầu lại từ đầu', () => {
   const d = new HoverDebouncer();
   d.update(P(100, 100), 0, TOLERANCE, DELAY);

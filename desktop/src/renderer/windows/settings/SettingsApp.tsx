@@ -12,6 +12,7 @@ import { createTranslator } from '@shared/i18n';
 import { SettingControl } from './controls/SettingControl';
 import { HotkeyControl } from './controls/HotkeyControl';
 import { ApiKeysPanel } from './ApiKeysPanel';
+import { TranslateProvidersPanel } from './TranslateProvidersPanel';
 import { INTENTS } from '@config/intents.config';
 import type { Intent } from '@shared/types/intent';
 import './settings.css';
@@ -85,6 +86,28 @@ export function SettingsApp() {
               onChange={(v) => patch(key, v)}
             />
           ),
+        )}
+
+        {activeGroup === 'language' && (
+          <TranslateProvidersPanel
+            configs={settings.translateProviders}
+            t={t}
+            onChange={(v) => patch('translateProviders', v)}
+          />
+        )}
+
+        {activeGroup === 'system' && (
+          <div className="setting">
+            <span className="setting__label">{t('onboardingReopenLabel')}</span>
+            <span className="setting__desc">{t('onboardingReopenDesc')}</span>
+            <button
+              type="button"
+              className="settings__reopen-onboarding"
+              onClick={() => void window.api?.invoke('windows:openOnboarding')}
+            >
+              {t('onboardingReopenButton')}
+            </button>
+          </div>
         )}
       </main>
     </div>

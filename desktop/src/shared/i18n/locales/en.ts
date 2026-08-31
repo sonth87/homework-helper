@@ -19,6 +19,11 @@ export default {
   setOutputLanguageDesc: 'Language the AI writes its answers in. Independent of the interface language.',
   setTranslateTarget: 'Translate into',
   setTranslateTargetDesc: 'Default target language for hover translation.',
+  setTranslateProviders: 'Translation services',
+  setTranslateProvidersDesc: 'Order these are tried when translating on hover — falls back to the next one automatically if one fails.',
+  translateProviderGoogle: 'Google Translate',
+  translateProviderBing: 'Bing Translator',
+  translateProviderMymemory: 'MyMemory',
 
   langVi: 'Tiếng Việt', langEn: 'English', langTh: 'ไทย',
   langZhCN: '简体中文', langZhTW: '繁體中文', langJa: '日本語', langKo: '한국어',
@@ -84,6 +89,23 @@ export default {
   logError: 'Errors only', logWarn: 'Warnings', logInfo: 'Normal', logDebug: 'Detailed',
   setDebugOverlay: 'Debug overlay',
   setDebugOverlayDesc: 'Draw boxes around detected text. Useful when reporting recognition problems.',
+
+  // ── Xin quyền hệ thống (onboarding) ────────────────────────────────────────
+  onboardingTitle: 'System permissions',
+  onboardingIntro: "Homework Helper needs two macOS permissions to translate text and solve problems anywhere on your screen. Neither is optional — without them the app can't read what's on screen.",
+  onboardingAccessibilityTitle: 'Accessibility',
+  onboardingAccessibilityDesc: 'Lets the app read text under your cursor to translate it instantly — the fast path used for most apps.',
+  onboardingScreenTitle: 'Screen Recording',
+  onboardingScreenDesc: "Lets the app capture the screen — used for Crop & Solve, and as a fallback when a page's text can't be read directly (e.g. PDFs, some editors).",
+  onboardingGranted: 'Granted',
+  onboardingNotGranted: 'Not granted',
+  onboardingOpenPane: 'Open System Settings',
+  onboardingNeedsRestart: "Permissions granted. Restart the app for this to take effect — macOS doesn't apply new permissions to an already-running process.",
+  onboardingRelaunch: 'Restart now',
+  onboardingSkip: 'Later',
+  onboardingReopenLabel: 'System permissions',
+  onboardingReopenDesc: 'Review or re-grant the permissions Homework Helper needs.',
+  onboardingReopenButton: 'Review',
 
   // ── Intent (config/intents.config.ts) ─────────────────────────────────────
   intentTranslate: 'Translate',

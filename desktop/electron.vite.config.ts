@@ -34,6 +34,7 @@ export default defineConfig({
           'region-select': resolve('src/renderer/windows/region-select/index.html'),
           result: resolve('src/renderer/windows/result/index.html'),
           chat: resolve('src/renderer/windows/chat/index.html'),
+          onboarding: resolve('src/renderer/windows/onboarding/index.html'),
         },
       },
     },

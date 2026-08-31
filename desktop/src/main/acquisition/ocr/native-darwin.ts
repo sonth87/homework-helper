@@ -10,7 +10,7 @@ import { spawn } from 'node:child_process';
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
 import { join } from 'node:path';
 import { app } from 'electron';
-import type { OcrResult, TextBlock } from '@shared/types/content';
+import type { OcrResult, TextBlock, TextWord } from '@shared/types/content';
 import { rect } from '@shared/types/geometry';
 import { logger } from '../../logging/logger';
 
@@ -114,13 +114,26 @@ export class MacOcr {
     if (typeof msg.error === 'string') throw new Error(msg.error);
 
     const rawBlocks = (msg.blocks as Record<string, unknown>[] | undefined) ?? [];
-    const blocks: TextBlock[] = rawBlocks.map((b) => ({
-      text: String(b.text),
-      confidence: Number(b.confidence),
-      bounds: rect('image', {
-        x: Number(b.x), y: Number(b.y), width: Number(b.width), height: Number(b.height),
-      }),
-    }));
+    const blocks: TextBlock[] = rawBlocks.map((b) => {
+      const rawWords = (b.words as Record<string, unknown>[] | undefined) ?? [];
+      const words: TextWord[] = rawWords.map((w) => ({
+        text: String(w.text),
+        startOffset: Number(w.startOffset),
+        endOffset: Number(w.endOffset),
+        bounds: rect('image', {
+          x: Number(w.x), y: Number(w.y), width: Number(w.width), height: Number(w.height),
+        }),
+      }));
+
+      return {
+        text: String(b.text),
+        confidence: Number(b.confidence),
+        bounds: rect('image', {
+          x: Number(b.x), y: Number(b.y), width: Number(b.width), height: Number(b.height),
+        }),
+        words,
+      };
+    });
 
     return {
       text: String(msg.text ?? ''),

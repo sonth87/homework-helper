@@ -10,7 +10,7 @@ const isDev = !!process.env.ELECTRON_RENDERER_URL;
 // và preload ESM còn đòi thêm ràng buộc về sandbox và phần mở rộng .mjs.
 // Vì vậy `__dirname` dùng được trực tiếp ở đây.
 
-export type WindowKind = 'settings' | 'chat' | 'result' | 'hover' | 'region-select';
+export type WindowKind = 'settings' | 'chat' | 'result' | 'hover' | 'region-select' | 'onboarding';
 
 /**
  * Dựng BrowserWindow với thiết lập bảo mật đã chuẩn hoá.

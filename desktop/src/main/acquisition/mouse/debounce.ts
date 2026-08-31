@@ -25,8 +25,19 @@ export class HoverDebouncer<S extends Space> {
   update(point: Point<S>, now: number, tolerancePx: number, stableForMs: number): Point<S> | null {
     if (!this.anchor || distance(point, this.anchor) > tolerancePx) {
       // Di chuyển ra khỏi vùng dung sai: đặt lại mốc, bắt đầu đếm giờ lại từ đây.
+      //
+      // BUG THẬT đã gặp: trước đây chỉ reset `anchor`, không reset `lastFired`
+      // — mà `hasFired()` chỉ nhìn vào `lastFired !== null`. Hệ quả: sau lần
+      // hover đầu tiên trong CẢ PHIÊN, `hasFired()` mãi mãi trả `true`, nên
+      // điều kiện `wasFired && !hasFired()` ở tracker.ts không bao giờ đúng
+      // nữa — `onMoveAway()` chết lâm sàng, tooltip không bao giờ tự ẩn khi
+      // chuột rời đi. Còn kéo theo lỗi thứ hai: quay lại ĐÚNG điểm đã hover
+      // trước đó (sau khi đã rời đi) cũng không hiện lại được, vì dòng kiểm
+      // tra `lastFired` bên dưới vẫn còn nhớ điểm cũ. Rời khỏi vùng dung sai
+      // là đúng thời điểm để coi phiên hover trước đã kết thúc — reset cả hai.
       this.anchor = point;
       this.anchorAt = now;
+      this.lastFired = null;
       return null;
     }
 

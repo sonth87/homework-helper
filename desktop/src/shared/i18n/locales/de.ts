@@ -20,6 +20,11 @@ export default {
   setOutputLanguageDesc: 'Sprache, in der die KI ihre Antworten schreibt. Unabhängig von der Oberflächensprache.',
   setTranslateTarget: 'Übersetzen nach',
   setTranslateTargetDesc: 'Standard-Zielsprache beim Übersetzen per Mauszeiger.',
+  setTranslateProviders: 'Übersetzungsdienste',
+  setTranslateProvidersDesc: 'Reihenfolge beim Übersetzen per Mauszeiger — wechselt automatisch zum nächsten, wenn einer fehlschlägt.',
+  translateProviderGoogle: 'Google Übersetzer',
+  translateProviderBing: 'Bing Übersetzer',
+  translateProviderMymemory: 'MyMemory',
 
   langVi: 'Tiếng Việt', langEn: 'English', langTh: 'ไทย',
   langZhCN: '简体中文', langZhTW: '繁體中文', langJa: '日本語', langKo: '한국어',
@@ -85,6 +90,23 @@ export default {
   logError: 'Nur Fehler', logWarn: 'Warnungen', logInfo: 'Normal', logDebug: 'Ausführlich',
   setDebugOverlay: 'Debug-Overlay',
   setDebugOverlayDesc: 'Zeichnet Rahmen um erkannten Text. Hilfreich beim Melden von Erkennungsproblemen.',
+
+  // ── Xin quyền hệ thống (onboarding) ────────────────────────────────────────
+  onboardingTitle: 'Systemberechtigungen',
+  onboardingIntro: 'Homework Helper benötigt zwei macOS-Berechtigungen, um überall auf dem Bildschirm zu übersetzen und Aufgaben zu lösen. Beide sind erforderlich — fehlt eine davon, kann die App den Bildschirminhalt nicht lesen.',
+  onboardingAccessibilityTitle: 'Bedienungshilfen (Accessibility)',
+  onboardingAccessibilityDesc: 'Ermöglicht der App, Text unter dem Mauszeiger zu lesen und sofort zu übersetzen — der schnelle Weg für die meisten Apps.',
+  onboardingScreenTitle: 'Bildschirmaufnahme (Screen Recording)',
+  onboardingScreenDesc: 'Ermöglicht der App, den Bildschirm aufzunehmen — genutzt für Ausschnitt & Lösen sowie als Alternative, wenn Text nicht direkt gelesen werden kann (PDFs, manche Editoren).',
+  onboardingGranted: 'Erteilt',
+  onboardingNotGranted: 'Nicht erteilt',
+  onboardingOpenPane: 'Systemeinstellungen öffnen',
+  onboardingNeedsRestart: 'Berechtigungen erteilt. Starte die App neu, damit dies wirksam wird — macOS wendet neue Berechtigungen nicht auf einen bereits laufenden Prozess an.',
+  onboardingRelaunch: 'Jetzt neu starten',
+  onboardingSkip: 'Später',
+  onboardingReopenLabel: 'Systemberechtigungen',
+  onboardingReopenDesc: 'Die von Homework Helper benötigten Berechtigungen prüfen oder erneut erteilen.',
+  onboardingReopenButton: 'Prüfen',
 
   // ── Intent (config/intents.config.ts) ─────────────────────────────────────
   intentTranslate: 'Übersetzen',

@@ -33,6 +33,10 @@ export const LIMITS = {
      *  `estimateTextOffsetFraction` ở geometry.ts). Không đo cỡ chữ thật của
      *  từng app, chỉ là hằng số gần đúng cho UI text thông thường. */
     estimatedLineHeightPx: 20,
+    /** Chờ một chút trước khi thật sự ẩn overlay sau khi chuột rời đi — chuột
+     *  hơi vọt qua rồi quay lại ngay (rung tay, đổi hướng đọc) không nên làm
+     *  overlay nháy tắt-bật. Đủ ngắn để vẫn cảm giác tức thì khi rời hẳn. */
+    hideDelayMs: 250,
   },
 
   history: { maxConversations: 1_000, maxMessagesPerConversation: 500 },

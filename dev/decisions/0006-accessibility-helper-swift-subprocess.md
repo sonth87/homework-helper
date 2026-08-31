@@ -83,7 +83,7 @@ quyết định như ADR-0005, áp dụng cho một vấn đề khác.
    trong bộ nhớ tiến trình) — không phải kích hoạt lại mỗi lần, chỉ tốn chi phí
    một lần cho mỗi app mới gặp trong phiên.
 
-## Hệ quả cho onboarding — quan trọng, chưa giải quyết ở ADR này
+## Hệ quả cho onboarding — quan trọng, đã giải quyết ở [ADR-0010](./0010-onboarding-xin-quyen-macos.md)
 
 Quyền Accessibility trên macOS gắn theo **tiến trình chịu trách nhiệm** (responsible
 process), không phải riêng lẻ từng binary con. Khi app đóng gói thật spawn
@@ -118,8 +118,7 @@ hoạt động" ngay sau khi vừa cấp quyền và bỏ cuộc.
 
 - Bắt đầu đóng gói thật (`electron-builder`) — cần quyết định cách bundle binary
   Swift vào `Resources/` và build nó trong CI cho cả arm64/x86_64.
-- Xây màn hình onboarding thật — cần thiết kế lại luồng "cấp quyền → khởi động
-  lại" thay vì giả định quyền có hiệu lực ngay.
+- ~~Xây màn hình onboarding thật~~ — đã xây, xem [ADR-0010](./0010-onboarding-xin-quyen-macos.md).
 - Khi bắt đầu nhánh Windows (UI Automation) — kiểm tra UI Automation có cùng vấn
   đề "cây rỗng cho tới khi kích hoạt" với Electron/Chromium trên Windows không;
   rất có thể không giống hệt vì đó là một tầng accessibility khác hẳn.

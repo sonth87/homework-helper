@@ -20,6 +20,11 @@ export default {
   setOutputLanguageDesc: 'AI가 답변을 작성하는 언어입니다. 인터페이스 언어와 별개입니다.',
   setTranslateTarget: '번역할 언어',
   setTranslateTargetDesc: '마우스를 올려 번역할 때의 기본 대상 언어입니다.',
+  setTranslateProviders: '번역 서비스',
+  setTranslateProvidersDesc: '마우스오버 번역 시 시도하는 순서 — 하나가 실패하면 자동으로 다음 서비스로 전환됩니다.',
+  translateProviderGoogle: 'Google 번역',
+  translateProviderBing: 'Bing 번역',
+  translateProviderMymemory: 'MyMemory',
 
   langVi: 'Tiếng Việt', langEn: 'English', langTh: 'ไทย',
   langZhCN: '简体中文', langZhTW: '繁體中文', langJa: '日本語', langKo: '한국어',
@@ -85,6 +90,23 @@ export default {
   logError: '오류만', logWarn: '경고', logInfo: '보통', logDebug: '상세',
   setDebugOverlay: '디버그 오버레이',
   setDebugOverlayDesc: '인식한 글자 주위에 상자를 그립니다. 인식 문제를 신고할 때 유용합니다.',
+
+  // ── Xin quyền hệ thống (onboarding) ────────────────────────────────────────
+  onboardingTitle: '시스템 권한',
+  onboardingIntro: 'Homework Helper가 화면 어디서나 번역하고 문제를 풀려면 macOS 권한 두 가지가 필요합니다. 둘 다 필수입니다 — 하나라도 없으면 앱이 화면 내용을 읽을 수 없습니다.',
+  onboardingAccessibilityTitle: '손쉬운 사용(Accessibility)',
+  onboardingAccessibilityDesc: '커서 아래 텍스트를 읽어 즉시 번역할 수 있게 합니다 — 대부분 앱에서 사용하는 빠른 경로입니다.',
+  onboardingScreenTitle: '화면 기록(Screen Recording)',
+  onboardingScreenDesc: '화면을 캡처할 수 있게 합니다 — 영역 선택 후 풀이 기능과, 텍스트를 직접 읽을 수 없을 때(PDF, 일부 편집기 등)의 대체 수단으로 사용됩니다.',
+  onboardingGranted: '허용됨',
+  onboardingNotGranted: '허용 안 됨',
+  onboardingOpenPane: '시스템 설정 열기',
+  onboardingNeedsRestart: '권한이 허용되었습니다. 적용하려면 앱을 재시작하세요 — macOS는 이미 실행 중인 프로세스에 새 권한을 바로 적용하지 않습니다.',
+  onboardingRelaunch: '지금 재시작',
+  onboardingSkip: '나중에',
+  onboardingReopenLabel: '시스템 권한',
+  onboardingReopenDesc: 'Homework Helper에 필요한 권한을 확인하거나 다시 허용합니다.',
+  onboardingReopenButton: '확인',
 
   // ── Intent (config/intents.config.ts) ─────────────────────────────────────
   intentTranslate: '번역',

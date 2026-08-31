@@ -16,6 +16,7 @@ import type { Rect } from '../types/geometry';
 import type { Intent, StudyMode } from '../types/intent';
 import type { AiDelta, ProviderId } from '../types/ai';
 import type { OcrResult } from '../types/content';
+import type { PermissionKind, PermissionStatus } from '../types/permissions';
 
 // ── Khai báo kiểu kênh ──────────────────────────────────────────────────────
 
@@ -134,7 +135,12 @@ export const IPC = {
 
   'shell:openExternal': req<{ url: string }, void>(),
   'shell:openSettings': req<void, void>(),
-  'permissions:check': req<void, { accessibility: boolean; screenRecording: boolean }>(),
+
+  // Quyền hệ thống macOS (Accessibility + Screen Recording) — xem ADR-0010.
+  'permissions:check': req<void, PermissionStatus>(),
+  'permissions:openPane': req<{ kind: PermissionKind }, void>(),
+  'permissions:relaunch': req<void, void>(),
+  'windows:openOnboarding': req<void, void>(),
 } as const;
 
 // ── Kiểu dẫn xuất — không viết tay ──────────────────────────────────────────

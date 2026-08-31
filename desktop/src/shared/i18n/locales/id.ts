@@ -20,6 +20,11 @@ export default {
   setOutputLanguageDesc: 'Bahasa yang dipakai AI untuk menulis jawaban. Terpisah dari bahasa antarmuka.',
   setTranslateTarget: 'Terjemahkan ke',
   setTranslateTargetDesc: 'Bahasa tujuan bawaan saat menerjemahkan dengan kursor.',
+  setTranslateProviders: 'Layanan terjemahan',
+  setTranslateProvidersDesc: 'Urutan yang dicoba saat menerjemahkan dengan mengarahkan kursor — otomatis beralih ke layanan berikutnya jika satu gagal.',
+  translateProviderGoogle: 'Google Translate',
+  translateProviderBing: 'Bing Translator',
+  translateProviderMymemory: 'MyMemory',
 
   langVi: 'Tiếng Việt', langEn: 'English', langTh: 'ไทย',
   langZhCN: '简体中文', langZhTW: '繁體中文', langJa: '日本語', langKo: '한국어',
@@ -85,6 +90,23 @@ export default {
   logError: 'Hanya kesalahan', logWarn: 'Peringatan', logInfo: 'Normal', logDebug: 'Rinci',
   setDebugOverlay: 'Lapisan debug',
   setDebugOverlayDesc: 'Menggambar kotak di sekitar teks yang terdeteksi. Berguna saat melaporkan masalah pengenalan.',
+
+  // ── Xin quyền hệ thống (onboarding) ────────────────────────────────────────
+  onboardingTitle: 'Izin sistem',
+  onboardingIntro: 'Homework Helper memerlukan dua izin macOS untuk menerjemahkan dan menyelesaikan soal di mana saja di layar. Keduanya wajib — tanpa salah satunya, aplikasi tidak dapat membaca konten di layar.',
+  onboardingAccessibilityTitle: 'Aksesibilitas (Accessibility)',
+  onboardingAccessibilityDesc: 'Memungkinkan aplikasi membaca teks di bawah kursor untuk diterjemahkan langsung — jalur cepat yang digunakan sebagian besar aplikasi.',
+  onboardingScreenTitle: 'Perekaman Layar (Screen Recording)',
+  onboardingScreenDesc: 'Memungkinkan aplikasi menangkap layar — digunakan untuk Potong & Selesaikan, dan sebagai cadangan saat teks tidak bisa dibaca langsung (PDF, beberapa editor).',
+  onboardingGranted: 'Diberikan',
+  onboardingNotGranted: 'Belum diberikan',
+  onboardingOpenPane: 'Buka Pengaturan Sistem',
+  onboardingNeedsRestart: 'Izin telah diberikan. Mulai ulang aplikasi agar berlaku — macOS tidak menerapkan izin baru ke proses yang sudah berjalan.',
+  onboardingRelaunch: 'Mulai ulang sekarang',
+  onboardingSkip: 'Nanti',
+  onboardingReopenLabel: 'Izin sistem',
+  onboardingReopenDesc: 'Tinjau atau berikan ulang izin yang diperlukan Homework Helper.',
+  onboardingReopenButton: 'Tinjau',
 
   // ── Intent (config/intents.config.ts) ─────────────────────────────────────
   intentTranslate: 'Terjemahkan',

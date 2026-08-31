@@ -363,16 +363,22 @@ file** và nó tự xuất hiện trong UI Settings với đủ 13 ngôn ngữ.
 **Nghiệm thu:** `⌘⇧S` → khoanh vùng bất kỳ trên màn hình → lời giải streaming có công thức.
 **Tại đây app đã có giá trị sử dụng thật**, độc lập với toàn bộ phần Accessibility/OCR.
 
-## Phase 3 — Lane A: Hover Translate (M2, M4–M7 bản gốc)
+## Phase 3 — Lane A: Hover Translate (M2, M4–M7 bản gốc) — hoàn tất 2026-08-31
 
-- [ ] Mouse tracking toàn cục + debounce + huỷ request
-- [ ] macOS Accessibility (AXUIElement) → `getTextAtPoint`
-- [ ] macOS Vision OCR fallback
-- [ ] Sentence detection, tolerance zone, text stability (§19–33 bản gốc — dùng nguyên)
-- [ ] Google Translate provider + LRU/SQLite cache
-- [ ] Hệ thống quyền macOS (Accessibility + Screen Recording) + onboarding
+- [x] Mouse tracking toàn cục + debounce + huỷ request (huỷ thật qua `AbortController`,
+      xem ADR liên quan tới sửa lỗi tooltip không tự ẩn)
+- [x] macOS Accessibility (AXUIElement) → `getTextAtPoint` (ADR-0006, ADR-0008)
+- [x] macOS Vision OCR fallback (ADR-0007, ADR-0008 tầng 4)
+- [x] Sentence detection, tolerance zone, text stability
+- [x] Provider dịch + SQLite cache — mở rộng thành **chuỗi 3 provider** (Google/Bing/
+      MyMemory, người dùng sắp xếp thứ tự) sau khi phát hiện endpoint Google có thể
+      bị chặn hẳn, không chỉ rate-limit (ADR-0009)
+- [x] Hệ thống quyền macOS (Accessibility + Screen Recording) + onboarding (ADR-0010)
 
 **Nghiệm thu:** rê chuột trên PDF/VS Code/app native → tooltip dịch trong <400ms.
+Đạt với đường Accessibility (287–664ms tuỳ độ trễ mạng của bước dịch). **Chưa đạt**
+với đường OCR fallback (740–939ms, đo thực nghiệm) — chấp nhận vì đây là fallback,
+không phải đường chính; xem lại nếu người dùng thật phàn nàn OCR cảm giác chậm.
 
 ## Phase 4 — Mở rộng intent & Windows
 

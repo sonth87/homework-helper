@@ -86,9 +86,10 @@ ném lỗi `"Failed to get sources."` — không phải lỗi code, là hành vi
 chuẩn của macOS.
 
 Cùng bài học đã ghi ở ADR-0006: cấp quyền cho **tiến trình đang chạy sẵn**
-không có tác dụng ngay, phải khởi động lại. Onboarding thật (chưa xây) cần xin
-**cả hai quyền** (Accessibility + Screen Recording) và hướng dẫn khởi động lại
-sau khi cấp — không chỉ một quyền như tài liệu ADR-0006 đã ghi trước đó.
+không có tác dụng ngay, phải khởi động lại. Onboarding thật xin **cả hai
+quyền** (Accessibility + Screen Recording) và hướng dẫn khởi động lại sau khi
+cấp — không chỉ một quyền như tài liệu ADR-0006 đã ghi trước đó. Xem
+[ADR-0010](./0010-onboarding-xin-quyen-macos.md).
 
 ## Kiểm chứng E2E thật
 
@@ -120,6 +121,4 @@ chỉ chạy khi Accessibility trả `null`. Đúng thứ tự ưu tiên đã c�
 - Xây nhánh Windows OCR (Phase 4) — kiểm tra Windows OCR API có cùng vấn đề
   cold-start không, và hệ toạ độ có cùng quy ước gốc trên-trái như Windows
   Graphics API thường dùng hay không (khác Vision).
-- Xây onboarding thật — cần màn hình xin quyền gộp cả Accessibility lẫn Screen
-  Recording, giải thích rõ vì sao cần từng quyền, và nhắc khởi động lại sau khi
-  cấp (xem thêm khuyến nghị tương tự ở ADR-0006).
+- ~~Xây onboarding thật~~ — đã xây, xem [ADR-0010](./0010-onboarding-xin-quyen-macos.md).

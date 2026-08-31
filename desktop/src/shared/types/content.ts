@@ -16,10 +16,25 @@ export type ApplicationInfo = {
   windowTitle?: string;
 };
 
+export type TextWord = {
+  text: string;
+  /** Offset UTF-16 trong `TextBlock.text` chứa nó — khớp cách JS đếm `string.length`. */
+  startOffset: number;
+  endOffset: number;
+  bounds: Rect<'image'>;
+};
+
 export type TextBlock = {
   text: string;
   bounds: Rect<'image'>;
   confidence: number;
+  /**
+   * Khung riêng từng từ trong khối — chính xác tuyệt đối (lấy thẳng từ hộp
+   * bao Vision đã nhận diện), không phải nội suy. Cho phép hit-test đúng từ
+   * theo trục X thay vì giả định bề rộng ký tự đều nhau (`offsetWithinBlock`
+   * ở ocr/blocks.ts vẫn giữ làm phương án chót khi mảng này rỗng). Xem ADR-0008.
+   */
+  words: TextWord[];
 };
 
 export type OcrResult = {

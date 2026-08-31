@@ -18,6 +18,11 @@ export default {
   setOutputLanguageDesc: 'Ngôn ngữ AI dùng để viết lời giải. Độc lập với ngôn ngữ giao diện.',
   setTranslateTarget: 'Dịch sang',
   setTranslateTargetDesc: 'Ngôn ngữ đích mặc định khi dịch bằng cách rê chuột.',
+  setTranslateProviders: 'Dịch vụ dịch',
+  setTranslateProvidersDesc: 'Thứ tự thử khi dịch bằng cách rê chuột — tự chuyển sang dịch vụ tiếp theo nếu một dịch vụ lỗi.',
+  translateProviderGoogle: 'Google Translate',
+  translateProviderBing: 'Bing Translator',
+  translateProviderMymemory: 'MyMemory',
 
   langVi: 'Tiếng Việt', langEn: 'English', langTh: 'ไทย',
   langZhCN: '简体中文', langZhTW: '繁體中文', langJa: '日本語', langKo: '한국어',
@@ -83,6 +88,23 @@ export default {
   logError: 'Chỉ lỗi', logWarn: 'Cảnh báo', logInfo: 'Bình thường', logDebug: 'Chi tiết',
   setDebugOverlay: 'Lớp phủ gỡ lỗi',
   setDebugOverlayDesc: 'Vẽ khung quanh vùng văn bản nhận diện được. Hữu ích khi báo lỗi nhận diện.',
+
+  // ── Xin quyền hệ thống (onboarding) ────────────────────────────────────────
+  onboardingTitle: 'Quyền hệ thống',
+  onboardingIntro: 'Homework Helper cần hai quyền của macOS để dịch và giải bài ở bất kỳ đâu trên màn hình. Cả hai đều bắt buộc — thiếu một trong hai app sẽ không đọc được nội dung trên màn hình.',
+  onboardingAccessibilityTitle: 'Trợ năng (Accessibility)',
+  onboardingAccessibilityDesc: 'Cho phép app đọc text dưới con trỏ chuột để dịch ngay lập tức — đường nhanh dùng cho hầu hết ứng dụng.',
+  onboardingScreenTitle: 'Ghi màn hình (Screen Recording)',
+  onboardingScreenDesc: 'Cho phép app chụp màn hình — dùng cho Khoanh vùng & Giải, và làm phương án dự phòng khi không đọc trực tiếp được text (PDF, một số trình soạn thảo).',
+  onboardingGranted: 'Đã cấp',
+  onboardingNotGranted: 'Chưa cấp',
+  onboardingOpenPane: 'Mở System Settings',
+  onboardingNeedsRestart: 'Đã cấp quyền. Khởi động lại app để áp dụng — macOS không áp dụng quyền mới cho tiến trình đang chạy sẵn.',
+  onboardingRelaunch: 'Khởi động lại ngay',
+  onboardingSkip: 'Để sau',
+  onboardingReopenLabel: 'Quyền hệ thống',
+  onboardingReopenDesc: 'Xem lại hoặc cấp lại các quyền Homework Helper cần.',
+  onboardingReopenButton: 'Xem lại',
 
   // ── Intent (config/intents.config.ts) ─────────────────────────────────────
   intentTranslate: 'Dịch',

@@ -15,6 +15,45 @@ chạy trên macOS và Windows.
 
 ## [Unreleased]
 
+### Thêm mới
+
+- **Màn hình xin quyền hệ thống (Accessibility + Screen Recording).** Trước
+  đây thiếu quyền thì app chỉ im lặng không hoạt động, không giải thích vì
+  sao. Nay tự mở màn hình hướng dẫn ngay khi khởi động nếu còn thiếu quyền,
+  giải thích từng quyền dùng để làm gì, và nhắc khởi động lại sau khi cấp
+  (bắt buộc trên macOS — quyền mới không áp dụng cho tiến trình đang chạy).
+  Xem lại bất cứ lúc nào từ Cài đặt → Hệ thống. Xem
+  [ADR-0010](./dev/decisions/0010-onboarding-xin-quyen-macos.md).
+- **Dịch nhanh có thêm hai dịch vụ dự phòng: Bing Translator và MyMemory.**
+  Trước đây chỉ dùng Google Translate — nếu Google chặn hoặc lỗi, dịch khi rê
+  chuột im lặng không hoạt động. Nay tự động chuyển sang dịch vụ tiếp theo khi
+  một dịch vụ lỗi. Vào Cài đặt → Ngôn ngữ để bật/tắt từng dịch vụ và sắp xếp
+  thứ tự ưu tiên. Xem [ADR-0009](./dev/decisions/0009-chuoi-fallback-provider-dich.md).
+
+### Sửa lỗi
+
+- **Thẻ dịch khi rê chuột không tự ẩn khi đưa chuột ra ngoài.** Nguyên nhân:
+  bộ đếm đứng-yên nhớ "đã từng kích hoạt" nhưng không bao giờ quên nó khi chuột
+  rời đi, nên tín hiệu ẩn chỉ đúng ở LẦN ĐẦU TIÊN trong cả phiên rồi im bặt —
+  quay lại đúng chỗ vừa dịch cũng không hiện lại được vì cùng lý do. Nay ẩn
+  đúng lúc, có một khoảng trễ ngắn (250ms) trước khi ẩn hẳn để rung tay nhẹ
+  không làm thẻ nháy tắt-bật.
+- Lệnh dịch đang bay tới mạng bị huỷ THẬT (không chỉ bỏ qua kết quả) ngay khi
+  chuột rời đi hoặc chuyển sang hover chỗ khác — tránh lãng phí gọi dịch vụ
+  dịch cho một vị trí không còn ai xem, và tránh thẻ dịch hiện sai chỗ nếu kết
+  quả trễ về sau khi chuột đã di chuyển.
+- Đọc vị trí chữ chính xác (Notes, TextEdit và các app dùng khung soạn thảo
+  lớn tương tự) từng âm thầm thất bại khi phần tử con dưới con trỏ không tự
+  mang nội dung riêng, phải lấy từ phần tử cha — mọi phép tính vị trí ký tự
+  khi đó hỏi nhầm phần tử con, luôn ra kết quả rỗng dù nội dung đọc được vẫn
+  đúng. Nay tính đúng theo phần tử thực sự chứa nội dung.
+
+### Thay đổi
+
+- Khi phải đọc chữ bằng nhận dạng ảnh (OCR — VS Code, PDF, ảnh chụp…), vị trí
+  từng từ giờ lấy thẳng từ kết quả nhận dạng, không còn ước lượng theo tỉ lệ vị
+  trí trong dòng — chính xác hơn với các dòng có từ ngắn/dài xen kẽ nhiều.
+
 ### Phase 0 — Nền móng (hoàn tất 2026-08-29)
 
 Chưa có tính năng cho người dùng. Đây là tầng khai báo tập trung mà mọi thứ sau

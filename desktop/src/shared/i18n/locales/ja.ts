@@ -20,6 +20,11 @@ export default {
   setOutputLanguageDesc: 'AI が回答を書く言語です。表示言語とは独立しています。',
   setTranslateTarget: '翻訳先',
   setTranslateTargetDesc: 'ホバー翻訳の既定の翻訳先言語です。',
+  setTranslateProviders: '翻訳サービス',
+  setTranslateProvidersDesc: 'ホバー翻訳時に試す順序 — 一つ失敗すると自動的に次のサービスに切り替わります。',
+  translateProviderGoogle: 'Google翻訳',
+  translateProviderBing: 'Bing翻訳',
+  translateProviderMymemory: 'MyMemory',
 
   langVi: 'Tiếng Việt', langEn: 'English', langTh: 'ไทย',
   langZhCN: '简体中文', langZhTW: '繁體中文', langJa: '日本語', langKo: '한국어',
@@ -85,6 +90,23 @@ export default {
   logError: 'エラーのみ', logWarn: '警告', logInfo: '通常', logDebug: '詳細',
   setDebugOverlay: 'デバッグ表示',
   setDebugOverlayDesc: '認識した文字の周囲に枠を描きます。認識の不具合を報告するときに便利です。',
+
+  // ── Xin quyền hệ thống (onboarding) ────────────────────────────────────────
+  onboardingTitle: 'システム権限',
+  onboardingIntro: 'Homework Helper が画面上のどこでも翻訳・問題解決を行うには、macOS の2つの権限が必要です。どちらも必須です — どちらか一方でも欠けると、アプリは画面の内容を読み取れません。',
+  onboardingAccessibilityTitle: 'アクセシビリティ（Accessibility）',
+  onboardingAccessibilityDesc: 'カーソル下のテキストを読み取ってすぐに翻訳できるようにします — ほとんどのアプリで使われる高速な経路です。',
+  onboardingScreenTitle: '画面収録（Screen Recording）',
+  onboardingScreenDesc: '画面をキャプチャできるようにします — 範囲選択して解く機能や、テキストを直接読み取れない場合（PDF、一部のエディタなど）の代替手段として使用します。',
+  onboardingGranted: '許可済み',
+  onboardingNotGranted: '未許可',
+  onboardingOpenPane: 'システム設定を開く',
+  onboardingNeedsRestart: '権限が許可されました。反映するにはアプリを再起動してください — macOS は実行中のプロセスに新しい権限をすぐには適用しません。',
+  onboardingRelaunch: '今すぐ再起動',
+  onboardingSkip: '後で',
+  onboardingReopenLabel: 'システム権限',
+  onboardingReopenDesc: 'Homework Helper に必要な権限を確認・再許可します。',
+  onboardingReopenButton: '確認',
 
   // ── Intent (config/intents.config.ts) ─────────────────────────────────────
   intentTranslate: '翻訳',

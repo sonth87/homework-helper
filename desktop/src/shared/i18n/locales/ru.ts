@@ -20,6 +20,11 @@ export default {
   setOutputLanguageDesc: 'Язык, на котором ИИ пишет ответы. Не связан с языком интерфейса.',
   setTranslateTarget: 'Переводить на',
   setTranslateTargetDesc: 'Язык перевода по умолчанию при наведении курсора.',
+  setTranslateProviders: 'Сервисы перевода',
+  setTranslateProvidersDesc: 'Порядок использования при переводе наведением курсора — при сбое одного сервиса автоматически переключается на следующий.',
+  translateProviderGoogle: 'Google Переводчик',
+  translateProviderBing: 'Bing Переводчик',
+  translateProviderMymemory: 'MyMemory',
 
   langVi: 'Tiếng Việt', langEn: 'English', langTh: 'ไทย',
   langZhCN: '简体中文', langZhTW: '繁體中文', langJa: '日本語', langKo: '한국어',
@@ -85,6 +90,23 @@ export default {
   logError: 'Только ошибки', logWarn: 'Предупреждения', logInfo: 'Обычный', logDebug: 'Подробный',
   setDebugOverlay: 'Отладочное наложение',
   setDebugOverlayDesc: 'Рисует рамки вокруг распознанного текста. Полезно при сообщении о проблемах распознавания.',
+
+  // ── Xin quyền hệ thống (onboarding) ────────────────────────────────────────
+  onboardingTitle: 'Системные разрешения',
+  onboardingIntro: 'Homework Helper требуются два разрешения macOS, чтобы переводить и решать задачи в любом месте экрана. Оба обязательны — без любого из них приложение не сможет читать содержимое экрана.',
+  onboardingAccessibilityTitle: 'Универсальный доступ (Accessibility)',
+  onboardingAccessibilityDesc: 'Позволяет приложению читать текст под курсором и мгновенно переводить его — быстрый путь, используемый большинством приложений.',
+  onboardingScreenTitle: 'Запись экрана (Screen Recording)',
+  onboardingScreenDesc: 'Позволяет приложению захватывать экран — используется для функции «Выделить и решить», а также как запасной вариант, когда текст нельзя прочитать напрямую (PDF, некоторые редакторы).',
+  onboardingGranted: 'Предоставлено',
+  onboardingNotGranted: 'Не предоставлено',
+  onboardingOpenPane: 'Открыть Системные настройки',
+  onboardingNeedsRestart: 'Разрешения предоставлены. Перезапустите приложение, чтобы применить их — macOS не применяет новые разрешения к уже запущенному процессу.',
+  onboardingRelaunch: 'Перезапустить сейчас',
+  onboardingSkip: 'Позже',
+  onboardingReopenLabel: 'Системные разрешения',
+  onboardingReopenDesc: 'Просмотрите или предоставьте заново разрешения, необходимые Homework Helper.',
+  onboardingReopenButton: 'Просмотреть',
 
   // ── Intent (config/intents.config.ts) ─────────────────────────────────────
   intentTranslate: 'Перевести',

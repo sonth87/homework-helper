@@ -20,6 +20,11 @@ export default {
   setOutputLanguageDesc: 'ภาษาที่ AI ใช้เขียนคำตอบ แยกจากภาษาของแอป',
   setTranslateTarget: 'แปลเป็น',
   setTranslateTargetDesc: 'ภาษาปลายทางเริ่มต้นเมื่อแปลด้วยการชี้เมาส์',
+  setTranslateProviders: 'บริการแปลภาษา',
+  setTranslateProvidersDesc: 'ลำดับการลองใช้เมื่อแปลด้วยการวางเมาส์ — สลับไปบริการถัดไปโดยอัตโนมัติหากบริการหนึ่งล้มเหลว',
+  translateProviderGoogle: 'Google Translate',
+  translateProviderBing: 'Bing Translator',
+  translateProviderMymemory: 'MyMemory',
 
   langVi: 'Tiếng Việt', langEn: 'English', langTh: 'ไทย',
   langZhCN: '简体中文', langZhTW: '繁體中文', langJa: '日本語', langKo: '한국어',
@@ -85,6 +90,23 @@ export default {
   logError: 'เฉพาะข้อผิดพลาด', logWarn: 'คำเตือน', logInfo: 'ปกติ', logDebug: 'ละเอียด',
   setDebugOverlay: 'ชั้นซ้อนสำหรับดีบัก',
   setDebugOverlayDesc: 'วาดกรอบรอบข้อความที่ตรวจพบ มีประโยชน์เมื่อรายงานปัญหาการอ่านข้อความ',
+
+  // ── Xin quyền hệ thống (onboarding) ────────────────────────────────────────
+  onboardingTitle: 'สิทธิ์ระบบ',
+  onboardingIntro: 'Homework Helper ต้องการสิทธิ์ macOS สองอย่างเพื่อแปลและแก้โจทย์ได้ทุกที่บนหน้าจอ ทั้งสองอย่างจำเป็น — หากขาดอย่างใดอย่างหนึ่ง แอปจะอ่านเนื้อหาบนหน้าจอไม่ได้',
+  onboardingAccessibilityTitle: 'การช่วยการเข้าถึง (Accessibility)',
+  onboardingAccessibilityDesc: 'ให้แอปอ่านข้อความใต้เคอร์เซอร์เพื่อแปลทันที — เส้นทางที่เร็วที่สุดสำหรับแอปส่วนใหญ่',
+  onboardingScreenTitle: 'การบันทึกหน้าจอ (Screen Recording)',
+  onboardingScreenDesc: 'ให้แอปจับภาพหน้าจอ — ใช้สำหรับ Crop & Solve และเป็นทางเลือกสำรองเมื่ออ่านข้อความโดยตรงไม่ได้ (PDF, โปรแกรมแก้ไขบางตัว)',
+  onboardingGranted: 'ได้รับอนุญาตแล้ว',
+  onboardingNotGranted: 'ยังไม่ได้รับอนุญาต',
+  onboardingOpenPane: 'เปิด System Settings',
+  onboardingNeedsRestart: 'ได้รับสิทธิ์แล้ว รีสตาร์ทแอปเพื่อให้มีผล — macOS จะไม่ใช้สิทธิ์ใหม่กับโปรเซสที่กำลังทำงานอยู่',
+  onboardingRelaunch: 'รีสตาร์ทตอนนี้',
+  onboardingSkip: 'ไว้ทีหลัง',
+  onboardingReopenLabel: 'สิทธิ์ระบบ',
+  onboardingReopenDesc: 'ตรวจสอบหรือให้สิทธิ์ที่ Homework Helper ต้องการอีกครั้ง',
+  onboardingReopenButton: 'ตรวจสอบ',
 
   // ── Intent (config/intents.config.ts) ─────────────────────────────────────
   intentTranslate: 'แปล',

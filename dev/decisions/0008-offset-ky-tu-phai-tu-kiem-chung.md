@@ -92,7 +92,7 @@ Mỗi tầng **hoặc trả kết quả đã chứng minh, hoặc không trả g
 2. AXRangeForLine + nhị phân hai lần  -> chính xác tuyệt đối          [ĐÃ CÀI]
 3. AXVisibleCharacterRange            -> giới hạn phạm vi cho tầng 2  [ĐÃ CÀI]
 4. OCR block hit-test                 -> ca Chromium/PDF               [ĐÃ CÀI]
-   + Vision per-char box              -> bỏ nốt giả định bề rộng đều   [chưa]
+   + Vision per-word box              -> chính xác tuyệt đối, hết cần đoán [ĐÃ CÀI]
 5. nội suy hình học                   -> CHỈ trong phạm vi một dòng    [ĐÃ CÀI]
 ```
 
@@ -141,8 +141,44 @@ Kiểm chứng E2E với binary Vision thật trên ảnh 3 dòng dựng sẵn: 
 khác nhau (`Alpha` → `bravo` → `delta`). Đường OCR đi từ **hằng số 0.625** sang
 đúng từ đang trỏ.
 
-Còn lại một ước lượng trong khối: giả định bề rộng ký tự đều nhau (~93,5%). Bỏ
-nốt được bằng `VNRecognizedText.boundingBox(for:)` — chưa làm.
+Còn lại một ước lượng trong khối: giả định bề rộng ký tự đều nhau (~93,5%).
+
+### Cập nhật 2026-08-31 (phiên sau) — bỏ nốt ước lượng trong khối bằng khung từng TỪ
+
+`VNRecognizedText.boundingBox(for:)` cho khung của một *đoạn con* trong dòng đã
+nhận diện. Trước khi dùng, đo thực nghiệm để trả lời câu hỏi tài liệu Apple
+không nói rõ: **hệ toạ độ nào** — so với riêng dòng đó hay so với cả ảnh?
+
+```
+dòng: "Alpha bravo charlie delta"
+boundingBox CỦA CẢ DÒNG:        (0.020, 0.700, 0.320, 0.175)
+box TỪ ĐẦU ("Alpha"):           (0.020, 0.700, 0.073, 0.175)
+box TỪ CUỐI ("delta"):          (0.272, 0.700, 0.068, 0.175)
+```
+
+Box từng từ NẰM LỒNG đúng vị trí trong box cả dòng (cùng y, x tăng dần trái→
+phải, "delta" kết thúc ở 0.34 khớp mép phải dòng) — xác nhận **cùng hệ toạ độ
+với cả ảnh**, giống `observation.boundingBox`. Cùng quy đổi Y-flip đã dùng cho
+box cả dòng áp dụng được thẳng cho box từng từ, không cần công thức riêng.
+
+Tách theo TỪ (`.byWords` của Foundation — nhận diện ranh giới theo ngôn ngữ,
+cùng tinh thần `Intl.Segmenter` đã dùng phía JS), không phải theo ký tự: payload
+nhỏ hơn nhiều, và độ chính xác theo từ đã đủ cho mọi granularity đang dùng
+(word/sentence/paragraph không cần biết chính xác ký tự nào trong một từ, chỉ
+cần biết ĐÚNG TỪ). Offset trả về theo **UTF-16** (`string.utf16.distance`),
+khớp cách JavaScript đếm `string.length` — khác Character/grapheme cluster mặc
+định của Swift, lệch chỗ này sẽ sai âm thầm với text ngoài ASCII thuần.
+
+`ocr/blocks.ts` giờ ưu tiên hit-test vào khung từng từ (`offsetFromWords`) —
+chính xác tuyệt đối, không nội suy. Nội suy theo tỉ lệ X chỉ còn là **phương án
+chót** khi khối không có khung từ (chưa xảy ra với `ocr-macos` hiện tại, nhưng
+không giả định nguồn OCR nào cũng có — ví dụ Windows OCR ở Phase 4 chưa chắc
+có cùng API). Cùng nguyên tắc round-trip-verify của tầng 1 (ADR này) áp dụng
+lại: khung từ lấy thẳng từ Vision đã nhận diện, không suy đoán gì thêm.
+
+Kiểm chứng E2E qua binary thật, ảnh 3 dòng: **5/5 đúng từ theo trục X trong
+cùng một dòng** (`Alpha`→`bravo`→`delta` ở dòng 1), dùng khung từ thật thay vì
+nội suy. Không còn giả định "bề rộng ký tự đều nhau" ở đường OCR nữa.
 
 **Không bao giờ lấy trung bình giữa các tầng.** Trộn một giá trị chính xác với
 một giá trị đoán chỉ làm hỏng giá trị chính xác. Kết hợp ở đây nghĩa là *bắt mỗi
@@ -220,6 +256,47 @@ các toạ độ lấy tất định từ cây AX (không dùng chuột):
 
 Bài học lặp lại lần nữa: toạ độ suy ra từ cây AX của một cửa sổ **nền** không
 dùng được cho hit-test — cây AX không biết gì về thứ tự chồng cửa sổ.
+
+### Cập nhật 2026-08-31 (phiên sau) — E2E lại khi có cửa sổ Notes/Terminal thật ở trên cùng, lộ ra một bug thật
+
+Đưa Notes/Terminal lên trước (`open -a Notes`) rồi lặp lại đúng phép đo trên
+qua binary thật: **0/2 đúng** — `text` vẫn đúng (2377 ký tự, khớp Notes), nhưng
+`charOffset` vắng mặt ở CẢ HAI tầng, dù cùng phép đo gọi trực tiếp AX (không
+qua binary) đã cho 6/6 đúng trước đó.
+
+Nguyên nhân: `main.swift` từng tính `text = textOf(leafElement) ?? textOf(root)`
+— nhưng MỌI lệnh gọi offset sau đó (`verifiedOffset`, `offsetViaLines`,
+`visibleRange`, `frameOf`) vẫn thao tác trên `leafElement`, không phải trên
+element THỰC SỰ giữ chuỗi đó. Ở Notes, `drillDown()` tới đúng vùng soạn thảo
+nhưng leaf không mang text riêng — rơi vào nhánh `?? textOf(root)` — nên `text`
+đúng (nhờ fallback) trong khi mọi lệnh gọi offset lại hỏi nhầm `leafElement`,
+một element không hề giữ chuỗi đó, chắc chắn trả `nil` hết. Đây đúng loại lỗi
+mà cách viết tách rời "tính text ở đâu" và "tính offset ở đâu" dễ để lọt —
+sửa bằng cách gộp lại thành một cặp `(textElement, text)` duy nhất, mọi lệnh
+gọi offset đi theo đúng `textElement`.
+
+Sau khi sửa, đo lại qua đúng binary, đúng giao thức JSON thật:
+
+```
+Notes    dòng 57  -> offset 2199 qua "lines"     ✓
+Notes    dòng 62  -> offset 2275 qua "lines"     ✓
+Terminal dòng 314 -> offset 26977 qua "position" ✓
+Terminal dòng 319 -> offset 27312 qua "position" ✓
+```
+
+**4/4**, khớp tầng đã kiểm chứng qua AX trực tiếp trước đó (tầng 1 cho Terminal,
+tầng 2 cho Notes). Kiểm tra không hồi quy trên VS Code (Chromium) — 6 điểm, kết
+quả y hệt trước khi sửa: có điểm đọc được text, `charOffset` luôn vắng mặt,
+không crash. Đúng như tài liệu — Chromium không đổi hành vi, bug chỉ ảnh hưởng
+tới đường "leaf không tự mang text, phải rơi về ancestor", một tình huống mà
+Chromium (leaf luôn tự mang text riêng, không cần fallback) không gặp phải.
+
+**Bài học phương pháp, lặp lại lần thứ ba trong ADR này**: kiểm chứng "logic
+đúng" bằng cách gọi trực tiếp các hàm AX (probe rời) không thay thế được việc
+chạy qua đúng con đường mã nguồn thật (ở đây là qua `leafElement`/`root` như
+`main.swift` thực sự dùng) — hai con đường trông giống hệt nhau về mặt thuật
+toán nhưng khác nhau ở đúng chỗ quyết định, và chỉ lộ ra khi chạy qua binary
+thật, đúng giao thức thật.
 
 ## Đánh đổi đã chấp nhận
 

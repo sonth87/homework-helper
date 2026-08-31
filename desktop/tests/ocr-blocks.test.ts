@@ -2,13 +2,26 @@ import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { layoutBlocks, sortReadingOrder } from '../src/main/acquisition/ocr/blocks';
 import { point, rect } from '../src/shared/types/geometry';
-import type { TextBlock } from '../src/shared/types/content';
+import type { TextBlock, TextWord } from '../src/shared/types/content';
 
 /** Khối OCR trong hệ ảnh ĐÃ CẮT (gốc trên-trái), đúng như Vision trả về. */
-const block = (text: string, b: { x: number; y: number; w: number; h: number }): TextBlock => ({
+const block = (
+  text: string,
+  b: { x: number; y: number; w: number; h: number },
+  words: TextWord[] = [],
+): TextBlock => ({
   text,
   bounds: rect('image', { x: b.x, y: b.y, width: b.w, height: b.h }),
   confidence: 0.9,
+  words,
+});
+
+/** Khung một TỪ trong khối — đúng như `wordBoxes()` của main.swift trả về. */
+const word = (text: string, startOffset: number, b: { x: number; y: number; w: number; h: number }): TextWord => ({
+  text,
+  startOffset,
+  endOffset: startOffset + text.length,
+  bounds: rect('image', { x: b.x, y: b.y, width: b.w, height: b.h }),
 });
 
 // Vùng chụp 500×80 lấy con trỏ (640, 400) làm tâm — đúng cấu tạo của tryOcr().
@@ -87,6 +100,48 @@ test('layoutBlocks: màn hình Retina — khung khối quy đổi đúng theo h�
   assert.ok(layout.hitBounds);
   assert.equal(layout.hitBounds.width, 100, '200 pixel vật lý = 100 điểm logic ở scale 2');
   assert.equal(layout.hitBounds.x, 400, 'gốc 390 + 20/2 = 400');
+});
+
+test('layoutBlocks: có khung từ thì hit-test CHÍNH XÁC, không nội suy', () => {
+  // "one" rộng 40px (10-50), "two" rộng 130px (60-190) — nếu còn nội suy theo
+  // tỉ lệ ký tự đều nhau (bỏ qua bề rộng thật), hover ở x=150 (giữa "two",
+  // gần cuối khối) sẽ bị tính lệch sang gần cuối "two" hoặc quá "three". Có
+  // khung từ thì phải luôn ra ĐÚNG "two" bất kể bề rộng từ chênh lệch thế nào.
+  const blocks = [
+    block('one two three', { x: 10, y: 10, w: 200, h: 16 }, [
+      word('one', 0, { x: 10, y: 10, w: 40, h: 16 }),
+      word('two', 4, { x: 60, y: 10, w: 130, h: 16 }), // từ RẤT rộng, phá nội suy nếu còn dùng
+      word('three', 8, { x: 200, y: 10, w: 10, h: 16 }),
+    ]),
+  ];
+  // x màn hình = 390 (gốc CAPTURE) + 150 (trong khối) = 540, giữa khung "two" (70..190)
+  const layout = layoutBlocks(blocks, point('screen-logical', 540, 378), CAPTURE, SCALE);
+  assert.equal(layout.charOffset, 4, `phải trúng đúng "two" (offset 4) nhờ khung từ thật, nhận ${layout.charOffset}`);
+});
+
+test('layoutBlocks: hover vào KHOẢNG TRẮNG giữa hai khung từ trả về từ GẦN NHẤT', () => {
+  // Lỗi cùng loại đã sửa ở pickSegmentAtIndex: rơi vào khe không được lấy từ
+  // đầu/cuối khối một cách tuỳ tiện, phải lấy từ có mép gần con trỏ nhất.
+  const blocks = [
+    block('alpha beta', { x: 10, y: 10, w: 200, h: 16 }, [
+      word('alpha', 0, { x: 10, y: 10, w: 60, h: 16 }), // 10..70
+      word('beta', 6, { x: 90, y: 10, w: 50, h: 16 }), // 90..140, khe 70..90
+    ]),
+  ];
+  // x màn hình 390+75=465 — trong khe, gần "alpha" (cách 5px) hơn "beta" (cách 15px)
+  const nearAlpha = layoutBlocks(blocks, point('screen-logical', 465, 378), CAPTURE, SCALE);
+  assert.equal(nearAlpha.charOffset, 0, 'gần "alpha" hơn thì phải trả offset của "alpha"');
+
+  // x màn hình 390+85=475 — gần "beta" (cách 5px) hơn "alpha" (cách 15px)
+  const nearBeta = layoutBlocks(blocks, point('screen-logical', 475, 378), CAPTURE, SCALE);
+  assert.equal(nearBeta.charOffset, 6, 'gần "beta" hơn thì phải trả offset của "beta"');
+});
+
+test('layoutBlocks: khối KHÔNG có khung từ thì lùi về nội suy như trước (không vỡ)', () => {
+  const blocks = [block('one two three four', { x: 10, y: 10, w: 200, h: 16 })]; // words: []
+  const left = layoutBlocks(blocks, point('screen-logical', 410, 378), CAPTURE, SCALE);
+  const right = layoutBlocks(blocks, point('screen-logical', 590, 378), CAPTURE, SCALE);
+  assert.ok(left.charOffset !== undefined && right.charOffset !== undefined && left.charOffset < right.charOffset);
 });
 
 test('layoutBlocks: danh sách khối rỗng không ném lỗi', () => {

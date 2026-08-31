@@ -6,6 +6,7 @@ import { registerAiStreamIpc } from '../ipc/ai-stream.ipc';
 import { registerCaptureIpc } from '../ipc/capture.ipc';
 import { registerTranslateIpc } from '../ipc/translate.ipc';
 import { pruneHistory, registerHistoryIpc } from '../ipc/history.ipc';
+import { registerPermissionsIpc } from '../ipc/permissions.ipc';
 import type { SettingsService } from '../settings/settings.service';
 
 /**
@@ -22,4 +23,5 @@ export function initIpc(settings: SettingsService): void {
   registerTranslateIpc(settings);
   registerHistoryIpc(settings);
   pruneHistory(settings);
+  registerPermissionsIpc();
 }

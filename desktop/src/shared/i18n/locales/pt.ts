@@ -20,6 +20,11 @@ export default {
   setOutputLanguageDesc: 'Idioma em que a IA escreve as respostas. Independente do idioma da interface.',
   setTranslateTarget: 'Traduzir para',
   setTranslateTargetDesc: 'Idioma de destino padrão ao traduzir com o cursor.',
+  setTranslateProviders: 'Serviços de tradução',
+  setTranslateProvidersDesc: 'Ordem de tentativa ao traduzir ao passar o cursor — muda automaticamente para o próximo se um falhar.',
+  translateProviderGoogle: 'Google Tradutor',
+  translateProviderBing: 'Bing Tradutor',
+  translateProviderMymemory: 'MyMemory',
 
   langVi: 'Tiếng Việt', langEn: 'English', langTh: 'ไทย',
   langZhCN: '简体中文', langZhTW: '繁體中文', langJa: '日本語', langKo: '한국어',
@@ -85,6 +90,23 @@ export default {
   logError: 'Somente erros', logWarn: 'Avisos', logInfo: 'Normal', logDebug: 'Detalhado',
   setDebugOverlay: 'Sobreposição de depuração',
   setDebugOverlayDesc: 'Desenha caixas ao redor do texto detectado. Útil ao relatar problemas de reconhecimento.',
+
+  // ── Xin quyền hệ thống (onboarding) ────────────────────────────────────────
+  onboardingTitle: 'Permissões do sistema',
+  onboardingIntro: 'O Homework Helper precisa de duas permissões do macOS para traduzir e resolver exercícios em qualquer lugar da tela. Ambas são obrigatórias — sem uma delas, o app não consegue ler o conteúdo da tela.',
+  onboardingAccessibilityTitle: 'Acessibilidade (Accessibility)',
+  onboardingAccessibilityDesc: 'Permite que o app leia o texto sob o cursor para traduzir instantaneamente — o caminho rápido usado pela maioria dos apps.',
+  onboardingScreenTitle: 'Gravação de tela (Screen Recording)',
+  onboardingScreenDesc: 'Permite que o app capture a tela — usado em Recortar e resolver, e como alternativa quando o texto não pode ser lido diretamente (PDFs, alguns editores).',
+  onboardingGranted: 'Concedida',
+  onboardingNotGranted: 'Não concedida',
+  onboardingOpenPane: 'Abrir Ajustes do Sistema',
+  onboardingNeedsRestart: 'Permissões concedidas. Reinicie o app para aplicar — o macOS não aplica novas permissões a um processo já em execução.',
+  onboardingRelaunch: 'Reiniciar agora',
+  onboardingSkip: 'Mais tarde',
+  onboardingReopenLabel: 'Permissões do sistema',
+  onboardingReopenDesc: 'Revise ou conceda novamente as permissões que o Homework Helper precisa.',
+  onboardingReopenButton: 'Revisar',
 
   // ── Intent (config/intents.config.ts) ─────────────────────────────────────
   intentTranslate: 'Traduzir',

@@ -312,13 +312,33 @@ while let line = readLine(strippingNewline: true) {
         }
 
         let leafElement = drillDown(from: root, point: point, depth: 0, maxDepth: 25)
-        let text = textOf(leafElement) ?? textOf(root)
         _ = activationOk // đã dùng để quyết định có hit-test lại hay không, không cần trả ra ngoài
+
+        // BUG THẬT đã gặp: `text` từng lấy từ `textOf(leafElement) ?? textOf(root)`
+        // nhưng mọi lệnh gọi offset SAU ĐÓ (verifiedOffset/offsetViaLines/
+        // visibleRange/frameOf) vẫn luôn thao tác trên `leafElement` — nếu
+        // leafElement KHÔNG có text riêng (rơi vào nhánh `?? textOf(root)`),
+        // các lệnh đó hỏi nhầm element không hề giữ chuỗi đó, chắc chắn trả
+        // nil hết. Quan sát được thật trên Notes: drillDown() tới đúng vùng
+        // soạn thảo nhưng leaf không mang text riêng, root mới có — kết quả
+        // "text": 2377 ký tự đúng (nhờ fallback) nhưng charOffset LUÔN vắng
+        // mặt dù verifiedOffset/offsetViaLines đã kiểm chứng hoạt động đúng
+        // khi gọi trực tiếp trên root. Từ nay: element nào THỰC SỰ cho text,
+        // mọi lệnh gọi offset đi theo đúng element đó.
+        let textElement: AXUIElement
+        let text: String?
+        if let t = textOf(leafElement) {
+            textElement = leafElement
+            text = t
+        } else {
+            textElement = root
+            text = textOf(root)
+        }
 
         var fields: [String: Any] = ["app": appName, "pid": Int(pid)]
         if let t = text {
             fields["text"] = t
-            if let f = frameOf(leafElement) {
+            if let f = frameOf(textElement) {
                 fields["bounds"] = ["x": f.origin.x, "y": f.origin.y, "width": f.width, "height": f.height]
             }
             // Hai tầng, thử theo thứ tự rẻ trước. Cả hai đều CHỨNG MINH kết quả
@@ -327,14 +347,14 @@ while let line = readLine(strippingNewline: true) {
             //
             // `offsetSource` để đo được tầng nào thực sự gánh việc khi dùng thật
             // — chính là dữ liệu mà ADR-0008 nói cần có trước khi xây tiếp.
-            if let off = verifiedOffset(leafElement, at: point, textLength: t.count) {
+            if let off = verifiedOffset(textElement, at: point, textLength: t.count) {
                 fields["charOffset"] = off
                 fields["offsetSource"] = "position"
-            } else if let off = offsetViaLines(leafElement, at: point, textLength: t.count) {
+            } else if let off = offsetViaLines(textElement, at: point, textLength: t.count) {
                 fields["charOffset"] = off
                 fields["offsetSource"] = "lines"
             }
-            if let (loc, len) = visibleRange(leafElement) {
+            if let (loc, len) = visibleRange(textElement) {
                 fields["visibleStart"] = loc
                 fields["visibleLength"] = len
             }

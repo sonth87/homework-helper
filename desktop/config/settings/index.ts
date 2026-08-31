@@ -42,4 +42,5 @@ export function migrateSettings(stored: Record<string, unknown>) {
 
 export { defineSettings } from './define';
 export type { ApiConfig } from './apikeys.settings';
+export type { TranslateProviderConfig } from './language.settings';
 export type { SettingDef, SettingsGroup, UiGroup } from './define';

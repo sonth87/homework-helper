@@ -20,6 +20,11 @@ export default {
   setOutputLanguageDesc: 'Langue dans laquelle l\'IA rédige ses réponses. Indépendante de la langue de l\'interface.',
   setTranslateTarget: 'Traduire vers',
   setTranslateTargetDesc: 'Langue cible par défaut pour la traduction au survol.',
+  setTranslateProviders: 'Services de traduction',
+  setTranslateProvidersDesc: 'Ordre d’essai lors de la traduction au survol — passe automatiquement au suivant en cas d’échec.',
+  translateProviderGoogle: 'Google Traduction',
+  translateProviderBing: 'Bing Traducteur',
+  translateProviderMymemory: 'MyMemory',
 
   langVi: 'Tiếng Việt', langEn: 'English', langTh: 'ไทย',
   langZhCN: '简体中文', langZhTW: '繁體中文', langJa: '日本語', langKo: '한국어',
@@ -85,6 +90,23 @@ export default {
   logError: 'Erreurs uniquement', logWarn: 'Avertissements', logInfo: 'Normal', logDebug: 'Détaillé',
   setDebugOverlay: 'Surimpression de débogage',
   setDebugOverlayDesc: 'Dessine des cadres autour du texte détecté. Utile pour signaler un problème de reconnaissance.',
+
+  // ── Xin quyền hệ thống (onboarding) ────────────────────────────────────────
+  onboardingTitle: 'Autorisations système',
+  onboardingIntro: "Homework Helper a besoin de deux autorisations macOS pour traduire et résoudre des exercices n'importe où à l'écran. Les deux sont obligatoires — sans l'une d'elles, l'app ne peut pas lire le contenu affiché.",
+  onboardingAccessibilityTitle: 'Accessibilité (Accessibility)',
+  onboardingAccessibilityDesc: "Permet à l'app de lire le texte sous le curseur pour le traduire instantanément — la voie rapide utilisée par la plupart des apps.",
+  onboardingScreenTitle: "Enregistrement d'écran (Screen Recording)",
+  onboardingScreenDesc: "Permet à l'app de capturer l'écran — utilisé pour Découper et résoudre, et comme solution de repli quand le texte ne peut pas être lu directement (PDF, certains éditeurs).",
+  onboardingGranted: 'Accordée',
+  onboardingNotGranted: 'Non accordée',
+  onboardingOpenPane: 'Ouvrir Réglages Système',
+  onboardingNeedsRestart: "Autorisations accordées. Redémarrez l'app pour appliquer — macOS n'applique pas les nouvelles autorisations à un processus déjà en cours d'exécution.",
+  onboardingRelaunch: 'Redémarrer maintenant',
+  onboardingSkip: 'Plus tard',
+  onboardingReopenLabel: 'Autorisations système',
+  onboardingReopenDesc: 'Consultez ou accordez à nouveau les autorisations dont Homework Helper a besoin.',
+  onboardingReopenButton: 'Vérifier',
 
   // ── Intent (config/intents.config.ts) ─────────────────────────────────────
   intentTranslate: 'Traduire',

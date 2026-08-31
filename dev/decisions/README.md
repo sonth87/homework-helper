@@ -14,6 +14,8 @@ thì biết chính xác điều gì cần xem lại.
 | [0006](./0006-accessibility-helper-swift-subprocess.md) | Accessibility macOS qua subprocess Swift, không qua native Node addon | Đã chấp nhận | 2026-08-30 |
 | [0007](./0007-ocr-vision-framework-subprocess.md) | OCR macOS qua Vision framework, subprocess riêng khỏi Accessibility | Đã chấp nhận (đính chính bởi 0008) | 2026-08-30 |
 | [0008](./0008-offset-ky-tu-phai-tu-kiem-chung.md) | Offset ký tự phải tự kiểm chứng khứ hồi, không tin API Accessibility | Đã chấp nhận | 2026-08-31 |
+| [0009](./0009-chuoi-fallback-provider-dich.md) | Lane A dịch qua chuỗi nhiều provider, người dùng sắp xếp thứ tự | Đã chấp nhận | 2026-08-31 |
+| [0010](./0010-onboarding-xin-quyen-macos.md) | Onboarding xin quyền macOS — tự mở khi thiếu, không tự tin báo "đã cấp" | Đã chấp nhận | 2026-08-31 |
 
 ## Khi nào viết ADR mới
 

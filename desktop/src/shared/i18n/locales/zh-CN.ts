@@ -20,6 +20,11 @@ export default {
   setOutputLanguageDesc: 'AI 撰写答案所用的语言，与界面语言相互独立。',
   setTranslateTarget: '翻译为',
   setTranslateTargetDesc: '悬停翻译时的默认目标语言。',
+  setTranslateProviders: '翻译服务',
+  setTranslateProvidersDesc: '悬停翻译时尝试的顺序——如果某个服务失败，会自动切换到下一个。',
+  translateProviderGoogle: 'Google 翻译',
+  translateProviderBing: '必应翻译',
+  translateProviderMymemory: 'MyMemory',
 
   langVi: 'Tiếng Việt', langEn: 'English', langTh: 'ไทย',
   langZhCN: '简体中文', langZhTW: '繁體中文', langJa: '日本語', langKo: '한국어',
@@ -85,6 +90,23 @@ export default {
   logError: '仅错误', logWarn: '警告', logInfo: '常规', logDebug: '详细',
   setDebugOverlay: '调试浮层',
   setDebugOverlayDesc: '在识别到的文字周围绘制边框。反馈识别问题时很有用。',
+
+  // ── Xin quyền hệ thống (onboarding) ────────────────────────────────────────
+  onboardingTitle: '系统权限',
+  onboardingIntro: 'Homework Helper 需要两项 macOS 权限才能在屏幕任意位置翻译和解题。两项都是必需的——缺少任何一项，应用都无法读取屏幕内容。',
+  onboardingAccessibilityTitle: '辅助功能（Accessibility）',
+  onboardingAccessibilityDesc: '让应用读取光标下的文字以立即翻译——大多数应用使用的快速路径。',
+  onboardingScreenTitle: '屏幕录制（Screen Recording）',
+  onboardingScreenDesc: '让应用截取屏幕——用于框选解题，以及在无法直接读取文字时作为备用方案（如 PDF、部分编辑器）。',
+  onboardingGranted: '已授权',
+  onboardingNotGranted: '未授权',
+  onboardingOpenPane: '打开系统设置',
+  onboardingNeedsRestart: '权限已授予。请重启应用以生效——macOS 不会将新权限应用到已在运行的进程。',
+  onboardingRelaunch: '立即重启',
+  onboardingSkip: '以后再说',
+  onboardingReopenLabel: '系统权限',
+  onboardingReopenDesc: '查看或重新授予 Homework Helper 所需的权限。',
+  onboardingReopenButton: '查看',
 
   // ── Intent (config/intents.config.ts) ─────────────────────────────────────
   intentTranslate: '翻译',

@@ -1,0 +1,86 @@
+:root {
+  --bg: #f6f7f9; --panel: rgba(255,255,255,0.72); --border: rgba(0,0,0,0.09);
+  --text: #16181d; --text-dim: #61656e; --accent: #0284c7;
+  --accent-soft: rgba(2,132,199,0.12); --success: #16a34a; --success-soft: rgba(22,163,74,0.12);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181d; --panel: rgba(38,41,48,0.72); --border: rgba(255,255,255,0.1);
+    --text: #eceef2; --text-dim: #9aa0ab; --accent: #38bdf8;
+    --accent-soft: rgba(56,189,248,0.16); --success: #4ade80; --success-soft: rgba(74,222,128,0.16);
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 13.5px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.onboarding { padding: 44px 28px 28px; display: grid; gap: 16px; }
+
+.onboarding h1 { margin: 0; font-size: 18px; }
+.onboarding__intro { margin: 0; color: var(--text-dim); }
+
+.onboarding__row {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.onboarding__row.is-granted { border-color: var(--success-soft); }
+
+.onboarding__row-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.onboarding__row-title { font-weight: 600; }
+
+.onboarding__badge {
+  padding: 2px 9px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+.onboarding__row.is-granted .onboarding__badge { background: var(--success-soft); color: var(--success); }
+
+.onboarding__row-desc { margin: 0; color: var(--text-dim); }
+
+.onboarding__row button,
+.onboarding__restart button {
+  appearance: none;
+  justify-self: start;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.onboarding__row button:hover,
+.onboarding__restart button:hover { border-color: var(--accent); color: var(--accent); }
+
+.onboarding__restart {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--success-soft);
+  border-radius: 12px;
+}
+.onboarding__restart p { margin: 0; }
+.onboarding__restart button { background: var(--success); border-color: var(--success); color: #fff; }
+
+.onboarding__skip {
+  appearance: none;
+  justify-self: center;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
