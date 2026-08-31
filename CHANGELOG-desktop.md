@@ -105,6 +105,13 @@ này dựa vào:
 **Phase 3 hoàn tất.** Lane A (dịch khi rê chuột) chạy đầy đủ trên macOS: mouse
 tracking → Accessibility/OCR → cắt đoạn → dịch → cache → hiển thị.
 
+### Sửa lỗi
+
+- Icon tray từng là `nativeImage.createEmpty()` — vô hình hoàn toàn trên thanh
+  menu. Sau khi đóng cửa sổ Settings, không có cách nào mở lại app trừ khởi
+  động lại từ đầu. Thêm icon tạm (`resources/trayTemplate.png`) — sẽ thay
+  bằng thiết kế chính thức sau, không cần sửa code khi đổi.
+
 Bản phát hành đầu tiên sẽ là **`0.1.0`** khi hoàn tất Phase 1.
 
 ---
