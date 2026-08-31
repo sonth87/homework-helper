@@ -17,6 +17,32 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.6.2] — 2026-08-31
+
+### Thay đổi
+- Icon thu gọn của thẻ giải bài (khi kéo thẻ để ẩn thành nút tròn) nay đổi kích thước
+  **và độ mờ** theo đúng cài đặt **Kích thước** / **Độ mờ nút nổi FAB**, thay vì luôn
+  cố định một cỡ và độ mờ 85%.
+- Thẻ giải bài (popup) có thể thu nhỏ hơn khi kéo cạnh để resize.
+- Ở chế độ Compact, nút hành động chính dưới đáy thẻ (ví dụ *Tiếp tục trong chat*,
+  *Chụp câu tiếp theo*) nay chỉ hiện icon, ẩn chữ — đồng bộ với nút Sao chép/Thử lại
+  vốn đã làm vậy.
+- Thanh công cụ khi cắt ảnh (Huỷ / Sao chép / Dịch / Hỏi AI) nay dùng **chung một giao
+  diện** với thanh công cụ khi bôi đen văn bản — cùng kiểu viên thuốc kính mờ, cùng
+  chịu ảnh hưởng của mọi cài đặt **Chủ đề / Kích thước / Độ mờ / Độ nhoè / Hiện chữ trên
+  toolbar** — thay vì mỗi nơi một kiểu (trước đây thanh cắt ảnh nền tối, nút "Hỏi AI"
+  tô nổi bật riêng). Chức năng của từng nút giữ nguyên.
+
+### Sửa lỗi
+- **Nhận diện chữ từ ảnh (OCR) không hoạt động trong bản cài từ Chrome Web Store.**
+  Bước nén gói phát hành làm hỏng bộ máy OCR ngoại tuyến, khiến chức năng "Cắt ảnh &
+  Giải bài" luôn báo lỗi *"Không trích xuất được văn bản từ ảnh"* với người dùng chưa
+  cấu hình API key — dù bản chạy trực tiếp từ mã nguồn vẫn bình thường. Gói phát hành
+  nay giữ nguyên vẹn các thư viện OCR và tự kiểm tra trước khi đóng gói.
+- **Model cục bộ chỉ đọc được chữ (Ollama / LM Studio) không nhận được nội dung ảnh.**
+  Bước OCR đệm trước khi gửi cho model luôn thất bại, nên câu hỏi được gửi đi mà
+  không kèm cả ảnh lẫn chữ trích xuất — model trả lời lạc đề hoặc hỏi lại đề bài.
+
 ## [1.6.1] — 2026-08-29
 
 ### Thay đổi

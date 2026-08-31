@@ -63,14 +63,58 @@ async function getTessBaseApi(compLang, sendProgress) {
   return { instance, api: apiInstance };
 }
 
+/**
+ * Recognize text in an image, in this same offscreen document.
+ *
+ * Exported so that same-document callers (offscreen/ai-stream.js) can invoke
+ * it directly. They must NOT go through chrome.runtime.sendMessage: the
+ * runtime fires onMessage "in every frame of your extension (except for the
+ * sender's frame)", and ai-stream.js shares this very frame, so an
+ * OFFSCREEN_RUN_OCR message sent from there would never reach the listener
+ * below.
+ *
+ * @param {string} imageBase64 - Base64 (data URL or bare) image
+ * @param {string} [targetLang] - App language code, e.g. 'vi'
+ * @param {(step: string, pct: number) => void} [onProgress]
+ * @returns {Promise<string>} recognized text, post-processed
+ */
+export async function runLocalOcr(imageBase64, targetLang = 'vi', onProgress = () => {}) {
+  const compLang = OcrEngine.getCompositeLanguage(targetLang);
+
+  onProgress('Bắt đầu khởi động nhân WebAssembly...', 15);
+
+  const { instance, api } = await getTessBaseApi(compLang, onProgress);
+
+  onProgress('Đang quét và trích xuất chữ từ ảnh...', 75);
+
+  // Convert base64 Data URL to Uint8Array
+  const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+  const binaryStr = atob(cleanBase64);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+
+  instance.FS.writeFile('/input', bytes);
+  api.SetImageFile('/input', 0);
+  api.Recognize(null);
+
+  onProgress('Định dạng văn bản & công thức...', 95);
+  const rawText = api.GetUTF8Text() || '';
+  console.log('[Offscreen Direct OCR] Raw text extracted:\n', rawText);
+
+  const cleanedText = OcrEngine.postProcessMathText(rawText);
+  onProgress('Nhận diện hoàn tất!', 100);
+
+  return cleanedText;
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'OFFSCREEN_RUN_OCR') {
     const { imageBase64, targetLang = 'vi', requestId, tabId } = message.payload || {};
 
     (async () => {
       try {
-        const compLang = OcrEngine.getCompositeLanguage(targetLang);
-
         const sendProgress = (stepText, percent) => {
           console.log(`[Offscreen Direct OCR] [${percent}%] ${stepText}`);
           // chrome.tabs is NOT available in Offscreen Documents.
@@ -87,31 +131,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }).catch(() => {});
         };
 
-        sendProgress('Bắt đầu khởi động nhân WebAssembly...', 15);
-
-        const { instance, api } = await getTessBaseApi(compLang, sendProgress);
-
-        sendProgress('Đang quét và trích xuất chữ từ ảnh...', 75);
-
-        // Convert base64 Data URL to Uint8Array
-        const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
-        const binaryStr = atob(cleanBase64);
-        const bytes = new Uint8Array(binaryStr.length);
-        for (let i = 0; i < binaryStr.length; i++) {
-          bytes[i] = binaryStr.charCodeAt(i);
-        }
-
-        instance.FS.writeFile('/input', bytes);
-        api.SetImageFile('/input', 0);
-        api.Recognize(null);
-
-        sendProgress('Định dạng văn bản & công thức...', 95);
-        const rawText = api.GetUTF8Text() || '';
-        console.log('[Offscreen Direct OCR] Raw text extracted:\n', rawText);
-
-        const cleanedText = OcrEngine.postProcessMathText(rawText);
-        sendProgress('Nhận diện hoàn tất!', 100);
-
+        const cleanedText = await runLocalOcr(imageBase64, targetLang, sendProgress);
         sendResponse({ success: true, text: cleanedText });
       } catch (err) {
         console.error('[Offscreen Direct OCR] Error:', err);

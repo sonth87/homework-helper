@@ -526,6 +526,7 @@ class InPageOverlay {
     } = await Storage.get();
 
     this.fabs.applyAppearance(enableFloatingButton, fabSize, fabOpacity);
+    this.floatingCard?.applyFabAppearance(fabSize, fabOpacity);
 
     const themeAttr = await getOverlayThemeAttr();
     if (themeAttr) this.host.setAttribute('data-theme', themeAttr);

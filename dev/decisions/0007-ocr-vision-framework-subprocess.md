@@ -1,7 +1,22 @@
 # ADR-0007: OCR macOS qua Vision framework, subprocess riêng khỏi Accessibility
 
-- **Trạng thái:** Đã chấp nhận
+- **Trạng thái:** Đã chấp nhận — mục "Bối cảnh" đã được [ADR-0008](./0008-offset-ky-tu-phai-tu-kiem-chung.md) đính chính
 - **Ngày:** 2026-08-30
+
+> ⚠️ **Đính chính 2026-08-31 (ADR-0008).** Tiền đề "Monaco không phơi text qua
+> Accessibility" bên dưới là **SAI**. Đo lại bằng duyệt cây tất định (bật
+> `AXManualAccessibility`, BFS, sâu 39) cho thấy VS Code phơi **2964 phần tử có
+> text**, nội dung thật và đầy đủ. Cái nó không làm được là ánh xạ **toạ độ →
+> ký tự** (mọi lệnh gọi đều trả `nil`, dù quảng cáo hỗ trợ 100%).
+>
+> **Quyết định dùng OCR vẫn đúng**, nhưng vì lý do khác. Và khác biệt này có hệ
+> quả: vì text của AX dùng được, hướng mạnh nhất cho ca Chromium là **hợp nhất
+> text-của-AX với hình học-của-OCR**, chứ không phải dùng text do OCR đọc ra.
+>
+> Bài học phương pháp: kết luận dưới đây rút ra từ chẩn đoán bằng chuột thật —
+> chính đoạn văn bên dưới cũng thừa nhận là "chưa xác nhận trực tiếp do khó đồng
+> bộ thời điểm". Lẽ ra phải dừng ở "chưa biết" thay vì ghi một giả thuyết vào
+> tài liệu như một sự thật.
 
 ## Bối cảnh
 

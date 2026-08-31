@@ -107,10 +107,30 @@ tracking → Accessibility/OCR → cắt đoạn → dịch → cache → hiển
 
 ### Sửa lỗi
 
+- **Dịch khi rê chuột giờ bám đúng chữ đang trỏ vào.** Trước đây khi để chế độ
+  dịch theo *từ*, hover vào bất kỳ từ nào trong một dòng cũng trả về **từ đầu
+  tiên** — dịch theo từ gần như vô nghĩa. Nay lấy đúng từ dưới con trỏ: đo trên
+  font hệ thống thật, tỉ lệ đúng tăng từ **20%** lên **93,5%**.
+- Hover vào khoảng trắng giữa hai từ từng trả về **từ cuối câu** — sai lệch
+  hoàn toàn, xảy ra ở khoảng 1/6 số vị trí. Nay luôn trả một trong hai từ kề bên.
+- Với ứng dụng hỗ trợ đầy đủ (Finder, Notes, Terminal…), vị trí chữ được lấy
+  **chính xác tuyệt đối** từ hệ điều hành thay vì ước lượng — kể cả trong **văn
+  bản dài nhiều dòng đang cuộn**, nơi trước đây hay chọn nhầm câu. Khi không lấy
+  được, app ước lượng như cũ chứ không đưa ra kết quả sai một cách tự tin.
+- **Đường OCR giờ bám đúng dòng chữ.** Khi phải đọc bằng nhận dạng ảnh (VS Code,
+  PDF, ảnh chụp…), trước đây kết quả **không đổi dù rê chuột đi đâu** trong vùng
+  đọc. Nay xác định đúng dòng và đúng từ dưới con trỏ, và thẻ dịch bám vào chính
+  dòng chữ đó thay vì một khung cố định quanh chuột.
 - Icon tray từng là `nativeImage.createEmpty()` — vô hình hoàn toàn trên thanh
   menu. Sau khi đóng cửa sổ Settings, không có cách nào mở lại app trừ khởi
   động lại từ đầu. Thêm icon tạm (`resources/trayTemplate.png`) — sẽ thay
   bằng thiết kế chính thức sau, không cần sửa code khi đổi.
+
+### Còn hạn chế đã biết
+
+- Với ứng dụng không cho biết vị trí chữ **và** cũng không đọc được bằng OCR,
+  app vẫn phải ước lượng — khi đó dịch theo **câu** trong đoạn văn nhiều dòng có
+  thể chọn nhầm. Xem [ADR-0008](./dev/decisions/0008-offset-ky-tu-phai-tu-kiem-chung.md).
 
 Bản phát hành đầu tiên sẽ là **`0.1.0`** khi hoàn tất Phase 1.
 

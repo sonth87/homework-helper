@@ -2,10 +2,12 @@ import { MouseTracker } from '../acquisition/mouse/tracker';
 import { acquire } from '../acquisition/acquire';
 import { checkTrigger } from '../pipeline/guards';
 import { quickTranslate } from '../translate/translate.service';
-import { pickFirstSegment } from '@shared/utils/text-segment';
+import { pickSegmentAtIndex, pickSegmentAtOffset } from '@shared/utils/text-segment';
 import { hideHover, showHoverAt } from '../windows/hover.window';
 import type { SettingsService } from '../settings/settings.service';
 import type { Point } from '@shared/types/geometry';
+import { estimateTextOffsetFraction } from '@shared/types/geometry';
+import { LIMITS } from '@config/limits.config';
 import { logger } from '../logging/logger';
 
 /**
@@ -60,10 +62,26 @@ async function onHoverStable(point: Point<'screen-logical'>, settings: SettingsS
     return;
   }
 
-  // Cắt theo độ chi tiết đã chọn — xem giới hạn "chưa cursor-accurate" trong
-  // text-segment.ts. Với văn bản một câu/nhãn ngắn (đa số trường hợp AX thực
-  // tế), kết quả đã đúng tự nhiên bất kể giới hạn này.
-  const segment = pickFirstSegment(acquired.content.text, s.hoverGranularity ?? 'sentence');
+  // Hai đường, KHÔNG trộn vào nhau:
+  //
+  //   charOffset có  -> vị trí ký tự đã được tầng native kiểm chứng khứ hồi.
+  //                     Chính xác tuyệt đối, dùng thẳng.
+  //   charOffset vắng -> phải ước lượng từ hình học. Đo được ~90% cho text một
+  //                     dòng nhưng chỉ ~24% cho đoạn văn nhiều dòng (ADR-0008),
+  //                     nên đây là phương án chót, không phải mặc định.
+  //
+  // Không bao giờ lấy trung bình hai nguồn: trộn một giá trị chính xác với một
+  // giá trị đoán chỉ làm hỏng giá trị chính xác.
+  const granularity = s.hoverGranularity ?? 'sentence';
+  const exactOffset = acquired.content.charOffset;
+  const segment =
+    exactOffset !== undefined
+      ? pickSegmentAtIndex(acquired.content.text, exactOffset, granularity)
+      : pickSegmentAtOffset(
+          acquired.content.text,
+          estimateTextOffsetFraction(point, acquired.content.bounds, LIMITS.hover.estimatedLineHeightPx),
+          granularity,
+        );
   if (!segment) {
     logger.debug('Không cắt được đoạn nào từ text đã thu nhận', { text: acquired.content.text });
     return;
@@ -78,5 +96,11 @@ async function onHoverStable(point: Point<'screen-logical'>, settings: SettingsS
     sourceLanguage: result.sourceLanguage,
   });
 
-  logger.debug('Hover dịch xong', { fromCache: result.fromCache, source: acquired.content.source });
+  logger.debug('Hover dịch xong', {
+    fromCache: result.fromCache,
+    source: acquired.content.source,
+    // Phân biệt được các đường trong log là điều kiện để đo tầng nào thực sự
+    // gánh việc khi dùng thật — dữ liệu mà ADR-0008 nói cần có trước khi xây tiếp.
+    offset: acquired.content.offsetSource ?? 'ước lượng',
+  });
 }

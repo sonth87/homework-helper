@@ -6,7 +6,7 @@
 import { AiEngine } from './ai-engine.js';
 import { keyRotator } from './key-rotator.js';
 import { Storage } from '../shared/storage.js';
-import { ensureOffscreenDocument } from './ocr-bridge.js';
+import { runOcrInOffscreen } from './ocr-bridge.js';
 import { detectLocalModels } from '../shared/local-model-detect.js';
 
 // State & active streams
@@ -258,21 +258,13 @@ if (action === 'PERFORM_OCR') {
   }
   (async () => {
     try {
-      await ensureOffscreenDocument();
-      const response = await chrome.runtime.sendMessage({
-        action: 'OFFSCREEN_RUN_OCR',
-        payload: { imageBase64, targetLang, requestId },
-      });
-      pendingOcrTabs.delete(requestId);
-      if (response && response.success) {
-        sendResponse({ success: true, text: response.text });
-      } else {
-        sendResponse({ success: false, error: response?.error || 'OCR nhận diện thất bại.' });
-      }
+      const text = await runOcrInOffscreen(imageBase64, targetLang, requestId);
+      sendResponse({ success: true, text });
     } catch (err) {
       console.error('[ServiceWorker] OCR dispatch error:', err);
-      pendingOcrTabs.delete(requestId);
       sendResponse({ success: false, error: err.message || String(err) });
+    } finally {
+      pendingOcrTabs.delete(requestId);
     }
   })();
   return true;

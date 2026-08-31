@@ -12,7 +12,8 @@ thì biết chính xác điều gì cần xem lại.
 | [0004](./0004-solve-truoc-translate.md) | Desktop ship Crop & Solve trước Hover Translate | Đã chấp nhận | 2026-08-29 |
 | [0005](./0005-dung-node-sqlite.md) | Dùng `node:sqlite` dựng sẵn, không dùng better-sqlite3 | Đã chấp nhận | 2026-08-29 |
 | [0006](./0006-accessibility-helper-swift-subprocess.md) | Accessibility macOS qua subprocess Swift, không qua native Node addon | Đã chấp nhận | 2026-08-30 |
-| [0007](./0007-ocr-vision-framework-subprocess.md) | OCR macOS qua Vision framework, subprocess riêng khỏi Accessibility | Đã chấp nhận | 2026-08-30 |
+| [0007](./0007-ocr-vision-framework-subprocess.md) | OCR macOS qua Vision framework, subprocess riêng khỏi Accessibility | Đã chấp nhận (đính chính bởi 0008) | 2026-08-30 |
+| [0008](./0008-offset-ky-tu-phai-tu-kiem-chung.md) | Offset ký tự phải tự kiểm chứng khứ hồi, không tin API Accessibility | Đã chấp nhận | 2026-08-31 |
 
 ## Khi nào viết ADR mới
 

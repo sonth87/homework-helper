@@ -49,77 +49,13 @@
 .hw-crop-handle-sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
 .hw-crop-handle-w  { top: 50%; left: -7px; margin-top: -6px; cursor: ew-resize; }
 
-.hw-crop-toolbar {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  background: rgba(15, 23, 42, 0.72);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 12px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-  color: #fafafa;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  z-index: 2147483647;
-  pointer-events: auto;
-}
-
-.hw-crop-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.hw-crop-btn-primary {
-  background: rgba(2, 132, 199, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.45);
-}
-
-.hw-crop-btn-primary:hover {
-  background: rgba(3, 105, 161, 0.95);
-  transform: translateY(-1px);
-}
-
-.hw-crop-btn-cancel {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.hw-crop-btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-}
-
-.hw-crop-btn-secondary {
-  background: rgba(2, 132, 199, 0.16);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #e0f2fe;
-  border: 1px solid rgba(2, 132, 199, 0.4);
-}
-
-.hw-crop-btn-secondary:hover {
-  background: rgba(2, 132, 199, 0.3);
-  color: #ffffff;
-}
+/* The crop toolbar itself has no styles of its own anymore — renderToolbar()
+   in cropper.js renders it with .hw-selection-toolbar/.hw-tb-btn, the same
+   classes the text-selection toolbar uses (see tooltip.css), so both are
+   pixel-identical and share every Options > Appearance toolbar setting
+   instead of drifting apart as two separate stylesheets. '.hw-crop-toolbar'
+   itself rides along as a bare marker class purely so onMouseDown's
+   click-guard in cropper.js can target this toolbar specifically. */
 
 .hw-crop-tip {
   position: fixed;

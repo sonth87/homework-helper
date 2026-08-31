@@ -62,29 +62,82 @@ function segmentWithRegex(text: string, granularity: 'word' | 'sentence'): Segme
 }
 
 /**
- * Cắt lấy MỘT đoạn đại diện khi không biết offset ký tự chính xác dưới con trỏ.
+ * Cắt lấy MỘT đoạn tại vị trí ước lượng dưới con trỏ, khi không biết offset ký
+ * tự chính xác.
  *
- * GIỚI HẠN QUAN TRỌNG — v1, chưa cursor-accurate
+ * GIỚI HẠN — v1, chưa cursor-accurate tuyệt đối
  * ------------------------------------------------
  * Extension biết chính xác ký tự nào dưới con trỏ nhờ `caretRangeFromPoint()`
  * của DOM. Accessibility trên desktop KHÔNG cho offset ký tự qua API cơ bản đã
- * dùng (`kAXValueAttribute`) — muốn chính xác phải gọi thêm
+ * dùng (`kAXValueAttribute`) — muốn tuyệt đối chính xác phải gọi thêm
  * `kAXBoundsForRangeParameterizedAttribute` để dò ngược từ toạ độ ra offset,
  * việc này chưa làm (native/accessibility-macos/main.swift chưa hỗ trợ).
  *
- * Trong lúc chờ: nếu chỉ có MỘT đoạn (trường hợp phổ biến nhất trên thực tế —
- * đa số leaf element của AX là nhãn/dòng ngắn, không phải cả khối văn bản dài,
- * xem ghi chú kiểm chứng thực nghiệm ở ADR-0006) thì kết quả đã chính xác tự
- * nhiên. Chỉ khi văn bản dài nhiều câu/từ mới cần đoán — khi đó lấy đoạn ĐẦU
- * TIÊN, đơn giản và có thể giải thích được, hơn là suy diễn vị trí X trong
- * frame (hỏng hoàn toàn với văn bản xuống dòng nhiều lần).
+ * Bù lại bằng dữ liệu ĐÃ SẴN CÓ mà không cần thêm lệnh gọi native nào: khung
+ * bao của khối văn bản (`bounds`) và toạ độ con trỏ đều đã có ở tầng gọi —
+ * xem `estimateTextOffsetFraction()` (geometry.ts, có xét cả trường hợp khối
+ * text trải nhiều dòng). `offsetFraction` (0..1) là vị trí ước lượng của con
+ * trỏ trong văn bản; hàm này chọn đúng đoạn CHỨA vị trí đó, thay vì luôn trả
+ * đoạn đầu tiên bất kể hover ở đâu — nếu chỉ dịch một từ (hoặc một câu trong
+ * một đoạn văn nhiều câu) mà kết quả không đổi dù hover chỗ nào thì tính năng
+ * vô nghĩa, đây là lý do hàm này thay thế cách làm "luôn lấy đầu tiên" trước
+ * đó.
+ *
+ * Vẫn chưa tuyệt đối chính xác khi khối text trải nhiều dòng (xem giới hạn ở
+ * `estimateTextOffsetFraction`) — nhưng LỆCH THEO vị trí hover thay vì hằng số
+ * cố định, đúng tự nhiên với văn bản một dòng (đa số leaf element AX thực tế).
  */
-export function pickFirstSegment(text: string, granularity: Granularity, locale?: string): string | null {
-  const normalized = normalizeWhitespace(text);
-  if (!normalized) return null;
+export function pickSegmentAtOffset(
+  text: string,
+  offsetFraction: number,
+  granularity: Granularity,
+  locale?: string,
+): string | null {
+  if (!text.trim()) return null;
+  const clamped = Math.min(1, Math.max(0, offsetFraction));
+  return pickSegmentAtIndex(text, Math.round(clamped * text.length), granularity, locale);
+}
 
-  const segments = segmentText(normalized, granularity, locale);
-  return segments[0]?.text.trim() || null;
+/**
+ * Chọn đoạn chứa MỘT CHỈ SỐ KÝ TỰ đã biết chắc — đường đi khi tầng native trả
+ * về `charOffset` đã kiểm chứng khứ hồi (xem `AccessibilityText.charOffset`).
+ * Không ước lượng gì cả.
+ *
+ * Cắt trên text THÔ, không chuẩn hoá trước: `normalizeWhitespace()` gộp khoảng
+ * trắng nên LÀM DỊCH CHUYỂN mọi chỉ số ký tự — dùng nó trước khi tra cứu theo
+ * offset sẽ tra nhầm chỗ một cách âm thầm, càng lệch nhiều khi text càng nhiều
+ * khoảng trắng liên tiếp. Chỉ chuẩn hoá KẾT QUẢ trả về.
+ */
+export function pickSegmentAtIndex(
+  text: string,
+  index: number,
+  granularity: Granularity,
+  locale?: string,
+): string | null {
+  if (!text.trim()) return null;
+
+  const segments = segmentText(text, granularity, locale);
+  if (!segments.length) return null;
+
+  const target = Math.min(Math.max(index, 0), Math.max(0, text.length - 1));
+  const hit = segments.find((s) => target >= s.start && target < s.end);
+  if (hit) return normalizeWhitespace(hit.text) || null;
+
+  // Rơi vào khe giữa hai đoạn — với granularity 'word' thì đó là khoảng trắng
+  // hoặc dấu câu, vốn không thuộc đoạn nào (Intl.Segmenter lọc bỏ phần không
+  // phải từ). Lấy đoạn GẦN NHẤT, không phải đoạn cuối: lấy đoạn cuối cho ra
+  // "từ cuối câu" khi người dùng hover vào khoảng trắng ở đầu câu — sai lệch
+  // hoàn toàn, và xảy ra ở khoảng 1/6 số vị trí hover trên một câu tiếng Anh.
+  let best = segments[0]!;
+  let bestDistance = Infinity;
+  for (const s of segments) {
+    const distance = target < s.start ? s.start - target : target - s.end;
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = s;
+    }
+  }
+  return normalizeWhitespace(best.text) || null;
 }
 
 /** Gộp khoảng trắng liên tiếp, bỏ khoảng trắng đầu/cuối — không đổi nội dung chữ. */

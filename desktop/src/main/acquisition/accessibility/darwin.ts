@@ -144,11 +144,24 @@ export class MacAccessibility {
     if (!res.text || typeof res.text !== 'string') return null;
 
     const b = res.bounds as { x: number; y: number; width: number; height: number } | undefined;
+    // charOffset chỉ có mặt khi helper đã KIỂM CHỨNG KHỨ HỒI được nó (xem
+    // verifiedOffset trong main.swift). Vắng mặt nghĩa là "không biết chắc",
+    // không phải "ở đầu chuỗi" — tầng trên phải tự ước lượng và biết rõ điều đó.
+    const offset = typeof res.charOffset === 'number' ? res.charOffset : undefined;
+    const src = res.offsetSource === 'position' || res.offsetSource === 'lines' ? res.offsetSource : undefined;
+    const visStart = typeof res.visibleStart === 'number' ? res.visibleStart : undefined;
+    const visLength = typeof res.visibleLength === 'number' ? res.visibleLength : undefined;
+
     return {
       text: res.text,
       bounds: b
         ? rect('screen-logical', { x: b.x, y: b.y, width: b.width, height: b.height })
         : rect('screen-logical', { x: point.x, y: point.y, width: 0, height: 0 }),
+      ...(offset !== undefined ? { charOffset: offset } : {}),
+      ...(src !== undefined ? { offsetSource: src } : {}),
+      ...(visStart !== undefined && visLength !== undefined
+        ? { visibleRange: { start: visStart, length: visLength } }
+        : {}),
       ...(typeof res.app === 'string' ? { role: res.app } : {}),
     };
   }

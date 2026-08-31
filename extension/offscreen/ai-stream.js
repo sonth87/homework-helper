@@ -14,7 +14,7 @@
  */
 
 import { formatStudyPrompt } from '../shared/study-prompt.js';
-import { runOcrInOffscreen } from '../background/ocr-bridge.js';
+import { runLocalOcr } from './ocr.js';
 import { getThinkingDisableValue } from '../shared/thinking-control.js';
 import { isSingleWord, DICTIONARY_SCHEMA } from '../shared/dictionary.js';
 
@@ -154,7 +154,10 @@ async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, 
   if (isLocalTextOnly && imageBase64 && config.ocrFallback !== false) {
     onChunk('', { status: 'switching', notice: `Model "${model}" không đọc được ảnh trực tiếp, đang OCR trích xuất chữ từ ảnh trước khi gửi...` });
     try {
-      const ocrText = await runOcrInOffscreen(imageBase64, outputLanguage);
+      // Direct call, not chrome.runtime.sendMessage: the OCR listener lives in
+      // this same offscreen document, and the runtime never delivers a message
+      // back to the sender's own frame.
+      const ocrText = await runLocalOcr(imageBase64, outputLanguage);
       effectivePrompt = ocrText.trim()
         ? `${prompt}\n\n[Nội dung câu hỏi & các phương án từ ảnh]:\n${ocrText.trim()}`
         : prompt;

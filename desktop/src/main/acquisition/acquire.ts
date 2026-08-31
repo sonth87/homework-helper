@@ -19,6 +19,7 @@ import { displayById, displayUnderCursor, selectionToImageRect } from './capture
 import { selectRegion } from '../windows/region-select.window';
 import { getAccessibilityProvider } from './accessibility';
 import { getOcrProvider } from './ocr';
+import { layoutBlocks } from './ocr/blocks';
 import { logger } from '../logging/logger';
 
 export type AcquireResult =
@@ -63,6 +64,8 @@ async function tryAccessibility(point: Point<'screen-logical'>): Promise<Acquire
     text: result.text,
     bounds: result.bounds,
     source: 'accessibility',
+    ...(result.charOffset !== undefined ? { charOffset: result.charOffset } : {}),
+    ...(result.offsetSource !== undefined ? { offsetSource: result.offsetSource } : {}),
     ...(result.role ? { app: { name: result.role } } : {}),
   };
 }
@@ -103,10 +106,21 @@ async function tryOcr(point: Point<'screen-logical'>): Promise<AcquiredContent |
       return null;
     }
 
+    // Dùng hình học của từng khối để biết con trỏ ở khối nào, thay vì ghép text
+    // phẳng rồi ước lượng trong khung chụp — khung đó lấy con trỏ làm tâm nên
+    // ước lượng luôn ra hằng số 0.625, vô dụng (ADR-0008).
+    const layout = layoutBlocks(result.blocks, point, box, display.scaleFactor);
+    logger.debug('OCR định vị khối', {
+      hit: layout.charOffset !== undefined,
+      blocks: result.blocks.length,
+    });
+
     return {
-      text: result.text,
-      bounds: box,
+      text: layout.text,
+      // Neo vào đúng dòng chữ khi biết chắc; chỉ lùi về khung chụp khi không.
+      bounds: layout.hitBounds ?? box,
       source: 'ocr',
+      ...(layout.charOffset !== undefined ? { charOffset: layout.charOffset, offsetSource: 'blocks' as const } : {}),
       ...(bestConfidence > 0 ? { confidence: bestConfidence } : {}),
     };
   } catch (error) {

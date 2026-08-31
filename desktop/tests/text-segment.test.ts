@@ -1,6 +1,11 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { normalizeWhitespace, pickFirstSegment, segmentText } from '../src/shared/utils/text-segment';
+import {
+  normalizeWhitespace,
+  pickSegmentAtIndex,
+  pickSegmentAtOffset,
+  segmentText,
+} from '../src/shared/utils/text-segment';
 
 test('cắt câu tiếng Anh cơ bản', () => {
   const segs = segmentText('Hello world. How are you?', 'sentence');
@@ -41,14 +46,69 @@ test('đoạn tách theo dòng trống, giữ nguyên câu bên trong', () => {
   assert.match(segs[1]?.text ?? '', /Đoạn hai/);
 });
 
-test('pickFirstSegment: văn bản một câu trả nguyên văn (trường hợp phổ biến nhất từ AX)', () => {
-  const result = pickFirstSegment('Visual Studio Code', 'sentence');
-  assert.equal(result, 'Visual Studio Code');
+test('pickSegmentAtOffset: văn bản một câu trả nguyên văn bất kể offset (trường hợp phổ biến nhất từ AX)', () => {
+  assert.equal(pickSegmentAtOffset('Visual Studio Code', 0, 'sentence'), 'Visual Studio Code');
+  assert.equal(pickSegmentAtOffset('Visual Studio Code', 0.9, 'sentence'), 'Visual Studio Code');
 });
 
-test('pickFirstSegment: văn bản rỗng trả về null, không ném lỗi', () => {
-  assert.equal(pickFirstSegment('   ', 'sentence'), null);
-  assert.equal(pickFirstSegment('', 'word'), null);
+test('pickSegmentAtOffset: văn bản rỗng trả về null, không ném lỗi', () => {
+  assert.equal(pickSegmentAtOffset('   ', 0, 'sentence'), null);
+  assert.equal(pickSegmentAtOffset('', 0.5, 'word'), null);
+});
+
+test('pickSegmentAtOffset: granularity "word" — hover đầu/giữa/cuối câu ra đúng từ khác nhau', () => {
+  // Đây là bài kiểm chứng trực tiếp cho lỗi đã sửa: trước đây luôn trả từ đầu
+  // tiên bất kể offset, khiến dịch theo từ vô nghĩa (hover từ nào cũng ra
+  // cùng một kết quả). Giờ offset khác nhau phải cho từ khác nhau.
+  const text = 'The quick brown fox jumps';
+  assert.equal(pickSegmentAtOffset(text, 0, 'word'), 'The');
+  assert.equal(pickSegmentAtOffset(text, 1, 'word'), 'jumps');
+  const middle = pickSegmentAtOffset(text, 0.5, 'word');
+  assert.ok(middle && !['The', 'jumps'].includes(middle), `từ giữa câu phải khác đầu/cuối, nhận "${middle}"`);
+});
+
+test('pickSegmentAtOffset: offset ngoài [0,1] được ghim lại thay vì lỗi', () => {
+  const text = 'one two three';
+  assert.equal(pickSegmentAtOffset(text, -5, 'word'), 'one');
+  assert.equal(pickSegmentAtOffset(text, 5, 'word'), 'three');
+});
+
+test('pickSegmentAtIndex: chỉ số chính xác trả đúng từ tại chỉ số đó', () => {
+  const text = 'The quick brown fox jumps';
+  assert.equal(pickSegmentAtIndex(text, 0, 'word'), 'The');
+  assert.equal(pickSegmentAtIndex(text, 5, 'word'), 'quick');
+  assert.equal(pickSegmentAtIndex(text, 11, 'word'), 'brown');
+  assert.equal(pickSegmentAtIndex(text, 22, 'word'), 'jumps');
+});
+
+test('pickSegmentAtIndex: rơi vào KHOẢNG TRẮNG trả từ KỀ BÊN, không phải từ cuối', () => {
+  // Lỗi đã sửa: trước đây fallback lấy segments[length-1], nên hover vào
+  // khoảng trắng ở ĐẦU câu lại trả về từ CUỐI câu. Xảy ra ở ~1/6 vị trí hover.
+  const text = 'The quick brown fox jumps over the lazy dog';
+  assert.equal(pickSegmentAtIndex(text, 3, 'word'), 'The', 'khoảng trắng sau "The" phải ra từ kề, không phải "dog"');
+  assert.equal(pickSegmentAtIndex(text, 9, 'word'), 'quick');
+  assert.equal(pickSegmentAtIndex(text, 15, 'word'), 'brown');
+});
+
+test('pickSegmentAtIndex: KHÔNG chuẩn hoá trước khi tra cứu — chỉ số không bị dịch', () => {
+  // normalizeWhitespace() gộp khoảng trắng, làm DỊCH mọi chỉ số ký tự. Nếu
+  // chuẩn hoá trước rồi mới tra theo offset thô của native thì tra nhầm chỗ.
+  const text = 'alpha     beta     gamma';   // nhiều khoảng trắng liên tiếp
+  assert.equal(pickSegmentAtIndex(text, 10, 'word'), 'beta', 'chỉ số 10 nằm trong "beta" của chuỗi THÔ');
+  assert.equal(pickSegmentAtIndex(text, 19, 'word'), 'gamma');
+});
+
+test('pickSegmentAtIndex: chỉ số ngoài phạm vi được ghim, không ném lỗi', () => {
+  assert.equal(pickSegmentAtIndex('one two three', -10, 'word'), 'one');
+  assert.equal(pickSegmentAtIndex('one two three', 999, 'word'), 'three');
+  assert.equal(pickSegmentAtIndex('   ', 0, 'word'), null);
+});
+
+test('pickSegmentAtIndex: câu trong đoạn nhiều câu — chỉ số quyết định, không phải thứ tự', () => {
+  const text = 'Câu một ở đây. Câu hai ở giữa. Câu ba cuối cùng.';
+  assert.match(pickSegmentAtIndex(text, 2, 'sentence') ?? '', /một/);
+  assert.match(pickSegmentAtIndex(text, 20, 'sentence') ?? '', /hai/);
+  assert.match(pickSegmentAtIndex(text, 40, 'sentence') ?? '', /ba/);
 });
 
 test('normalizeWhitespace gộp khoảng trắng liên tiếp, không đổi nội dung chữ', () => {

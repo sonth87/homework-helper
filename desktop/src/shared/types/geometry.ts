@@ -170,6 +170,47 @@ export function distance<S extends Space>(a: Point<S>, b: Point<S>): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
+/**
+ * Ước lượng vị trí (0..1) của một điểm trong dòng chảy đọc (trái→phải,
+ * trên→dưới) của một khối text — dùng để chọn đúng từ/câu dưới con trỏ khi
+ * chỉ có khung bao của CẢ khối văn bản, không có offset ký tự thật (xem
+ * `pickSegmentAtOffset` ở text-segment.ts).
+ *
+ * VÌ SAO CẦN CẢ HAI TRỤC, KHÔNG CHỈ X
+ * ------------------------------------
+ * `bounds` từ Accessibility là khung bao cả khối, có thể trải NHIỀU DÒNG —
+ * một đoạn văn nhiều câu bị word-wrap. Nếu chỉ xét trục X (coi cả khối là một
+ * dòng) thì con trỏ ở đầu dòng 2 sẽ bị hiểu nhầm gần đầu văn bản — sai hẳn
+ * hướng đọc. Ở đây chia khối thành `rows` dòng ước lượng theo chiều cao
+ * (`lineHeightPx`), xác định con trỏ rơi vào dòng nào rồi mới nội suy theo X
+ * trong dòng đó.
+ *
+ * Với văn bản MỘT DÒNG (rows tính ra = 1, đa số nhãn/UI ngắn thực tế), công
+ * thức rút gọn đúng về suy luận thuần trục X — không đổi hành vi so với
+ * trước.
+ *
+ * GIỚI HẠN: không có font metric thật của app đang hover (không thêm lệnh
+ * gọi native nào), nên `lineHeightPx` là hằng số cấu hình gần đúng
+ * (`LIMITS.hover.estimatedLineHeightPx`), và công thức giả định mỗi dòng
+ * chứa lượng ký tự xấp xỉ nhau. Vẫn tốt hơn hẳn bỏ qua trục Y khi khối text
+ * thật sự nhiều dòng — kết quả LỆCH THEO vị trí hover thay vì hằng số cố
+ * định không đổi dù hover ở đâu.
+ */
+export function estimateTextOffsetFraction<S extends Space>(
+  p: Point<S>,
+  r: Rect<S>,
+  lineHeightPx: number,
+): number {
+  if (r.width <= 0 || r.height <= 0) return 0;
+
+  const rows = Math.max(1, Math.round(r.height / lineHeightPx));
+  const relY = Math.min(1, Math.max(0, (p.y - r.y) / r.height));
+  const relX = Math.min(1, Math.max(0, (p.x - r.x) / r.width));
+  const rowIndex = Math.min(rows - 1, Math.floor(relY * rows));
+
+  return Math.min(1, Math.max(0, (rowIndex + relX) / rows));
+}
+
 /** Ghim một điểm vào trong hình chữ nhật — dùng khi overlay tràn khỏi mép màn hình. */
 export function clamp<S extends Space>(p: Point<S>, bounds: Rect<S>): Point<S> {
   return mkPoint(

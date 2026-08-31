@@ -27,8 +27,12 @@ class ScreenCropper {
     this.moveOffset = { x: 0, y: 0 };
 
     // Loaded eagerly (not on first start()) so the sheet has landed well
-    // before the user ever presses Alt+C — see shadow-root.js.
+    // before the user ever presses Alt+C — see shadow-root.js. tooltip.css is
+    // needed too: the crop toolbar (renderToolbar()) reuses the text-selection
+    // toolbar's own .hw-selection-toolbar/.hw-tb-btn classes for a fully
+    // identical UI instead of a separate lookalike stylesheet.
     ensureStylesheet('content/styles/cropper.css');
+    ensureStylesheet('content/styles/tooltip.css');
   }
 
   /**
@@ -215,21 +219,44 @@ class ScreenCropper {
   async renderToolbar(rect) {
     if (this.toolbar) this.toolbar.remove();
 
-    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    // Renders with the exact same classes/CSS vars as the text-selection
+    // toolbar (selection-tooltip.js's .hw-selection-toolbar/.hw-tb-btn) —
+    // same UI, not just a lookalike — so every Options > Appearance toolbar
+    // setting (theme, size, show-text, opacity, blur) styles both
+    // identically instead of drifting apart as two parallel stylesheets.
+    // 'hw-crop-toolbar' rides along as a bare marker class (no CSS of its
+    // own) purely so onMouseDown's click-guard below can target this toolbar
+    // specifically.
+    const {
+      uiLanguage = 'en',
+      toolbarShowText = true,
+      toolbarSize = 'normal',
+      toolbarTheme = 'glass-light',
+      toolbarOpacity = 90,
+      toolbarBlur = 16,
+    } = await Storage.get(['uiLanguage', 'toolbarShowText', 'toolbarSize', 'toolbarTheme', 'toolbarOpacity', 'toolbarBlur']);
     const dict = getCropperI18n(uiLanguage);
     const genDict = getI18n(uiLanguage);
+    const iconOnlyCls = toolbarShowText ? '' : 'icon-only';
 
     this.toolbar = document.createElement('div');
-    this.toolbar.className = 'hw-crop-toolbar';
+    this.toolbar.className = `hw-selection-toolbar hw-crop-toolbar size-${toolbarSize} theme-${toolbarTheme}`;
+    this.toolbar.style.setProperty('--tb-alpha', `${(toolbarOpacity / 100).toFixed(2)}`);
+    this.toolbar.style.setProperty('--tb-blur', `${toolbarBlur}px`);
+    // .hw-selection-toolbar's own position:absolute is left as-is — it's
+    // appended into .hw-crop-overlay below, a position:fixed 100vw/100vh box
+    // pinned at viewport (0,0), so absolute coordinates inside it already
+    // line up 1:1 with the getBoundingClientRect() viewport coordinates used
+    // below (same reason the toolbar this replaces never needed position:fixed).
     this.toolbar.style.visibility = 'hidden';
     this.toolbar.style.left = '0px';
     this.toolbar.style.top = '0px';
 
     this.toolbar.innerHTML = `
-      <button class="hw-crop-btn hw-crop-btn-cancel" id="hwCropCancel">${dict.cancel}</button>
-      <button class="hw-crop-btn hw-crop-btn-secondary" id="hwCropCopy">${Icons.copy(14)} <span id="hwCropCopyLabel">${genDict.copyBtn}</span></button>
-      <button class="hw-crop-btn hw-crop-btn-secondary" id="hwCropTranslate">${Icons.languages(14)} ${genDict.modes?.translate || dict.askAi}</button>
-      <button class="hw-crop-btn hw-crop-btn-primary" id="hwCropSolve">${Icons.sparkles(14)} ${dict.askAi}</button>
+      <button class="hw-tb-btn ${iconOnlyCls}" id="hwCropCancel">${Icons.x(14)} <span class="hw-tb-label">${dict.cancel}</span></button>
+      <button class="hw-tb-btn ${iconOnlyCls}" id="hwCropCopy">${Icons.copy(14)} <span class="hw-tb-label" id="hwCropCopyLabel">${genDict.copyBtn}</span></button>
+      <button class="hw-tb-btn ${iconOnlyCls}" id="hwCropTranslate">${Icons.languages(14)} <span class="hw-tb-label">${genDict.modes?.translate || dict.askAi}</span></button>
+      <button class="hw-tb-btn ${iconOnlyCls}" id="hwCropSolve">${Icons.sparkles(14)} <span class="hw-tb-label">${dict.askAi}</span></button>
     `;
 
     this.overlay.appendChild(this.toolbar);
@@ -314,7 +341,7 @@ class ScreenCropper {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
 
       if (copyBtn) {
-        copyBtn.innerHTML = `${Icons.check(14)} <span id="hwCropCopyLabel">${genDict.copiedBtn}</span>`;
+        copyBtn.innerHTML = `${Icons.check(14)} <span class="hw-tb-label" id="hwCropCopyLabel">${genDict.copiedBtn}</span>`;
       }
     } catch (err) {
       console.error('Failed to copy cropped image:', err);

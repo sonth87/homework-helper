@@ -21,7 +21,9 @@ export class OverlayFloatingCard {
     this.activeCardResponseText = '';
     this.activeCardNotices = [];
     this.loadingStepsInterval = null;
-    // Must match .hw-card-collapsed-fab's width/height in overlay.css.
+    // Pixel size of the collapsed FAB, kept in sync with the shared `fabSize`
+    // setting by applyFabAppearance() — must match .hw-card-collapsed-fab.hw-fab-size-*
+    // in overlay.css. Used for drag-bounds clamping and edge-snapping math.
     this.fabSize = 36;
     this.fabEdgeMargin = 10;
 
@@ -99,6 +101,22 @@ export class OverlayFloatingCard {
     if (fab) fab.style.display = 'none';
   }
 
+  // Same 'tiny'|'small'|'normal'|'large' size and 30-100% opacity settings
+  // that style the standing FAB cluster (OverlayFabs.applyAppearance) also
+  // style this collapsed-popup FAB — they're visually the same kind of
+  // control, so one pair of settings covers both.
+  static FAB_SIZE_PX = { tiny: 22, small: 28, normal: 36, large: 42 };
+
+  applyFabAppearance(fabSize = 'normal', fabOpacity = 90) {
+    this.fabSize = OverlayFloatingCard.FAB_SIZE_PX[fabSize] || OverlayFloatingCard.FAB_SIZE_PX.normal;
+
+    const fab = this.shadow.getElementById('hwCardCollapsedFab');
+    if (!fab) return;
+    fab.classList.remove('hw-fab-size-tiny', 'hw-fab-size-small', 'hw-fab-size-normal', 'hw-fab-size-large');
+    fab.classList.add(`hw-fab-size-${fabSize || 'normal'}`);
+    fab.style.setProperty('--hw-fab-icon-alpha', (fabOpacity / 100).toFixed(2));
+  }
+
   // Whichever of the 4 screen edges (left/right/top/bottom) the FAB's
   // current rect is closest to, snap flush against that edge and clamp the
   // other axis within the viewport — used both right after collapsing and
@@ -153,7 +171,6 @@ export class OverlayFloatingCard {
     const fab = this.shadow.getElementById('hwCardCollapsedFab');
     if (!fab) return;
 
-    const { fabSize } = this;
     let isPressed = false;
     let hasMoved = false;
     let startX = 0;
@@ -180,8 +197,8 @@ export class OverlayFloatingCard {
         hasMoved = true;
         fab.classList.add('hw-fab-dragging');
       }
-      const left = Math.max(0, Math.min(window.innerWidth - fabSize, e.clientX - offsetX));
-      const top = Math.max(0, Math.min(window.innerHeight - fabSize, e.clientY - offsetY));
+      const left = Math.max(0, Math.min(window.innerWidth - this.fabSize, e.clientX - offsetX));
+      const top = Math.max(0, Math.min(window.innerHeight - this.fabSize, e.clientY - offsetY));
       fab.style.left = `${left}px`;
       fab.style.top = `${top}px`;
     });

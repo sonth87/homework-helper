@@ -25,7 +25,15 @@ export const LIMITS = {
   },
 
   /** Vùng dung sai khi dò text quanh con trỏ (logical px). */
-  hover: { tolerancePx: 12, minStableFrames: 2 },
+  hover: {
+    tolerancePx: 12,
+    minStableFrames: 2,
+    /** Ước lượng chiều cao một dòng chữ (logical px) — dùng để suy ra số dòng
+     *  của một khối text nhiều dòng khi chọn đúng từ/câu dưới con trỏ (xem
+     *  `estimateTextOffsetFraction` ở geometry.ts). Không đo cỡ chữ thật của
+     *  từng app, chỉ là hằng số gần đúng cho UI text thông thường. */
+    estimatedLineHeightPx: 20,
+  },
 
   history: { maxConversations: 1_000, maxMessagesPerConversation: 500 },
 

@@ -40,6 +40,31 @@ export type AccessibilityText = {
    * khi có bằng chứng thực nghiệm) từng ghi nhầm là screen-physical.
    */
   bounds: Rect<'screen-logical'>;
+  /**
+   * Chỉ số ký tự CHÍNH XÁC dưới con trỏ, trong `text`.
+   *
+   * Có mặt CHỈ KHI đã qua kiểm chứng khứ hồi ở tầng native (offset →
+   * AXBoundsForRange → khung ký tự đó có bao con trỏ không). Đo thực nghiệm
+   * cho thấy AX trả offset sai một cách âm thầm khá thường xuyên — Finder trả
+   * 0 khi hover cuối dòng, Notes trả cùng một offset cho mọi vị trí X — nên
+   * giá trị chưa kiểm chứng còn tệ hơn không có giá trị. Xem ADR-0008.
+   *
+   * VẮNG MẶT nghĩa là "không xác định được", KHÔNG phải "bằng 0".
+   */
+  charOffset?: number;
+  /**
+   * Tầng nào giải ra `charOffset` — `position` (AXRangeForPosition + kiểm khứ
+   * hồi) hay `lines` (phân rã theo dòng + nhị phân). Chỉ để ĐO xem tầng nào
+   * thực sự gánh việc khi dùng thật; không tầng nào kém chính xác hơn tầng nào,
+   * cả hai đều chứng minh kết quả bằng hình học thật.
+   */
+  offsetSource?: 'position' | 'lines';
+  /**
+   * Đoạn ký tự đang HIỂN THỊ, với view có cuộn. Cần thiết vì `bounds` là khung
+   * nhìn còn `text` là cả tài liệu — đã đo được phần tử của Terminal có khung
+   * cao 5057px trong khi màn hình chỉ ~1400px.
+   */
+  visibleRange?: { start: number; length: number };
   role?: string;
 };
 
@@ -57,6 +82,10 @@ export type AcquiredContent = {
    */
   bounds: Rect<'screen-logical'>;
   source: AcquisitionStrategy;
+  /** Xem `AccessibilityText.charOffset` — vắng mặt = chưa xác định được. */
+  charOffset?: number;
+  /** Tầng nào giải ra `charOffset`. `blocks` = hit-test khối OCR. Chỉ để đo. */
+  offsetSource?: 'position' | 'lines' | 'blocks';
   confidence?: number;
   app?: ApplicationInfo;
 };

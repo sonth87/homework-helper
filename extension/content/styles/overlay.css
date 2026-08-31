@@ -220,8 +220,11 @@
   user-select: none;
   z-index: 2147483640;
   padding: 0;
-  opacity: 0.85;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, left 0.25s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Same 30-100% 'Độ mờ nút nổi FAB' setting that fades the standing FAB
+     cluster's glass background (--hw-fab-alpha) also fades this icon's own
+     opacity — set by floating-card.js's applyFabAppearance(). */
+  opacity: var(--hw-fab-icon-alpha, 0.85);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, left 0.25s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hw-card-collapsed-fab:hover {
@@ -235,6 +238,37 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* The bundled app-logo SVG carries its own width/height attributes (36px,
+   from overlay.js's initial markup) — scale it to fill whatever button size
+   is picked below instead of leaving it clipped or floating in empty space. */
+.hw-card-collapsed-fab svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Size Variants — shares the 'Kích thước nút nổi FAB' setting (fabSize) with
+   .hw-fab-container's own tiny/small/normal/large steps above, so both FABs
+   scale together. Applied via floating-card.js's applyFabAppearance(). */
+.hw-card-collapsed-fab.hw-fab-size-tiny {
+  width: 22px;
+  height: 22px;
+}
+
+.hw-card-collapsed-fab.hw-fab-size-small {
+  width: 28px;
+  height: 28px;
+}
+
+.hw-card-collapsed-fab.hw-fab-size-normal {
+  width: 36px;
+  height: 36px;
+}
+
+.hw-card-collapsed-fab.hw-fab-size-large {
+  width: 42px;
+  height: 42px;
+}
+
 /* ========================================================= */
 /* Homework Helper Floating Popup (Liquid Glass Resizable) */
 /* ========================================================= */
@@ -243,8 +277,8 @@
   top: 80px;
   right: 40px;
   width: 440px;
-  min-width: 320px;
-  min-height: 220px;
+  min-width: 240px;
+  min-height: 160px;
   max-width: 90vw;
   max-height: 80vh;
   background: rgba(var(--hw-glass-rgb), var(--popup-alpha, 0.92));
@@ -741,11 +775,11 @@
 }
 
 .hw-solution-card.hw-card-compact .hw-btn-card-primary {
-  padding: 2px 8px;
-  font-size: 11px;
+  padding: 3px 6px;
+  gap: 0;
 }
 
-/* Copy/Retry lose their text label in compact mode — icon only, */
+/* Copy/Retry/Primary all lose their text label in compact mode — icon only, */
 /* so the already-narrow footer packs tighter once revealed.     */
 .hw-solution-card.hw-card-compact .hw-btn-card-action {
   padding: 2px 4px;
@@ -754,7 +788,8 @@
 }
 
 .hw-solution-card.hw-card-compact #hwBtnCardCopyLabel,
-.hw-solution-card.hw-card-compact #hwBtnCardRetryLabel {
+.hw-solution-card.hw-card-compact #hwBtnCardRetryLabel,
+.hw-solution-card.hw-card-compact #hwBtnPrimaryLabel {
   display: none;
 }
 

@@ -98,6 +98,145 @@ func drillDown(from el: AXUIElement, point: CGPoint, depth: Int, maxDepth: Int) 
     return el
 }
 
+// ── Offset ký tự chính xác, CÓ TỰ KIỂM ──────────────────────────────────
+//
+// ĐO THỰC NGHIỆM 2026-08-31 (xem ADR-0008): kAXRangeForPositionParameterized
+// KHÔNG đáng tin. Cùng một lệnh gọi, trên các app khác nhau:
+//   Finder   — đúng ở giữa dòng, trả 0 khi hover cuối dòng (SAI, không phải nil)
+//   Notes    — trả CÙNG một offset cho mọi vị trí X (bỏ qua trục X)
+//   Terminal — đúng một phần
+//   System Settings, VS Code — nil, dù QUẢNG CÁO là có hỗ trợ
+//
+// Nên không bao giờ tin thẳng kết quả. Mỗi offset phải tự chứng minh bằng một
+// lượt KHỨ HỒI: offset -> AXBoundsForRange -> khung chữ đó có thật sự chứa con
+// trỏ không. Chiều ngược (range -> bounds) đáng tin hơn hẳn chiều thuận vì app
+// BUỘC phải cài đúng nó để tự vẽ vùng bôi đen của chính mình.
+//
+// Kết quả: hoặc một offset đã kiểm chứng, hoặc nil sạch sẽ. Không có đường thứ
+// ba là "một con số trông hợp lệ nhưng sai" — đó chính là thứ nguy hiểm nhất,
+// vì tầng trên không thể phân biệt được.
+
+/// Một ký tự đơn không thể rộng/cao hơn ngần này. Chặn trường hợp app trả về
+/// khung của CẢ phần tử (đã gặp: 590×64, 1033×1924) — khung đó dĩ nhiên "chứa"
+/// con trỏ nên sẽ lọt qua phép kiểm nếu không giới hạn kích thước.
+let maxGlyphSize: CGFloat = 150
+
+func verifiedOffset(_ el: AXUIElement, at point: CGPoint, textLength: Int) -> Int? {
+    guard textLength > 0 else { return nil }
+
+    var pt = point
+    guard let posValue = AXValueCreate(.cgPoint, &pt) else { return nil }
+    var rangeRef: CFTypeRef?
+    guard AXUIElementCopyParameterizedAttributeValue(
+            el, "AXRangeForPosition" as CFString, posValue, &rangeRef) == .success,
+          let rangeVal = rangeRef else { return nil }
+
+    var range = CFRange()
+    guard AXValueGetValue(rangeVal as! AXValue, .cfRange, &range) else { return nil }
+    let offset = range.location
+    guard offset >= 0, offset < textLength else { return nil }
+
+    // KHỨ HỒI: lấy khung của đúng ký tự đó rồi kiểm tra nó bao con trỏ.
+    var charRange = CFRange(location: offset, length: 1)
+    guard let rangeValue = AXValueCreate(.cfRange, &charRange) else { return nil }
+    var boundsRef: CFTypeRef?
+    guard AXUIElementCopyParameterizedAttributeValue(
+            el, "AXBoundsForRange" as CFString, rangeValue, &boundsRef) == .success,
+          let boundsVal = boundsRef else { return nil }
+
+    var glyph = CGRect.zero
+    guard AXValueGetValue(boundsVal as! AXValue, .cgRect, &glyph) else { return nil }
+    guard !glyph.isEmpty, glyph.width <= maxGlyphSize, glyph.height <= maxGlyphSize else { return nil }
+
+    // Dung sai nhỏ cho sai số làm tròn giữa hệ toạ độ và vị trí hotspot con trỏ.
+    return glyph.insetBy(dx: -3, dy: -3).contains(point) ? offset : nil
+}
+
+/// Đoạn ký tự ĐANG HIỂN THỊ của một view có cuộn. Giải bài toán: bounds là
+/// khung nhìn nhưng text là CẢ tài liệu — không có thông tin này thì không thể
+/// biết phần nào đang nằm trong tầm mắt người dùng. Đo được: Notes hiển thị
+/// 261/2377 ký tự, Terminal 2347/29064.
+func visibleRange(_ el: AXUIElement) -> (Int, Int)? {
+    var ref: CFTypeRef?
+    guard AXUIElementCopyAttributeValue(el, "AXVisibleCharacterRange" as CFString, &ref) == .success,
+          let val = ref else { return nil }
+    var r = CFRange()
+    guard AXValueGetValue(val as! AXValue, .cfRange, &r), r.length > 0 else { return nil }
+    return (r.location, r.length)
+}
+
+func boundsForRange(_ el: AXUIElement, _ range: CFRange) -> CGRect? {
+    var r = range
+    guard let arg = AXValueCreate(.cfRange, &r) else { return nil }
+    var out: CFTypeRef?
+    guard AXUIElementCopyParameterizedAttributeValue(
+            el, "AXBoundsForRange" as CFString, arg, &out) == .success, let v = out else { return nil }
+    var g = CGRect.zero
+    guard AXValueGetValue(v as! AXValue, .cgRect, &g) else { return nil }
+    return g
+}
+
+/// Tham số dòng/chỉ số của các thuộc tính này là CFNumber, KHÔNG phải AXValue —
+/// `AXValueType` không có thành viên tương ứng, dựng bằng AXValueCreate sẽ không
+/// biên dịch được.
+func rangeForLine(_ el: AXUIElement, _ line: Int) -> CFRange? {
+    var out: CFTypeRef?
+    guard AXUIElementCopyParameterizedAttributeValue(
+            el, "AXRangeForLine" as CFString, line as CFNumber, &out) == .success, let v = out else { return nil }
+    var r = CFRange()
+    guard AXValueGetValue(v as! AXValue, .cfRange, &r) else { return nil }
+    return r
+}
+
+func lineForIndex(_ el: AXUIElement, _ index: Int) -> Int? {
+    var out: CFTypeRef?
+    guard AXUIElementCopyParameterizedAttributeValue(
+            el, "AXLineForIndex" as CFString, index as CFNumber, &out) == .success else { return nil }
+    return (out as? NSNumber)?.intValue
+}
+
+/// TẦNG 2 — phân rã theo DÒNG rồi nhị phân, khi tầng 1 (AXRangeForPosition) từ
+/// chối. Không nội suy ở bất kỳ bước nào.
+///
+/// Hai lần nhị phân:
+///   1. Trên SỐ DÒNG — hợp lệ vì Y của khung dòng tăng đơn điệu theo số dòng.
+///      Phạm vi giới hạn trong các dòng ĐANG HIỂN THỊ (AXVisibleCharacterRange),
+///      nên không phụ thuộc tài liệu dài bao nhiêu.
+///   2. Trong dòng đã tìm được, theo trục X, để ra đúng ký tự.
+///
+/// ĐO THỰC NGHIỆM 2026-08-31: 6/6 lần ra đúng dòng trên Notes và Terminal, tốn
+/// 11–21 lệnh gọi AX và 1,1–1,5ms — không đáng kể so với ngân sách hoverDelayMs.
+func offsetViaLines(_ el: AXUIElement, at point: CGPoint, textLength: Int) -> Int? {
+    guard let (visStart, visLength) = visibleRange(el),
+          let firstLine = lineForIndex(el, visStart),
+          let lastLine = lineForIndex(el, min(textLength - 1, visStart + visLength - 1)),
+          lastLine >= firstLine else { return nil }
+
+    var lo = firstLine, hi = lastLine
+    var hitLine: CFRange? = nil
+    while lo <= hi {
+        let mid = (lo + hi) / 2
+        guard let lineRange = rangeForLine(el, mid),
+              let box = boundsForRange(el, lineRange) else { return nil }
+        if point.y < box.minY { hi = mid - 1 }
+        else if point.y > box.maxY { lo = mid + 1 }
+        else { hitLine = lineRange; break }
+    }
+    guard let line = hitLine, line.length > 0, line.location >= 0 else { return nil }
+
+    var a = line.location
+    var b = line.location + line.length - 1
+    while a < b {
+        let mid = (a + b) / 2
+        guard let g = boundsForRange(el, CFRange(location: mid, length: 1)) else { break }
+        if point.x < g.minX { b = mid - 1 }
+        else if point.x > g.maxX { a = mid + 1 }
+        else { return mid }
+    }
+    let candidate = max(line.location, min(a, line.location + line.length - 1))
+    return candidate < textLength ? candidate : nil
+}
+
 /// Chromium/Electron không dựng cây accessibility đầy đủ tới khi có AT client
 /// kích hoạt. "AXManualAccessibility" ép bật full tree không cần VoiceOver —
 /// đã kiểm chứng thực nghiệm, không có trong tài liệu Apple chính thức.
@@ -181,6 +320,23 @@ while let line = readLine(strippingNewline: true) {
             fields["text"] = t
             if let f = frameOf(leafElement) {
                 fields["bounds"] = ["x": f.origin.x, "y": f.origin.y, "width": f.width, "height": f.height]
+            }
+            // Hai tầng, thử theo thứ tự rẻ trước. Cả hai đều CHỨNG MINH kết quả
+            // bằng hình học thật, không tầng nào nội suy. Vắng cả hai = tầng
+            // trên phải tự ước lượng, và biết rõ là mình đang ước lượng.
+            //
+            // `offsetSource` để đo được tầng nào thực sự gánh việc khi dùng thật
+            // — chính là dữ liệu mà ADR-0008 nói cần có trước khi xây tiếp.
+            if let off = verifiedOffset(leafElement, at: point, textLength: t.count) {
+                fields["charOffset"] = off
+                fields["offsetSource"] = "position"
+            } else if let off = offsetViaLines(leafElement, at: point, textLength: t.count) {
+                fields["charOffset"] = off
+                fields["offsetSource"] = "lines"
+            }
+            if let (loc, len) = visibleRange(leafElement) {
+                fields["visibleStart"] = loc
+                fields["visibleLength"] = len
             }
         } else {
             fields["text"] = NSNull()
