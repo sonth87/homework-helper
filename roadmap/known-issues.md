@@ -8,17 +8,31 @@ desktop app hiện tại. Cả hai vấn đề ảnh hưởng **cả extension l
 
 ## 1. Chat nhiều lượt không có ngữ cảnh hội thoại
 
-> **Cập nhật 2026-09-01: đã sửa cho DESKTOP**, xem CHANGELOG-desktop.md mục
-> "Thêm mới" và commit liên quan. Phần dưới vẫn mô tả đúng hiện trạng CÒN LẠI
-> của **extension** — chưa đụng tới. Cắt nông + ngưỡng khác nhau theo
-> local/cloud (phương án 1+3 đã bàn ở dưới), số lượt (6 local / 20 cloud) là
-> ước lượng có lý do, KHÔNG phải đo thực nghiệm — máy làm việc không cài được
-> Ollama để đo prefill time thật như tài liệu này yêu cầu. Xem lại khi có máy
-> cài Ollama, hoặc có phản hồi thật.
+> **Cập nhật 2026-09-01: ĐÃ SỬA cho CẢ HAI APP.** Desktop: xem
+> CHANGELOG-desktop.md mục "Thêm mới" và commit liên quan. Extension: xem
+> CHANGELOG-extension.md mục 1.7.1 và commit liên quan (5 điểm chạm: 3 UI ×
+> service-worker × ai-engine.js × offscreen/ai-stream.js, đúng như liệt kê ở
+> mục "Việc cần làm" bên dưới). Cắt nông + ngưỡng khác nhau theo local/cloud
+> (phương án 1+3 đã bàn ở dưới) áp dụng cho cả hai app; số lượt (6 local / 20
+> cloud) là ước lượng có lý do, KHÔNG phải đo thực nghiệm — máy làm việc không
+> cài được Ollama để đo prefill time thật như tài liệu này yêu cầu. Xem lại khi
+> có máy cài Ollama, hoặc có phản hồi thật.
+>
+> Phần còn lại của mục này (bảng "Bằng chứng", các đoạn dưới) mô tả **hiện
+> trạng TRƯỚC khi sửa** — giữ lại làm tài liệu lịch sử/tham khảo thiết kế,
+> không còn phản ánh code hiện tại.
+>
+> **Một khoảng trống cố ý chưa sửa:** `main-world-bridge.js` (`HOMEWORK_AI_NANO_EXEC`)
+> là đường gọi Gemini Nano trực tiếp trên trang, dùng khi **không có API key nào**
+> được bật — nó không đi qua `AiEngine.ask()` nên không nhận được `history`. Quyết
+> định: không sửa trong đợt này (nằm ngoài phạm vi 5 điểm chạm đã liệt kê), người
+> dùng ở trạng thái "chưa cấu hình key nào" vẫn sẽ mất ngữ cảnh hội thoại. Quay lại
+> nếu có phản hồi thật cho thấy đây là vấn đề đáng kể.
 
-**Hiện trạng đã xác nhận bằng code:** mỗi lượt hỏi tiếp trong một hội thoại chỉ
-gửi đúng câu vừa gõ, không kèm bất kỳ nội dung nào của các lượt trước. AI không
-biết "còn cách nào khác không?" đang hỏi tiếp về vấn đề gì.
+**Hiện trạng đã xác nhận bằng code (TRƯỚC khi sửa, xem cập nhật ở trên):** mỗi
+lượt hỏi tiếp trong một hội thoại chỉ gửi đúng câu vừa gõ, không kèm bất kỳ nội
+dung nào của các lượt trước. AI không biết "còn cách nào khác không?" đang hỏi
+tiếp về vấn đề gì.
 
 ### Bằng chứng
 
@@ -169,8 +183,12 @@ chữ viết tay, sơ đồ hoá học), ảnh gửi thẳng dạng bytes, khôn
 
 ## Trạng thái
 
-- [ ] Chưa sửa gì cho cả hai vấn đề.
-- [ ] Chưa đo thời gian thật trên model local để chốt tham số (N lượt giữ lại,
-      TTL cache).
-- [ ] Bàn lại sau khi hoàn tất toàn bộ nội dung desktop app hiện tại (Phase 3
-      trở đi — xem [desktop-app-implementation-plan.md](./desktop-app-implementation-plan.md)).
+- [x] Vấn đề 1 (ngữ cảnh hội thoại) đã sửa cho cả hai app — 2026-09-01. Ngoại
+      trừ đường Nano trực tiếp (`main-world-bridge.js`) khi chưa cấu hình key
+      nào, xem ghi chú trong mục 1.
+- [ ] Vấn đề 2 (cache) chưa sửa.
+- [ ] Chưa đo thời gian thật trên model local để chốt tham số (N lượt giữ lại
+      đang dùng số ước lượng 6 local / 20 cloud; TTL cache cho vấn đề 2 vẫn
+      chưa có số).
+- [ ] Bàn lại vấn đề 2 sau khi hoàn tất toàn bộ nội dung desktop app hiện tại
+      (Phase 3 trở đi — xem [desktop-app-implementation-plan.md](./desktop-app-implementation-plan.md)).

@@ -50,7 +50,7 @@ async function fetchWithSchemaFallback(doFetch, wantsSchema) {
 /**
  * Google Gemini SSE Stream
  */
-async function streamGemini(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled }, onChunk, signal) {
+async function streamGemini(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled, history = [] }, onChunk, signal) {
   const baseUrl = config.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
   const model = config.model || 'gemini-2.5-flash';
   const url = `${baseUrl}/models/${model}:streamGenerateContent?alt=sse&key=${config.apiKey}`;
@@ -79,9 +79,15 @@ async function streamGemini(config, { prompt, imageBase64, studyMode, outputLang
     if (level) generationConfig.thinkingConfig = { thinkingLevel: level };
   }
 
+  // Gemini has no 'assistant' role — its own past replies must be resent as 'model'.
+  const historyContents = history.map((h) => ({
+    role: h.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: h.content }],
+  }));
+
   const wantsSchema = wantsDictionarySchema(studyMode, prompt);
   const buildPayload = (useSchema) => ({
-    contents: [{ role: 'user', parts }],
+    contents: [...historyContents, { role: 'user', parts }],
     system_instruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
     generationConfig: useSchema
       ? { ...generationConfig, responseMimeType: 'application/json', responseSchema: DICTIONARY_SCHEMA }
@@ -139,7 +145,7 @@ async function streamGemini(config, { prompt, imageBase64, studyMode, outputLang
 /**
  * OpenAI / DeepSeek / Groq / OpenRouter / Custom Streaming
  */
-async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled }, onChunk, signal) {
+async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled, history = [] }, onChunk, signal) {
   const baseUrl = config.baseUrl || 'https://api.openai.com/v1';
   const model = config.model || 'gpt-4o';
   const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
@@ -183,6 +189,11 @@ async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, 
   const messages = [];
   if (systemPrompt) {
     messages.push({ role: 'system', content: systemPrompt });
+  }
+  // Lịch sử không chứa ảnh (chỉ lượt hiện tại mới có, xem ai-engine.js) nên
+  // đẩy thẳng vào giữa system prompt và lượt hiện tại là đủ.
+  for (const h of history) {
+    messages.push({ role: h.role, content: h.content });
   }
   messages.push({ role: 'user', content: userContent.length === 1 ? fullPrompt : userContent });
 
@@ -305,7 +316,7 @@ async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, 
 /**
  * Anthropic Claude Streaming
  */
-async function streamClaude(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled }, onChunk, signal) {
+async function streamClaude(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled, history = [] }, onChunk, signal) {
   const baseUrl = config.baseUrl || 'https://api.anthropic.com/v1';
   const model = config.model || 'claude-3-5-sonnet-20241022';
   const url = `${baseUrl.replace(/\/+$/, '')}/messages`;
@@ -327,11 +338,16 @@ async function streamClaude(config, { prompt, imageBase64, studyMode, outputLang
   const fullPrompt = formatStudyPrompt(studyMode, prompt, outputLanguage);
   content.push({ type: 'text', text: fullPrompt });
 
+  const historyMessages = history.map((h) => ({
+    role: h.role,
+    content: [{ type: 'text', text: h.content }],
+  }));
+
   const payload = {
     model,
     max_tokens: 4096,
     system: systemPrompt || undefined,
-    messages: [{ role: 'user', content }],
+    messages: [...historyMessages, { role: 'user', content }],
     stream: true,
     temperature: 0.4,
   };

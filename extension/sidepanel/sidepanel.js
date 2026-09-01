@@ -441,6 +441,10 @@ export class SidePanelController {
   }
 
   async askAi({ prompt, imageBase64 = null }) {
+    // PHẢI lấy TRƯỚC appendUserMessage() — hàm đó ghi luôn tin nhắn hiện tại
+    // vào Storage (không đợi xong), nên lấy lịch sử sau đó là dính đua tranh:
+    // có thể dính luôn chính câu vừa gửi vào danh sách "lượt trước" của nó.
+    const priorMessages = await Storage.getChatHistory();
     this.appendUserMessage(prompt, imageBase64);
 
     this.activeAiBubble = this.createAiBubble();
@@ -473,6 +477,11 @@ export class SidePanelController {
         studyMode: this.currentStudyMode,
         outputLanguage,
         requestId: this.activeRequestId,
+        // Chỉ role+content — KHÔNG gửi lại ảnh của các lượt trước (không đổi
+        // giữa các lượt, gửi lại chỉ tốn băng thông) và không gửi timestamp
+        // (provider không cần). Cắt theo local/cloud là việc của ai-engine.js,
+        // ở đây gửi nguyên lịch sử đang có (Storage đã tự giới hạn 50 lượt).
+        history: priorMessages.map((m) => ({ role: m.role, content: m.content })),
       },
     });
   }

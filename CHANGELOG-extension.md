@@ -17,6 +17,18 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.7.1] — 2026-09-01
+
+### Sửa lỗi
+- **Chat nhiều lượt nay nhớ được ngữ cảnh hội thoại trước đó** — trước đây mỗi câu hỏi
+  gửi lên AI chỉ có mỗi tin nhắn hiện tại, khiến các câu hỏi nối tiếp kiểu "còn câu 2 thì
+  sao?" bị model trả lời sai vì không biết "câu 2" là gì. Áp dụng cho cả khung chat
+  (Sidepanel), thẻ nổi trên trang, và ô hỏi nhanh khi bôi đen văn bản. Model chạy trên máy
+  (Ollama/LM Studio) giữ ít lượt hội thoại gần nhất hơn model trên mây, vì ngữ cảnh dài
+  cộng thẳng vào thời gian chờ trả lời mà model local vốn đã chậm hơn.
+
+---
+
 ## [1.7.0] — 2026-09-01
 
 ### Thêm mới

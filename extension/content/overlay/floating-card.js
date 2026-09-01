@@ -452,6 +452,9 @@ export class OverlayFloatingCard {
   }
 
   async showSolutionCard(imageBase64, mode = 'solve') {
+    // PHẢI lấy TRƯỚC Storage.addChatMessage() ở dưới (dòng ghi tin nhắn "đã
+    // chụp ảnh" của chính lượt này) — lấy sau sẽ dính đua tranh.
+    const priorMessages = await Storage.getChatHistory();
     const s = this.shadow;
     this.popupMode = 'screenshot';
     this.popupSourceText = '';
@@ -661,6 +664,7 @@ export class OverlayFloatingCard {
         studyMode,
         outputLanguage,
         requestId: this.overlay.drawer.activeRequestId,
+        history: priorMessages.map((m) => ({ role: m.role, content: m.content })),
       },
     });
   }
@@ -741,6 +745,8 @@ export class OverlayFloatingCard {
   }
 
   async executePopupAction(type, text) {
+    // PHẢI lấy TRƯỚC Storage.addChatMessage() ở dưới — lấy sau sẽ dính đua tranh.
+    const priorMessages = await Storage.getChatHistory();
     const s = this.shadow;
     const { uiLanguage = 'en', studyMode: savedStudyMode = 'step-by-step' } = await Storage.get(['uiLanguage', 'studyMode']);
     const cardDict = getFloatingPopupI18n(uiLanguage);
@@ -843,6 +849,7 @@ export class OverlayFloatingCard {
         studyMode,
         outputLanguage: effectiveOutputLanguage,
         requestId: this.overlay.drawer.activeRequestId,
+        history: priorMessages.map((m) => ({ role: m.role, content: m.content })),
       },
     });
   }

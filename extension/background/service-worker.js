@@ -267,7 +267,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Ask AI via Port / Message
   if (action === 'ASK_AI') {
-    const { prompt, imageBase64, studyMode, preferredConfigId, outputLanguage: reqLang, requestId = `req_${Date.now()}` } = payload || {};
+    const { prompt, imageBase64, studyMode, preferredConfigId, outputLanguage: reqLang, history, requestId = `req_${Date.now()}` } = payload || {};
     const abortController = new AbortController();
     activeStreams.set(requestId, abortController);
 
@@ -276,7 +276,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const outputLanguage = reqLang || storedLang;
       try {
         await AiEngine.ask(
-          { prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage },
+          { prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage, history },
           (chunk, meta) => {
             // Send chunk back to sender
             if (sender.tab && sender.tab.id) {

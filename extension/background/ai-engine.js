@@ -11,6 +11,26 @@ import { streamViaOffscreen } from './offscreen-ai-bridge.js';
 import { isSingleWord, DICTIONARY_SCHEMA } from '../shared/dictionary.js';
 import { checkNanoAvailability, NANO_STATUS } from '../shared/nano-status.js';
 
+// Cắt nông lịch sử hội thoại trước khi gửi cho model — không tóm tắt (tóm tắt
+// tốn thêm 1 lần gọi model, có thể phản tác dụng vì local model vốn đã chậm).
+// Local model giữ ít lượt hơn vì ngữ cảnh cộng thẳng vào thời gian chờ prefill
+// mà người dùng cảm nhận được. Hai con số này CHƯA đo thực tế (máy dev không
+// cài Ollama) — là ước lượng có lý do, không phải số đo — xem
+// roadmap/known-issues.md mục 1. Desktop áp cùng logic, cùng ước lượng, ở
+// desktop/config/limits.config.ts (LIMITS.llmLane.historyTurnsLocal/Cloud).
+const HISTORY_TURNS_LOCAL = 6;
+const HISTORY_TURNS_CLOUD = 20;
+
+/**
+ * @param {Array<{role: 'user'|'assistant', content: string}>} history
+ * @param {boolean} isLocal
+ */
+function truncateHistory(history, isLocal) {
+  if (!history || !history.length) return [];
+  const max = isLocal ? HISTORY_TURNS_LOCAL : HISTORY_TURNS_CLOUD;
+  return history.slice(-max);
+}
+
 export class AiEngine {
   /**
    * Main entrypoint to ask AI with text and optional image
@@ -19,10 +39,11 @@ export class AiEngine {
    * @param {string} [params.imageBase64] - Optional base64 image (with or without data URL prefix)
    * @param {string} [params.studyMode] - 'step-by-step' | 'direct' | 'hint' | 'explain' | 'translate'
    * @param {string} [params.preferredConfigId] - Specific config ID or null for auto-rotation
+   * @param {Array<{role: 'user'|'assistant', content: string}>} [params.history] - Prior turns in the current conversation, oldest first
    * @param {Function} onChunk - Callback for incremental text chunks: onChunk(text, metadata)
    * @param {AbortSignal} [signal] - Abort signal
    */
-  static async ask({ prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage = 'en' }, onChunk, signal) {
+  static async ask({ prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage = 'en', history = [] }, onChunk, signal) {
     const { routingStrategy = 'prefer_nano', apiConfigs = [], nanoSystemPrompt, thinkingEnabled = true } = await Storage.get(['routingStrategy', 'apiConfigs', 'nanoSystemPrompt', 'thinkingEnabled']);
     const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin'));
 
@@ -61,7 +82,7 @@ export class AiEngine {
     // 1. nano_only Strategy: 100% On-Device execution
     if (routingStrategy === 'nano_only') {
       onChunk('', { status: 'connecting', model: 'Gemini Nano (On-Device)', provider: 'chrome-builtin' });
-      await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt }, onChunk, signal);
+      await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt, history: truncateHistory(history, true) }, onChunk, signal);
       return;
     }
 
@@ -69,7 +90,7 @@ export class AiEngine {
     if (routingStrategy === 'prefer_nano' && !imageBase64 && !preferredConfigId) {
       try {
         onChunk('', { status: 'connecting', model: 'Gemini Nano (On-Device)', provider: 'chrome-builtin' });
-        await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt }, onChunk, signal);
+        await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt, history: truncateHistory(history, true) }, onChunk, signal);
         return;
       } catch (nanoErr) {
         if (enabledKeys.length === 0) throw nanoErr;
@@ -96,7 +117,7 @@ export class AiEngine {
             status: 'switching',
             notice: 'Không có API Key khả dụng, tự động chuyển về Gemini Nano On-Device...',
           });
-          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt }, onChunk, signal);
+          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt, history: truncateHistory(history, true) }, onChunk, signal);
           return;
         }
         throw new Error('Chưa có API Key nào được kích hoạt trong Cài đặt.');
@@ -106,13 +127,17 @@ export class AiEngine {
         onChunk('', { status: 'connecting', model: config.model, provider: config.provider, attempt: attempts });
 
         if (config.provider === 'chrome-builtin') {
-          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt }, onChunk, signal);
+          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt, history: truncateHistory(history, true) }, onChunk, signal);
         } else {
           // Gemini / Claude / OpenAI-compatible (OpenAI, DeepSeek, Groq, OpenRouter, Custom).
           // The actual fetch() runs in the offscreen document, not here — MV3 kills the
           // service worker if a fetch() response takes over 30s to arrive, and "thinking"
           // models routinely take longer than that just to send their first byte.
-          await streamViaOffscreen(config.provider, config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt, thinkingEnabled }, onChunk, signal);
+          // Ollama/LM Studio are local even though they go through this same
+          // OpenAI-compatible offscreen path — cắt lịch sử ngắn hơn cho chúng,
+          // giống hệt cách streamChromeBuiltin được xử lý ở nhánh kia.
+          const isLocalConfig = config.provider === 'ollama' || config.provider === 'lmstudio';
+          await streamViaOffscreen(config.provider, config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt, thinkingEnabled, history: truncateHistory(history, isLocalConfig) }, onChunk, signal);
         }
 
         // Successfully completed
@@ -134,7 +159,7 @@ export class AiEngine {
               status: 'switching',
               notice: 'Tất cả API Key đều bận hoặc không kết nối được, tự động chuyển về Gemini Nano On-Device...',
             });
-            await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt }, onChunk, signal);
+            await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt, history: truncateHistory(history, true) }, onChunk, signal);
             return;
           }
           throw err;
@@ -153,7 +178,7 @@ export class AiEngine {
   /**
    * Chrome Built-in AI (Gemini Nano On-Device Prompt API)
    */
-  static async streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt }, onChunk, signal) {
+  static async streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt, history = [] }, onChunk, signal) {
     if (imageBase64) {
       onChunk('', {
         status: 'switching',
@@ -195,6 +220,9 @@ export class AiEngine {
           systemPrompt: systemPrompt || undefined,
           temperature: 0.4,
           topK: 3,
+          // initialPrompts seeds prior turns into the session — role names match
+          // our internal 'user'/'assistant' convention already (Prompt API spec).
+          ...(history.length ? { initialPrompts: history.map((h) => ({ role: h.role, content: h.content })) } : {}),
           monitor(m) {
             // Chrome fires a trivial 0%→100% downloadprogress pair on every single
             // create() call, even when the model is already fully available and

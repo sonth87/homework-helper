@@ -404,6 +404,9 @@ export class OverlayDrawer {
   }
 
   async askAi({ prompt, imageBase64 = null }) {
+    // PHẢI lấy TRƯỚC appendUserMessage() — hàm đó ghi luôn tin nhắn hiện tại
+    // vào Storage (không đợi xong), lấy sau sẽ dính đua tranh.
+    const priorMessages = await Storage.getChatHistory();
     this.appendUserMessage(prompt, imageBase64);
 
     this.activeAiBubble = this.createAiBubble();
@@ -477,6 +480,9 @@ export class OverlayDrawer {
         studyMode: this.currentStudyMode,
         outputLanguage,
         requestId: this.activeRequestId,
+        // Chỉ role+content — không gửi lại ảnh của lượt trước, không gửi
+        // timestamp. Cắt theo local/cloud là việc của ai-engine.js.
+        history: priorMessages.map((m) => ({ role: m.role, content: m.content })),
       },
     });
   }
