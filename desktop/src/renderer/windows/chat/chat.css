@@ -1,15 +1,5 @@
-:root {
-  --bg: #f6f7f9; --panel: rgba(255,255,255,0.72); --border: rgba(0,0,0,0.09);
-  --text: #16181d; --text-dim: #61656e; --accent: #0284c7;
-  --accent-soft: rgba(2,132,199,0.12); --danger: #dc2626;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #16181d; --panel: rgba(38,41,48,0.72); --border: rgba(255,255,255,0.1);
-    --text: #eceef2; --text-dim: #9aa0ab; --accent: #38bdf8;
-    --accent-soft: rgba(56,189,248,0.16); --danger: #f87171;
-  }
-}
+/* Token màu dùng chung ở @renderer/theme/theme.css (import trong main.tsx,
+   TRƯỚC file này) — không khai lại ở đây. */
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text);
   font: 13.5px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
@@ -20,6 +10,7 @@ body { margin: 0; background: var(--bg); color: var(--text);
 .history { display: flex; flex-direction: column; border-right: 1px solid var(--border); min-width: 0; }
 .history__new {
   -webkit-app-region: no-drag; margin: 52px 10px 8px; padding: 8px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
   border: 1px dashed var(--border); border-radius: 9px;
   background: transparent; color: var(--text-dim); font: inherit; cursor: pointer;
 }
@@ -41,7 +32,7 @@ body { margin: 0; background: var(--bg); color: var(--text);
 
 .history__delete {
   opacity: 0; border: 0; background: transparent; color: var(--danger);
-  font-size: 17px; line-height: 1; padding: 0 9px; cursor: pointer;
+  display: flex; align-items: center; padding: 0 9px; cursor: pointer;
 }
 .history__item:hover .history__delete { opacity: 1; }
 

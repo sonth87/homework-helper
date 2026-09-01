@@ -185,4 +185,28 @@ export default {
   notifFileDropPdfNoText: 'Aucun texte trouvé dans ce PDF (il s\'agit peut-être d\'un document scanné). Essayez plutôt « Résoudre le devoir » avec une capture d\'écran de chaque page.',
   notifFileDropReadError: 'Impossible de lire ce fichier. Veuillez réessayer.',
 
+  // ── Giao diện (Phase 5) ──────────────────────────────────────────────────
+  groupAppearance: 'Apparence',
+  setTheme: 'Thème',
+  setThemeDesc: 'Choisissez le thème de couleur de l\'application.',
+  themeSystem: 'Système',
+  themeLight: 'Clair',
+  themeDark: 'Sombre',
+  setHoverCustomStyle: 'Personnaliser l\'apparence de l\'infobulle',
+  setHoverCustomStyleDesc: 'Remplace la couleur et la taille de l\'infobulle de traduction au lieu du réglage par défaut qui suit le thème de l\'application.',
+  setHoverBgColor: 'Couleur de fond',
+  setHoverBgColorDesc: 'Couleur de fond de l\'infobulle de traduction.',
+  setHoverBgOpacity: 'Opacité du fond',
+  setHoverBgOpacityDesc: 'Degré de transparence du fond de l\'infobulle.',
+  setHoverTextColor: 'Couleur du texte',
+  setHoverTextColorDesc: 'Couleur du texte traduit.',
+  setHoverFontSize: 'Taille du texte',
+  setHoverFontSizeDesc: 'Taille du texte à l\'intérieur de l\'infobulle.',
+  setHoverBlur: 'Flou du fond',
+  setHoverBlurDesc: 'Intensité du flou derrière l\'infobulle.',
+  setHoverBorderRadius: 'Arrondi des coins',
+  setHoverBorderRadiusDesc: 'Degré d\'arrondi des coins de l\'infobulle.',
+  resultStop: 'Arrêter',
+  resultCopy: 'Copier',
+
 } as const satisfies Dictionary;

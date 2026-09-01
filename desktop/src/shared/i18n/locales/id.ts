@@ -185,4 +185,28 @@ export default {
   notifFileDropPdfNoText: 'Tidak ditemukan teks dalam PDF ini (mungkin dokumen hasil pindai). Coba gunakan "Selesaikan Tugas" dengan tangkapan layar tiap halaman.',
   notifFileDropReadError: 'Tidak dapat membaca file ini. Silakan coba lagi.',
 
+  // ── Giao diện (Phase 5) ──────────────────────────────────────────────────
+  groupAppearance: 'Tampilan',
+  setTheme: 'Tema',
+  setThemeDesc: 'Pilih tema warna aplikasi.',
+  themeSystem: 'Ikuti sistem',
+  themeLight: 'Terang',
+  themeDark: 'Gelap',
+  setHoverCustomStyle: 'Sesuaikan tampilan tooltip',
+  setHoverCustomStyleDesc: 'Timpa warna dan ukuran tooltip terjemahan alih-alih default yang mengikuti tema aplikasi.',
+  setHoverBgColor: 'Warna latar',
+  setHoverBgColorDesc: 'Warna latar belakang tooltip terjemahan.',
+  setHoverBgOpacity: 'Opasitas latar',
+  setHoverBgOpacityDesc: 'Seberapa transparan latar belakang tooltip.',
+  setHoverTextColor: 'Warna teks',
+  setHoverTextColorDesc: 'Warna teks terjemahan.',
+  setHoverFontSize: 'Ukuran huruf',
+  setHoverFontSizeDesc: 'Ukuran teks di dalam tooltip.',
+  setHoverBlur: 'Blur latar',
+  setHoverBlurDesc: 'Tingkat blur di belakang tooltip.',
+  setHoverBorderRadius: 'Kelengkungan sudut',
+  setHoverBorderRadiusDesc: 'Seberapa melengkung sudut tooltip.',
+  resultStop: 'Berhenti',
+  resultCopy: 'Salin',
+
 } as const satisfies Dictionary;

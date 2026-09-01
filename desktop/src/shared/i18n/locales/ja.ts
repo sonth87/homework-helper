@@ -185,4 +185,28 @@ export default {
   notifFileDropPdfNoText: 'このPDFにはテキストが見つかりませんでした（スキャンされた文書の可能性があります）。代わりに各ページのスクリーンショットで「宿題を解く」をお試しください。',
   notifFileDropReadError: 'このファイルを読み込めませんでした。もう一度お試しください。',
 
+  // ── Giao diện (Phase 5) ──────────────────────────────────────────────────
+  groupAppearance: '外観',
+  setTheme: 'テーマ',
+  setThemeDesc: 'アプリの配色テーマを選択します。',
+  themeSystem: 'システムに合わせる',
+  themeLight: 'ライト',
+  themeDark: 'ダーク',
+  setHoverCustomStyle: 'ツールチップの外観をカスタマイズ',
+  setHoverCustomStyleDesc: '翻訳ツールチップの色とサイズを、アプリのテーマに自動追従する既定値の代わりに上書きします。',
+  setHoverBgColor: '背景色',
+  setHoverBgColorDesc: '翻訳ツールチップの背景色。',
+  setHoverBgOpacity: '背景の不透明度',
+  setHoverBgOpacityDesc: 'ツールチップ背景の透け具合。',
+  setHoverTextColor: '文字色',
+  setHoverTextColorDesc: '翻訳文の色。',
+  setHoverFontSize: '文字サイズ',
+  setHoverFontSizeDesc: 'ツールチップ内の文字サイズ。',
+  setHoverBlur: '背景ぼかし',
+  setHoverBlurDesc: 'ツールチップ背後のぼかしの強さ。',
+  setHoverBorderRadius: '角の丸み',
+  setHoverBorderRadiusDesc: 'ツールチップの角がどれだけ丸いか。',
+  resultStop: '停止',
+  resultCopy: 'コピー',
+
 } as const satisfies Dictionary;

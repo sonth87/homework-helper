@@ -1,0 +1,89 @@
+/**
+ * Token màu dùng chung cho MỌI cửa sổ renderer (Phase 5) — trước đây mỗi cửa
+ * sổ (settings.css, chat.css, result.css, onboarding.css) tự khai lại y hệt
+ * một bộ token (`--bg`, `--panel`, `--border`, `--text`, `--text-dim`,
+ * `--accent`...) một cách độc lập. Gộp về một nơi để sửa một chỗ, áp dụng
+ * khắp app — không đổi GIÁ TRỊ nào so với trước, chỉ gộp vị trí khai báo.
+ *
+ * Cơ chế theme thủ công (setting `theme`, mặc định 'system'):
+ *   - Không set `data-theme` trên <html> → theo `prefers-color-scheme` của hệ
+ *     điều hành, như hành vi cũ.
+ *   - `data-theme="light"` / `data-theme="dark"` → ép cứng, bất kể hệ điều
+ *     hành đang ở chế độ nào. Đặt qua theme/apply-theme.ts, gọi ở main.tsx của
+ *     từng cửa sổ.
+ *
+ * `--float-*`: bộ token RIÊNG cho các lớp phủ nổi trên nội dung tuỳ ý (tooltip
+ * dịch, thanh hành động clipboard) — nền phải ĐỤC hơn hẳn panel bình thường
+ * (0.94 so với 0.72) để đọc được trên MỌI nền phía sau, không chỉ trên nền
+ * app của chính mình. Giữ nguyên giá trị gốc từ hover.css/clipboard-bar.css
+ * (trước đây hardcode riêng từng file, hơi lệch panel một chút — 0.94 vs 0.72,
+ * border 0.08 vs 0.09 — KHÔNG ép về chung một token để không đổi hình ảnh dù
+ * chỉ 1px/0.01 alpha).
+ */
+
+:root {
+  --bg: #f6f7f9;
+  --panel: rgba(255, 255, 255, 0.72);
+  --border: rgba(0, 0, 0, 0.09);
+  --text: #16181d;
+  --text-dim: #61656e;
+  --accent: #0284c7;
+  --accent-soft: rgba(2, 132, 199, 0.12);
+  --danger: #dc2626;
+  --success: #16a34a;
+  --success-soft: rgba(22, 163, 74, 0.12);
+  --radius: 12px;
+  --blur: 18px;
+
+  --float-bg: rgba(255, 255, 255, 0.94);
+  --float-border: rgba(0, 0, 0, 0.08);
+  --float-text: #16181d;
+  --float-text-dim: #61656e;
+  --float-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  /* Trạng thái hover/active của nút trên thanh clipboard-bar — giữ nguyên giá
+     trị gốc từ clipboard-bar.css (trước đây hardcode inline trong file đó). */
+  --float-hover: rgba(0, 0, 0, 0.06);
+  --float-active: rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #16181d;
+    --panel: rgba(38, 41, 48, 0.72);
+    --border: rgba(255, 255, 255, 0.1);
+    --text: #eceef2;
+    --text-dim: #9aa0ab;
+    --accent: #38bdf8;
+    --accent-soft: rgba(56, 189, 248, 0.16);
+    --danger: #f87171;
+    --success: #4ade80;
+    --success-soft: rgba(74, 222, 128, 0.16);
+
+    --float-bg: rgba(38, 41, 48, 0.94);
+    --float-border: rgba(255, 255, 255, 0.1);
+    --float-text: #eceef2;
+    --float-text-dim: #9aa0ab;
+    --float-hover: rgba(255, 255, 255, 0.1);
+    --float-active: rgba(255, 255, 255, 0.16);
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #16181d;
+  --panel: rgba(38, 41, 48, 0.72);
+  --border: rgba(255, 255, 255, 0.1);
+  --text: #eceef2;
+  --text-dim: #9aa0ab;
+  --accent: #38bdf8;
+  --accent-soft: rgba(56, 189, 248, 0.16);
+  --danger: #f87171;
+  --success: #4ade80;
+  --success-soft: rgba(74, 222, 128, 0.16);
+
+  --float-bg: rgba(38, 41, 48, 0.94);
+  --float-border: rgba(255, 255, 255, 0.1);
+  --float-text: #eceef2;
+  --float-text-dim: #9aa0ab;
+  --float-hover: rgba(255, 255, 255, 0.1);
+  --float-active: rgba(255, 255, 255, 0.16);
+}

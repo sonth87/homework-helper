@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { PROVIDERS, PROVIDER_LIST } from '@config/providers.config';
 import type { ApiConfig } from '@config/settings';
 import type { ProviderId } from '@shared/types/ai';
@@ -57,7 +58,8 @@ export function ApiKeysPanel({ configs, t, onChange }: Props) {
       ))}
 
       <button type="button" className="keys__add" onClick={add}>
-        + {t('keysAdd')}
+        <Plus size={14} strokeWidth={2} aria-hidden="true" />
+        {t('keysAdd')}
       </button>
     </div>
   );

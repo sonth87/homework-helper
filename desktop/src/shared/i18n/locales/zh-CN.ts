@@ -185,4 +185,28 @@ export default {
   notifFileDropPdfNoText: '在此 PDF 中未找到文字内容（可能是扫描件）。请改用「解题」功能，对每页截图处理。',
   notifFileDropReadError: '无法读取此文件，请重试。',
 
+  // ── Giao diện (Phase 5) ──────────────────────────────────────────────────
+  groupAppearance: '外观',
+  setTheme: '主题',
+  setThemeDesc: '选择应用的配色主题。',
+  themeSystem: '跟随系统',
+  themeLight: '浅色',
+  themeDark: '深色',
+  setHoverCustomStyle: '自定义提示框外观',
+  setHoverCustomStyleDesc: '覆盖翻译提示框的颜色和大小，而不是默认跟随应用主题。',
+  setHoverBgColor: '背景颜色',
+  setHoverBgColorDesc: '翻译提示框的背景颜色。',
+  setHoverBgOpacity: '背景透明度',
+  setHoverBgOpacityDesc: '提示框背景的透明程度。',
+  setHoverTextColor: '文字颜色',
+  setHoverTextColorDesc: '翻译文字的颜色。',
+  setHoverFontSize: '字体大小',
+  setHoverFontSizeDesc: '提示框内文字的大小。',
+  setHoverBlur: '背景模糊',
+  setHoverBlurDesc: '提示框背后的模糊程度。',
+  setHoverBorderRadius: '圆角程度',
+  setHoverBorderRadiusDesc: '提示框边角的圆润程度。',
+  resultStop: '停止',
+  resultCopy: '复制',
+
 } as const satisfies Dictionary;

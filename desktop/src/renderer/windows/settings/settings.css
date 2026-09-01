@@ -1,33 +1,8 @@
 /**
  * Liquid Glass — kế thừa tư tưởng thị giác từ extension, viết lại cho Electron.
- * Token màu ở :root, chuyển theo prefers-color-scheme.
+ * Token màu dùng chung ở @renderer/theme/theme.css (import trong
+ * SettingsApp.tsx, TRƯỚC file này) — không khai lại ở đây.
  */
-
-:root {
-  --bg: #f6f7f9;
-  --panel: rgba(255, 255, 255, 0.72);
-  --border: rgba(0, 0, 0, 0.09);
-  --text: #16181d;
-  --text-dim: #61656e;
-  --accent: #0284c7;
-  --accent-soft: rgba(2, 132, 199, 0.12);
-  --danger: #dc2626;
-  --radius: 12px;
-  --blur: 18px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #16181d;
-    --panel: rgba(38, 41, 48, 0.72);
-    --border: rgba(255, 255, 255, 0.1);
-    --text: #eceef2;
-    --text-dim: #9aa0ab;
-    --accent: #38bdf8;
-    --accent-soft: rgba(56, 189, 248, 0.16);
-    --danger: #f87171;
-  }
-}
 
 * { box-sizing: border-box; }
 
@@ -59,6 +34,9 @@ body {
 
 .settings__nav button {
   -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   appearance: none;
   border: 0;
   background: transparent;
@@ -71,6 +49,7 @@ body {
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
 }
+.settings__nav button svg { flex-shrink: 0; opacity: 0.85; }
 
 .settings__nav button:hover { background: var(--accent-soft); color: var(--text); }
 .settings__nav button.is-active { background: var(--accent-soft); color: var(--accent); }
@@ -227,6 +206,9 @@ body {
 .keys__keyrow button,
 .keys__add {
   appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 7px 14px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -264,6 +246,9 @@ body {
 .providers__order { display: flex; flex-direction: column; gap: 2px; }
 .providers__order button {
   appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 22px;
   height: 18px;
   padding: 0;

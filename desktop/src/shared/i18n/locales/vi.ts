@@ -183,4 +183,28 @@ export default {
   notifFileDropPdfNoText: 'Không tìm thấy văn bản trong PDF này (có thể là bản scan). Hãy thử Giải bài tập bằng cách chụp màn hình từng trang.',
   notifFileDropReadError: 'Không đọc được file này. Hãy thử lại.',
 
+  // ── Giao diện (Phase 5) ──────────────────────────────────────────────────
+  groupAppearance: 'Giao diện',
+  setTheme: 'Chủ đề',
+  setThemeDesc: 'Chọn chủ đề màu sắc cho ứng dụng.',
+  themeSystem: 'Theo hệ thống',
+  themeLight: 'Sáng',
+  themeDark: 'Tối',
+  setHoverCustomStyle: 'Tuỳ chỉnh giao diện tooltip',
+  setHoverCustomStyleDesc: 'Ghi đè màu sắc và kích thước của tooltip dịch thay vì mặc định tự đổi theo chủ đề ứng dụng.',
+  setHoverBgColor: 'Màu nền',
+  setHoverBgColorDesc: 'Màu nền của tooltip dịch.',
+  setHoverBgOpacity: 'Độ trong suốt nền',
+  setHoverBgOpacityDesc: 'Mức độ trong suốt của nền tooltip.',
+  setHoverTextColor: 'Màu chữ',
+  setHoverTextColorDesc: 'Màu của chữ dịch.',
+  setHoverFontSize: 'Cỡ chữ',
+  setHoverFontSizeDesc: 'Kích thước chữ bên trong tooltip.',
+  setHoverBlur: 'Độ mờ nền',
+  setHoverBlurDesc: 'Mức độ làm mờ phía sau tooltip.',
+  setHoverBorderRadius: 'Độ bo góc',
+  setHoverBorderRadiusDesc: 'Mức độ bo tròn góc của tooltip.',
+  resultStop: 'Dừng',
+  resultCopy: 'Sao chép',
+
 } as const satisfies Dictionary;

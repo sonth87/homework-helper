@@ -1,3 +1,4 @@
+import { Plus, Trash2 } from 'lucide-react';
 import { INTENTS } from '@config/intents.config';
 import type { Conversation } from '@shared/ipc/channels';
 import type { I18nKey } from '@shared/i18n';
@@ -15,7 +16,8 @@ export function HistoryList({ conversations, activeId, t, onOpen, onNew, onDelet
   return (
     <aside className="history">
       <button type="button" className="history__new" onClick={onNew}>
-        + {t('intentChat')}
+        <Plus size={14} strokeWidth={2} aria-hidden="true" />
+        {t('intentChat')}
       </button>
 
       <div className="history__list">
@@ -33,7 +35,7 @@ export function HistoryList({ conversations, activeId, t, onOpen, onNew, onDelet
               aria-label={t('keysRemove')}
               onClick={() => onDelete(c.id)}
             >
-              ×
+              <Trash2 size={13} strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
         ))}

@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createTranslator } from '@shared/i18n';
 import type { PermissionKind, PermissionStatus } from '@shared/types/permissions';
 import type { I18nKey } from '@shared/i18n';
+import '@renderer/theme/theme.css';
 import './onboarding.css';
 
 export function OnboardingApp() {

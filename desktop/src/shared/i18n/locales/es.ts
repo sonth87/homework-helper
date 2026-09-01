@@ -185,4 +185,28 @@ export default {
   notifFileDropPdfNoText: 'No se encontró texto en este PDF (puede ser un documento escaneado). Prueba "Resolver tarea" con una captura de cada página.',
   notifFileDropReadError: 'No se pudo leer este archivo. Inténtalo de nuevo.',
 
+  // ── Giao diện (Phase 5) ──────────────────────────────────────────────────
+  groupAppearance: 'Apariencia',
+  setTheme: 'Tema',
+  setThemeDesc: 'Elige el tema de color de la aplicación.',
+  themeSystem: 'Sistema',
+  themeLight: 'Claro',
+  themeDark: 'Oscuro',
+  setHoverCustomStyle: 'Personalizar apariencia del tooltip',
+  setHoverCustomStyleDesc: 'Anula el color y tamaño del tooltip de traducción en lugar del valor predeterminado que sigue el tema de la app.',
+  setHoverBgColor: 'Color de fondo',
+  setHoverBgColorDesc: 'Color de fondo del tooltip de traducción.',
+  setHoverBgOpacity: 'Opacidad del fondo',
+  setHoverBgOpacityDesc: 'Qué tan transparente es el fondo del tooltip.',
+  setHoverTextColor: 'Color del texto',
+  setHoverTextColorDesc: 'Color del texto traducido.',
+  setHoverFontSize: 'Tamaño de letra',
+  setHoverFontSizeDesc: 'Tamaño del texto dentro del tooltip.',
+  setHoverBlur: 'Desenfoque del fondo',
+  setHoverBlurDesc: 'Intensidad del desenfoque detrás del tooltip.',
+  setHoverBorderRadius: 'Redondez de esquinas',
+  setHoverBorderRadiusDesc: 'Qué tan redondeadas son las esquinas del tooltip.',
+  resultStop: 'Detener',
+  resultCopy: 'Copiar',
+
 } as const satisfies Dictionary;

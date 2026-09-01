@@ -185,4 +185,28 @@ export default {
   notifFileDropPdfNoText: 'ไม่พบข้อความในไฟล์ PDF นี้ (อาจเป็นเอกสารสแกน) ลองใช้ฟีเจอร์แก้โจทย์ด้วยการจับภาพหน้าจอแต่ละหน้าแทน',
   notifFileDropReadError: 'ไม่สามารถอ่านไฟล์นี้ได้ กรุณาลองใหม่อีกครั้ง',
 
+  // ── Giao diện (Phase 5) ──────────────────────────────────────────────────
+  groupAppearance: 'รูปลักษณ์',
+  setTheme: 'ธีม',
+  setThemeDesc: 'เลือกธีมสีของแอป',
+  themeSystem: 'ตามระบบ',
+  themeLight: 'สว่าง',
+  themeDark: 'มืด',
+  setHoverCustomStyle: 'ปรับแต่งรูปลักษณ์ทูลทิป',
+  setHoverCustomStyleDesc: 'แทนที่สีและขนาดของทูลทิปคำแปล แทนค่าเริ่มต้นที่เปลี่ยนตามธีมแอป',
+  setHoverBgColor: 'สีพื้นหลัง',
+  setHoverBgColorDesc: 'สีพื้นหลังของทูลทิปคำแปล',
+  setHoverBgOpacity: 'ความโปร่งใสพื้นหลัง',
+  setHoverBgOpacityDesc: 'ระดับความโปร่งใสของพื้นหลังทูลทิป',
+  setHoverTextColor: 'สีข้อความ',
+  setHoverTextColorDesc: 'สีของข้อความที่แปล',
+  setHoverFontSize: 'ขนาดตัวอักษร',
+  setHoverFontSizeDesc: 'ขนาดตัวอักษรภายในทูลทิป',
+  setHoverBlur: 'ความเบลอพื้นหลัง',
+  setHoverBlurDesc: 'ระดับความเบลอด้านหลังทูลทิป',
+  setHoverBorderRadius: 'ความโค้งมุม',
+  setHoverBorderRadiusDesc: 'ระดับความโค้งมนของมุมทูลทิป',
+  resultStop: 'หยุด',
+  resultCopy: 'คัดลอก',
+
 } as const satisfies Dictionary;

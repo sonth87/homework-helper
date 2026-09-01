@@ -185,4 +185,28 @@ export default {
   notifFileDropPdfNoText: '이 PDF에서 텍스트를 찾을 수 없습니다(스캔된 문서일 수 있음). 대신 각 페이지를 캡처하여 "숙제 풀기"를 사용해 보세요.',
   notifFileDropReadError: '이 파일을 읽을 수 없습니다. 다시 시도해 주세요.',
 
+  // ── Giao diện (Phase 5) ──────────────────────────────────────────────────
+  groupAppearance: '모양',
+  setTheme: '테마',
+  setThemeDesc: '앱의 색상 테마를 선택합니다.',
+  themeSystem: '시스템 설정 따름',
+  themeLight: '라이트',
+  themeDark: '다크',
+  setHoverCustomStyle: '툴팁 모양 사용자 지정',
+  setHoverCustomStyleDesc: '앱 테마를 따라가는 기본값 대신 번역 툴팁의 색상과 크기를 직접 지정합니다.',
+  setHoverBgColor: '배경색',
+  setHoverBgColorDesc: '번역 툴팁의 배경색입니다.',
+  setHoverBgOpacity: '배경 불투명도',
+  setHoverBgOpacityDesc: '툴팁 배경의 투명한 정도입니다.',
+  setHoverTextColor: '글자색',
+  setHoverTextColorDesc: '번역된 텍스트의 색상입니다.',
+  setHoverFontSize: '글자 크기',
+  setHoverFontSizeDesc: '툴팁 안 텍스트의 크기입니다.',
+  setHoverBlur: '배경 흐림',
+  setHoverBlurDesc: '툴팁 뒤 배경의 흐림 정도입니다.',
+  setHoverBorderRadius: '모서리 둥글기',
+  setHoverBorderRadiusDesc: '툴팁 모서리가 둥근 정도입니다.',
+  resultStop: '중지',
+  resultCopy: '복사',
+
 } as const satisfies Dictionary;

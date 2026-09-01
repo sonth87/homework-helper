@@ -17,6 +17,21 @@ chạy trên macOS và Windows.
 
 ### Thêm mới
 
+- **Icon thay cho text/ký tự thuần và emoji khắp app.** 10 tab Cài đặt, nút
+  Dừng/Sao chép ở khung kết quả, nút Thêm/Xoá ở lịch sử chat và danh sách
+  API key, nút sắp xếp thứ tự dịch vụ dịch — tất cả dùng bộ icon
+  [Lucide](https://lucide.dev) thay vì ký tự `+ × ↑ ↓` hay emoji. Tiện thể sửa
+  luôn 2 nhãn nút bị gắn nhầm text ở khung kết quả (nút Dừng từng hiện chữ
+  "Xoá", nút Sao chép từng hiện chữ "Đã kết nối" — tái dùng nhầm khoá dịch có
+  sẵn, phát hiện khi thêm icon vào đúng hai nút này).
+- **Chủ đề Sáng/Tối/Theo hệ thống**, chọn ở Cài đặt → Giao diện. Trước đây
+  giao diện chỉ tự đổi theo hệ điều hành, không có cách ép cố định. Màu sắc
+  từng khai riêng độc lập ở 6 cửa sổ nay gộp về một nơi dùng chung
+  (`@renderer/theme/theme.css`) — không đổi màu sắc nào, chỉ gộp chỗ khai báo.
+- **Tuỳ chỉnh giao diện tooltip dịch nhanh.** Cài đặt → Giao diện → "Tuỳ chỉnh
+  giao diện tooltip" (mặc định TẮT — giữ nguyên hành vi tự đổi theo chủ đề
+  cho ai chưa động tới). Bật lên cho chỉnh màu nền, độ trong suốt, màu chữ,
+  cỡ chữ, độ mờ nền, độ bo góc.
 - **Tesseract làm dự phòng OCR khi rê chuột dịch.** Nếu OCR native của hệ
   điều hành (macOS Vision / Windows OCR) không đọc được chữ hoặc đọc không
   chắc chắn, nay thử thêm lần nữa bằng Tesseract trước khi bỏ cuộc — vẫn có

@@ -86,7 +86,11 @@ export function ChatApp() {
           answer += d.text;
           setStreaming(answer);
         } else if (d.type === 'error') {
-          answer = answer || `⚠️ ${d.message}`;
+          // Không dùng emoji — nội dung này chảy thẳng vào `content` của tin
+          // nhắn (chuỗi text/markdown thuần), không phải vị trí render React
+          // component để chèn icon Lucide được. Để nguyên text lỗi, không
+          // thêm ký hiệu gì trước nó.
+          answer = answer || d.message;
           setStreaming(answer);
         }
       },

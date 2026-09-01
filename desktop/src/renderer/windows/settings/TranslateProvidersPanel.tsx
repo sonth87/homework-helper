@@ -4,6 +4,7 @@
  * một input đơn — cùng lý do ApiKeysPanel có màn hình riêng.
  */
 
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import type { TranslateProviderConfig } from '@config/settings';
 import type { TranslateProviderId } from '@shared/types/translate';
 import type { I18nKey } from '@shared/i18n';
@@ -47,7 +48,7 @@ export function TranslateProvidersPanel({ configs, t, onChange }: Props) {
           <div key={c.id} className={`providers__row${c.isEnabled ? '' : ' is-off'}`}>
             <span className="providers__order">
               <button type="button" disabled={i === 0} onClick={() => move(c.id, -1)} aria-label="up">
-                ↑
+                <ChevronUp size={14} strokeWidth={2} aria-hidden="true" />
               </button>
               <button
                 type="button"
@@ -55,7 +56,7 @@ export function TranslateProvidersPanel({ configs, t, onChange }: Props) {
                 onClick={() => move(c.id, 1)}
                 aria-label="down"
               >
-                ↓
+                <ChevronDown size={14} strokeWidth={2} aria-hidden="true" />
               </button>
             </span>
             <label className="providers__toggle">

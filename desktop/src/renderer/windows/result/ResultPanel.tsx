@@ -7,6 +7,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { CircleStop, Copy } from 'lucide-react';
 import { Markdown } from '@renderer/components/markdown/Markdown';
 import { createTranslator } from '@shared/i18n';
 import type { AiDelta } from '@shared/types/ai';
@@ -90,11 +91,13 @@ export function ResultPanel() {
         </span>
         {busy && (
           <button type="button" onClick={() => abortRef.current?.()}>
-            {t('keysRemove')}
+            <CircleStop size={14} strokeWidth={2} aria-hidden="true" />
+            {t('resultStop')}
           </button>
         )}
         <button type="button" onClick={() => void navigator.clipboard.writeText(text)} disabled={!text}>
-          {t('keysOk')}
+          <Copy size={14} strokeWidth={2} aria-hidden="true" />
+          {t('resultCopy')}
         </button>
       </header>
 

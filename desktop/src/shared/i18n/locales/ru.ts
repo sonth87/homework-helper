@@ -185,4 +185,28 @@ export default {
   notifFileDropPdfNoText: 'В этом PDF не найден текст (возможно, это скан). Попробуйте использовать «Решить задание» со скриншотом каждой страницы.',
   notifFileDropReadError: 'Не удалось прочитать этот файл. Попробуйте ещё раз.',
 
+  // ── Giao diện (Phase 5) ──────────────────────────────────────────────────
+  groupAppearance: 'Внешний вид',
+  setTheme: 'Тема',
+  setThemeDesc: 'Выберите цветовую тему приложения.',
+  themeSystem: 'Системная',
+  themeLight: 'Светлая',
+  themeDark: 'Тёмная',
+  setHoverCustomStyle: 'Настроить внешний вид подсказки',
+  setHoverCustomStyleDesc: 'Переопределяет цвет и размер подсказки перевода вместо значения по умолчанию, следующего теме приложения.',
+  setHoverBgColor: 'Цвет фона',
+  setHoverBgColorDesc: 'Цвет фона подсказки перевода.',
+  setHoverBgOpacity: 'Непрозрачность фона',
+  setHoverBgOpacityDesc: 'Насколько прозрачен фон подсказки.',
+  setHoverTextColor: 'Цвет текста',
+  setHoverTextColorDesc: 'Цвет переведённого текста.',
+  setHoverFontSize: 'Размер шрифта',
+  setHoverFontSizeDesc: 'Размер текста внутри подсказки.',
+  setHoverBlur: 'Размытие фона',
+  setHoverBlurDesc: 'Сила размытия за подсказкой.',
+  setHoverBorderRadius: 'Скругление углов',
+  setHoverBorderRadiusDesc: 'Насколько скруглены углы подсказки.',
+  resultStop: 'Стоп',
+  resultCopy: 'Копировать',
+
 } as const satisfies Dictionary;

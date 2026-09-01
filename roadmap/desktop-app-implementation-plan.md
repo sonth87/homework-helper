@@ -502,6 +502,17 @@ với máy Mac thật + "đo thực nghiệm". Xem ghi chú CHƯA KIỂM CHỨNG
 - [ ] electron-builder, ký số (notarize macOS / code-sign Windows), auto-update
 - [ ] Chế độ hiệu năng Fast/Balanced/Accurate (§51 bản gốc)
 - [ ] Telemetry opt-in, trang chẩn đoán (§92 bản gốc)
+- [x] **Bổ sung ngoài 4 mục gốc** (yêu cầu thêm khi quay lại Phase 5, 2026-09-01) —
+      icon Lucide khắp app, chủ đề Sáng/Tối/Theo hệ thống, tuỳ chỉnh giao diện
+      tooltip dịch (màu nền/độ trong suốt/màu chữ/cỡ chữ/độ mờ/bo góc). Chi
+      tiết trong CHANGELOG-desktop.md. Token màu gộp về
+      `src/renderer/theme/theme.css` dùng chung cho mọi cửa sổ (trước đây 4
+      file CSS tự khai lại y hệt một bộ token độc lập). `showWhen` trong
+      `SettingDef` (đã khai kiểu từ trước, chưa từng có UI xử lý) nay được
+      `SettingsApp.tsx` đọc thật — ẩn 6 tuỳ chọn tooltip cho tới khi bật công
+      tắc tuỳ chỉnh. Đã xác minh bằng ảnh chụp màn hình app chạy thật (not chỉ
+      typecheck): dark theme áp đúng, 10 icon tab hiện đúng, toggle + color
+      picker + slider % hoạt động đúng.
 
 ---
 

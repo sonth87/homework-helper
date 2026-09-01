@@ -1,15 +1,5 @@
-:root {
-  --bg: #f6f7f9; --panel: rgba(255,255,255,0.72); --border: rgba(0,0,0,0.09);
-  --text: #16181d; --text-dim: #61656e; --accent: #0284c7;
-  --accent-soft: rgba(2,132,199,0.12); --success: #16a34a; --success-soft: rgba(22,163,74,0.12);
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #16181d; --panel: rgba(38,41,48,0.72); --border: rgba(255,255,255,0.1);
-    --text: #eceef2; --text-dim: #9aa0ab; --accent: #38bdf8;
-    --accent-soft: rgba(56,189,248,0.16); --success: #4ade80; --success-soft: rgba(74,222,128,0.16);
-  }
-}
+/* Token màu dùng chung ở @renderer/theme/theme.css (import trong
+   OnboardingApp.tsx, TRƯỚC file này) — không khai lại ở đây. */
 * { box-sizing: border-box; }
 body {
   margin: 0;

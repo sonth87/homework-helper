@@ -184,4 +184,28 @@ export default {
   notifFileDropPdfNoText: 'No text found in this PDF (it may be a scanned document). Try Solve Homework with a screenshot of each page instead.',
   notifFileDropReadError: 'Couldn\'t read this file. Please try again.',
 
+  // ── Giao diện (Phase 5) ──────────────────────────────────────────────────
+  groupAppearance: 'Appearance',
+  setTheme: 'Theme',
+  setThemeDesc: 'Choose the app\'s color theme.',
+  themeSystem: 'System',
+  themeLight: 'Light',
+  themeDark: 'Dark',
+  setHoverCustomStyle: 'Customize tooltip appearance',
+  setHoverCustomStyleDesc: 'Override the translate tooltip\'s color and size instead of the default that follows the app theme.',
+  setHoverBgColor: 'Background color',
+  setHoverBgColorDesc: 'Background color of the translate tooltip.',
+  setHoverBgOpacity: 'Background opacity',
+  setHoverBgOpacityDesc: 'How see-through the tooltip background is.',
+  setHoverTextColor: 'Text color',
+  setHoverTextColorDesc: 'Color of the translated text.',
+  setHoverFontSize: 'Font size',
+  setHoverFontSizeDesc: 'Text size inside the tooltip.',
+  setHoverBlur: 'Background blur',
+  setHoverBlurDesc: 'Blur strength behind the tooltip.',
+  setHoverBorderRadius: 'Corner roundness',
+  setHoverBorderRadiusDesc: 'How rounded the tooltip\'s corners are.',
+  resultStop: 'Stop',
+  resultCopy: 'Copy',
+
 } as const;
