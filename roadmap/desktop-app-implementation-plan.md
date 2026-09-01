@@ -382,7 +382,15 @@ không phải đường chính; xem lại nếu người dùng thật phàn nàn
 
 ## Phase 4 — Mở rộng intent & Windows
 
-- [ ] Intent `summarize` / `explain` / `rewrite` dùng lại pipeline Phase 2
+- [x] Intent `summarize` / `explain` / `rewrite` dùng lại pipeline Phase 2 — 2026-09-01.
+      Config (`intents.config.ts`) và prompt builder (`build-prompt.ts`) đã sẵn từ
+      trước; phần thiếu là tầng thu nhận: `task-pipeline.ts` gọi `acquire(intent)`
+      không kèm toạ độ chuột khi kích hoạt bằng hotkey/tray nên `accessibility`/`ocr`
+      luôn bị bỏ qua, và `acquire()` chưa có case `'clipboard'` nên `rewrite` luôn lỗi.
+      Đã sửa cả hai — xem CHANGELOG-desktop.md. **Chưa kiểm chứng bằng cách chạy app
+      thật** (chỉ `npm run check` tĩnh: typecheck/lint/test/i18n) — module này chạm
+      Electron `screen`/`clipboard` API, cùng nhóm với Accessibility/OCR native ở
+      Phase 3 vốn không có unit test, cần "đo thực nghiệm" như Phase 3 đã làm.
 - [ ] Clipboard watcher + thanh hành động nổi
 - [ ] Kéo–thả file (PDF/ảnh)
 - [ ] Windows: UI Automation + Windows OCR + xử lý DPI

@@ -8,6 +8,7 @@
  * kiểm chứng thực nghiệm trên macOS (ADR-0006, ADR-0007).
  */
 
+import { clipboard } from 'electron';
 import { INTENTS } from '@config/intents.config';
 import { LIMITS } from '@config/limits.config';
 import type { Intent } from '@shared/types/intent';
@@ -49,6 +50,12 @@ export async function acquire(intent: Intent, point?: Point<'screen-logical'>): 
       if (viaOcr) return { ok: true, content: viaOcr };
       continue;
     }
+
+    if (strategy === 'clipboard') {
+      const viaClipboard = tryClipboard(point);
+      if (viaClipboard) return { ok: true, content: viaClipboard };
+      continue;
+    }
   }
   return { ok: false, cancelled: false, error: `Intent "${intent}" chưa có chiến lược thu nhận nào khả dụng.` };
 }
@@ -67,6 +74,28 @@ async function tryAccessibility(point: Point<'screen-logical'>): Promise<Acquire
     ...(result.charOffset !== undefined ? { charOffset: result.charOffset } : {}),
     ...(result.offsetSource !== undefined ? { offsetSource: result.offsetSource } : {}),
     ...(result.role ? { app: { name: result.role } } : {}),
+  };
+}
+
+/**
+ * Đọc clipboard hệ thống — dùng cho `rewrite` khi Accessibility không đọc được
+ * text tại điểm hover (editor ảo hoá cao, hoặc người dùng chỉ đơn giản đã copy
+ * sẵn đoạn cần viết lại thay vì trỏ chuột vào đó).
+ *
+ * `bounds` không có ý nghĩa hình học thật với clipboard (không có "vị trí" gắn
+ * với nội dung đã copy) — chỉ neo vào điểm hiện tại của con trỏ để thoả kiểu dữ
+ * liệu `AcquiredContent.bounds` (bắt buộc). Vô hại: surface 'result-panel' của
+ * `rewrite` không đọc `bounds` (xem showResult() ở task-pipeline.ts).
+ */
+function tryClipboard(point?: Point<'screen-logical'>): AcquiredContent | null {
+  const text = clipboard.readText().trim();
+  if (!text) return null;
+
+  const anchor = point ?? ({ x: 0, y: 0 } as Point<'screen-logical'>);
+  return {
+    text,
+    bounds: rect('screen-logical', { x: anchor.x, y: anchor.y, width: 0, height: 0 }),
+    source: 'clipboard',
   };
 }
 

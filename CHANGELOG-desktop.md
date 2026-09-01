@@ -17,6 +17,14 @@ chạy trên macOS và Windows.
 
 ### Thêm mới
 
+- **Tóm tắt / Giải thích / Viết lại nay hoạt động qua phím tắt và tray menu.**
+  Ba tác vụ này đã có trong menu và đặt được phím tắt riêng
+  (mặc định `⌘⇧M`/`⌘⇧E` trên macOS) từ trước, nhưng bấm vào không có phản hồi
+  vì tầng thu nhận nội dung chưa nối — nay bấm phím tắt (hoặc chọn từ tray)
+  trong lúc trỏ chuột vào đoạn text sẽ lấy đúng đoạn đó để xử lý, giống cách
+  "dịch khi rê chuột" đã hoạt động, chỉ khác ở chỗ chủ động kích hoạt thay vì
+  tự động. Riêng "Viết lại" còn thử đọc clipboard nếu vị trí con trỏ không có
+  text đọc được.
 - **Chat nhớ được ngữ cảnh các lượt trước.** Trước đây mỗi câu hỏi tiếp theo
   trong một hội thoại chỉ gửi đúng câu vừa gõ — hỏi "còn cách nào khác không?"
   thì AI không biết đang hỏi tiếp về vấn đề gì. Nay gửi kèm lịch sử hội thoại

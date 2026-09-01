@@ -9,9 +9,11 @@
  * việc huỷ khi đóng cửa sổ hoạt động tự nhiên, không cần đường dây riêng.
  */
 
+import { screen } from 'electron';
 import { INTENTS } from '@config/intents.config';
 import type { Settings } from '@config/settings';
 import type { Intent, TriggerSource } from '@shared/types/intent';
+import type { Point } from '@shared/types/geometry';
 import { checkTrigger } from './guards';
 import { acquire } from '../acquisition/acquire';
 import { showResult } from '../windows/result.window';
@@ -45,7 +47,17 @@ export async function handleIntent(
     return;
   }
 
-  const acquired = await acquire(intent);
+  // 'mouse-move' không tới được đây (đã return sớm ở lane 'fast', và guard chặn
+  // llm+mouse-move ở checkTrigger phía trên) — trigger còn lại (hotkey/tray/ui)
+  // không có toạ độ chuột "tự nhiên" đi kèm sự kiện như mouse-move đã có sẵn từ
+  // debounce. Dùng vị trí con trỏ NGAY LÚC kích hoạt: người dùng bấm hotkey
+  // trong lúc đang trỏ vào đoạn text muốn xử lý, giống mô tả "tóm tắt vùng" ở
+  // desktop-app-implementation-plan.md mục 6.1 — chỉ khác 'translate' ở chỗ
+  // kích hoạt chủ động thay vì tự động theo chuyển động chuột.
+  const { x, y } = screen.getCursorScreenPoint();
+  const point = { x, y } as Point<'screen-logical'>;
+
+  const acquired = await acquire(intent, point);
 
   if (!acquired.ok) {
     // Người dùng bấm Esc là hành vi bình thường, không phải lỗi — im lặng.
