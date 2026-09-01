@@ -57,6 +57,19 @@ Tài liệu liên quan: [architecture.md](extension/architecture.md) · [develop
 | Đổi **thứ tự nạp script trên trang** | `content/loader.js` + `content/index.js` |
 | Thêm **icon SVG** | `shared/icons.js` |
 
+## Ô dịch nhanh (bấm icon extension)
+
+| Muốn làm gì | Sửa ở đâu |
+|---|---|
+| Đổi **giao diện ô dịch** | `popup/popup.html` + `popup/popup.js` + `popup/popup.css` |
+| Thêm/bớt **nguồn dịch miễn phí** | `background/translate-engines.js` — `FREE_ENGINES` |
+| Đổi **thứ tự tự chuyển nguồn khi lỗi** | `background/translate-engines.js` — `FREE_ENGINES` (thứ tự mảng) + `translateText()` |
+| Đổi **nguồn dịch mặc định** | `shared/storage.js` — `popupTranslateEngine` |
+| Đổi **tra từ điển khi dịch một từ** | `background/translate-engines.js` — `lookupWord()` |
+| Đổi **giọng đọc / nút nghe** | `shared/tts.js` — `speak()`, `guessLang()`, `VOICE_LANG` |
+| Đổi hành vi **tự dịch clipboard** | `popup/popup.js` — `pickUpClipboard()`; ngưỡng ở `shared/storage.js` — `popupClipboardMaxLength` |
+| Đổi **icon bấm vào mở gì** | `background/service-worker.js` — `setPanelBehavior({ openPanelOnActionClick })` + `manifest.json` — `action.default_popup` |
+
 ## Trắc nghiệm & Google Forms
 
 | Muốn làm gì | Sửa ở đâu |

@@ -17,6 +17,46 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.7.0] — 2026-09-01
+
+### Thêm mới
+- **Bấm vào icon extension trên thanh công cụ nay mở ô dịch nhanh**, thay vì mở thẳng
+  khung chat AI. Ô dịch có cặp ngôn ngữ (tự động nhận diện → ngôn ngữ đích), nút đảo
+  chiều, ô nhập và ô kết quả kèm nút sao chép. `Ctrl/Cmd + Enter` để dịch mà không rời
+  ô nhập.
+- **Tự dịch nội dung vừa copy.** Nếu bạn copy một đoạn text rồi bấm vào icon extension,
+  nội dung đó được điền sẵn và dịch luôn, kèm dòng ghi chú và nút *Hoàn tác*. Đoạn quá
+  dài chỉ được điền sẵn chứ không tự dịch. Bật/tắt ngay trong ô dịch — mặc định **bật**.
+  Cùng một nội dung sẽ không bị dịch lại ở những lần mở sau.
+- **Chọn nguồn dịch.** Bốn dịch vụ miễn phí không cần API key — Microsoft Translator
+  (mặc định), Google Translate, Volcano Translate, MyMemory — hoặc **Mô hình AI**, dùng
+  chính kho API key / mô hình cục bộ (Ollama, LM Studio, Gemini Nano) mà bạn đã cấu hình.
+  Tra một từ đơn bằng mô hình AI vẫn cho ra thẻ từ điển đầy đủ như thanh công cụ bôi đen.
+- Hàng nút chức năng nhanh dưới ô dịch: **Chat AI · Chụp & Giải · Rê chuột dịch · Cài đặt**.
+  Nút *Rê chuột dịch* bật/tắt tính năng ngay tại chỗ và sáng lên khi đang bật.
+- **Tra từ điển khi dịch một từ.** Gõ đúng một từ vào ô dịch nhanh sẽ ra thẻ từ điển đầy
+  đủ: phiên âm, các nghĩa gom theo từ loại (danh từ, động từ…), và câu ví dụ — không cần
+  API key, kể cả khi đang chọn nguồn dịch miễn phí. Cả câu vẫn dịch như thường. Nhãn từ
+  loại hiển thị theo **Ngôn ngữ giao diện** bạn đã chọn trong Cài đặt, không phụ thuộc
+  ngôn ngữ đang dịch sang.
+- **Nút nghe phát âm** ở cả ô dịch nhanh (nghe từ gốc và nghe bản dịch) lẫn thẻ kết quả
+  nổi trong trang. Dùng giọng đọc sẵn có của hệ điều hành — không cần API key, không tốn
+  hạn mức, không gửi gì lên mạng. Với chữ Hán, ngôn ngữ của trang web được dùng để chọn
+  đúng giọng Nhật hay Trung.
+
+### Thay đổi
+- Khung chat AI nay mở bằng `Alt+K` / `Cmd+K`, nút nổi trên trang, hoặc nút **Chat AI**
+  trong ô dịch — icon trên thanh công cụ đã nhường chỗ cho ô dịch.
+
+### Sửa lỗi
+- **Dịch khi rê chuột hay báo "Không thể dịch".** Trước đây tính năng này chỉ gọi một
+  endpoint Google miễn phí duy nhất; endpoint đó chặn theo địa chỉ IP, nên trong mạng
+  công ty hay trường học — nơi nhiều người cùng dùng một IP — nó trả lỗi *429* và mọi
+  yêu cầu dịch đều hỏng. Nay khi một dịch vụ từ chối, extension tự chuyển sang dịch vụ
+  kế tiếp trong danh sách bốn nguồn miễn phí.
+
+---
+
 ## [1.6.2] — 2026-08-31
 
 ### Thay đổi

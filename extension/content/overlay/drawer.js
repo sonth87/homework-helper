@@ -611,6 +611,7 @@ export class OverlayDrawer {
 
     if (this.activeTarget === 'card') {
       this.overlay.floatingCard.stopLoadingSteps();
+      this.overlay.floatingCard.syncSpeakButton();
       Storage.addChatMessage({ role: 'assistant', content: this.overlay.floatingCard.activeCardResponseText });
       return;
     }

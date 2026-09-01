@@ -258,6 +258,15 @@ export const DEFAULT_SETTINGS = {
   toolbarTheme: "glass-light", // 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple'
   toolbarCustomColor: "#0284c7",
   toolbarLayout: DEFAULT_TOOLBAR_LAYOUT, // ordered [{ id, area: 'main' | 'dropdown' }] — see shared/toolbar-items.js
+  // Action-popup quick translator (popup/popup.js). Kept separate from
+  // outputLanguage, which governs what language the AI *answers homework* in —
+  // a user can want solutions in English while translating pages into
+  // Vietnamese, so the two must not share one value.
+  popupTranslateEngine: "bing", // free engine id from background/translate-engines.js, or 'ai' for the key pool
+  popupTranslateSource: "auto", // 'auto' or a SUPPORTED_LANGUAGES id
+  popupTranslateTarget: "vi", // a SUPPORTED_LANGUAGES id (never 'auto')
+  popupAutoTranslateClipboard: true, // on open, read the clipboard and translate it unprompted
+  popupClipboardMaxLength: 2000, // clipboard longer than this is never auto-translated, only offered
   enableHoverTranslate: false, // hover-to-translate on any webpage text (see content/hover-translate.js)
   hoverTranslateModifiers: ["ctrl"], // subset of ['ctrl','shift','alt','meta']; [] = fires on hover alone, no key needed
   hoverTranslateGranularity: "sentence", // 'word' | 'sentence' | 'paragraph'

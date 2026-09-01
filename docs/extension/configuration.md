@@ -8,9 +8,10 @@ kèm giá trị mặc định và ý nghĩa thực tế.
 
 **Mục lục:** [Ngôn ngữ](#1-ngôn-ngữ) · [AI & Mô hình](#2-ai--mô-hình) ·
 [Chế độ học tập](#3-chế-độ-học-tập) · [Dịch khi rê chuột](#4-dịch-khi-rê-chuột) ·
-[Thanh công cụ bôi đen](#5-thanh-công-cụ-bôi-đen) · [Giao diện](#6-giao-diện) ·
-[OCR offline](#7-ocr-offline) · [Tính năng bật/tắt](#8-bật--tắt-tính-năng) ·
-[Dữ liệu](#9-dữ-liệu--lịch-sử)
+[Ô dịch nhanh](#5-ô-dịch-nhanh-bấm-icon-extension) ·
+[Thanh công cụ bôi đen](#6-thanh-công-cụ-bôi-đen) · [Giao diện](#7-giao-diện) ·
+[OCR offline](#8-ocr-offline) · [Tính năng bật/tắt](#9-bật--tắt-tính-năng) ·
+[Dữ liệu](#10-dữ-liệu--lịch-sử)
 
 ---
 
@@ -97,12 +98,58 @@ kèm giá trị mặc định và ý nghĩa thực tế.
 | **Làm nổi văn bản** | Bật | | Tô nền vùng văn bản đang được dịch |
 | **Hiệu ứng** | Tô từ đầu đến cuối | | Không · Nhấp nháy · Phát sáng · Quét gạch chân · Tô từ đầu đến cuối |
 
-> **Tính năng này miễn phí và không cần API key.** Nó dùng dịch vụ dịch của Google, không
-> gọi mô hình AI — nên phản hồi tức thì và không tốn hạn mức của bạn.
+> **Tính năng này miễn phí và không cần API key.** Nó dùng chuỗi dịch vụ dịch miễn phí
+> giống ô dịch nhanh (mục 5) — không gọi mô hình AI, nên phản hồi tức thì và không tốn
+> hạn mức của bạn. Nguồn dịch bạn chọn ở ô dịch nhanh cũng áp dụng cho tính năng này.
 
 ---
 
-## 5. Thanh công cụ bôi đen
+## 5. Ô dịch nhanh (bấm icon extension)
+
+Bấm vào icon extension trên thanh công cụ trình duyệt sẽ mở ô dịch nhanh.
+
+| Tuỳ chọn | Mặc định | Phạm vi | Ý nghĩa |
+|---|---|---|---|
+| **Ngôn ngữ nguồn** | Tự động nhận diện | 13 ngôn ngữ + tự động | |
+| **Ngôn ngữ đích** | Tiếng Việt | 13 ngôn ngữ | |
+| **Nguồn dịch** | Microsoft Translator | 4 dịch vụ miễn phí + Mô hình AI | Xem bảng bên dưới |
+| **Tự dịch nội dung đã copy** | Bật | | Mở ô dịch khi clipboard có text mới → điền sẵn và dịch luôn |
+
+### Các nguồn dịch
+
+| Nguồn | Cần API key | Ghi chú |
+|---|---|---|
+| **Microsoft Translator** *(mặc định)* | Không | Ổn định nhất trong bốn nguồn miễn phí |
+| **Google Translate** | Không | |
+| **Volcano Translate** | Không | |
+| **MyMemory** | Không | Hạn mức thấp nhất, chỉ nhận đoạn ngắn |
+| **Mô hình AI** | Có *(hoặc mô hình cục bộ)* | Dùng kho key / Ollama / LM Studio / Gemini Nano bạn đã cấu hình ở mục 2. Tra **một từ đơn** sẽ cho ra thẻ từ điển đầy đủ thay vì một dòng dịch. |
+
+> **Tự chuyển nguồn khi lỗi.** Nếu nguồn bạn chọn từ chối (hết hạn mức, chặn theo IP,
+> đoạn quá dài), extension tự thử lần lượt các nguồn miễn phí còn lại. Dòng chú thích
+> phía trên bản dịch cho biết nguồn nào đã thực sự trả kết quả.
+
+### Tra từ điển & nghe phát âm
+
+Gõ **đúng một từ** vào ô dịch nhanh sẽ ra thẻ từ điển thay vì một dòng dịch: phiên âm,
+các nghĩa gom theo từ loại, và câu ví dụ. Việc này **không cần API key** — dùng từ điển
+Google miễn phí, hoạt động kể cả khi bạn đang chọn nguồn dịch miễn phí. Gõ cả câu thì
+dịch như bình thường.
+
+Nút 🔊 **Nghe** có ở cả ô dịch nhanh (một nút cho từ gốc, một nút cho bản dịch) và thẻ
+kết quả nổi trong trang. Giọng đọc lấy từ hệ điều hành: không cần key, không tốn hạn mức,
+không gửi nội dung lên mạng. Nút tự ẩn nếu máy bạn không có giọng cho ngôn ngữ đó.
+
+**Về clipboard:** nội dung clipboard chỉ được đọc **khi bạn chủ động mở ô dịch**, và chỉ
+để dịch. Đoạn dài hơn 2000 ký tự được điền sẵn nhưng **không** tự dịch — bạn phải bấm
+*Dịch*. Cùng một nội dung sẽ không bị dịch lại ở lần mở sau. Tắt hẳn bằng công tắc
+*Tự dịch nội dung đã copy* ngay trong ô dịch.
+
+**Bốn nút chức năng nhanh:** Chat AI · Chụp & Giải · Rê chuột dịch · Cài đặt.
+
+---
+
+## 6. Thanh công cụ bôi đen
 
 | Tuỳ chọn | Mặc định | Phạm vi | Ý nghĩa |
 |---|---|---|---|
@@ -119,7 +166,7 @@ Giải thích · Tóm tắt · Kiểm tra ngữ pháp *(mặc định trong menu
 
 ---
 
-## 6. Giao diện
+## 7. Giao diện
 
 ### Nút nổi (FAB)
 
@@ -147,7 +194,7 @@ Giải thích · Tóm tắt · Kiểm tra ngữ pháp *(mặc định trong menu
 
 ---
 
-## 7. OCR offline
+## 8. OCR offline
 
 Nhận diện chữ trong ảnh **ngay trên máy**, không gửi ảnh đi đâu.
 
@@ -168,7 +215,7 @@ Português (3.3 MB) · Bahasa Indonesia (2.8 MB) · Русский (4.0 MB)
 
 ---
 
-## 8. Bật / tắt tính năng
+## 9. Bật / tắt tính năng
 
 | Tuỳ chọn | Mặc định | Ý nghĩa |
 |---|---|---|
@@ -179,7 +226,7 @@ Português (3.3 MB) · Bahasa Indonesia (2.8 MB) · Русский (4.0 MB)
 
 ---
 
-## 9. Dữ liệu & Lịch sử
+## 10. Dữ liệu & Lịch sử
 
 | Mục | Hành vi |
 |---|---|

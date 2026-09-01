@@ -124,6 +124,9 @@ class InPageOverlay {
         <!-- Action Footer -->
         <div class="hw-card-footer">
           <div class="hw-card-actions-left">
+            <button class="hw-btn-card-action" id="hwBtnCardSpeak" style="display:none;">
+              ${Icons.volume2(14)} <span id="hwBtnCardSpeakLabel">Nghe</span>
+            </button>
             <button class="hw-btn-card-action" id="hwBtnCardCopy">
               ${Icons.copy(14)} <span id="hwBtnCardCopyLabel">Sao chép</span>
             </button>
@@ -562,6 +565,7 @@ class InPageOverlay {
     const activeConvTitle = s.getElementById('hwActiveConvTitle');
     const btnDrawerAddConv = s.getElementById('hwBtnDrawerAddConv');
     const btnCardCopyLabel = s.getElementById('hwBtnCardCopyLabel');
+    const btnCardSpeakLabel = s.getElementById('hwBtnCardSpeakLabel');
     const btnCardRetryLabel = s.getElementById('hwBtnCardRetryLabel');
     const configModalTitle = s.getElementById('hwConfigModalTitle');
 
@@ -578,6 +582,7 @@ class InPageOverlay {
     }
     if (btnDrawerAddConv) btnDrawerAddConv.innerHTML = `${Icons.plus(13)} ${dict.newChat}`;
     if (btnCardCopyLabel) btnCardCopyLabel.textContent = cardDict.copy || 'Copy';
+    if (btnCardSpeakLabel) btnCardSpeakLabel.textContent = cardDict.listen || 'Listen';
     if (btnCardRetryLabel) btnCardRetryLabel.textContent = cardDict.retry || 'Retry';
 
     // Populate native language options (with compact names for display)

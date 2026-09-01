@@ -7,6 +7,8 @@ import { Storage, SUPPORTED_LANGUAGES, buildNanoPrompts } from '../../shared/sto
 import { renderAnswer } from '../../shared/markdown-katex.js';
 import { getFloatingPopupI18n, getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
+import { speak, isSpeechAvailable } from '../../shared/tts.js';
+import { parseDictionaryEntry } from '../../shared/dictionary.js';
 
 export class OverlayFloatingCard {
   constructor(overlay) {
@@ -357,6 +359,12 @@ export class OverlayFloatingCard {
       }, 2000);
     });
 
+    s.getElementById('hwBtnCardSpeak')?.addEventListener('click', () => {
+      const target = this.getSpeechTarget();
+      // The page's own language disambiguates Han text — see guessLang().
+      if (target) speak(target.text, target.lang, document.documentElement.lang || '');
+    });
+
     s.getElementById('hwBtnCardRetry')?.addEventListener('click', () => {
       if (this.popupMode === 'screenshot' && this.popupImageBase64) {
         this.showSolutionCard(this.popupImageBase64, this.popupImageMode);
@@ -372,6 +380,38 @@ export class OverlayFloatingCard {
         this.executePopupAction('translate', this.popupSourceText);
       }
     });
+  }
+
+  /**
+   * What the Listen button should pronounce. For a word lookup that is the
+   * headword in its own language — the pronunciation the reader is looking up
+   * — not the translation of it. Anything else reads back the reply in the
+   * language it was written in.
+   */
+  getSpeechTarget() {
+    const reply = this.activeCardResponseText || '';
+    if (!reply.trim()) return null;
+
+    const entry = parseDictionaryEntry(reply);
+    if (entry?.word) {
+      // The card has no source-language selector, so the headword's own script
+      // decides the voice — see guessLang().
+      return { text: entry.word, lang: 'auto' };
+    }
+    if (this.popupMode !== 'translate') return null;
+    return { text: this.shadow.getElementById('hwCardAnswerContent')?.textContent || '', lang: this.targetLang };
+  }
+
+  /**
+   * The button is only meaningful once a reply has arrived, and only where the
+   * browser actually has a voice — an always-visible control that does nothing
+   * would read as a broken feature.
+   */
+  syncSpeakButton() {
+    const btn = this.shadow.getElementById('hwBtnCardSpeak');
+    if (!btn) return;
+    const target = isSpeechAvailable() ? this.getSpeechTarget() : null;
+    btn.style.display = target?.text ? 'flex' : 'none';
   }
 
   makeCardDraggable() {
@@ -469,6 +509,7 @@ export class OverlayFloatingCard {
     this.hideCollapsedFab();
     this.popupCard.style.display = 'flex';
     this.activeCardResponseText = '';
+    this.syncSpeakButton();
     this.activeCardNotices = [];
     this.resetNoticeIcon();
     this.overlay.drawer.isStreaming = true;
@@ -710,6 +751,7 @@ export class OverlayFloatingCard {
     this.startLoadingSteps(content, genDict.loadingSteps);
 
     this.activeCardResponseText = '';
+    this.syncSpeakButton();
     this.activeCardNotices = [];
     this.resetNoticeIcon();
     this.overlay.drawer.isStreaming = true;
@@ -893,6 +935,7 @@ export class OverlayFloatingCard {
         ansContent.classList.toggle('hw-dict-mode', /^\*\*.+?\*\*\s*\/[^/\n]+\//.test(replyText.trim()));
         ansContent.innerHTML = renderAnswer(replyText, { allowMarkdownDict: true });
         this.activeCardResponseText = replyText;
+        this.syncSpeakButton();
       });
 
       listEl.appendChild(el);

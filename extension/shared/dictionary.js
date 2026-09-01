@@ -195,8 +195,12 @@ export function normalizeDictionaryEntry(raw) {
     ? raw.senses
         .filter((s) => s && typeof s === 'object')
         .map((s) => {
+          // "noun." / "verb." follows the English dictionary convention of
+          // marking a clipped word-class label with a dot. It only reads that
+          // way for a single Latin word: a dot on 名詞, гла��ол or the two-word
+          // "động từ" reads as a typo, not an abbreviation.
           let pos = cleanString(s.pos);
-          if (pos && !pos.endsWith('.')) pos += '.';
+          if (pos && !pos.endsWith('.') && /^[\p{Script=Latin}\p{M}-]+$/u.test(pos)) pos += '.';
           return {
             pos,
             gloss: cleanString(s.gloss),

@@ -167,6 +167,12 @@ export const Icons = {
     <path d="M14 18h6"></path>
   `, size, cls),
 
+  volume2: (size = 18, cls = '') => createSvg(`
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+  `, size, cls),
+
   fileText: (size = 18, cls = '') => createSvg(`
     <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
     <polyline points="14 2 14 8 20 8"></polyline>

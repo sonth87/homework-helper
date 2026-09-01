@@ -13,43 +13,78 @@
         <div id="popLogo" class="pop-logo"></div>
         <div>
           <div class="pop-title">Homework Helper</div>
-          <div class="pop-sub">Zero-Login Academic AI</div>
+          <div class="pop-sub" id="popBrandSub">Zero-Login Academic AI</div>
         </div>
       </div>
       <button class="pop-icon-btn" id="popBtnOptions" title="Settings"></button>
     </header>
 
     <div class="pop-body">
-      <!-- Quick Action Cards -->
-      <button class="pop-card-btn pop-card-primary" id="popBtnOpenSidePanel">
-        <span id="popIconSidePanel"></span>
-        <div class="pop-btn-text">
-          <span class="pop-btn-title" id="popSidePanelTitle">Open AI Side Panel</span>
-          <span class="pop-btn-desc" id="popSidePanelDesc">Workspace alongside any webpage</span>
-        </div>
-      </button>
+      <!-- Language pair -->
+      <div class="pop-lang-row">
+        <select class="pop-select" id="popLangFrom"></select>
+        <button class="pop-swap-btn" id="popBtnSwap" title="Swap"></button>
+        <select class="pop-select" id="popLangTo"></select>
+      </div>
 
-      <button class="pop-card-btn" id="popBtnCapture">
-        <span id="popIconCapture"></span>
-        <div class="pop-btn-text">
-          <span class="pop-btn-title" id="popCaptureTitle">Crop & Solve (Alt+C)</span>
-          <span class="pop-btn-desc" id="popCaptureDesc">Snip formulas or diagrams</span>
-        </div>
-      </button>
+      <!-- Engine picker -->
+      <div class="pop-engine-row">
+        <span class="pop-engine-label" id="popEngineLabel">Engine:</span>
+        <select class="pop-select pop-select-engine" id="popEngine"></select>
+      </div>
 
-      <!-- Key Rotation Status -->
-      <div class="pop-status-box">
-        <div class="pop-status-row">
-          <span class="pop-label" id="popLabelKeyPool">Active Keys Pool:</span>
-          <span class="pop-badge" id="popKeyCount">0 Keys</span>
-        </div>
-        <div class="pop-status-row">
-          <span class="pop-label" id="popLabelRotationMode">Rotation Mode:</span>
-          <span class="pop-value" id="popRotationMode">Round Robin</span>
+      <!-- Source text -->
+      <div class="pop-field">
+        <textarea id="popInput" class="pop-textarea" rows="3" placeholder="Type or paste text..."></textarea>
+        <div class="pop-field-actions">
+          <button class="pop-icon-mini" id="popBtnSpeakSource" title="Listen" hidden></button>
+          <button class="pop-clear-btn" id="popBtnClear" title="Clear" hidden></button>
         </div>
       </div>
 
-      <!-- Feature Toggles -->
+      <div class="pop-note" id="popClipboardNote" hidden>
+        <span id="popClipboardNoteText"></span>
+        <button class="pop-link-btn" id="popBtnUndoClipboard"></button>
+      </div>
+
+      <button class="pop-translate-btn" id="popBtnTranslate">
+        <span id="popIconTranslate"></span>
+        <span id="popBtnTranslateText">Translate</span>
+      </button>
+
+      <!-- Result -->
+      <div class="pop-result-box" id="popResultBox" hidden>
+        <div class="pop-result-head">
+          <span class="pop-result-meta" id="popResultMeta"></span>
+          <button class="pop-icon-mini" id="popBtnSpeakResult" title="Listen" hidden></button>
+          <button class="pop-link-btn" id="popBtnCopy"></button>
+        </div>
+        <div class="pop-result-body" id="popResult"></div>
+      </div>
+
+      <div class="pop-error" id="popError" hidden></div>
+
+      <!-- Quick actions -->
+      <div class="pop-widgets">
+        <button class="pop-widget" id="popWidgetChat">
+          <span class="pop-widget-icon" id="popIconChat"></span>
+          <span class="pop-widget-text" id="popWidgetChatText">AI Chat</span>
+        </button>
+        <button class="pop-widget" id="popWidgetCapture">
+          <span class="pop-widget-icon" id="popIconCapture"></span>
+          <span class="pop-widget-text" id="popWidgetCaptureText">Crop &amp; Solve</span>
+        </button>
+        <button class="pop-widget" id="popWidgetHover">
+          <span class="pop-widget-icon" id="popIconHover"></span>
+          <span class="pop-widget-text" id="popWidgetHoverText">Hover Translate</span>
+        </button>
+        <button class="pop-widget" id="popWidgetSettings">
+          <span class="pop-widget-icon" id="popIconSettings"></span>
+          <span class="pop-widget-text" id="popWidgetSettingsText">Settings</span>
+        </button>
+      </div>
+
+      <!-- Feature toggles -->
       <div class="pop-toggles">
         <label class="pop-toggle-row">
           <span id="popLabelForms">Google Forms Assistant</span>
@@ -59,13 +94,18 @@
           <span id="popLabelTooltip">Selection Tooltip (Highlight Text)</span>
           <input type="checkbox" id="popToggleTooltip" checked>
         </label>
+        <label class="pop-toggle-row">
+          <span id="popLabelAutoClipboard">Auto-translate clipboard</span>
+          <input type="checkbox" id="popToggleAutoClipboard" checked>
+        </label>
       </div>
     </div>
 
     <footer class="pop-footer">
       <button class="pop-btn-settings" id="popBtnConfigure">
-        <span id="popIconGear"></span> <span id="popConfigureBtnText">Configure Models & Keys</span>
+        <span id="popIconGear"></span> <span id="popConfigureBtnText">Configure Models &amp; Keys</span>
       </button>
+      <span class="pop-status" id="popKeyStatus"></span>
     </footer>
   </div>
 

@@ -5,7 +5,7 @@
 }
 
 body {
-  width: 320px;
+  width: 360px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 13px;
   background: #ffffff;
@@ -76,84 +76,6 @@ body {
   gap: 10px;
 }
 
-.pop-card-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.15s ease;
-}
-
-.pop-card-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-}
-
-.pop-card-primary {
-  background: #0284c7;
-  border-color: #0284c7;
-  color: #ffffff;
-}
-
-.pop-card-primary:hover {
-  background: #0369a1;
-  border-color: #0369a1;
-}
-
-.pop-card-primary .pop-btn-desc {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.pop-btn-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.pop-btn-title {
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.pop-btn-desc {
-  font-size: 11px;
-  color: #64748b;
-}
-
-.pop-status-box {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.pop-status-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-}
-
-.pop-label {
-  color: #64748b;
-}
-
-.pop-badge {
-  padding: 2px 8px;
-  background: #e0f2fe;
-  color: #0369a1;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 11px;
-}
-
 .pop-toggles {
   display: flex;
   flex-direction: column;
@@ -195,4 +117,406 @@ body {
 .pop-btn-settings:hover {
   background: #f1f5f9;
   color: #0f172a;
+}
+
+/* ---------- Quick translator ---------- */
+
+.pop-lang-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pop-select {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 8px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.pop-select:focus {
+  outline: none;
+  border-color: #0284c7;
+}
+
+.pop-swap-btn {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.pop-swap-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.pop-engine-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pop-engine-label {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.pop-select-engine {
+  flex: 1;
+}
+
+.pop-field {
+  position: relative;
+}
+
+.pop-textarea {
+  width: 100%;
+  padding: 9px 28px 9px 10px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.45;
+  resize: vertical;
+  min-height: 62px;
+  max-height: 180px;
+}
+
+.pop-textarea:focus {
+  outline: none;
+  border-color: #0284c7;
+}
+
+.pop-clear-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.pop-clear-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.pop-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: -4px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.pop-link-btn {
+  border: none;
+  background: transparent;
+  color: #0284c7;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.pop-link-btn:hover {
+  text-decoration: underline;
+}
+
+.pop-translate-btn {
+  width: 100%;
+  padding: 9px;
+  border-radius: 10px;
+  border: 1px solid #0284c7;
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pop-translate-btn:hover:not(:disabled) {
+  background: #0369a1;
+  border-color: #0369a1;
+}
+
+.pop-translate-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.pop-result-box {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.pop-result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.pop-result-meta {
+  font-size: 11px;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pop-result-body {
+  padding: 9px 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #0f172a;
+  max-height: 190px;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+
+.pop-result-body p {
+  margin: 0 0 6px 0;
+}
+
+.pop-result-body p:last-child {
+  margin-bottom: 0;
+}
+
+.pop-error {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.pop-widgets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.pop-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  padding: 9px 3px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pop-widget:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.pop-widget[data-active="true"] {
+  border-color: #0284c7;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.pop-widget-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.pop-widget-text {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.pop-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pop-status {
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+/* Dictionary card for single-word AI lookups. Same class names as the in-page
+   overlay and the side panel (overlay.css / sidepanel.css) so a lookup reads
+   the same wherever it is opened — only the scale differs here. */
+.pop-result-body .hw-dict-headword {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.pop-result-body .hw-dict-phonetic {
+  font-size: 11px;
+  font-weight: 400;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+.pop-result-body .hw-dict-sense {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.pop-result-body .hw-dict-sense:last-of-type {
+  margin-bottom: 0;
+}
+
+.pop-result-body .hw-dict-pos {
+  flex: 0 0 auto;
+  min-width: 30px;
+  max-width: 88px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  padding-top: 2px;
+}
+
+.pop-result-body .hw-dict-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.pop-result-body .hw-dict-gloss {
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 3px;
+}
+
+.pop-result-body .hw-dict-example {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.pop-result-body .hw-dict-example code.inline-code {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  padding: 0;
+  color: #0284c7;
+  font-weight: 600;
+}
+
+.pop-result-body .hw-dict-desc {
+  margin-top: 6px;
+  padding: 7px 9px;
+  background: #eef2f7;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.pop-result-body .hw-dict-desc-term {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 3px;
+}
+
+.pop-result-body .hw-dict-desc-text {
+  color: #64748b;
+}
+
+.pop-swap-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pop-swap-btn:disabled:hover {
+  background: transparent;
+  color: #64748b;
+}
+
+.pop-field-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pop-field-actions .pop-clear-btn {
+  position: static;
+}
+
+.pop-icon-mini {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: 0 0 auto;
+  padding: 0;
+}
+
+.pop-icon-mini:hover {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.pop-result-head .pop-result-meta {
+  flex: 1;
 }

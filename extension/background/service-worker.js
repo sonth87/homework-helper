@@ -8,6 +8,8 @@ import { keyRotator } from './key-rotator.js';
 import { Storage } from '../shared/storage.js';
 import { runOcrInOffscreen } from './ocr-bridge.js';
 import { detectLocalModels } from '../shared/local-model-detect.js';
+import { translateText, lookupWord } from './translate-engines.js';
+import { isSingleWord } from '../shared/dictionary.js';
 
 // State & active streams
 const activeStreams = new Map(); // requestId -> AbortController
@@ -32,9 +34,12 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     });
   });
 
-  // Enable SidePanel on action click if supported
+  // The toolbar icon opens the action popup (the quick translator), NOT the
+  // side panel: openPanelOnActionClick would override manifest.action's
+  // default_popup entirely. The chat panel keeps its own entry points —
+  // Alt+K / Cmd+K, the in-page floating button, and a button in that popup.
   if (chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {
-    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((err) => {
+    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch((err) => {
       console.log('SidePanel behavior note:', err);
     });
   }
@@ -158,22 +163,90 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   // Quick Hover Translate (content/hover-translate.js) — plain machine
-  // translation via the free, unauthenticated Google Translate endpoint, not
-  // the AI Key Pool: firing on every hovered word needs to be instant and
-  // free, not an LLM call per lookup. Same host_permissions/CORS reasoning
-  // as DETECT_LOCAL_MODELS above — must run from the background, not the
-  // content script's origin.
+  // translation through the keyless engine chain, not the AI Key Pool: firing
+  // on every hovered word needs to be instant and free, not an LLM call per
+  // lookup. Same host_permissions/CORS reasoning as DETECT_LOCAL_MODELS above
+  // — must run from the background, not the content script's origin.
   if (action === 'QUICK_TRANSLATE') {
     const { text, targetLang } = payload || {};
     (async () => {
       try {
-        const tl = (targetLang && targetLang !== 'auto') ? targetLang : 'en';
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(tl)}&dt=t&q=${encodeURIComponent(text || '')}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const translation = (data[0] || []).map((seg) => seg[0] || '').join('');
-        sendResponse({ success: true, translation, detectedLang: data[2] || null });
+        const { popupTranslateEngine } = await Storage.get(['popupTranslateEngine']);
+        const result = await translateText({
+          text,
+          from: 'auto',
+          to: (targetLang && targetLang !== 'auto') ? targetLang : 'en',
+          engine: popupTranslateEngine,
+        });
+        sendResponse({ success: true, translation: result.translation, detectedLang: result.detectedLang });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+
+  // Popup quick translator. Two routes behind one message: a keyless engine,
+  // or the AI Key Pool when engine === 'ai'. The AI route is collected into a
+  // single reply instead of streamed — the popup can be dismissed mid-stream
+  // and would leave an orphaned AI_STREAM_CHUNK broadcast with no listener.
+  if (action === 'TRANSLATE_TEXT') {
+    const { text, from = 'auto', to = 'en', engine, preferredConfigId } = payload || {};
+    (async () => {
+      try {
+        if (engine === 'ai') {
+          const { systemPrompt } = await Storage.get(['systemPrompt']);
+          let collected = '';
+          let modelUsed = null;
+          const abortController = new AbortController();
+          await AiEngine.ask(
+            { prompt: text, studyMode: 'translate', preferredConfigId, systemPrompt, outputLanguage: to },
+            (chunk, meta) => {
+              if (chunk) collected += chunk;
+              if (meta?.model) modelUsed = meta.model;
+            },
+            abortController.signal
+          );
+          if (!collected.trim()) throw new Error('AI returned an empty translation.');
+          sendResponse({ success: true, translation: collected.trim(), engine: 'ai', model: modelUsed, isAi: true });
+          return;
+        }
+
+        // A single word gets a dictionary lookup first — phonetics, meanings by
+        // part of speech, example sentences — so the free engines reach parity
+        // with what the AI path already returns for a word. It answers null for
+        // anything it does not recognise as a word, which falls through to a
+        // plain translation below.
+        if (isSingleWord(text)) {
+          try {
+            const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+            const entry = await lookupWord({ word: text, from, to, displayLang: uiLanguage });
+            if (entry) {
+              sendResponse({
+                success: true,
+                translation: JSON.stringify(entry),
+                detectedLang: entry.detectedLang,
+                engine: 'google-dict',
+                isDictionary: true,
+                spoken: { source: entry.word, target: entry.translation },
+                isAi: false,
+              });
+              return;
+            }
+          } catch {
+            // Lookup is an enrichment, never a reason to fail the translation.
+          }
+        }
+
+        const result = await translateText({ text, from, to, engine });
+        sendResponse({
+          success: true,
+          translation: result.translation,
+          detectedLang: result.detectedLang,
+          engine: result.engine,
+          fellBack: result.fellBack,
+          isAi: false,
+        });
       } catch (err) {
         sendResponse({ success: false, error: err.message });
       }
