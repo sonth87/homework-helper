@@ -46,6 +46,7 @@ export function registerAiStreamIpc(settings: SettingsService): void {
         ...(params.studyMode ? { studyMode: params.studyMode } : {}),
         ...(params.imageBase64 ? { imageBase64: params.imageBase64 } : {}),
         ...(params.preferredConfigId ? { preferredConfigId: params.preferredConfigId } : {}),
+        ...(params.history?.length ? { history: params.history } : {}),
       },
       current,
       (delta) => {

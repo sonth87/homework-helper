@@ -10,6 +10,8 @@
 
 import type { AiDelta, ProviderError } from '@shared/types/ai';
 
+export type HistoryTurn = { role: 'user' | 'assistant'; content: string };
+
 export type RequestContext = {
   baseUrl: string;
   apiKey: string | null;
@@ -19,6 +21,17 @@ export type RequestContext = {
   imageBase64?: string;
   thinkingEnabled: boolean;
   maxOutputTokens?: number;
+  /**
+   * Các lượt TRƯỚC lượt hiện tại, đã được cắt theo `LIMITS.llmLane.historyTurns*`
+   * ở ai.service.ts (adapter không tự cắt — không biết provider đang chạy có
+   * phải local hay không). Rỗng/vắng mặt = lượt đầu tiên của hội thoại, hoặc
+   * intent không phải chat (Crop & Solve là one-shot, xem ADR-0004).
+   *
+   * CHỈ TEXT — không lượt nào trong đây mang ảnh, kể cả nếu lượt gốc có ảnh.
+   * Gửi lại ảnh mỗi lượt vừa tốn `maxImageBytes`, vừa không thêm giá trị vì
+   * nội dung ảnh không đổi giữa các lượt.
+   */
+  history?: HistoryTurn[];
 };
 
 export type ProviderRequest = {

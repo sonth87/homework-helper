@@ -17,6 +17,13 @@ chạy trên macOS và Windows.
 
 ### Thêm mới
 
+- **Chat nhớ được ngữ cảnh các lượt trước.** Trước đây mỗi câu hỏi tiếp theo
+  trong một hội thoại chỉ gửi đúng câu vừa gõ — hỏi "còn cách nào khác không?"
+  thì AI không biết đang hỏi tiếp về vấn đề gì. Nay gửi kèm lịch sử hội thoại
+  (chỉ chữ, không gửi lại ảnh ở các lượt sau — ảnh không đổi nên gửi lại chỉ
+  tốn băng thông). Số lượt giữ lại khác nhau giữa mô hình chạy trên máy (ít
+  hơn, vì mỗi lượt cộng thẳng vào thời gian chờ) và mô hình trên mây (nhiều
+  hơn). Áp dụng cho cả ba họ mô hình (Gemini, OpenAI và tương thích, Claude).
 - **Màn hình xin quyền hệ thống (Accessibility + Screen Recording).** Trước
   đây thiếu quyền thì app chỉ im lặng không hoạt động, không giải thích vì
   sao. Nay tự mở màn hình hướng dẫn ngay khi khởi động nếu còn thiếu quyền,

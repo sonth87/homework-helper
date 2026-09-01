@@ -12,7 +12,29 @@ export const LIMITS = {
   fastLane: { targetLatencyMs: 400, timeoutMs: 5_000, cacheTtlMs: 7 * 24 * 60 * 60 * 1000, cacheMaxEntries: 10_000 },
 
   /** Lane B — mô hình suy luận có thể im lặng rất lâu trước byte đầu tiên. */
-  llmLane: { firstByteTimeoutMs: 90_000, totalTimeoutMs: 600_000 },
+  llmLane: {
+    firstByteTimeoutMs: 90_000,
+    totalTimeoutMs: 600_000,
+    /**
+     * Số LƯỢT (một lượt = một tin nhắn user hoặc assistant) giữ lại làm ngữ
+     * cảnh khi chat nhiều lượt — xem roadmap/known-issues.md mục 1.
+     *
+     * CHƯA ĐO THỰC NGHIỆM — tài liệu yêu cầu "đo thời gian thật trên Qwen/Gemma
+     * qua Ollama trước khi chốt số N", nhưng máy này không cài Ollama nên
+     * không đo được. Hai số dưới đây là ước lượng có lý do, KHÔNG phải kết quả
+     * đo: model local chạy trên CPU/GPU máy người dùng, mỗi lượt thêm vào đều
+     * cộng thẳng vào thời gian prefill họ phải chờ — giữ ít hơn hẳn cloud (có
+     * phần cứng riêng, prefill nhanh hơn nhiều bậc). Cắt NÔNG (giữ N lượt gần
+     * nhất, không viết lại nội dung cũ) — phương án 1+3 trong ba phương án đã
+     * bàn, không làm phương án 2 (tóm tắt) vì tự nó là một lần suy luận nữa
+     * trên chính model local đang chậm sẵn.
+     *
+     * Xem lại khi: có Ollama thật để đo prefill time theo số lượt, hoặc có
+     * phản hồi thật cho thấy hai con số này sai hướng.
+     */
+    historyTurnsLocal: 6,
+    historyTurnsCloud: 20,
+  },
 
   /** Ngưỡng dưới thì coi như OCR không đọc được, chuyển sang chiến lược khác. */
   ocr: {

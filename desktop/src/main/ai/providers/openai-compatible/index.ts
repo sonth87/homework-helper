@@ -31,6 +31,10 @@ export const openAiCompatibleAdapter: ProviderAdapter = {
       content.push({ type: 'image_url', image_url: { url } });
     }
 
+    // Role của OpenAI khớp thẳng với role nội bộ ('user'/'assistant') — không
+    // cần ánh xạ như Gemini ('model') hay gộp turn như Claude.
+    const history = (ctx.history ?? []).map((turn) => ({ role: turn.role, content: turn.content }));
+
     const body: Record<string, unknown> = {
       model: ctx.model,
       stream: true,
@@ -39,6 +43,7 @@ export const openAiCompatibleAdapter: ProviderAdapter = {
       stream_options: { include_usage: true },
       messages: [
         { role: 'system', content: ctx.systemPrompt },
+        ...history,
         { role: 'user', content: ctx.imageBase64 ? content : ctx.userPrompt },
       ],
       ...(ctx.maxOutputTokens ? { max_tokens: ctx.maxOutputTokens } : {}),

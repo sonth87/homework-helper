@@ -8,6 +8,14 @@ desktop app hiện tại. Cả hai vấn đề ảnh hưởng **cả extension l
 
 ## 1. Chat nhiều lượt không có ngữ cảnh hội thoại
 
+> **Cập nhật 2026-09-01: đã sửa cho DESKTOP**, xem CHANGELOG-desktop.md mục
+> "Thêm mới" và commit liên quan. Phần dưới vẫn mô tả đúng hiện trạng CÒN LẠI
+> của **extension** — chưa đụng tới. Cắt nông + ngưỡng khác nhau theo
+> local/cloud (phương án 1+3 đã bàn ở dưới), số lượt (6 local / 20 cloud) là
+> ước lượng có lý do, KHÔNG phải đo thực nghiệm — máy làm việc không cài được
+> Ollama để đo prefill time thật như tài liệu này yêu cầu. Xem lại khi có máy
+> cài Ollama, hoặc có phản hồi thật.
+
 **Hiện trạng đã xác nhận bằng code:** mỗi lượt hỏi tiếp trong một hội thoại chỉ
 gửi đúng câu vừa gõ, không kèm bất kỳ nội dung nào của các lượt trước. AI không
 biết "còn cách nào khác không?" đang hỏi tiếp về vấn đề gì.

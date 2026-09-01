@@ -65,6 +65,12 @@ export const claudeAdapter: ProviderAdapter = {
     }
     content.push({ type: 'text', text: ctx.userPrompt });
 
+    // Role khớp thẳng với role nội bộ, giống OpenAI — chỉ Gemini cần ánh xạ.
+    const history = (ctx.history ?? []).map((turn) => ({
+      role: turn.role,
+      content: [{ type: 'text', text: turn.content }],
+    }));
+
     const maxTokens = ctx.maxOutputTokens ?? DEFAULT_MAX_TOKENS;
 
     const body: Record<string, unknown> = {
@@ -72,7 +78,7 @@ export const claudeAdapter: ProviderAdapter = {
       stream: true,
       max_tokens: maxTokens,
       system: ctx.systemPrompt,
-      messages: [{ role: 'user', content }],
+      messages: [...history, { role: 'user', content }],
       // max_tokens phải LỚN HƠN budget_tokens, nếu không API từ chối request.
       ...(ctx.thinkingEnabled && maxTokens > THINKING_BUDGET
         ? { thinking: { type: 'enabled', budget_tokens: THINKING_BUDGET } }

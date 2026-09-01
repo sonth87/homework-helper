@@ -67,20 +67,30 @@ export function ChatApp() {
     }
     if (!id) return;
 
+    // Chụp lại TRƯỚC khi thêm tin nhắn mới vào state — đây đúng là các lượt
+    // "trước" lượt sắp gửi. Chỉ text, không kèm ảnh dù lượt gốc từng có (xem
+    // ghi chú ở AskParams.history) — cắt theo local/cloud là việc của
+    // ai.service.ts, ChatApp chỉ gửi toàn bộ lịch sử đang có.
+    const history = messages.map((m) => ({ role: m.role, content: m.content }));
+
     const now = Date.now();
     setMessages((prev) => [...prev, { id: now, role: 'user', content: text, createdAt: now }]);
     await window.api?.invoke('history:addMessage', { id, role: 'user', content: text });
 
     let answer = '';
-    const stream = window.api?.stream('ai:ask', { intent: 'chat', prompt: text }, (d: AiDelta) => {
-      if (d.type === 'text') {
-        answer += d.text;
-        setStreaming(answer);
-      } else if (d.type === 'error') {
-        answer = answer || `⚠️ ${d.message}`;
-        setStreaming(answer);
-      }
-    });
+    const stream = window.api?.stream(
+      'ai:ask',
+      { intent: 'chat', prompt: text, ...(history.length ? { history } : {}) },
+      (d: AiDelta) => {
+        if (d.type === 'text') {
+          answer += d.text;
+          setStreaming(answer);
+        } else if (d.type === 'error') {
+          answer = answer || `⚠️ ${d.message}`;
+          setStreaming(answer);
+        }
+      },
+    );
     abortRef.current = stream?.abort ?? null;
 
     try {

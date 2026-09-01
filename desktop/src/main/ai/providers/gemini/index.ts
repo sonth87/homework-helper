@@ -33,8 +33,15 @@ export const geminiAdapter: ProviderAdapter = {
       });
     }
 
+    // Gemini dùng 'model' cho lượt trợ lý, không phải 'assistant' như hai họ
+    // kia — khác biệt riêng của API này, không suy luận được từ chỗ khác.
+    const history = (ctx.history ?? []).map((turn) => ({
+      role: turn.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: turn.content }],
+    }));
+
     const body: Record<string, unknown> = {
-      contents: [{ role: 'user', parts }],
+      contents: [...history, { role: 'user', parts }],
       systemInstruction: { parts: [{ text: ctx.systemPrompt }] },
       generationConfig: {
         ...(ctx.maxOutputTokens ? { maxOutputTokens: ctx.maxOutputTokens } : {}),

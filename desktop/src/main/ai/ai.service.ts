@@ -91,6 +91,7 @@ async function attempt({ config, params, settings, emit, signal }: AttemptArgs) 
     userPrompt: buildUserPrompt(params),
     ...(params.imageBase64 ? { imageBase64: params.imageBase64 } : {}),
     thinkingEnabled: settings.thinkingEnabled && info.capabilities.thinking,
+    ...(params.history?.length ? { history: truncateHistory(params.history, info.isLocal) } : {}),
   });
 
   const state: ParseState = {};
@@ -103,6 +104,25 @@ async function attempt({ config, params, settings, emit, signal }: AttemptArgs) 
     },
     onHttpError: (status, body) => adapter.normalizeError(status, body),
   });
+}
+
+/**
+ * Cắt NÔNG — giữ N lượt GẦN NHẤT, không viết lại/tóm tắt nội dung cũ (phương
+ * án 1+3 trong ba phương án đã bàn ở known-issues.md; không làm phương án 2 —
+ * tóm tắt tự nó là một lần suy luận nữa, có thể phản tác dụng đúng lúc model
+ * local đang chậm sẵn).
+ *
+ * Ngưỡng khác nhau theo local/cloud VÌ CONFIG ĐANG THỬ, không phải theo một
+ * cờ cố định trong settings — cùng một cuộc chat có thể rơi vào cả model local
+ * lẫn cloud tuỳ lượt thử nào thành công (key-rotator), nên phải cắt lại mỗi
+ * lần build request, không cắt một lần rồi dùng chung cho mọi adapter.
+ */
+export function truncateHistory(
+  history: NonNullable<PromptParams['history']>,
+  isLocal: boolean,
+): NonNullable<PromptParams['history']> {
+  const max = isLocal ? LIMITS.llmLane.historyTurnsLocal : LIMITS.llmLane.historyTurnsCloud;
+  return history.slice(-max);
 }
 
 function describeNoCandidate(settings: Settings, needsVision: boolean): string {

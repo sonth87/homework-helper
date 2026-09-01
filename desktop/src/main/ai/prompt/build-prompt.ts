@@ -36,6 +36,9 @@ export type PromptParams = {
   outputLanguage: string;
   userText: string;
   hasImage: boolean;
+  /** Chưa cắt theo local/cloud — việc đó thuộc về ai.service.ts (biết config
+   *  nào đang chạy), không phải nơi dựng prompt. Xem RequestContext.history. */
+  history?: { role: 'user' | 'assistant'; content: string }[];
 };
 
 export function buildSystemPrompt(params: PromptParams): string {

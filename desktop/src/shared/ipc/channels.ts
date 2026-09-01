@@ -42,6 +42,13 @@ export type AskParams = {
   studyMode?: StudyMode;
   preferredConfigId?: string;
   conversationId?: string;
+  /**
+   * Các lượt TRƯỚC trong cùng hội thoại, cũ → mới. Chỉ ChatApp gửi — Crop &
+   * Solve (ResultPanel) là one-shot, không có khái niệm lượt trước (ADR-0004).
+   * KHÔNG mang ảnh dù lượt gốc từng có — xem ghi chú ở RequestContext.history
+   * (main/ai/providers/types.ts) để biết lý do.
+   */
+  history?: { role: 'user' | 'assistant'; content: string }[];
 };
 
 export type QuickTranslateParams = {
