@@ -14,7 +14,7 @@ import { initHotkeys } from './bootstrap/init-hotkeys';
 import { initWindows } from './bootstrap/init-windows';
 import { initMouseTracker } from './bootstrap/init-mouse-tracker';
 import { initClipboardWatcher } from './bootstrap/init-clipboard-watcher';
-import { handleIntent } from './pipeline/task-pipeline';
+import { handleIntent, handleFileDrop } from './pipeline/task-pipeline';
 import { abortAllStreams } from './ipc/stream-handler';
 import { closeDatabase } from './db/connection';
 import { hotkeyManager } from './hotkeys/hotkey-manager';
@@ -29,7 +29,11 @@ async function main(): Promise<void> {
 
   const settings = await initSettings();
   initIpc(settings);
-  initTray(settings, (intent) => void handleIntent(intent, 'tray', settings.get()));
+  initTray(
+    settings,
+    (intent) => void handleIntent(intent, 'tray', settings.get()),
+    (filePaths) => void handleFileDrop(filePaths, settings.get()),
+  );
   initHotkeys(settings, (intent) => void handleIntent(intent, 'hotkey', settings.get()));
   initMouseTracker(settings);
   initClipboardWatcher(settings);

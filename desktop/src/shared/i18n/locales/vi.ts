@@ -178,4 +178,9 @@ export default {
   granWord: 'Từ',
   granSentence: 'Câu',
   granParagraph: 'Đoạn',
+  // ── Kéo-thả file (Phase 4) ────────────────────────────────────────────────
+  notifFileDropUnsupported: 'Định dạng file này chưa được hỗ trợ. Chỉ hỗ trợ PDF và ảnh (PNG/JPG).',
+  notifFileDropPdfNoText: 'Không tìm thấy văn bản trong PDF này (có thể là bản scan). Hãy thử Giải bài tập bằng cách chụp màn hình từng trang.',
+  notifFileDropReadError: 'Không đọc được file này. Hãy thử lại.',
+
 } as const satisfies Dictionary;

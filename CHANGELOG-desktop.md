@@ -17,6 +17,13 @@ chạy trên macOS và Windows.
 
 ### Thêm mới
 
+- **Kéo-thả file PDF/ảnh vào icon trên khay hệ thống** (macOS). Thả ảnh
+  (PNG/JPG/WEBP) → giải ngay như chụp đề. Thả PDF → tóm tắt nội dung văn bản
+  (tối đa 30 trang/60.000 ký tự — tài liệu dài hơn bị cắt bớt). PDF dạng scan
+  (không có chữ trích được, chỉ là ảnh) chưa hỗ trợ — hiện thông báo giải
+  thích thay vì im lặng không làm gì, gợi ý dùng Giải bài tập bằng ảnh chụp
+  màn hình từng trang thay vào đó. Chưa có trên Windows/Linux (giới hạn của
+  Electron, không phải giới hạn cố ý).
 - **Thanh hành động nổi khi copy văn bản.** Bật ở Cài đặt → Thu nhận nội dung
   (mặc định TẮT — đọc mọi thứ bạn copy là hành vi nhạy cảm, phải tự bật). Khi
   bật, copy bất kỳ đoạn text nào (Ctrl/Cmd+C ở bất kỳ đâu) hiện một thanh nhỏ

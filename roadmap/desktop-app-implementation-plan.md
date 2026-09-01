@@ -406,7 +406,32 @@ không phải đường chính; xem lại nếu người dùng thật phàn nàn
       `npm run dev` thật trên máy này (macOS) — app khởi động sạch, setting
       mới migrate đúng, route renderer mới load không lỗi transform. Chưa thử
       bằng tay việc thật sự copy text và bấm nút (cần tương tác GUI).
-- [ ] Kéo–thả file (PDF/ảnh)
+- [x] Kéo–thả file (PDF/ảnh) — 2026-09-01, macOS only (Tray.on('drop-files')
+      không tồn tại trên Windows/Linux trong Electron). Ảnh (PNG/JPG/WEBP) →
+      intent 'solve'. PDF → trích text layer bằng `pdfjs-dist` (thêm dependency
+      mới — xem lý do chọn thay vì native canvas trong
+      acquisition/pdf/extract-text.ts) → intent 'summarize'. KHÔNG hỗ trợ PDF
+      dạng scan (không có text layer) — cần render trang ra ảnh rồi OCR, và
+      lựa chọn phổ biến nhất để render PDF trong Node (`canvas`) là native
+      addon, đúng loại rủi ro ABI/node-gyp dự án đã né (ADR-0005); báo rõ cho
+      người dùng bằng Notification thay vì lặng lẽ không làm gì.
+      ⚠️ **Lưu ý bảo mật đã xử lý, không phải phát hiện chờ xử lý:** bản
+      `pdfjs-dist@5.x` mặc định dính CVE thực thi JS tuỳ ý khi mở PDF độc hại
+      (GHSA-hq66-cqwq-w95j) — đúng bề mặt tấn công của chính tính năng này.
+      Đã chốt `^6.2.108` (bản vá), xác nhận `npm audit` sạch cho riêng gói này
+      trước khi dùng.
+      Xác minh: `npm run typecheck` sạch. Trích text đã kiểm chứng THẬT bằng
+      script độc lập chạy qua `ELECTRON_RUN_AS_NODE=1 electron` (không phải
+      `node` hệ thống — pdfjs-dist@6 cần `Promise.withResolvers`, tức Node
+      ≥22.5 mà package.json engines đã khai; Electron 37 đi kèm Node
+      22.21.1, máy dev hệ thống chỉ có 20.19.1) — trích đúng "Hello World" từ
+      một PDF tối thiểu dựng tay. Đã `npm run pack` thật và `asar list` xác
+      nhận pdfjs-dist (kể cả standard_fonts/cmaps) được đóng gói đúng vào
+      app.asar dù electron-builder.yml không khai node_modules trong `files`.
+      KHÔNG test được việc kéo-thả file thật vào tray icon (cần tương tác GUI
+      kéo-thả, ngoài khả năng của phiên làm việc này) — chưa thêm test tự
+      động cho extract-text.ts cùng lý do Promise.withResolvers ở trên (sẽ
+      làm `npm test` báo lỗi giả trong môi trường Node <22.5).
 - [x] Windows: UI Automation + Windows OCR + xử lý DPI — 2026-09-01, **CHƯA ĐO
       THỰC NGHIỆM, mức rủi ro cao hơn hẳn các mục đã tích khác trong tài liệu
       này**. Máy phát triển là macOS, không có toolchain Windows để build/test —

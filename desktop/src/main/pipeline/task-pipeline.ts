@@ -9,13 +9,17 @@
  * việc huỷ khi đóng cửa sổ hoạt động tự nhiên, không cần đường dây riêng.
  */
 
-import { screen } from 'electron';
+import { screen, Notification } from 'electron';
+import { extname } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { INTENTS } from '@config/intents.config';
 import type { Settings } from '@config/settings';
 import type { Intent, TriggerSource } from '@shared/types/intent';
 import type { Point } from '@shared/types/geometry';
+import { createTranslator } from '@shared/i18n';
 import { checkTrigger } from './guards';
 import { acquire } from '../acquisition/acquire';
+import { extractPdfText } from '../acquisition/pdf/extract-text';
 import { showResult } from '../windows/result.window';
 import { openChatWindow } from '../windows/chat.window';
 import { logger } from '../logging/logger';
@@ -107,4 +111,80 @@ export async function handleClipboardAction(
     prompt: text,
     ...(config.defaultStudyMode ? { studyMode: settings.studyMode ?? config.defaultStudyMode } : {}),
   });
+}
+
+const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp']);
+
+function notifyFileDropIssue(key: 'notifFileDropUnsupported' | 'notifFileDropPdfNoText' | 'notifFileDropReadError', settings: Settings): void {
+  const t = createTranslator(settings.uiLanguage);
+  new Notification({ title: 'Homework Helper', body: t(key) }).show();
+}
+
+/**
+ * Kéo-thả file vào icon tray (Phase 4, hiện chỉ macOS — xem tray.ts). Tách
+ * riêng khỏi handleIntent()/acquire() cùng lý do handleClipboardAction(): nội
+ * dung đã CÓ SẴN từ chính sự kiện thả file, không có "chiến lược thu nhận"
+ * nào để chọn.
+ *
+ * Ảnh → 'solve' (vision, đúng bản chất "ảnh chụp đề"). PDF → trích text layer
+ * sẵn có rồi đưa vào 'summarize' — KHÔNG OCR trang scan (xem
+ * acquisition/pdf/extract-text.ts để biết lý do), báo rõ cho người dùng bằng
+ * Notification thay vì lặng lẽ không làm gì khi đó là PDF dạng scan hoặc định
+ * dạng không hỗ trợ — thả file mà không thấy gì xảy ra còn khó hiểu hơn một
+ * thông báo ngắn giải thích vì sao.
+ */
+export async function handleFileDrop(filePaths: string[], settings: Settings): Promise<void> {
+  for (const filePath of filePaths) {
+    await handleSingleFileDrop(filePath, settings).catch((err: unknown) => {
+      logger.warn('Xử lý file thả vào tray thất bại', { filePath, err });
+      notifyFileDropIssue('notifFileDropReadError', settings);
+    });
+  }
+}
+
+async function handleSingleFileDrop(filePath: string, settings: Settings): Promise<void> {
+  const ext = extname(filePath).toLowerCase();
+
+  if (IMAGE_EXTENSIONS.has(ext)) {
+    const trigger = checkTrigger('solve', 'file-drop');
+    if (!trigger.allowed) {
+      logger.warn('Bỏ qua file thả vào tray', { filePath, reason: trigger.reason });
+      return;
+    }
+    const buffer = await readFile(filePath);
+    const config = INTENTS.solve;
+    await showResult({
+      intent: 'solve',
+      prompt: '',
+      imageBase64: buffer.toString('base64'),
+      ...(config.defaultStudyMode ? { studyMode: settings.studyMode ?? config.defaultStudyMode } : {}),
+    });
+    return;
+  }
+
+  if (ext === '.pdf') {
+    const trigger = checkTrigger('summarize', 'file-drop');
+    if (!trigger.allowed) {
+      logger.warn('Bỏ qua file thả vào tray', { filePath, reason: trigger.reason });
+      return;
+    }
+    const { text, truncated, pageCount } = await extractPdfText(filePath);
+    if (!text.trim()) {
+      logger.warn('PDF không có text layer (có thể là bản scan)', { filePath, pageCount });
+      notifyFileDropIssue('notifFileDropPdfNoText', settings);
+      return;
+    }
+
+    const config = INTENTS.summarize;
+    await showResult({
+      intent: 'summarize',
+      prompt: text,
+      ...(config.defaultStudyMode ? { studyMode: settings.studyMode ?? config.defaultStudyMode } : {}),
+    });
+    if (truncated) logger.info('Đã cắt bớt nội dung PDF theo LIMITS.pdf', { filePath, pageCount });
+    return;
+  }
+
+  logger.warn('Định dạng file thả vào tray không được hỗ trợ', { filePath, ext });
+  notifyFileDropIssue('notifFileDropUnsupported', settings);
 }

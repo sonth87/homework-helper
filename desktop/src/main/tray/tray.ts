@@ -18,7 +18,17 @@ import { logger } from '../logging/logger';
 
 let tray: Tray | null = null;
 
-type Options = { uiLanguage: string; onIntent: (intent: Intent) => void };
+type Options = {
+  uiLanguage: string;
+  onIntent: (intent: Intent) => void;
+  /**
+   * Kéo-thả file vào icon tray (Phase 4, macOS-only — Tray.on('drop-files')
+   * không tồn tại trên Windows/Linux trong Electron, xem
+   * roadmap/desktop-app-implementation-plan.md mục Phase 4). Optional để
+   * initOnboarding/nơi khác gọi createTray() không phải lúc nào cũng cần khai.
+   */
+  onFilesDropped?: (filePaths: string[]) => void;
+};
 
 /**
  * TẠM: icon vuông bo góc + chữ "H", vẽ bằng AppKit — không phải thiết kế cuối
@@ -40,11 +50,21 @@ function trayIcon(): Electron.NativeImage {
   return image;
 }
 
-export function createTray({ uiLanguage, onIntent }: Options): Tray {
+export function createTray({ uiLanguage, onIntent, onFilesDropped }: Options): Tray {
   const t = createTranslator(uiLanguage);
   const platform = process.platform as Platform;
 
+  const isNewTray = !tray;
   tray ??= new Tray(trayIcon());
+
+  // Đăng ký MỘT LẦN DUY NHẤT khi Tray thật sự vừa được tạo — createTray() còn
+  // được gọi lại mỗi khi đổi ngôn ngữ (refreshTray()) để dựng lại context menu,
+  // đăng ký lại 'drop-files' mỗi lần đó sẽ chồng listener, gọi onFilesDropped
+  // nhiều lần cho một lần thả file. macOS-only: Tray không phát sự kiện này
+  // trên Windows/Linux, onFilesDropped đơn giản không bao giờ được gọi ở đó.
+  if (isNewTray && onFilesDropped) {
+    tray.on('drop-files', (_event, filePaths) => onFilesDropped(filePaths));
+  }
 
   // exactOptionalPropertyTypes cấm truyền `accelerator: undefined` tường minh —
   // phải BỎ HẲN thuộc tính khi không có phím tắt, không phải gán undefined.

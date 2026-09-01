@@ -180,4 +180,9 @@ export default {
   granWord: 'Слово',
   granSentence: 'Предложение',
   granParagraph: 'Абзац',
+  // ── Kéo-thả file (Phase 4) ────────────────────────────────────────────────
+  notifFileDropUnsupported: 'Этот тип файла пока не поддерживается. Поддерживаются только PDF и изображения (PNG/JPG).',
+  notifFileDropPdfNoText: 'В этом PDF не найден текст (возможно, это скан). Попробуйте использовать «Решить задание» со скриншотом каждой страницы.',
+  notifFileDropReadError: 'Не удалось прочитать этот файл. Попробуйте ещё раз.',
+
 } as const satisfies Dictionary;

@@ -180,4 +180,9 @@ export default {
   granWord: '單字',
   granSentence: '句子',
   granParagraph: '段落',
+  // ── Kéo-thả file (Phase 4) ────────────────────────────────────────────────
+  notifFileDropUnsupported: '暫不支援此檔案類型，僅支援 PDF 和圖片（PNG/JPG）。',
+  notifFileDropPdfNoText: '在此 PDF 中找不到文字內容（可能是掃描檔）。請改用「解題」功能，對每頁截圖處理。',
+  notifFileDropReadError: '無法讀取此檔案，請重試。',
+
 } as const satisfies Dictionary;

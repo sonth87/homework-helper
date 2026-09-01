@@ -79,5 +79,13 @@ export const LIMITS = {
 
   history: { maxConversations: 1_000, maxMessagesPerConversation: 500 },
 
+  /**
+   * Kéo-thả file PDF (Phase 4) — chỉ trích text layer sẵn có, không OCR trang
+   * scan (xem acquisition/pdf/extract-text.ts). Số trang/ký tự tối đa là ước
+   * lượng có lý do (chặn chi phí token khi ai đó thả nhầm một cuốn sách),
+   * KHÔNG phải số đo — chưa có phản hồi thật để chốt con số tối ưu.
+   */
+  pdf: { maxPages: 30, maxChars: 60_000 },
+
   ipc: { maxPayloadBytes: 32 * 1024 * 1024 },
 } as const;

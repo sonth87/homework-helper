@@ -179,4 +179,9 @@ export default {
   granWord: 'Word',
   granSentence: 'Sentence',
   granParagraph: 'Paragraph',
+  // ── Kéo-thả file (Phase 4) ────────────────────────────────────────────────
+  notifFileDropUnsupported: 'This file type isn\'t supported yet. Only PDF and images (PNG/JPG) work.',
+  notifFileDropPdfNoText: 'No text found in this PDF (it may be a scanned document). Try Solve Homework with a screenshot of each page instead.',
+  notifFileDropReadError: 'Couldn\'t read this file. Please try again.',
+
 } as const;

@@ -180,4 +180,9 @@ export default {
   granWord: 'Palavra',
   granSentence: 'Frase',
   granParagraph: 'Parágrafo',
+  // ── Kéo-thả file (Phase 4) ────────────────────────────────────────────────
+  notifFileDropUnsupported: 'Este tipo de arquivo ainda não é compatível. Apenas PDF e imagens (PNG/JPG) são aceitos.',
+  notifFileDropPdfNoText: 'Nenhum texto encontrado neste PDF (pode ser um documento digitalizado). Experimente "Resolver tarefa" com uma captura de tela de cada página.',
+  notifFileDropReadError: 'Não foi possível ler este arquivo. Tente novamente.',
+
 } as const satisfies Dictionary;

@@ -180,4 +180,9 @@ export default {
   granWord: '단어',
   granSentence: '문장',
   granParagraph: '단락',
+  // ── Kéo-thả file (Phase 4) ────────────────────────────────────────────────
+  notifFileDropUnsupported: '아직 지원하지 않는 파일 형식입니다. PDF와 이미지(PNG/JPG)만 지원합니다.',
+  notifFileDropPdfNoText: '이 PDF에서 텍스트를 찾을 수 없습니다(스캔된 문서일 수 있음). 대신 각 페이지를 캡처하여 "숙제 풀기"를 사용해 보세요.',
+  notifFileDropReadError: '이 파일을 읽을 수 없습니다. 다시 시도해 주세요.',
+
 } as const satisfies Dictionary;

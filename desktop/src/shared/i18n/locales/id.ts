@@ -180,4 +180,9 @@ export default {
   granWord: 'Kata',
   granSentence: 'Kalimat',
   granParagraph: 'Paragraf',
+  // ── Kéo-thả file (Phase 4) ────────────────────────────────────────────────
+  notifFileDropUnsupported: 'Jenis file ini belum didukung. Hanya PDF dan gambar (PNG/JPG) yang didukung.',
+  notifFileDropPdfNoText: 'Tidak ditemukan teks dalam PDF ini (mungkin dokumen hasil pindai). Coba gunakan "Selesaikan Tugas" dengan tangkapan layar tiap halaman.',
+  notifFileDropReadError: 'Tidak dapat membaca file ini. Silakan coba lagi.',
+
 } as const satisfies Dictionary;
