@@ -161,6 +161,8 @@ export default {
   groupAcquisition: 'ホバー翻訳',
   setHoverEnabled: 'ホバー翻訳を有効化',
   setHoverEnabledDesc: '画面上の文字にカーソルを重ねると翻訳を表示します。',
+  setClipboardWatcher: 'クリップボード監視を有効にする',
+  setClipboardWatcherDesc: '画面上のどこかでテキストをコピーするたびに、フローティングアクションバー（翻訳 / 要約 / 説明 / 書き直し）を表示します。',
   setHoverDelay: '発動までの遅延',
   setHoverDelayDesc: '翻訳を調べるまでカーソルが静止している必要がある時間です。',
   setHoverTolerance: '移動許容範囲',

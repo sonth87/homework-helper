@@ -161,6 +161,8 @@ export default {
   groupAcquisition: 'แปลเมื่อชี้เมาส์',
   setHoverEnabled: 'เปิดการแปลเมื่อชี้เมาส์',
   setHoverEnabledDesc: 'แสดงคำแปลเมื่อคุณชี้เมาส์ไปที่ข้อความบนหน้าจอ',
+  setClipboardWatcher: 'เปิดใช้งานการติดตามคลิปบอร์ด',
+  setClipboardWatcherDesc: 'แสดงแถบการทำงานลอย (แปล / สรุป / อธิบาย / เขียนใหม่) ทุกครั้งที่คุณคัดลอกข้อความบนหน้าจอ',
   setHoverDelay: 'ระยะหน่วงก่อนทำงาน',
   setHoverDelayDesc: 'ระยะเวลาที่เคอร์เซอร์ต้องนิ่งก่อนค้นหาคำแปล',
   setHoverTolerance: 'ระยะยอมรับการขยับ',

@@ -17,6 +17,14 @@ chạy trên macOS và Windows.
 
 ### Thêm mới
 
+- **Thanh hành động nổi khi copy văn bản.** Bật ở Cài đặt → Thu nhận nội dung
+  (mặc định TẮT — đọc mọi thứ bạn copy là hành vi nhạy cảm, phải tự bật). Khi
+  bật, copy bất kỳ đoạn text nào (Ctrl/Cmd+C ở bất kỳ đâu) hiện một thanh nhỏ
+  gần con trỏ với 3 nút: Tóm tắt / Giải thích / Viết lại — bấm vào xử lý ngay
+  đúng đoạn vừa copy, không cần mở app hay nhớ phím tắt. Tự ẩn sau 8 giây nếu
+  không bấm gì, hoặc Esc/bấm ra ngoài để đóng ngay. Không có nút Dịch (dùng
+  dịch khi rê chuột sẵn có) hay Giải bài (cần chọn vùng màn hình, không hợp
+  với văn bản đã copy).
 - **Bắt đầu hỗ trợ Windows (đọc văn bản dưới con trỏ + OCR).** Trước đây app chỉ
   chạy đầy đủ trên macOS — trên Windows, phần đọc văn bản và OCR im lặng không
   hoạt động (rơi thẳng về "không có chiến lược thu nhận nào khả dụng"). Nay có

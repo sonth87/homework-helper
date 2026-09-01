@@ -391,7 +391,21 @@ không phải đường chính; xem lại nếu người dùng thật phàn nàn
       thật** (chỉ `npm run check` tĩnh: typecheck/lint/test/i18n) — module này chạm
       Electron `screen`/`clipboard` API, cùng nhóm với Accessibility/OCR native ở
       Phase 3 vốn không có unit test, cần "đo thực nghiệm" như Phase 3 đã làm.
-- [ ] Clipboard watcher + thanh hành động nổi
+- [x] Clipboard watcher + thanh hành động nổi — 2026-09-01. Poll clipboard
+      (`acquisition/clipboard/watcher.ts`, cùng lý do MouseTracker phải poll —
+      Electron không có event native cho thay đổi clipboard). Cửa sổ nhỏ
+      luôn-trên-cùng gần con trỏ, 3 nút: Tóm tắt/Giải thích/Viết lại (đi qua
+      `handleClipboardAction()` mới trong task-pipeline.ts, dùng thẳng text đã
+      bắt được — KHÔNG đọc lại clipboard ở thời điểm bấm, tránh dính đua tranh
+      nếu người dùng đã copy thứ khác trong lúc thanh còn hiện). Cố tình KHÔNG
+      có nút Dịch (Lane A, luồng UI khác hẳn — quickTranslate()/HoverOverlay
+      không qua showResult()) hay Giải bài (acquisition là `['capture']`, luôn
+      mở lớp phủ khoanh vùng, bỏ qua hẳn text đã copy). Setting
+      `clipboardWatcherEnabled` mặc định **TẮT** — đọc mọi thứ người dùng copy
+      là hành vi nhạy cảm. Đã xác minh: `npm run check` sạch, VÀ đã chạy thử
+      `npm run dev` thật trên máy này (macOS) — app khởi động sạch, setting
+      mới migrate đúng, route renderer mới load không lỗi transform. Chưa thử
+      bằng tay việc thật sự copy text và bấm nút (cần tương tác GUI).
 - [ ] Kéo–thả file (PDF/ảnh)
 - [x] Windows: UI Automation + Windows OCR + xử lý DPI — 2026-09-01, **CHƯA ĐO
       THỰC NGHIỆM, mức rủi ro cao hơn hẳn các mục đã tích khác trong tài liệu

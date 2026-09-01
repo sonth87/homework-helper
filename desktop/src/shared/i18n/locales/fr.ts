@@ -161,6 +161,8 @@ export default {
   groupAcquisition: 'Traduction au survol',
   setHoverEnabled: 'Activer la traduction au survol',
   setHoverEnabledDesc: 'Affiche une traduction lorsque vous survolez du texte à l\'écran.',
+  setClipboardWatcher: 'Activer la surveillance du presse-papiers',
+  setClipboardWatcherDesc: 'Affiche une barre d\'actions flottante (Traduire / Résumer / Expliquer / Réécrire) chaque fois que vous copiez du texte n\'importe où à l\'écran.',
   setHoverDelay: 'Délai de déclenchement',
   setHoverDelayDesc: 'Durée pendant laquelle le curseur doit rester immobile avant de chercher la traduction.',
   setHoverTolerance: 'Tolérance de mouvement',

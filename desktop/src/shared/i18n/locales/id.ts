@@ -161,6 +161,8 @@ export default {
   groupAcquisition: 'Terjemahan Arahkan Kursor',
   setHoverEnabled: 'Aktifkan terjemahan arahkan kursor',
   setHoverEnabledDesc: 'Tampilkan terjemahan saat kursor diarahkan ke teks di layar.',
+  setClipboardWatcher: 'Aktifkan pemantau clipboard',
+  setClipboardWatcherDesc: 'Tampilkan bilah tindakan mengambang (Terjemahkan / Ringkas / Jelaskan / Tulis ulang) setiap kali Anda menyalin teks di mana saja di layar.',
   setHoverDelay: 'Jeda pemicu',
   setHoverDelayDesc: 'Lama kursor harus diam sebelum mencari terjemahan.',
   setHoverTolerance: 'Toleransi gerakan',

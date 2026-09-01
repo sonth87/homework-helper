@@ -72,3 +72,39 @@ export async function handleIntent(
     ...(config.defaultStudyMode ? { studyMode: settings.studyMode ?? config.defaultStudyMode } : {}),
   });
 }
+
+/**
+ * Xử lý một nút bấm trên thanh hành động nổi của clipboard watcher
+ * (bootstrap/init-clipboard-watcher.ts, windows/clipboard-bar.window.ts).
+ *
+ * Tách riêng khỏi handleIntent() thay vì tái dùng qua trigger 'clipboard': ở
+ * đây đã CÓ SẴN đúng text cần xử lý (chính là đoạn vừa copy khiến thanh hành
+ * động hiện ra) — gọi lại acquire() sẽ đọc lại clipboard LẦN NỮA, thừa một
+ * vòng, và có rủi ro đọc phải nội dung khác nếu người dùng đã copy thứ khác
+ * trong lúc thanh hành động còn hiện (dù hiếm, nhưng "trả lời sai còn tệ hơn
+ * không trả lời" — xem CLAUDE.md/known-issues.md nguyên tắc xuyên suốt dự án).
+ *
+ * Chỉ nhận intent thuộc lane 'llm' và có `surface: 'result-panel'` — thanh
+ * hành động không hiện nút cho 'translate' (Lane A, luồng UI khác hẳn:
+ * quickTranslate() + HoverOverlay không dùng showResult()) hay 'solve' (cần
+ * ẢNH, không phải text) hay 'chat' (không có "nội dung" để xử lý, chỉ gõ
+ * trực tiếp) — xem clipboard-bar.window.ts để biết đúng 3 intent hiện ra.
+ */
+export async function handleClipboardAction(
+  intent: Intent,
+  text: string,
+  settings: Settings,
+): Promise<void> {
+  const trigger = checkTrigger(intent, 'clipboard');
+  if (!trigger.allowed) {
+    logger.warn('Bỏ qua hành động từ thanh clipboard', { intent, reason: trigger.reason });
+    return;
+  }
+
+  const config = INTENTS[intent];
+  await showResult({
+    intent,
+    prompt: text,
+    ...(config.defaultStudyMode ? { studyMode: settings.studyMode ?? config.defaultStudyMode } : {}),
+  });
+}

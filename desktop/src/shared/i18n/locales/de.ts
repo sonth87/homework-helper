@@ -161,6 +161,8 @@ export default {
   groupAcquisition: 'Übersetzung beim Überfahren',
   setHoverEnabled: 'Übersetzung beim Überfahren aktivieren',
   setHoverEnabledDesc: 'Zeigt eine Übersetzung, wenn Sie mit dem Mauszeiger über Text fahren.',
+  setClipboardWatcher: 'Zwischenablage-Überwachung aktivieren',
+  setClipboardWatcherDesc: 'Zeigt eine schwebende Aktionsleiste (Übersetzen / Zusammenfassen / Erklären / Umschreiben), sobald Sie irgendwo auf dem Bildschirm Text kopieren.',
   setHoverDelay: 'Auslöseverzögerung',
   setHoverDelayDesc: 'Wie lange der Zeiger stillstehen muss, bevor eine Übersetzung gesucht wird.',
   setHoverTolerance: 'Bewegungstoleranz',

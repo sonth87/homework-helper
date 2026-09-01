@@ -39,4 +39,11 @@ export const acquisitionSettings = defineSettings('acquisition', 'groupAcquisiti
     ],
     i18n: 'setHoverModifiers', i18nDesc: 'setHoverModifiersDesc',
   },
+  // Mặc định TẮT — cùng lý do hoverEnabled mặc định tắt: đọc thứ người dùng
+  // vừa copy TOÀN HỆ THỐNG (có thể là mật khẩu, thông tin cá nhân) là hành vi
+  // nhạy cảm, phải người dùng tự bật chứ không được ngầm định chạy nền.
+  clipboardWatcherEnabled: {
+    type: 'boolean', default: false,
+    i18n: 'setClipboardWatcher', i18nDesc: 'setClipboardWatcherDesc',
+  },
 } as const);

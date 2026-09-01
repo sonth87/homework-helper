@@ -161,6 +161,8 @@ export default {
   groupAcquisition: '호버 번역',
   setHoverEnabled: '호버 번역 사용',
   setHoverEnabledDesc: '화면의 텍스트 위에 마우스를 올리면 번역을 표시합니다.',
+  setClipboardWatcher: '클립보드 감시 사용',
+  setClipboardWatcherDesc: '화면 어디서든 텍스트를 복사할 때마다 플로팅 작업 바(번역 / 요약 / 설명 / 다시 쓰기)를 표시합니다.',
   setHoverDelay: '실행 지연 시간',
   setHoverDelayDesc: '번역을 조회하기까지 커서가 멈춰 있어야 하는 시간입니다.',
   setHoverTolerance: '이동 허용 범위',

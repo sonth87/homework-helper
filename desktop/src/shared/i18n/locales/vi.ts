@@ -159,6 +159,8 @@ export default {
   groupAcquisition: 'Dịch khi rê chuột',
   setHoverEnabled: 'Bật dịch khi rê chuột',
   setHoverEnabledDesc: 'Hiện bản dịch khi rê chuột lên văn bản bất kỳ trên màn hình.',
+  setClipboardWatcher: 'Bật theo dõi clipboard',
+  setClipboardWatcherDesc: 'Hiện thanh hành động nổi (Dịch / Tóm tắt / Giải thích / Viết lại) mỗi khi bạn copy văn bản ở bất kỳ đâu trên màn hình.',
   setHoverDelay: 'Độ trễ kích hoạt',
   setHoverDelayDesc: 'Thời gian con trỏ phải đứng yên trước khi tra bản dịch.',
   setHoverTolerance: 'Dung sai di chuyển',

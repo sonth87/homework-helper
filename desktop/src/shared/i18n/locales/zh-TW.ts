@@ -161,6 +161,8 @@ export default {
   groupAcquisition: '懸停翻譯',
   setHoverEnabled: '啟用懸停翻譯',
   setHoverEnabledDesc: '將滑鼠懸停在螢幕上任意文字時顯示譯文。',
+  setClipboardWatcher: '啟用剪貼簿監聽',
+  setClipboardWatcherDesc: '每當你在螢幕任意位置複製文字時，顯示浮動操作列（翻譯 / 摘要 / 解釋 / 改寫）。',
   setHoverDelay: '觸發延遲',
   setHoverDelayDesc: '游標需靜止多久才會查詢譯文。',
   setHoverTolerance: '移動容差',

@@ -161,6 +161,8 @@ export default {
   groupAcquisition: 'Tradução ao passar o cursor',
   setHoverEnabled: 'Ativar tradução ao passar o cursor',
   setHoverEnabledDesc: 'Mostra uma tradução ao passar o cursor sobre qualquer texto na tela.',
+  setClipboardWatcher: 'Ativar monitor da área de transferência',
+  setClipboardWatcherDesc: 'Mostra uma barra de ações flutuante (Traduzir / Resumir / Explicar / Reescrever) sempre que você copiar texto em qualquer lugar da tela.',
   setHoverDelay: 'Atraso de ativação',
   setHoverDelayDesc: 'Tempo que o cursor deve ficar parado antes de buscar a tradução.',
   setHoverTolerance: 'Tolerância de movimento',

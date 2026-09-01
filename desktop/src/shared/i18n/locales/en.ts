@@ -160,6 +160,8 @@ export default {
   groupAcquisition: 'Hover Translate',
   setHoverEnabled: 'Enable hover translation',
   setHoverEnabledDesc: 'Show a translation when you hover text anywhere on screen.',
+  setClipboardWatcher: 'Enable clipboard watcher',
+  setClipboardWatcherDesc: 'Show a floating action bar (Translate / Summarize / Explain / Rewrite) whenever you copy text anywhere on screen.',
   setHoverDelay: 'Trigger delay',
   setHoverDelayDesc: 'How long the cursor must stay still before looking up a translation.',
   setHoverTolerance: 'Movement tolerance',

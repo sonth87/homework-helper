@@ -1,0 +1,39 @@
+html, body, #root { margin: 0; background: transparent; overflow: hidden; }
+
+.cbar {
+  display: flex;
+  gap: 6px;
+  margin: 6px;
+  padding: 6px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  font: 13px/1.3 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+.cbar__btn {
+  flex: 1;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #16181d;
+  font: inherit;
+  font-weight: 550;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cbar__btn:hover { background: rgba(0, 0, 0, 0.06); }
+.cbar__btn:active { background: rgba(0, 0, 0, 0.1); }
+
+@media (prefers-color-scheme: dark) {
+  .cbar { background: rgba(38, 41, 48, 0.94); border-color: rgba(255, 255, 255, 0.1); }
+  .cbar__btn { color: #eceef2; }
+  .cbar__btn:hover { background: rgba(255, 255, 255, 0.1); }
+  .cbar__btn:active { background: rgba(255, 255, 255, 0.16); }
+}

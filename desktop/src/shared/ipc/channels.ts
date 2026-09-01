@@ -147,6 +147,15 @@ export const IPC = {
    */
   'hover:measured': send<{ height: number }>(),
 
+  /**
+   * Người dùng bấm một nút trên thanh hành động nổi (clipboard watcher). Chỉ
+   * gửi `intent` — KHÔNG gửi lại text: main đã tự nhớ đúng đoạn text đã hiện
+   * thanh hành động cho nó (xem clipboard-bar.window.ts), tránh renderer phải
+   * echo lại dữ liệu nó không cần sở hữu.
+   */
+  'clipboard-bar:action': send<{ intent: Intent }>(),
+  'clipboard-bar:dismiss': send<Record<string, never>>(),
+
   'shell:openExternal': req<{ url: string }, void>(),
   'shell:openSettings': req<void, void>(),
 
