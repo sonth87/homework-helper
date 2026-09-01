@@ -94,7 +94,22 @@ thật trên Qwen/Gemma qua Ollama** trước khi chốt số N — không đoá
 
 ## 2. Không có cache cho kết quả dịch/giải đã xử lý trước đó
 
-**Hiện trạng đã xác nhận bằng code:** dịch hay giải cùng một nội dung hai lần
+> **Cập nhật 2026-09-01: đã sửa phần LANE A CỦA EXTENSION** (hover translate +
+> ô dịch nhanh popup, khi engine ≠ 'ai') — xem CHANGELOG-extension.md mục
+> 1.7.2 và `extension/background/translate-cache.js`. Khi đọc lại code lúc
+> quay lại mục này mới phát hiện **desktop Lane A cũng đã xong từ trước**
+> (commit `2caec2d`, `translate.service.ts` đã nối `CacheRepo`) — bảng "Bằng
+> chứng" và câu mở đầu bên dưới mô tả hiện trạng CŨ, không còn đúng cho Lane A
+> nữa. Phần **còn lại chưa làm**, đúng như bảng "Giá trị cache khác nhau rõ
+> rệt theo lane" đã liệt kê: Lane B chat/giải bài (cả hai app) — desktop cố
+> tình hoãn (xem chú thích trong `cache.repo.ts`, chờ xong toàn bộ desktop
+> app), extension thì đơn giản là chưa làm và giờ phức tạp hơn vì lịch sử hội
+> thoại nhiều lượt (issue #1, đã xong) khiến khoá cache theo prompt-text đơn
+> thuần có thể trả lời SAI ngữ cảnh — cần quyết định riêng, chưa chốt. Lane B
+> có ảnh (vision) vẫn giữ nguyên quyết định không làm cache.
+
+**Hiện trạng đã xác nhận bằng code (TRƯỚC khi sửa Lane A extension, xem cập
+nhật ở trên):** dịch hay giải cùng một nội dung hai lần
 đều xử lý lại từ đầu — tốn thời gian và tài nguyên vô ích, đặc biệt nặng với
 model local (liên quan trực tiếp tới mối lo hiệu năng ở mục 1).
 
@@ -168,16 +183,22 @@ chữ viết tay, sơ đồ hoá học), ảnh gửi thẳng dạng bytes, khôn
 
 ### Việc cần làm khi quay lại
 
-1. Desktop: hoàn thiện `translate.service.ts` (Phase 3) kèm cache ngay từ đầu,
-   dùng bảng và `LIMITS.fastLane` đã có sẵn — không phải xây thêm gì mới, chỉ
-   là nối nốt phần đã thiết kế. Mở rộng khoá cache cho cả Lane B text (không chỉ Lane A).
-2. Extension: thêm cache in-memory hoặc `chrome.storage`, khoá theo 4 trục ở trên.
-   Đặt điểm tra cache SAU bước OCR fallback trong `ai-stream.js`.
+1. ~~Desktop: hoàn thiện `translate.service.ts` (Phase 3) kèm cache~~ — **đã xong
+   từ trước** (commit `2caec2d`), không phải chờ nữa.
+2. ~~Extension: thêm cache cho Lane A~~ — **đã xong** (2026-09-01,
+   `translate-cache.js`, xem cập nhật đầu mục này).
 3. Không làm cache cho Lane B giải bài có ảnh gửi trực tiếp (vision) trừ khi
-   quyết định làm mục "hai" ở trên — hit-rate lý thuyết thấp, rủi ro riêng.
+   quyết định làm mục "bốn" ở dưới — hit-rate lý thuyết thấp, rủi ro riêng.
+   **Vẫn giữ nguyên, chưa làm.**
 4. Chat text thuần (Lane B, không ảnh) dùng chung cơ chế cache trên, nhưng khoá
-   phụ thuộc cách xử lý `messages[]` cuối cùng chọn ở mục 1 — làm sau khi mục 1
-   đã chốt.
+   phụ thuộc cách xử lý `messages[]` — mục đó (vấn đề 1) đã chốt và đã làm
+   xong (lịch sử nhiều lượt, xem mục 1 phía trên). Việc còn lại khi quay lại:
+   quyết định khoá cache Lane B chat thế nào khi có lịch sử hội thoại — dịch
+   thẳng `messages[]` vào khoá (hit-rate rất thấp, gần như vô dụng) hay chỉ
+   cache lượt ĐẦU TIÊN của một hội thoại (history rỗng, hành vi giống hệt một
+   câu hỏi độc lập cũ) — phương án sau an toàn hơn nhưng cần cân nhắc còn có
+   ích không khi phần lớn hỏi lại là hỏi tiếp (follow-up), không phải hỏi lại
+   từ đầu. **Chưa quyết, chưa làm** — cho cả desktop lẫn extension.
 
 ---
 
@@ -186,9 +207,16 @@ chữ viết tay, sơ đồ hoá học), ảnh gửi thẳng dạng bytes, khôn
 - [x] Vấn đề 1 (ngữ cảnh hội thoại) đã sửa cho cả hai app — 2026-09-01. Ngoại
       trừ đường Nano trực tiếp (`main-world-bridge.js`) khi chưa cấu hình key
       nào, xem ghi chú trong mục 1.
-- [ ] Vấn đề 2 (cache) chưa sửa.
+- [x] Vấn đề 2, phần Lane A extension (dịch nhanh) đã sửa — 2026-09-01, xem
+      CHANGELOG-extension.md mục 1.7.2. Desktop Lane A hoá ra đã xong từ
+      trước (commit `2caec2d`), phát hiện khi quay lại đọc code, không phải
+      việc mới làm trong đợt này.
+- [ ] Vấn đề 2, phần Lane B (chat/giải bài, cả hai app) chưa làm — desktop cố
+      tình hoãn tới khi xong toàn bộ desktop app (ghi trong `cache.repo.ts`),
+      extension cần quyết định riêng vì lịch sử hội thoại (vấn đề 1) làm khoá
+      cache theo prompt-text đơn thuần có rủi ro trả lời sai ngữ cảnh.
 - [ ] Chưa đo thời gian thật trên model local để chốt tham số (N lượt giữ lại
-      đang dùng số ước lượng 6 local / 20 cloud; TTL cache cho vấn đề 2 vẫn
-      chưa có số).
-- [ ] Bàn lại vấn đề 2 sau khi hoàn tất toàn bộ nội dung desktop app hiện tại
-      (Phase 3 trở đi — xem [desktop-app-implementation-plan.md](./desktop-app-implementation-plan.md)).
+      ở vấn đề 1 đang dùng số ước lượng 6 local / 20 cloud).
+- [ ] Bàn lại phần Lane B của vấn đề 2 sau khi hoàn tất toàn bộ nội dung
+      desktop app hiện tại (Phase 4/5 — xem
+      [desktop-app-implementation-plan.md](./desktop-app-implementation-plan.md)).

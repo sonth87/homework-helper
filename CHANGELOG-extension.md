@@ -17,6 +17,18 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.7.2] — 2026-09-01
+
+### Thay đổi
+- **Dịch nhanh khi rê chuột và ô dịch nhanh trên popup nay có cache trong phiên
+  duyệt web.** Rê lại đúng một từ/câu, hoặc dịch lại đúng nội dung vừa dịch,
+  trả kết quả ngay không cần gọi lại máy chủ dịch — nhanh hơn và đỡ tốn lượt
+  gọi các dịch vụ dịch miễn phí. Cache tự xoá khi đóng trình duyệt, không lưu
+  lâu dài. Chỉ áp dụng cho dịch nhanh (không phải AI); chat/giải bài bằng AI
+  chưa có cache.
+
+---
+
 ## [1.7.1] — 2026-09-01
 
 ### Sửa lỗi

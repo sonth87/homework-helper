@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Homework Helper - AI Homework Solver & Academic Assistant",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "description": "Smart AI homework helper and quiz solver",
   "icons": {
     "16": "assets/icons/icon-16.png",

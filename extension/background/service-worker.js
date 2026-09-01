@@ -10,6 +10,7 @@ import { runOcrInOffscreen } from './ocr-bridge.js';
 import { detectLocalModels } from '../shared/local-model-detect.js';
 import { translateText, lookupWord } from './translate-engines.js';
 import { isSingleWord } from '../shared/dictionary.js';
+import { getCachedTranslation, setCachedTranslation } from './translate-cache.js';
 
 // State & active streams
 const activeStreams = new Map(); // requestId -> AbortController
@@ -170,14 +171,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (action === 'QUICK_TRANSLATE') {
     const { text, targetLang } = payload || {};
     (async () => {
+      const from = 'auto';
+      const to = (targetLang && targetLang !== 'auto') ? targetLang : 'en';
       try {
+        const cached = await getCachedTranslation(text, from, to);
+        if (cached) {
+          sendResponse({ success: true, translation: cached.translation, detectedLang: cached.detectedLang });
+          return;
+        }
+
         const { popupTranslateEngine } = await Storage.get(['popupTranslateEngine']);
-        const result = await translateText({
-          text,
-          from: 'auto',
-          to: (targetLang && targetLang !== 'auto') ? targetLang : 'en',
-          engine: popupTranslateEngine,
-        });
+        const result = await translateText({ text, from, to, engine: popupTranslateEngine });
+        setCachedTranslation(text, from, to, result).catch(() => {});
         sendResponse({ success: true, translation: result.translation, detectedLang: result.detectedLang });
       } catch (err) {
         sendResponse({ success: false, error: err.message });
@@ -238,7 +243,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
         }
 
+        const cached = await getCachedTranslation(text, from, to);
+        if (cached) {
+          // engine/fellBack không lưu trong cache (khoá cache gộp mọi engine
+          // dịch máy làm một, xem translate-cache.js) — trả lại engine đang
+          // được chọn hiện tại để UI (popup.js:247-248) không hiển thị
+          // "undefined", và fellBack: false vì lần này không có chuyện rơi
+          // provider nào cả, trả thẳng từ cache.
+          sendResponse({ success: true, translation: cached.translation, detectedLang: cached.detectedLang, engine, fellBack: false, isAi: false });
+          return;
+        }
+
         const result = await translateText({ text, from, to, engine });
+        setCachedTranslation(text, from, to, result).catch(() => {});
         sendResponse({
           success: true,
           translation: result.translation,
