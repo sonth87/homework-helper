@@ -1,0 +1,53 @@
+# Cấu hình đóng gói. TÁCH RIÊNG khỏi package.json để cấu hình build không lẫn
+# với metadata gói npm — và để diff khi sửa build dễ đọc.
+#
+# VÌ SAO FILE NÀY QUAN TRỌNG HƠN VẺ NGOÀI: trước khi có nó, `npm run pack` chạy
+# xong và tạo ra .app trông bình thường, nhưng BÊN TRONG thiếu cả hai binary
+# Swift lẫn icon tray — nghĩa là toàn bộ Lane A (Accessibility + OCR, tức là
+# gần như toàn bộ tính năng) chết lặng trong bản đóng gói, dù chạy `npm run dev`
+# thì hoàn hảo. Đã kiểm chứng bằng cách đóng gói thật rồi `find` trong .app.
+appId: com.homeworkhelper.desktop
+productName: Homework Helper
+# Không có dòng này, electron-builder tự suy tên file thực thi từ productName và
+# CẮT ở dấu cách — ra `MacOS/Homework`, trông như lỗi đóng gói với bất kỳ ai mở
+# gói app ra xem.
+executableName: HomeworkHelper
+
+directories:
+  output: dist
+  buildResources: build
+
+# Chỉ đóng gói thứ cần chạy. `out/**` là kết quả electron-vite build;
+# `resources/**` PHẢI nằm trong asar vì tray.ts tìm icon qua app.getAppPath(),
+# mà đường dẫn đó trỏ vào chính app.asar khi đã đóng gói.
+files:
+  - out/**
+  - resources/**
+  - package.json
+
+# Binary Swift KHÔNG vào asar — asar là một file lưu trữ, không thực thi được
+# file bên trong. Đưa ra Contents/Resources/ để spawn() gọi trực tiếp, khớp
+# đúng `join(process.resourcesPath, 'accessibility-helper')` trong mã nguồn.
+extraResources:
+  - from: native/accessibility-macos/accessibility-helper
+    to: accessibility-helper
+  - from: native/ocr-macos/ocr-helper
+    to: ocr-helper
+
+mac:
+  category: public.app-category.productivity
+  target:
+    - dmg
+    - zip
+  # Hai quyền này người dùng tự cấp trong System Settings (xem ADR-0010), nhưng
+  # macOS vẫn đòi app KHAI BÁO lý do — thiếu thì hệ thống từ chối thẳng, không
+  # hiện hộp thoại xin quyền nào cả.
+  extendInfo:
+    NSAccessibilityUsageDescription: >-
+      Homework Helper đọc văn bản trên màn hình để dịch nhanh khi bạn rê chuột.
+    NSScreenCaptureUsageDescription: >-
+      Homework Helper chụp vùng màn hình bạn chọn để giải bài tập và để đọc chữ
+      khi không lấy được văn bản trực tiếp.
+
+# Chưa ký số: chưa có Developer ID. Bản chưa ký vẫn chạy được khi tự tải về và
+# cho phép thủ công, đủ cho giai đoạn thử nghiệm nội bộ — xem CHANGELOG.

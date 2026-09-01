@@ -21,7 +21,10 @@
 
 import { rectImageToScreen, rectToLogical, rectToPhysical } from '@shared/types/geometry';
 import type { Point, Rect } from '@shared/types/geometry';
-import type { TextBlock } from '@shared/types/content';
+import type { TextBlock, TextWord } from '@shared/types/content';
+
+/** Vị trí ký tự dưới con trỏ + khung của chính từ đó (để neo overlay). */
+type WordHit = { offset: number; bounds: Rect<'screen-logical'> };
 
 /** Gộp hai tham số luôn đi cùng nhau khi quy đổi khung ảnh -> screen-logical. */
 type ImageToScreen = { boxPhysical: Rect<'screen-physical'>; scaleFactor: number };
@@ -65,6 +68,38 @@ export function sortReadingOrder(blocks: TextBlock[]): TextBlock[] {
 const centerY = (b: TextBlock): number => b.bounds.y + b.bounds.height / 2;
 
 /**
+ * Giữ lại các khối thuộc CÙNG MỘT CỘT chữ với con trỏ, bỏ phần còn lại.
+ *
+ * VÌ SAO CẦN — hệ quả trực tiếp của việc chụp trọn bề rộng màn hình (xem
+ * `tryOcr`): dải ngang đó cắt qua mọi thứ nằm cùng độ cao, không chỉ đoạn văn
+ * người dùng đang đọc. Hover giữa trình soạn thảo thì dải còn hút cả cây thư
+ * mục bên trái, minimap bên phải, hay một cửa sổ khác cạnh đó. Ghép tất cả vào
+ * một chuỗi rồi cắt câu sẽ sinh ra câu lai giữa những nội dung không liên
+ * quan — dịch ra thứ vô nghĩa mà người dùng không biết là sai.
+ *
+ * Cách phân biệt: khối cùng cột thì hình chiếu ngang CHỒNG LÊN NHAU đáng kể
+ * (các dòng của một đoạn văn gần như trùng khít bề ngang), còn sidebar/minimap
+ * nằm ở dải x hoàn toàn khác. Ngưỡng 30% tính theo khối HẸP HƠN để dòng cuối
+ * đoạn (thường ngắn hơn hẳn) không bị loại oan.
+ */
+function sameColumnAs(
+  cursor: Point<'screen-logical'>,
+  ordered: TextBlock[],
+  conv: ImageToScreen,
+): TextBlock[] {
+  const onScreen = (b: TextBlock) => rectToLogical(rectImageToScreen(b.bounds, conv.boxPhysical), conv.scaleFactor);
+  const hit = ordered.find((b) => contains2d(onScreen(b), cursor));
+  if (!hit) return ordered; // không trúng khối nào — không có cột nào để bám theo
+
+  const hitRect = onScreen(hit);
+  return ordered.filter((b) => {
+    const r = onScreen(b);
+    const overlap = Math.min(r.x + r.width, hitRect.x + hitRect.width) - Math.max(r.x, hitRect.x);
+    return overlap > 0 && overlap >= Math.min(r.width, hitRect.width) * 0.3;
+  });
+}
+
+/**
  * Ghép text theo thứ tự đọc và xác định con trỏ đang ở ký tự nào.
  *
  * `captureBox` là vùng đã chụp (screen-logical); khung của khối do Vision trả
@@ -78,31 +113,53 @@ export function layoutBlocks(
   captureBox: Rect<'screen-logical'>,
   scaleFactor: number,
 ): BlockLayout {
-  const ordered = sortReadingOrder(blocks);
   const conv: ImageToScreen = { boxPhysical: rectToPhysical(captureBox, scaleFactor), scaleFactor };
+  const ordered = sameColumnAs(cursor, sortReadingOrder(blocks), conv);
 
-  const parts: string[] = [];
+  let text = '';
   let cursorOffset: number | undefined;
   let hitBounds: Rect<'screen-logical'> | undefined;
-  let charsSoFar = 0;
+  let previous: Rect<'screen-logical'> | null = null;
 
   for (const block of ordered) {
     const onScreen = rectToLogical(rectImageToScreen(block.bounds, conv.boxPhysical), conv.scaleFactor);
+    if (previous) text += separatorBetween(previous, onScreen);
 
     if (cursorOffset === undefined && contains2d(onScreen, cursor)) {
-      cursorOffset = charsSoFar + offsetWithinBlock(block, onScreen, cursor, conv);
-      hitBounds = onScreen;
+      const hit = offsetWithinBlock(block, onScreen, cursor, conv);
+      cursorOffset = text.length + hit.offset;
+      // Neo vào khung TỪ chứ không phải cả dòng: từ khi chụp trọn bề rộng màn
+      // hình, một dòng có thể rộng gần hết màn — neo theo dòng sẽ đẩy thẻ dịch
+      // ra xa hẳn chỗ người dùng đang trỏ.
+      hitBounds = hit.bounds;
     }
 
-    parts.push(block.text);
-    charsSoFar += block.text.length + 1; // +1 cho ký tự xuống dòng khi ghép
+    text += block.text;
+    previous = onScreen;
   }
 
   return {
-    text: parts.join('\n'),
+    text,
     ...(cursorOffset !== undefined ? { charOffset: cursorOffset } : {}),
     ...(hitBounds !== undefined ? { hitBounds } : {}),
   };
+}
+
+/**
+ * Nối hai dòng OCR liền nhau bằng KHOẢNG TRẮNG, không phải xuống dòng.
+ *
+ * BUG THẬT đã gặp: ghép mọi dòng bằng '\n' làm `Intl.Segmenter` coi mỗi dòng
+ * là một câu riêng — câu thật trải hai dòng (chuyện thường trong mọi đoạn văn)
+ * bị chặt làm đôi, và người dùng nhận về bản dịch của NỬA CÂU mà không hề biết.
+ * Xuống dòng trong một đoạn văn là ngắt THỊ GIÁC, không phải ngắt ngữ nghĩa.
+ *
+ * Chỉ khi khoảng cách dọc giữa hai khối lớn bất thường (hơn 1,6 lần chiều cao
+ * dòng) mới coi là sang ĐOẠN mới và dùng '\n\n' — lúc đó ngắt câu là đúng.
+ */
+function separatorBetween(previous: Rect<'screen-logical'>, next: Rect<'screen-logical'>): string {
+  const gap = next.y - (previous.y + previous.height);
+  const lineHeight = Math.max(previous.height, next.height);
+  return gap > lineHeight * 1.6 ? '\n\n' : ' ';
 }
 
 /**
@@ -126,13 +183,13 @@ function offsetWithinBlock(
   bounds: Rect<'screen-logical'>,
   cursor: Point<'screen-logical'>,
   conv: ImageToScreen,
-): number {
+): WordHit {
   const exact = offsetFromWords(block, cursor, conv);
   if (exact !== undefined) return exact;
 
-  if (bounds.width <= 0 || !block.text.length) return 0;
+  if (bounds.width <= 0 || !block.text.length) return { offset: 0, bounds };
   const fraction = Math.min(1, Math.max(0, (cursor.x - bounds.x) / bounds.width));
-  return Math.min(block.text.length - 1, Math.round(fraction * block.text.length));
+  return { offset: Math.min(block.text.length - 1, Math.round(fraction * block.text.length)), bounds };
 }
 
 /**
@@ -145,21 +202,28 @@ function offsetWithinBlock(
  * nguyên tắc đã sửa ở `pickSegmentAtIndex` (text-segment.ts) cho đúng loại lỗi
  * này: lấy "từ cuối" khi hover vào khoảng trắng đầu câu là sai lệch hoàn toàn.
  */
-function offsetFromWords(block: TextBlock, cursor: Point<'screen-logical'>, conv: ImageToScreen): number | undefined {
+function offsetFromWords(
+  block: TextBlock,
+  cursor: Point<'screen-logical'>,
+  conv: ImageToScreen,
+): WordHit | undefined {
   if (!block.words.length) return undefined;
 
-  let nearestOffset = block.words[0]!.startOffset;
+  let nearest: WordHit = { offset: block.words[0]!.startOffset, bounds: wordRect(block.words[0]!, conv) };
   let nearestDistance = Infinity;
 
   for (const word of block.words) {
-    const onScreen = rectToLogical(rectImageToScreen(word.bounds, conv.boxPhysical), conv.scaleFactor);
-    if (contains2d(onScreen, cursor)) return word.startOffset;
+    const onScreen = wordRect(word, conv);
+    if (contains2d(onScreen, cursor)) return { offset: word.startOffset, bounds: onScreen };
 
     const distance = cursor.x < onScreen.x ? onScreen.x - cursor.x : Math.max(0, cursor.x - (onScreen.x + onScreen.width));
     if (distance < nearestDistance) {
       nearestDistance = distance;
-      nearestOffset = word.startOffset;
+      nearest = { offset: word.startOffset, bounds: onScreen };
     }
   }
-  return nearestOffset;
+  return nearest;
 }
+
+const wordRect = (word: TextWord, conv: ImageToScreen): Rect<'screen-logical'> =>
+  rectToLogical(rectImageToScreen(word.bounds, conv.boxPhysical), conv.scaleFactor);

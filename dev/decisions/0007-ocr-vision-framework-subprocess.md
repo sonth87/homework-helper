@@ -102,11 +102,13 @@ chỉ chạy khi Accessibility trả `null`. Đúng thứ tự ưu tiên đã c�
 
 ## Đánh đổi đã chấp nhận
 
-- Chụp vùng NHỎ quanh con trỏ (`hoverCaptureWidth/Height` = 500×80 logical px)
-  bằng cách chụp TOÀN màn hình rồi crop (`captureDisplay()` + `cropToBase64()`),
-  không phải capture-vùng-nhỏ native. Với tần suất gọi bị giới hạn bởi debounce
-  (tối đa mỗi `hoverDelayMs`), chấp nhận được cho v1 — tối ưu capture-vùng-nhỏ
-  thật là việc để sau nếu đo được đây là nút thắt hiệu năng thực tế.
+- ~~Chụp vùng NHỎ quanh con trỏ (`hoverCaptureWidth/Height` = 500×80 logical px)~~
+  — **đã bị [ADR-0011](./0011-chup-dai-ngang-thay-vi-o-vuong.md) thay thế.** Giả
+  định nền của mục này ("vùng nhỏ = OCR nhanh") đo lại thấy **sai**: dải trọn bề
+  rộng 2560×200 mất 90ms trong khi ô 500×80 mất 169ms. Tệ hơn, ô vuông cắt dòng
+  chữ ở cả hai đầu khiến Vision trả về RỖNG với văn bản dày, và khi đọc được thì
+  câu lấy ra là mảnh vụn thiếu chữ. Vẫn giữ cách chụp toàn màn hình rồi crop
+  (`captureDisplay()` + `cropToBase64()`) — chỉ vùng crop là đổi.
 - `recognitionLevel = .accurate` (không phải `.fast`) — đo thực nghiệm cho thấy
   vẫn đủ nhanh (<250ms) sau khi model đã nạp, nên ưu tiên độ chính xác.
 - Không giữ Tesseract cho `equ` (công thức toán) ở macOS như kế hoạch gốc từng

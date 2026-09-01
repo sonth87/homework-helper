@@ -18,10 +18,26 @@ export const LIMITS = {
   ocr: {
     minConfidence: 0.55,
     maxRegionPx: 2_000_000,
-    /** Vùng chụp quanh con trỏ khi OCR làm fallback cho Lane A (screen-logical
-     *  px). Đủ rộng để bắt một dòng chữ, không quá lớn để giữ OCR nhanh. */
-    hoverCaptureWidth: 500,
-    hoverCaptureHeight: 80,
+    /**
+     * Chiều CAO dải chụp quanh con trỏ khi OCR làm fallback cho Lane A
+     * (screen-logical px). Bề rộng KHÔNG cấu hình ở đây — luôn lấy trọn bề
+     * rộng màn hình, xem `tryOcr()`.
+     *
+     * ĐO THỰC NGHIỆM 2026-09-01, hai phát hiện đổi hẳn thiết kế cũ (ô 500×80
+     * lấy con trỏ làm tâm):
+     *
+     * 1. Vision trả về **0 khối** khi dòng chữ tràn ra CẢ HAI mép trái–phải
+     *    của ảnh (không còn khoảng trắng ở rìa). Ô cắt quanh con trỏ giữa một
+     *    đoạn văn dày rơi đúng vào trạng thái này → OCR im lặng trả rỗng,
+     *    đúng ở tình huống nó sinh ra để phục vụ (PDF, editor).
+     * 2. Chụp rộng lại NHANH HƠN: dải 2560×200 mất 90ms, trong khi ô 500×80
+     *    cắt cụt mất 169ms — Vision không phải vật lộn với chữ gãy ở rìa.
+     *
+     * 240px ≈ 6–12 dòng văn bản thường: đủ để câu chứa con trỏ (thường trải
+     * 1–3 dòng) nằm TRỌN trong ảnh, nên câu cắt ra là câu thật chứ không phải
+     * mảnh vụn.
+     */
+    hoverCaptureHeight: 240,
   },
 
   /** Vùng dung sai khi dò text quanh con trỏ (logical px). */

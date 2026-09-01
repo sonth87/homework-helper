@@ -17,12 +17,38 @@ import type { Point, Rect } from '@shared/types/geometry';
 
 let hover: BrowserWindow | null = null;
 
+/** Bề rộng cố định — chiều CAO mới là thứ phải giãn theo nội dung. Giữ bề rộng
+ *  ổn định để overlay không "nhảy" ngang mỗi lần đổi câu, và để xuống dòng đều. */
+const HOVER_WIDTH = 320;
+/** Cỡ ban đầu trước khi đo được nội dung thật; luôn bị thay bằng số đo thật. */
+const HOVER_INITIAL_HEIGHT = 120;
+/** Không có số đo (renderer lỗi/chậm bất thường) thì vẫn hiện, cỡ mặc định. */
+const MEASURE_TIMEOUT_MS = 300;
+
+/**
+ * Chờ overlay báo chiều cao thật của nội dung vừa render. Có timeout vì hover
+ * là đường NÓNG: thà hiện hơi sai cỡ còn hơn treo chờ mãi và không hiện gì.
+ */
+function measuredHeight(win: BrowserWindow): Promise<number> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      win.webContents.ipc.removeAllListeners('hover:measured');
+      resolve(HOVER_INITIAL_HEIGHT);
+    }, MEASURE_TIMEOUT_MS);
+
+    win.webContents.ipc.once('hover:measured', (_e, payload: { height: number }) => {
+      clearTimeout(timer);
+      resolve(Math.max(40, Math.round(payload.height)));
+    });
+  });
+}
+
 function getHoverWindow(): BrowserWindow {
   if (hover && !hover.isDestroyed()) return hover;
 
   hover = new BrowserWindow({
-    width: 320,
-    height: 120,
+    width: HOVER_WIDTH,
+    height: HOVER_INITIAL_HEIGHT,
     show: false,
     frame: false,
     transparent: true,
@@ -83,8 +109,17 @@ export async function showHoverAt(anchor: Rect<'screen-logical'>, content: Hover
 
   win.webContents.send('hover:update', content);
 
-  const [width, height] = win.getSize() as [number, number];
   const area = screen.getDisplayNearestPoint({ x: anchor.x, y: anchor.y }).workArea;
+
+  // Chờ overlay tự đo chiều cao thật rồi mới chỉnh cửa sổ — cỡ cố định cũ cắt
+  // cụt mọi bản dịch dài hơn ~3 dòng mà không có dấu hiệu gì cho người dùng.
+  //
+  // Chặn trên tính theo MÀN HÌNH THẬT (60% chiều cao vùng làm việc) chứ không
+  // phải một hằng số đoán mò: overlay cao quá nửa màn hình thì che mất chính
+  // nội dung người dùng đang đọc, phản tác dụng.
+  const width = HOVER_WIDTH;
+  const height = Math.min(await measuredHeight(win), Math.round(area.height * 0.6));
+  win.setSize(width, height);
 
   // Ưu tiên đặt bên dưới; nếu tràn đáy thì lật lên trên vùng nguồn.
   const belowY = anchor.y + anchor.height + 8;

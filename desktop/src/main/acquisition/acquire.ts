@@ -72,24 +72,31 @@ async function tryAccessibility(point: Point<'screen-logical'>): Promise<Acquire
 
 /**
  * Fallback khi Accessibility không đọc được nội dung tại điểm đó — ví dụ
- * editor ảo hoá cao (đã quan sát: Monaco/VS Code không lộ text qua AX ở vùng
- * soạn thảo, dù sidebar/terminal của cùng app đọc được), PDF, ảnh, app native
- * không hỗ trợ accessibility.
+ * editor ảo hoá cao (Monaco/VS Code không cho ánh xạ vị trí → ký tự), PDF,
+ * ảnh, app native không hỗ trợ accessibility.
  *
- * Chụp một vùng NHỎ quanh con trỏ (không phải toàn màn hình) rồi OCR — đủ để
- * bắt một dòng chữ, giữ nhanh cho Lane A.
+ * Chụp một DẢI NGANG trọn bề rộng màn hình quanh con trỏ, không phải một ô
+ * vuông quanh con trỏ. Hai lý do, cả hai đều đo được (xem LIMITS.ocr):
+ *
+ *   - Ô vuông cắt dòng chữ ở cả hai đầu. Vision trả về RỖNG khi chữ tràn cả
+ *     hai mép ảnh — hover giữa đoạn văn dày im lặng không ra gì.
+ *   - Kể cả khi đọc được, câu cắt ra là MẢNH VỤN: cụt đầu, cụt đuôi, hoặc
+ *     dính sang câu bên cạnh. Dịch một mảnh vụn còn tệ hơn không dịch, vì
+ *     người dùng không có cách nào biết mình đang đọc bản dịch của nửa câu.
+ *
+ * Dải trọn bề rộng giữ nguyên vẹn từng dòng, nên câu cắt ra là câu thật.
  */
 async function tryOcr(point: Point<'screen-logical'>): Promise<AcquiredContent | null> {
   const provider = await getOcrProvider();
   if (!provider) return null;
 
   const display = displayUnderCursor();
-  const box = rect('screen-logical', {
-    x: point.x - LIMITS.ocr.hoverCaptureWidth / 2,
-    y: point.y - LIMITS.ocr.hoverCaptureHeight / 2,
-    width: LIMITS.ocr.hoverCaptureWidth,
-    height: LIMITS.ocr.hoverCaptureHeight,
-  });
+  const bounds = display.boundsLogical;
+  const height = LIMITS.ocr.hoverCaptureHeight;
+  // Ghim dải vào trong màn hình — con trỏ ở sát mép trên/dưới không được sinh
+  // vùng chụp tràn ra ngoài (crop sẽ lệch hoặc rỗng).
+  const top = Math.max(bounds.y, Math.min(point.y - height / 2, bounds.y + bounds.height - height));
+  const box = rect('screen-logical', { x: bounds.x, y: top, width: bounds.width, height });
 
   try {
     const image = await captureDisplay(display);

@@ -32,6 +32,22 @@ chạy trên macOS và Windows.
 
 ### Sửa lỗi
 
+- **Dịch khi rê chuột trên PDF/trình soạn thảo trả về câu SAI mà trông vẫn hợp
+  lý.** Khi phải đọc bằng nhận dạng ảnh, app chụp một ô vuông quanh con trỏ —
+  ô đó cắt ngang dòng chữ ở cả hai đầu, nên câu lấy ra bị **mất chữ** hoặc dính
+  sang câu bên cạnh. Câu vẫn đọc xuôi tai nên người dùng không có cách nào biết
+  bản dịch mình đang đọc là của một câu không tồn tại. Nay chụp trọn bề rộng
+  dòng nên câu lấy ra là câu thật. Đo trên cùng một đoạn văn: trước ra
+  *"...instead of writing rule by hand."* (thiếu chữ), sau ra
+  *"...instead of writing every rule by hand."* Xem
+  [ADR-0011](./dev/decisions/0011-chup-dai-ngang-thay-vi-o-vuong.md).
+- **Nhiều trường hợp rê chuột trên văn bản dày không hiện gì cả.** Cùng nguyên
+  nhân trên: khi dòng chữ tràn ra cả hai mép ô chụp, bộ nhận dạng của macOS trả
+  về rỗng — im lặng, không lỗi. Nay không còn xảy ra, và nhận dạng còn **nhanh
+  hơn gấp đôi** (90ms so với 169ms).
+- **Thẻ dịch bị cắt cụt nội dung dài.** Cửa sổ thẻ cố định 320×120px nên bản
+  dịch dài hơn vài dòng bị mất phần cuối, không cuộn được, không dấu hiệu gì.
+  Nay thẻ tự giãn vừa nội dung (tối đa 60% chiều cao màn hình).
 - **Thẻ dịch khi rê chuột không tự ẩn khi đưa chuột ra ngoài.** Nguyên nhân:
   bộ đếm đứng-yên nhớ "đã từng kích hoạt" nhưng không bao giờ quên nó khi chuột
   rời đi, nên tín hiệu ẩn chỉ đúng ở LẦN ĐẦU TIÊN trong cả phiên rồi im bặt —
@@ -53,6 +69,12 @@ chạy trên macOS và Windows.
 - Khi phải đọc chữ bằng nhận dạng ảnh (OCR — VS Code, PDF, ảnh chụp…), vị trí
   từng từ giờ lấy thẳng từ kết quả nhận dạng, không còn ước lượng theo tỉ lệ vị
   trí trong dòng — chính xác hơn với các dòng có từ ngắn/dài xen kẽ nhiều.
+- **App đóng gói được và chạy thật.** Trước đây `npm run pack` tạo ra file .app
+  trông bình thường nhưng bên trong **thiếu cả hai bộ đọc màn hình lẫn icon** —
+  nghĩa là mọi tính năng dịch/giải bài chết lặng trong bản đóng gói, dù chạy từ
+  mã nguồn thì hoàn hảo. Nay bản đóng gói khởi động, nạp đủ thành phần, và khai
+  báo sẵn lý do xin quyền cho macOS. Chưa ký số (cần Developer ID) nên vẫn phải
+  cho phép thủ công khi mở lần đầu.
 
 ### Phase 0 — Nền móng (hoàn tất 2026-08-29)
 

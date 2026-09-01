@@ -44,16 +44,51 @@ test('sortReadingOrder: khối lệch nhẹ theo chiều dọc vẫn được co
   assert.deepEqual(sortReadingOrder(blocks).map((b) => b.text), ['trái', 'phải']);
 });
 
-test('layoutBlocks: ghép text theo thứ tự đọc bằng ký tự xuống dòng', () => {
+test('layoutBlocks: ghép các dòng liền nhau bằng KHOẢNG TRẮNG, không phải xuống dòng', () => {
+  // Bug thật đã sửa: ghép bằng '\n' khiến Intl.Segmenter coi mỗi dòng là một
+  // câu riêng, nên câu trải hai dòng (chuyện thường trong mọi đoạn văn) bị
+  // chặt đôi và người dùng nhận bản dịch của NỬA CÂU.
   const layout = layoutBlocks(
-    [block('dòng hai', { x: 10, y: 40, w: 90, h: 16 }), block('dòng một', { x: 10, y: 10, w: 90, h: 16 })],
+    [block('rule by hand.', { x: 10, y: 40, w: 90, h: 16 }), block('instead of writing every', { x: 10, y: 10, w: 90, h: 16 })],
     point('screen-logical', 0, 0), // con trỏ ngoài mọi khối
     CAPTURE,
     SCALE,
   );
-  assert.equal(layout.text, 'dòng một\ndòng hai');
+  assert.equal(layout.text, 'instead of writing every rule by hand.');
   assert.equal(layout.charOffset, undefined, 'không trúng khối nào thì không được đoán offset');
   assert.equal(layout.hitBounds, undefined);
+});
+
+test('layoutBlocks: khoảng cách dọc LỚN giữa hai khối được coi là sang đoạn mới', () => {
+  // Ngắt đoạn thật thì '\n\n' là đúng — lúc đó ngắt câu là mong muốn.
+  const layout = layoutBlocks(
+    [
+      block('Đoạn một kết thúc ở đây.', { x: 10, y: 10, w: 90, h: 16 }),
+      block('Đoạn hai bắt đầu.', { x: 10, y: 70, w: 90, h: 16 }), // cách 44px >> 16*1.6
+    ],
+    point('screen-logical', 0, 0),
+    CAPTURE,
+    SCALE,
+  );
+  assert.equal(layout.text, 'Đoạn một kết thúc ở đây.\n\nĐoạn hai bắt đầu.');
+});
+
+test('layoutBlocks: LOẠI khối ở cột khác (sidebar/minimap) khỏi text ghép', () => {
+  // Hệ quả của việc chụp trọn bề rộng màn hình: dải ngang cắt qua cả sidebar.
+  // Ghép lẫn vào sẽ sinh câu lai giữa nội dung không liên quan.
+  const blocks = [
+    block('src', { x: 5, y: 10, w: 30, h: 16 }), // "sidebar" — x 395..425
+    block('tests', { x: 5, y: 40, w: 30, h: 16 }),
+    block('Đây là câu trong đoạn văn chính.', { x: 200, y: 10, w: 260, h: 16 }), // x 590..850
+    block('Câu thứ hai của đoạn đó.', { x: 200, y: 40, w: 260, h: 16 }),
+  ];
+  // Con trỏ trong cột chính (x màn hình 700, y 378)
+  const layout = layoutBlocks(blocks, point('screen-logical', 700, 378), CAPTURE, SCALE);
+
+  assert.ok(!layout.text.includes('src'), `không được lẫn text sidebar, nhận: ${layout.text}`);
+  assert.ok(!layout.text.includes('tests'), 'không được lẫn text sidebar');
+  assert.match(layout.text, /đoạn văn chính/);
+  assert.match(layout.text, /Câu thứ hai/);
 });
 
 test('layoutBlocks: con trỏ ở DÒNG NÀO thì offset rơi vào đúng dòng đó', () => {
@@ -135,6 +170,24 @@ test('layoutBlocks: hover vào KHOẢNG TRẮNG giữa hai khung từ trả về
   // x màn hình 390+85=475 — gần "beta" (cách 5px) hơn "alpha" (cách 15px)
   const nearBeta = layoutBlocks(blocks, point('screen-logical', 475, 378), CAPTURE, SCALE);
   assert.equal(nearBeta.charOffset, 6, 'gần "beta" hơn thì phải trả offset của "beta"');
+});
+
+test('layoutBlocks: hitBounds neo vào đúng TỪ, không phải cả dòng', () => {
+  // Từ khi chụp trọn bề rộng màn hình, một dòng có thể rộng gần hết màn hình.
+  // Neo thẻ dịch theo dòng sẽ đẩy nó ra xa hẳn chỗ người dùng đang trỏ.
+  const blocks = [
+    block('alpha beta gamma', { x: 10, y: 10, w: 400, h: 16 }, [
+      word('alpha', 0, { x: 10, y: 10, w: 60, h: 16 }),
+      word('beta', 6, { x: 200, y: 10, w: 50, h: 16 }), // màn hình x 590..640
+      word('gamma', 11, { x: 350, y: 10, w: 60, h: 16 }),
+    ]),
+  ];
+  const layout = layoutBlocks(blocks, point('screen-logical', 610, 378), CAPTURE, SCALE);
+
+  assert.ok(layout.hitBounds);
+  assert.equal(layout.hitBounds.width, 50, `phải là khung từ "beta" (50px), không phải cả dòng (400px)`);
+  assert.equal(layout.hitBounds.x, 590);
+  assert.equal(layout.charOffset, 6, 'và offset cũng phải là của "beta"');
 });
 
 test('layoutBlocks: khối KHÔNG có khung từ thì lùi về nội suy như trước (không vỡ)', () => {

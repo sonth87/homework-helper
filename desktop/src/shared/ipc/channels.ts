@@ -133,6 +133,13 @@ export const IPC = {
   // không có ai chờ giá trị trả về.
   'region:done': send<{ x: number; y: number; width: number; height: number } | null>(),
 
+  /**
+   * Overlay dịch tự báo chiều cao thật của nội dung sau khi render, để main
+   * chỉnh cửa sổ vừa khít. Một chiều vì main không cần trả lời gì — nó chỉ
+   * đang CHỜ con số này trước khi hiện cửa sổ ra (xem showHoverAt).
+   */
+  'hover:measured': send<{ height: number }>(),
+
   'shell:openExternal': req<{ url: string }, void>(),
   'shell:openSettings': req<void, void>(),
 

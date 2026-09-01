@@ -16,8 +16,8 @@
     "check:settings-i18n": "tsx scripts/check-settings-i18n.ts",
     "check:locale-parity": "tsx scripts/check-locale-parity.ts",
     "check": "npm run typecheck && npm run lint && npm run test && npm run check:settings-i18n && npm run check:locale-parity",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder",
+    "pack": "npm run build && npm run build:native:macos && electron-builder --dir",
+    "dist": "npm run build && npm run build:native:macos && electron-builder",
     "test": "tsx --tsconfig tsconfig.main.json --test tests/*.test.ts",
     "build:native:macos": "sh scripts/build-native-macos.sh",
     "postinstall": "node -e \"process.platform==='darwin' && require('child_process').execSync('sh scripts/build-native-macos.sh', {stdio:'inherit'})\""
