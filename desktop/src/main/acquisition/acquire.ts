@@ -14,12 +14,14 @@ import { LIMITS } from '@config/limits.config';
 import type { Intent } from '@shared/types/intent';
 import type { AcquiredContent } from '@shared/types/content';
 import { rect, rectToLogical } from '@shared/types/geometry';
-import type { Point } from '@shared/types/geometry';
+import type { Point, Rect } from '@shared/types/geometry';
 import { captureDisplay, cropToBase64 } from './capture/screen-capture';
 import { displayById, displayUnderCursor, selectionToImageRect } from './capture/display';
 import { selectRegion } from '../windows/region-select.window';
 import { getAccessibilityProvider } from './accessibility';
 import { getOcrProvider } from './ocr';
+import type { OcrProvider } from './ocr';
+import { getTesseractProvider } from './ocr/tesseract';
 import { layoutBlocks } from './ocr/blocks';
 import { logger } from '../logging/logger';
 
@@ -116,9 +118,6 @@ function tryClipboard(point?: Point<'screen-logical'>): AcquiredContent | null {
  * Dải trọn bề rộng giữ nguyên vẹn từng dòng, nên câu cắt ra là câu thật.
  */
 async function tryOcr(point: Point<'screen-logical'>): Promise<AcquiredContent | null> {
-  const provider = await getOcrProvider();
-  if (!provider) return null;
-
   const display = displayUnderCursor();
   const bounds = display.boundsLogical;
   const height = LIMITS.ocr.hoverCaptureHeight;
@@ -127,25 +126,62 @@ async function tryOcr(point: Point<'screen-logical'>): Promise<AcquiredContent |
   const top = Math.max(bounds.y, Math.min(point.y - height / 2, bounds.y + bounds.height - height));
   const box = rect('screen-logical', { x: bounds.x, y: top, width: bounds.width, height });
 
+  let base64: string;
   try {
     const image = await captureDisplay(display);
     const imageRegion = selectionToImageRect(box, display);
-    const base64 = cropToBase64(image, imageRegion);
+    base64 = cropToBase64(image, imageRegion);
+  } catch (error) {
+    // KHÔNG nuốt lỗi im lặng — thất bại thật (capture lỗi...) phải phân biệt
+    // được với "vùng này đơn giản không có chữ".
+    logger.warn('OCR fallback lỗi (chụp màn hình)', error);
+    return null;
+  }
 
+  const hit = { point, box, scaleFactor: display.scaleFactor };
+
+  const provider = await getOcrProvider();
+  if (provider) {
+    const viaNative = await recognizeWith('native', provider, base64, hit);
+    if (viaNative) return viaNative;
+  }
+
+  // Tesseract (WASM thuần, không tăng tốc phần cứng) — chậm hơn hẳn OCR native
+  // nên chỉ thử SAU KHI native đã thất bại/không có/tin cậy thấp, không chạy
+  // song song để không tốn CPU vô ích ở đường nóng. Bù lại chạy được trên MỌI
+  // nền tảng kể cả khi chưa có provider native (ví dụ Linux trong tương lai,
+  // hoặc provider native khởi động lỗi) — không cần quyền hệ thống hay binary
+  // ngoài. KHÔNG có khả năng đặc biệt cho công thức toán (model 'equ' của
+  // Tesseract chỉ tồn tại ở bản legacy, không tương thích chế độ LSTM đang
+  // dùng — xem acquisition/ocr/tesseract.ts).
+  const viaTesseract = await recognizeWith('tesseract', getTesseractProvider(), base64, hit);
+  if (viaTesseract) logger.debug('OCR native không đạt, Tesseract cứu được');
+  return viaTesseract;
+}
+
+type OcrHitContext = { point: Point<'screen-logical'>; box: Rect<'screen-logical'>; scaleFactor: number };
+
+async function recognizeWith(
+  label: 'native' | 'tesseract',
+  provider: OcrProvider,
+  base64: string,
+  { point, box, scaleFactor }: OcrHitContext,
+): Promise<AcquiredContent | null> {
+  try {
     const result = await provider.recognize(base64);
-    logger.debug('OCR fallback', { textLength: result.text.length, blocks: result.blocks.length, durationMs: result.durationMs });
+    logger.debug('OCR fallback', { engine: result.engine, textLength: result.text.length, blocks: result.blocks.length, durationMs: result.durationMs });
     if (!result.text.trim()) return null;
 
     const bestConfidence = result.blocks.reduce((max, b) => Math.max(max, b.confidence), 0);
     if (bestConfidence > 0 && bestConfidence < LIMITS.ocr.minConfidence) {
-      logger.debug('OCR confidence quá thấp, bỏ qua', { bestConfidence });
+      logger.debug('OCR confidence quá thấp, bỏ qua', { engine: result.engine, bestConfidence });
       return null;
     }
 
     // Dùng hình học của từng khối để biết con trỏ ở khối nào, thay vì ghép text
     // phẳng rồi ước lượng trong khung chụp — khung đó lấy con trỏ làm tâm nên
     // ước lượng luôn ra hằng số 0.625, vô dụng (ADR-0008).
-    const layout = layoutBlocks(result.blocks, point, box, display.scaleFactor);
+    const layout = layoutBlocks(result.blocks, point, box, scaleFactor);
     logger.debug('OCR định vị khối', {
       hit: layout.charOffset !== undefined,
       blocks: result.blocks.length,
@@ -160,9 +196,7 @@ async function tryOcr(point: Point<'screen-logical'>): Promise<AcquiredContent |
       ...(bestConfidence > 0 ? { confidence: bestConfidence } : {}),
     };
   } catch (error) {
-    // KHÔNG nuốt lỗi im lặng — thất bại thật (helper không spawn được, capture
-    // lỗi...) phải phân biệt được với "vùng này đơn giản không có chữ".
-    logger.warn('OCR fallback lỗi', error);
+    logger.warn('OCR fallback lỗi', { engine: label, error });
     return null;
   }
 }

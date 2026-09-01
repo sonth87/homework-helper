@@ -17,6 +17,14 @@ chạy trên macOS và Windows.
 
 ### Thêm mới
 
+- **Tesseract làm dự phòng OCR khi rê chuột dịch.** Nếu OCR native của hệ
+  điều hành (macOS Vision / Windows OCR) không đọc được chữ hoặc đọc không
+  chắc chắn, nay thử thêm lần nữa bằng Tesseract trước khi bỏ cuộc — vẫn có
+  thể hiện được bản dịch thay vì im lặng không có gì, tuy chậm hơn native
+  một chút. **Không có khả năng nhận diện công thức toán tốt hơn** dù roadmap
+  ban đầu có nhắc tới — đã điều tra và xác nhận model chuyên công thức toán
+  của Tesseract chưa từng có bản tương thích với chế độ đang dùng (giới hạn
+  thật của bản thân Tesseract, không phải thiếu sót ở đây).
 - **Kéo-thả file PDF/ảnh vào icon trên khay hệ thống** (macOS). Thả ảnh
   (PNG/JPG/WEBP) → giải ngay như chụp đề. Thả PDF → tóm tắt nội dung văn bản
   (tối đa 30 trang/60.000 ký tự — tài liệu dài hơn bị cắt bớt). PDF dạng scan

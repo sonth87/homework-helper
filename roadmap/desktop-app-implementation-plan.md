@@ -380,7 +380,12 @@ file** và nó tự xuất hiện trong UI Settings với đủ 13 ngôn ngữ.
 với đường OCR fallback (740–939ms, đo thực nghiệm) — chấp nhận vì đây là fallback,
 không phải đường chính; xem lại nếu người dùng thật phàn nàn OCR cảm giác chậm.
 
-## Phase 4 — Mở rộng intent & Windows
+## Phase 4 — Mở rộng intent & Windows — hoàn tất 2026-09-01 (1 phần thu hẹp phạm vi)
+
+Toàn bộ 5 mục dưới đã có code, nhưng KHÔNG đồng nghĩa "đã kiểm chứng như Phase
+3". Ba mục (Windows, kéo-thả PDF, Tesseract) chỉ kiểm chứng được tĩnh
+(typecheck/script độc lập) — không chạy thử được end-to-end như Phase 3 đã làm
+với máy Mac thật + "đo thực nghiệm". Xem ghi chú CHƯA KIỂM CHỨNG ở từng mục.
 
 - [x] Intent `summarize` / `explain` / `rewrite` dùng lại pipeline Phase 2 — 2026-09-01.
       Config (`intents.config.ts`) và prompt builder (`build-prompt.ts`) đã sẵn từ
@@ -456,7 +461,40 @@ không phải đường chính; xem lại nếu người dùng thật phàn nàn
       thử hover một đoạn text ở vài loại app khác nhau (trình duyệt, Word/PDF
       reader, app Electron khác), so khớp toạ độ trả về với vị trí con trỏ thật,
       rồi mới tích "đã kiểm chứng" giống cách ADR-0006/0007 đã làm cho macOS.
-- [ ] Native OCR + Tesseract fallback cho `equ`
+- [x] Native OCR + Tesseract fallback — 2026-09-01, **KHÔNG có phần `equ`**.
+      Đã điều tra và xác nhận phần "cho equ" (công thức toán) trong tiêu đề
+      mục này KHÔNG khả thi: tải cả ba kho chính thức của Tesseract
+      (`tessdata`, `tessdata_fast`, `tessdata_best`) và so hash — `equ.
+      traineddata` GIỐNG HỆT NHAU ở cả ba (cùng SHA-256), tức dự án Tesseract
+      chưa từng huấn luyện bản LSTM riêng cho ký hiệu toán, chỉ có bản
+      legacy-only. Pipeline OCR (đây và của chính extension) dùng oem=1
+      (LSTM_ONLY) — nạp equ vào sẽ báo lỗi "LSTM requested, but not
+      present!!", HỎNG HẲN OCR chứ không chỉ kém với công thức toán. Đúng
+      phát hiện đã có sẵn từ trước ở `extension/shared/ocr-engine.js` dòng
+      312-324 — không phải lặp lại một lỗi mới.
+
+      Phần LÀM ĐƯỢC: `acquisition/ocr/tesseract.ts` — Tesseract qua
+      `tesseract.js` (WASM thuần, không native addon, tránh rủi ro ABI/
+      node-gyp dự án đã né với better-sqlite3, ADR-0005), ngôn ngữ eng+vie
+      bundled (`resources/tessdata/*.gz`, tải từ tessdata_fast). Nối vào
+      `acquire.ts`: `tryOcr()` giờ thử OCR native trước (Vision/Windows OCR),
+      chỉ chạy Tesseract khi native không có sẵn HOẶC confidence dưới
+      ngưỡng `LIMITS.ocr.minConfidence` — Tesseract là WASM thuần nên chậm
+      hơn hẳn native, không đáng chạy song song ở đường nóng. Đã chuẩn hoá
+      thang confidence Tesseract (0-100) về 0-1 khớp Vision framework —
+      lệch thang đo sẽ làm ngưỡng minConfidence vô nghĩa, đã kiểm tra bằng
+      script thật (0.96 sau chuẩn hoá từ 96).
+
+      Xác minh: `npm run check` sạch. OCR + chuẩn hoá confidence + tính
+      offset từng từ đã kiểm chứng THẬT bằng script độc lập (ảnh dựng bằng
+      Python/Pillow, text "Hello Tesseract") chạy đúng logic sản xuất
+      (`lineToTextBlock()` copy nguyên văn) — ra đúng text, bounds, offset
+      từng từ, confidence 0.96. `npm run dev` thật trên máy này khởi động
+      sạch, import tesseract.js không lỗi. **Chưa kiểm chứng được đường
+      Tesseract THỰC SỰ kích hoạt trong `tryOcr()` khi hover thật** — cần
+      quyền Ghi màn hình (Screen Recording) mà sandbox này không có sẵn
+      (lỗi "Ảnh chụp rỗng" xảy ra TRƯỚC bước OCR, không phải lỗi do thay đổi
+      này — hành vi từ trước, đã xác nhận bằng log thật).
 
 ## Phase 5 — Sản phẩm hoá
 
