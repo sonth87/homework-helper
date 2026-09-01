@@ -15,7 +15,7 @@ import type { Settings } from '@config/settings';
 import type { TranslateProviderId } from '@shared/types/translate';
 import { openDatabase } from '../db/connection';
 import { CacheRepo } from '../db/repositories/cache.repo';
-import { TRANSLATE_PROVIDERS } from './provider-registry';
+import { TRANSLATE_PROVIDERS, TRANSLATE_PROVIDER_MAX_LENGTH } from './provider-registry';
 import { translateRotator } from './translate-rotator';
 import { logger } from '../logging/logger';
 
@@ -58,8 +58,18 @@ export async function quickTranslate(
     };
   }
 
-  const candidates = translateRotator.candidates(settings.translateProviders);
-  if (!candidates.length) throw new Error('Không có provider dịch nào khả dụng (đều bị tắt hoặc đang tạm ngưng).');
+  // Loại provider có giới hạn độ dài đã biết trước sẽ chắc chắn từ chối văn
+  // bản này — KHÔNG gọi rồi nhận lỗi đoán trước được, và tuyệt đối không cắt
+  // bớt text cho vừa giới hạn (dịch câu cụt mà người dùng không biết là cụt,
+  // đúng loại lỗi đã sửa ở đường OCR, ADR-0011). Không tính là "lỗi" của
+  // provider — nó không hợp với input này, không phải nó hỏng.
+  const candidates = translateRotator
+    .candidates(settings.translateProviders)
+    .filter((c) => {
+      const max = TRANSLATE_PROVIDER_MAX_LENGTH[c.id];
+      return max === undefined || normalized.length <= max;
+    });
+  if (!candidates.length) throw new Error('Không có provider dịch nào khả dụng (đều bị tắt, đang tạm ngưng, hoặc không nhận văn bản dài này).');
 
   let lastError: unknown;
   for (const candidate of candidates) {

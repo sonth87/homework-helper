@@ -32,6 +32,10 @@ chạy trên macOS và Windows.
 
 ### Sửa lỗi
 
+- Với đoạn văn dài hơn 500 ký tự, MyMemory (dịch vụ dự phòng cuối) trước đây
+  luôn bị từ chối lỗi mà vẫn tốn một lượt gọi mạng. Nay bỏ qua thẳng dịch vụ
+  này khi biết trước sẽ bị từ chối — **không cắt bớt văn bản** để cố vừa giới
+  hạn (dịch một câu cụt mà không báo là cụt còn tệ hơn không dịch).
 - **Dịch khi rê chuột trên PDF/trình soạn thảo trả về câu SAI mà trông vẫn hợp
   lý.** Khi phải đọc bằng nhận dạng ảnh, app chụp một ô vuông quanh con trỏ —
   ô đó cắt ngang dòng chữ ở cả hai đầu, nên câu lấy ra bị **mất chữ** hoặc dính

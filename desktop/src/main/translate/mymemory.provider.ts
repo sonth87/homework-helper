@@ -11,7 +11,16 @@
  * minh — "'AUTO' IS AN INVALID SOURCE LANGUAGE". Cú pháp đúng là `autodetect`,
  * khác quy ước "auto" của Google/Bing — dễ nhầm nếu chỉ suy luận từ tên tham
  * số mà không gọi thử thật.
+ *
+ * ĐÃ KIỂM CHỨNG THỰC NGHIỆM 2026-09-01: giới hạn CỨNG 500 ký tự — vượt là lỗi
+ * tường minh `QUERY LENGTH LIMIT EXCEEDED`. `MAX_LENGTH` export ra để
+ * `translate.service.ts` LOẠI provider này khỏi danh sách thử ngay từ đầu khi
+ * text dài hơn — không gọi rồi nhận lỗi đoán trước được, và quan trọng hơn:
+ * không được CẮT BỚT text cho vừa 500 ký tự. Cắt bớt sẽ dịch một câu cụt mà
+ * người dùng không biết là cụt — đúng loại lỗi "trông hợp lý nhưng sai" đã sửa
+ * ở đường OCR (ADR-0011), không được lặp lại ở đây.
  */
+export const MYMEMORY_MAX_LENGTH = 500;
 
 const ENDPOINT = 'https://api.mymemory.translated.net/get';
 
