@@ -2,8 +2,9 @@
  * Interface chung cho Accessibility — tách theo nền tảng, giống mô hình
  * `AccessibilityProvider` trong roadmap/desktop-app.md §60.
  *
- * macOS đã kiểm chứng thực nghiệm (ADR-0006). Windows (UI Automation) chưa xây
- * — đúng thứ tự roadmap (macOS trước, Windows ở Phase 4).
+ * macOS đã kiểm chứng thực nghiệm (ADR-0006). Windows (UI Automation qua
+ * PowerShell, xem windows.ts) đã viết ở Phase 4 nhưng CHƯA đo thực nghiệm trên
+ * máy Windows thật — xem cảnh báo trong native/accessibility-windows/helper.ps1.
  */
 
 import { platform } from 'node:process';
@@ -26,7 +27,11 @@ export async function getAccessibilityProvider(): Promise<AccessibilityProvider 
     return cached;
   }
 
-  // Windows (UI Automation) chưa xây — Phase 4. Trả null để acquire.ts tự
-  // chuyển sang chiến lược tiếp theo trong danh sách ưu tiên của intent.
+  if (platform === 'win32') {
+    const { windowsAccessibility } = await import('./windows');
+    cached = windowsAccessibility;
+    return cached;
+  }
+
   return null;
 }

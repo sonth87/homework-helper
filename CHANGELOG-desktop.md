@@ -17,6 +17,14 @@ chạy trên macOS và Windows.
 
 ### Thêm mới
 
+- **Bắt đầu hỗ trợ Windows (đọc văn bản dưới con trỏ + OCR).** Trước đây app chỉ
+  chạy đầy đủ trên macOS — trên Windows, phần đọc văn bản và OCR im lặng không
+  hoạt động (rơi thẳng về "không có chiến lược thu nhận nào khả dụng"). Nay có
+  cả hai, viết bằng PowerShell (không cần cài thêm gì trên máy người dùng).
+  ⚠️ **Phần này chưa được test trên máy Windows thật** — máy phát triển hiện tại
+  là macOS. Nếu bạn dùng bản Windows và gặp lỗi ở tính năng đọc màn hình, đây là
+  nghi phạm đầu tiên; xem roadmap/desktop-app-implementation-plan.md mục Phase 4
+  để biết chính xác phần nào chưa kiểm chứng.
 - **Tóm tắt / Giải thích / Viết lại nay hoạt động qua phím tắt và tray menu.**
   Ba tác vụ này đã có trong menu và đặt được phím tắt riêng
   (mặc định `⌘⇧M`/`⌘⇧E` trên macOS) từ trước, nhưng bấm vào không có phản hồi

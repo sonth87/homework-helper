@@ -25,14 +25,11 @@ files:
   - resources/**
   - package.json
 
-# Binary Swift KHÔNG vào asar — asar là một file lưu trữ, không thực thi được
-# file bên trong. Đưa ra Contents/Resources/ để spawn() gọi trực tiếp, khớp
-# đúng `join(process.resourcesPath, 'accessibility-helper')` trong mã nguồn.
-extraResources:
-  - from: native/accessibility-macos/accessibility-helper
-    to: accessibility-helper
-  - from: native/ocr-macos/ocr-helper
-    to: ocr-helper
+# extraResources chung (cả hai nền tảng) để trống — mỗi nền tảng khai báo
+# helper của riêng mình trong mac:/win: bên dưới (electron-builder CỘNG DỒN
+# extraResources của khối nền tảng vào extraResources gốc, không thay thế).
+# Tách riêng để không đóng gói nhầm binary Swift vào bản Windows hay script
+# PowerShell vào bản macOS.
 
 mac:
   category: public.app-category.productivity
@@ -48,6 +45,32 @@ mac:
     NSScreenCaptureUsageDescription: >-
       Homework Helper chụp vùng màn hình bạn chọn để giải bài tập và để đọc chữ
       khi không lấy được văn bản trực tiếp.
+  # Binary Swift KHÔNG vào asar — asar là một file lưu trữ, không thực thi được
+  # file bên trong. Đưa ra Contents/Resources/ để spawn() gọi trực tiếp, khớp
+  # đúng `join(process.resourcesPath, 'accessibility-helper')` trong mã nguồn.
+  extraResources:
+    - from: native/accessibility-macos/accessibility-helper
+      to: accessibility-helper
+    - from: native/ocr-macos/ocr-helper
+      to: ocr-helper
 
-# Chưa ký số: chưa có Developer ID. Bản chưa ký vẫn chạy được khi tự tải về và
-# cho phép thủ công, đủ cho giai đoạn thử nghiệm nội bộ — xem CHANGELOG.
+# ⚠️ CHƯA đo thực nghiệm trên máy Windows thật — xem cảnh báo trong
+# native/accessibility-windows/helper.ps1 và native/ocr-windows/helper.ps1.
+# nsis là installer mặc định của electron-builder cho Windows, chưa tinh chỉnh
+# gì thêm (không cần icon .ico riêng để build chạy được, electron-builder tự
+# dùng icon mặc định khi thiếu — nhưng NÊN thay trước khi phát hành thật).
+win:
+  target:
+    - nsis
+  # Script PowerShell là văn bản thuần, không phải binary — vẫn để ngoài asar
+  # cho nhất quán với macOS (spawn() tìm theo process.resourcesPath), dù về mặt
+  # kỹ thuật asar không chặn ĐỌC văn bản như nó chặn THỰC THI binary.
+  extraResources:
+    - from: native/accessibility-windows/helper.ps1
+      to: accessibility-helper.ps1
+    - from: native/ocr-windows/helper.ps1
+      to: ocr-helper.ps1
+
+# Chưa ký số: chưa có Developer ID (macOS) / chứng chỉ code-signing (Windows).
+# Bản chưa ký vẫn chạy được khi tự tải về và cho phép thủ công, đủ cho giai
+# đoạn thử nghiệm nội bộ — xem CHANGELOG.

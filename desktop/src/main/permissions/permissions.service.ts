@@ -18,8 +18,11 @@ export type { PermissionKind, PermissionStatus };
 
 export async function checkPermissions(): Promise<PermissionStatus> {
   if (process.platform !== 'darwin') {
-    // Windows (UI Automation) chưa xây — Phase 4. Không có mô hình quyền
-    // tương đương để chặn theo ở đây; coi như luôn sẵn sàng.
+    // Windows không có mô hình xin quyền kiểu TCC của macOS cho UI Automation
+    // hay chụp màn hình — không có gì để chặn theo ở đây, coi như luôn sẵn
+    // sàng. (Bản thân UI Automation trên Windows đã viết ở Phase 4, xem
+    // acquisition/accessibility/windows.ts — đây chỉ nói về QUYỀN, không phải
+    // về việc tính năng có hoạt động hay không.)
     return { accessibility: true, screenRecording: true };
   }
 

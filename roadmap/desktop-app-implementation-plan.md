@@ -393,7 +393,30 @@ không phải đường chính; xem lại nếu người dùng thật phàn nàn
       Phase 3 vốn không có unit test, cần "đo thực nghiệm" như Phase 3 đã làm.
 - [ ] Clipboard watcher + thanh hành động nổi
 - [ ] Kéo–thả file (PDF/ảnh)
-- [ ] Windows: UI Automation + Windows OCR + xử lý DPI
+- [x] Windows: UI Automation + Windows OCR + xử lý DPI — 2026-09-01, **CHƯA ĐO
+      THỰC NGHIỆM, mức rủi ro cao hơn hẳn các mục đã tích khác trong tài liệu
+      này**. Máy phát triển là macOS, không có toolchain Windows để build/test —
+      viết bằng PowerShell (chạy trực tiếp, không cần biên dịch) thay vì native
+      C#/C++ đã tính ban đầu, cụ thể:
+      - Accessibility: `native/accessibility-windows/helper.ps1` dùng
+        `System.Windows.Automation` (TextPattern + fallback Name/BoundingRectangle),
+        set DPI-awareness Per-Monitor V2 qua P/Invoke để cố định hệ toạ độ — CHƯA
+        kiểm chứng có khớp `screen.getCursorScreenPoint()` của Electron như macOS
+        đã kiểm chứng thực nghiệm hay không.
+      - OCR: `native/ocr-windows/helper.ps1` dùng `Windows.Media.Ocr` (WinRT) —
+        điểm rủi ro nhất là cầu nối `IAsyncOperation<T>` → chờ được từ PowerShell
+        qua reflection (`AsTask()`), một kỹ thuật cộng đồng đã ghi lại nhưng CHƯA
+        chạy thử trong repo này.
+      - DPI: KHÔNG cần việc riêng — `capture/display.ts` đã dùng
+        `display.scaleFactor` của Electron hoàn toàn theo nền tảng-trung lập từ
+        trước, tự động đúng trên Windows nhiều màn hình DPI khác nhau.
+      - `permissions.service.ts` đã coi Windows luôn `{accessibility: true,
+        screenRecording: true}` từ trước (không có mô hình xin quyền kiểu TCC) —
+        không cần màn hình onboarding riêng cho Windows.
+      **Việc cần làm khi có máy Windows thật:** chạy `npm run dev` trên Windows,
+      thử hover một đoạn text ở vài loại app khác nhau (trình duyệt, Word/PDF
+      reader, app Electron khác), so khớp toạ độ trả về với vị trí con trỏ thật,
+      rồi mới tích "đã kiểm chứng" giống cách ADR-0006/0007 đã làm cho macOS.
 - [ ] Native OCR + Tesseract fallback cho `equ`
 
 ## Phase 5 — Sản phẩm hoá
