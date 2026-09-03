@@ -11,6 +11,7 @@
 import { clipboard } from 'electron';
 import { INTENTS } from '@config/intents.config';
 import { LIMITS } from '@config/limits.config';
+import type { Settings } from '@config/settings';
 import type { Intent } from '@shared/types/intent';
 import type { AcquiredContent } from '@shared/types/content';
 import { rect, rectToLogical } from '@shared/types/geometry';
@@ -30,12 +31,22 @@ export type AcquireResult =
   | { ok: false; cancelled: true }
   | { ok: false; cancelled: false; error: string };
 
+type PerformanceMode = Settings['performanceMode'];
+
 /**
  * `point` bắt buộc cho các intent có chiến lược `accessibility`/`ocr` trong
  * danh sách ưu tiên (Lane A — dịch khi rê chuột). Intent chỉ dùng `capture`
  * (Lane B — giải bài) không cần, vì `capture` tự mở lớp phủ khoanh vùng riêng.
+ *
+ * `performanceMode` chỉ ảnh hưởng nhánh `ocr` (xem tryOcr()) — mặc định
+ * 'balanced' khi không truyền, để mọi lời gọi cũ (nếu có) vẫn ra đúng hành vi
+ * đã có từ trước thay vì đổi ngầm.
  */
-export async function acquire(intent: Intent, point?: Point<'screen-logical'>): Promise<AcquireResult> {
+export async function acquire(
+  intent: Intent,
+  point?: Point<'screen-logical'>,
+  performanceMode: PerformanceMode = 'balanced',
+): Promise<AcquireResult> {
   for (const strategy of INTENTS[intent].acquisition) {
     if (strategy === 'capture') return captureRegion();
 
@@ -48,7 +59,7 @@ export async function acquire(intent: Intent, point?: Point<'screen-logical'>): 
     }
 
     if (strategy === 'ocr' && point) {
-      const viaOcr = await tryOcr(point);
+      const viaOcr = await tryOcr(point, performanceMode);
       if (viaOcr) return { ok: true, content: viaOcr };
       continue;
     }
@@ -117,10 +128,11 @@ function tryClipboard(point?: Point<'screen-logical'>): AcquiredContent | null {
  *
  * Dải trọn bề rộng giữ nguyên vẹn từng dòng, nên câu cắt ra là câu thật.
  */
-async function tryOcr(point: Point<'screen-logical'>): Promise<AcquiredContent | null> {
+async function tryOcr(point: Point<'screen-logical'>, performanceMode: PerformanceMode): Promise<AcquiredContent | null> {
+  const modeLimits = LIMITS.ocr.performanceModes[performanceMode];
   const display = displayUnderCursor();
   const bounds = display.boundsLogical;
-  const height = LIMITS.ocr.hoverCaptureHeight;
+  const height = modeLimits.hoverCaptureHeight;
   // Ghim dải vào trong màn hình — con trỏ ở sát mép trên/dưới không được sinh
   // vùng chụp tràn ra ngoài (crop sẽ lệch hoặc rỗng).
   const top = Math.max(bounds.y, Math.min(point.y - height / 2, bounds.y + bounds.height - height));
@@ -138,7 +150,7 @@ async function tryOcr(point: Point<'screen-logical'>): Promise<AcquiredContent |
     return null;
   }
 
-  const hit = { point, box, scaleFactor: display.scaleFactor };
+  const hit = { point, box, scaleFactor: display.scaleFactor, minConfidence: modeLimits.minConfidence };
 
   const provider = await getOcrProvider();
   if (provider) {
@@ -159,13 +171,18 @@ async function tryOcr(point: Point<'screen-logical'>): Promise<AcquiredContent |
   return viaTesseract;
 }
 
-type OcrHitContext = { point: Point<'screen-logical'>; box: Rect<'screen-logical'>; scaleFactor: number };
+type OcrHitContext = {
+  point: Point<'screen-logical'>;
+  box: Rect<'screen-logical'>;
+  scaleFactor: number;
+  minConfidence: number;
+};
 
 async function recognizeWith(
   label: 'native' | 'tesseract',
   provider: OcrProvider,
   base64: string,
-  { point, box, scaleFactor }: OcrHitContext,
+  { point, box, scaleFactor, minConfidence }: OcrHitContext,
 ): Promise<AcquiredContent | null> {
   try {
     const result = await provider.recognize(base64);
@@ -173,7 +190,7 @@ async function recognizeWith(
     if (!result.text.trim()) return null;
 
     const bestConfidence = result.blocks.reduce((max, b) => Math.max(max, b.confidence), 0);
-    if (bestConfidence > 0 && bestConfidence < LIMITS.ocr.minConfidence) {
+    if (bestConfidence > 0 && bestConfidence < minConfidence) {
       logger.debug('OCR confidence quá thấp, bỏ qua', { engine: result.engine, bestConfidence });
       return null;
     }

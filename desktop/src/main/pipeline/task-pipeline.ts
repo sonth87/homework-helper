@@ -18,6 +18,7 @@ import type { Intent, TriggerSource } from '@shared/types/intent';
 import type { Point } from '@shared/types/geometry';
 import { createTranslator } from '@shared/i18n';
 import { checkTrigger } from './guards';
+import { checkAppExcluded } from '../privacy/app-exclusion';
 import { acquire } from '../acquisition/acquire';
 import { extractPdfText } from '../acquisition/pdf/extract-text';
 import { showResult } from '../windows/result.window';
@@ -61,11 +62,21 @@ export async function handleIntent(
   const { x, y } = screen.getCursorScreenPoint();
   const point = { x, y } as Point<'screen-logical'>;
 
-  const acquired = await acquire(intent, point);
+  const acquired = await acquire(intent, point, settings.performanceMode);
 
   if (!acquired.ok) {
     // Người dùng bấm Esc là hành vi bình thường, không phải lỗi — im lặng.
     if (!acquired.cancelled) logger.warn('Thu nhận nội dung thất bại', acquired.error);
+    return;
+  }
+
+  // Chỉ áp được cho nội dung có tên app (nguồn 'accessibility') — xem giới
+  // hạn đầy đủ trong privacy/app-exclusion.ts. Vẫn chặn dù người dùng chủ
+  // động bấm hotkey/tray: quen tay bấm "Giải thích" khi đang trỏ vào ô mật
+  // khẩu không nên gửi nội dung đó đi.
+  const exclusion = checkAppExcluded(acquired.content.app?.name, settings);
+  if (exclusion.excluded) {
+    logger.debug('Bỏ qua intent — app bị loại trừ', { intent, reason: exclusion.reason });
     return;
   }
 

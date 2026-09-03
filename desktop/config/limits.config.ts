@@ -38,15 +38,16 @@ export const LIMITS = {
 
   /** Ngưỡng dưới thì coi như OCR không đọc được, chuyển sang chiến lược khác. */
   ocr: {
-    minConfidence: 0.55,
     maxRegionPx: 2_000_000,
     /**
-     * Chiều CAO dải chụp quanh con trỏ khi OCR làm fallback cho Lane A
-     * (screen-logical px). Bề rộng KHÔNG cấu hình ở đây — luôn lấy trọn bề
-     * rộng màn hình, xem `tryOcr()`.
+     * Ba chế độ hiệu năng (setting `performanceMode`, acquisition.settings.ts)
+     * — điều chỉnh CHIỀU CAO dải chụp quanh con trỏ khi OCR làm fallback cho
+     * Lane A (screen-logical px; bề rộng KHÔNG cấu hình ở đây, luôn lấy trọn
+     * bề rộng màn hình, xem `tryOcr()`) và NGƯỠNG TIN CẬY tối thiểu để chấp
+     * nhận kết quả OCR.
      *
-     * ĐO THỰC NGHIỆM 2026-09-01, hai phát hiện đổi hẳn thiết kế cũ (ô 500×80
-     * lấy con trỏ làm tâm):
+     * `balanced` là hai số ĐÃ ĐO THỰC NGHIỆM 2026-09-01, hai phát hiện đổi hẳn
+     * thiết kế cũ (ô 500×80 lấy con trỏ làm tâm):
      *
      * 1. Vision trả về **0 khối** khi dòng chữ tràn ra CẢ HAI mép trái–phải
      *    của ảnh (không còn khoảng trắng ở rìa). Ô cắt quanh con trỏ giữa một
@@ -58,8 +59,20 @@ export const LIMITS = {
      * 240px ≈ 6–12 dòng văn bản thường: đủ để câu chứa con trỏ (thường trải
      * 1–3 dòng) nằm TRỌN trong ảnh, nên câu cắt ra là câu thật chứ không phải
      * mảnh vụn.
+     *
+     * `fast`/`accurate` là ƯỚC LƯỢNG có lý do dựa trên số `balanced` đã đo,
+     * KHÔNG phải số đo riêng — chưa có máy để đo lại thời gian thực tế cho
+     * hai chế độ này. `fast` giảm chiều cao (ít pixel hơn = Vision xử lý
+     * nhanh hơn, đổi lại dễ cắt cụt câu dài hơn 3 dòng) và hạ ngưỡng tin cậy
+     * (chấp nhận kết quả kém chắc chắn hơn, ưu tiên có gì đó hơn im lặng).
+     * `accurate` ngược lại: cao hơn (ít khả năng cắt cụt) và ngưỡng tin cậy
+     * cao hơn (thà báo "không đọc được" còn hơn dịch sai).
      */
-    hoverCaptureHeight: 240,
+    performanceModes: {
+      fast: { hoverCaptureHeight: 160, minConfidence: 0.45 },
+      balanced: { hoverCaptureHeight: 240, minConfidence: 0.55 },
+      accurate: { hoverCaptureHeight: 320, minConfidence: 0.65 },
+    },
   },
 
   /** Vùng dung sai khi dò text quanh con trỏ (logical px). */

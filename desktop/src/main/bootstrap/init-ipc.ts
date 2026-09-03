@@ -7,6 +7,7 @@ import { registerCaptureIpc } from '../ipc/capture.ipc';
 import { registerTranslateIpc } from '../ipc/translate.ipc';
 import { pruneHistory, registerHistoryIpc } from '../ipc/history.ipc';
 import { registerPermissionsIpc } from '../ipc/permissions.ipc';
+import { registerDiagnosticsIpc } from '../ipc/diagnostics.ipc';
 import type { SettingsService } from '../settings/settings.service';
 
 /**
@@ -24,4 +25,5 @@ export function initIpc(settings: SettingsService): void {
   registerHistoryIpc(settings);
   pruneHistory(settings);
   registerPermissionsIpc();
+  registerDiagnosticsIpc(settings);
 }

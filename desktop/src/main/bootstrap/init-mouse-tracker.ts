@@ -1,12 +1,15 @@
 import { MouseTracker } from '../acquisition/mouse/tracker';
 import { acquire } from '../acquisition/acquire';
 import { checkTrigger } from '../pipeline/guards';
+import { checkAppExcluded } from '../privacy/app-exclusion';
 import { quickTranslate } from '../translate/translate.service';
 import { pickSegmentAtIndex, pickSegmentAtOffset } from '@shared/utils/text-segment';
 import { hideHover, showHoverAt } from '../windows/hover.window';
 import type { SettingsService } from '../settings/settings.service';
+import type { Settings } from '@config/settings';
 import type { Point } from '@shared/types/geometry';
 import { estimateTextOffsetFraction } from '@shared/types/geometry';
+import type { AcquiredContent } from '@shared/types/content';
 import { LIMITS } from '@config/limits.config';
 import { logger } from '../logging/logger';
 
@@ -96,25 +99,9 @@ async function onHoverStable(point: Point<'screen-logical'>, settings: SettingsS
   const s = settings.get();
   const start = performance.now();
 
-  logger.debug('Hover ổn định, đang thu nhận nội dung', { point });
-  // acquire() gọi subprocess native (AX/OCR) qua round-trip đồng bộ trong vòng
-  // lặp readLine() của helper — không có cách huỷ giữa chừng một khi đã gửi
-  // yêu cầu (khác quickTranslate() ở dưới, vốn là fetch() huỷ được thật qua
-  // AbortSignal). Bù lại bằng isStale(): nếu chuột đã rời đi hoặc đã hover chỗ
-  // khác trước khi acquire() kịp trả lời, bỏ luôn kết quả trễ này thay vì hiện
-  // tooltip sai vị trí — đây chính là bug đã sửa cho HoverDebouncer, và kiểm
-  // tra này là lớp phòng thủ thứ hai cho đúng loại lỗi đó.
-  const acquired = await acquire('translate', point);
+  const acquired = await resolveHoverContent(point, s, ctx);
   const acquireMs = performance.now() - start;
-  if (ctx.isStale()) return;
-  if (!acquired.ok) {
-    logger.debug('Thu nhận thất bại hoặc bị huỷ', acquired);
-    return;
-  }
-  if (!acquired.content.text) {
-    logger.debug('Thu nhận thành công nhưng không có text');
-    return;
-  }
+  if (!acquired) return;
 
   // Hai đường, KHÔNG trộn vào nhau:
   //
@@ -127,17 +114,17 @@ async function onHoverStable(point: Point<'screen-logical'>, settings: SettingsS
   // Không bao giờ lấy trung bình hai nguồn: trộn một giá trị chính xác với một
   // giá trị đoán chỉ làm hỏng giá trị chính xác.
   const granularity = s.hoverGranularity ?? 'sentence';
-  const exactOffset = acquired.content.charOffset;
+  const exactOffset = acquired.charOffset;
   const segment =
     exactOffset !== undefined
-      ? pickSegmentAtIndex(acquired.content.text, exactOffset, granularity)
+      ? pickSegmentAtIndex(acquired.text, exactOffset, granularity)
       : pickSegmentAtOffset(
-          acquired.content.text,
-          estimateTextOffsetFraction(point, acquired.content.bounds, LIMITS.hover.estimatedLineHeightPx),
+          acquired.text,
+          estimateTextOffsetFraction(point, acquired.bounds, LIMITS.hover.estimatedLineHeightPx),
           granularity,
         );
   if (!segment) {
-    logger.debug('Không cắt được đoạn nào từ text đã thu nhận', { text: acquired.content.text });
+    logger.debug('Không cắt được đoạn nào từ text đã thu nhận', { text: acquired.text });
     return;
   }
 
@@ -148,7 +135,7 @@ async function onHoverStable(point: Point<'screen-logical'>, settings: SettingsS
   if (ctx.isStale()) return;
 
   const beforeDisplay = performance.now();
-  await showHoverAt(acquired.content.bounds, {
+  await showHoverAt(acquired.bounds, {
     sourceText: segment,
     translatedText: result.translatedText,
     sourceLanguage: result.sourceLanguage,
@@ -164,18 +151,61 @@ async function onHoverStable(point: Point<'screen-logical'>, settings: SettingsS
   // phạm khi vượt ngân sách — nhất là đường OCR, đã đo riêng ~314ms chỉ cho
   // bước nhận dạng, chưa cộng chụp màn hình lẫn dịch.
   if (totalMs > LIMITS.fastLane.targetLatencyMs) {
-    logger.warn('Hover dịch vượt ngân sách độ trễ', { ...timing, source: acquired.content.source });
+    logger.warn('Hover dịch vượt ngân sách độ trễ', { ...timing, source: acquired.source });
   }
 
   logger.debug('Hover dịch xong', {
     ...timing,
     fromCache: result.fromCache,
     translateProvider: result.provider ?? '(cache)',
-    source: acquired.content.source,
+    source: acquired.source,
     // Phân biệt được các đường trong log là điều kiện để đo tầng nào thực sự
     // gánh việc khi dùng thật — dữ liệu mà ADR-0008 nói cần có trước khi xây tiếp.
-    offset: acquired.content.offsetSource ?? 'ước lượng',
+    offset: acquired.offsetSource ?? 'ước lượng',
   });
+}
+
+/**
+ * Gọi acquire() rồi lọc qua mọi lý do "không có gì để dịch" — huỷ do lỗi thời,
+ * thất bại, không có text, hay app bị loại trừ khỏi việc đọc màn hình — tách
+ * riêng khỏi onHoverStable() chỉ để tránh vượt giới hạn số dòng/hàm, không có
+ * lý do nghiệp vụ nào khác.
+ */
+async function resolveHoverContent(
+  point: Point<'screen-logical'>,
+  s: Settings,
+  ctx: HoverContext,
+): Promise<(AcquiredContent & { text: string }) | null> {
+  logger.debug('Hover ổn định, đang thu nhận nội dung', { point });
+  // acquire() gọi subprocess native (AX/OCR) qua round-trip đồng bộ trong vòng
+  // lặp readLine() của helper — không có cách huỷ giữa chừng một khi đã gửi
+  // yêu cầu (khác quickTranslate() ở dưới, vốn là fetch() huỷ được thật qua
+  // AbortSignal). Bù lại bằng isStale(): nếu chuột đã rời đi hoặc đã hover chỗ
+  // khác trước khi acquire() kịp trả lời, bỏ luôn kết quả trễ này thay vì hiện
+  // tooltip sai vị trí — đây chính là bug đã sửa cho HoverDebouncer, và kiểm
+  // tra này là lớp phòng thủ thứ hai cho đúng loại lỗi đó.
+  const acquired = await acquire('translate', point, s.performanceMode);
+  if (ctx.isStale()) return null;
+  if (!acquired.ok) {
+    logger.debug('Thu nhận thất bại hoặc bị huỷ', acquired);
+    return null;
+  }
+  if (!acquired.content.text) {
+    logger.debug('Thu nhận thành công nhưng không có text');
+    return null;
+  }
+
+  // Chỉ áp được cho nội dung có tên app (nguồn 'accessibility') — xem ghi chú
+  // giới hạn đầy đủ trong app-exclusion.ts.
+  const exclusion = checkAppExcluded(acquired.content.app?.name, s);
+  if (exclusion.excluded) {
+    logger.debug('Bỏ qua hover — app bị loại trừ', { reason: exclusion.reason });
+    return null;
+  }
+
+  // `text` đã được kiểm tra khác rỗng ở trên — ép kiểu để phản ánh đúng điều
+  // đó, TypeScript không tự suy luận qua được lời gọi hàm ở giữa.
+  return acquired.content as AcquiredContent & { text: string };
 }
 
 const round1 = (ms: number): number => Math.round(ms * 10) / 10;

@@ -13,6 +13,7 @@ import { languageSettings } from './language.settings';
 import { privacySettings } from './privacy.settings';
 import { storageSettings } from './storage.settings';
 import { systemSettings } from './system.settings';
+import { diagnosticsSettings } from './diagnostics.settings';
 import { buildDefaults, buildZodSchema, buildUiGroups, migrate } from './define';
 import type { SettingsGroup, SettingsOf } from './define';
 
@@ -27,6 +28,7 @@ export const SETTINGS_GROUPS = [
   privacySettings,
   storageSettings,
   systemSettings,
+  diagnosticsSettings,
 ] as const;
 
 /** Kiểu suy ra từ khai báo — không viết tay. */

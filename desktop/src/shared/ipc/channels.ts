@@ -17,6 +17,7 @@ import type { Intent, StudyMode } from '../types/intent';
 import type { AiDelta, ProviderId } from '../types/ai';
 import type { OcrResult } from '../types/content';
 import type { PermissionKind, PermissionStatus } from '../types/permissions';
+import type { DiagnosticsInfo } from '../types/diagnostics';
 
 // ── Khai báo kiểu kênh ──────────────────────────────────────────────────────
 
@@ -164,6 +165,9 @@ export const IPC = {
   'permissions:openPane': req<{ kind: PermissionKind }, void>(),
   'permissions:relaunch': req<void, void>(),
   'windows:openOnboarding': req<void, void>(),
+
+  /** Cài đặt → Chẩn đoán — xem diagnostics.service.ts. */
+  'diagnostics:get': req<void, DiagnosticsInfo>(),
 } as const;
 
 // ── Kiểu dẫn xuất — không viết tay ──────────────────────────────────────────

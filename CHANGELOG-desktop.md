@@ -17,6 +17,22 @@ chạy trên macOS và Windows.
 
 ### Thêm mới
 
+- **Trang Chẩn đoán** (Cài đặt → Chẩn đoán) — hiện trạng thái thật của từng
+  phần: nền tảng/phiên bản, quyền Accessibility + Ghi màn hình, provider đọc
+  màn hình/OCR có sẵn sàng không, dịch khi rê chuột/theo dõi clipboard đang
+  bật hay tắt, số nhà cung cấp AI/dịch đã bật. Giúp tự biết vì sao một tính
+  năng không hoạt động thay vì phải đoán. Chưa gửi dữ liệu đi đâu cả (không
+  có backend phân tích).
+- **Chế độ hiệu năng cho OCR dự phòng** (Cài đặt → Dịch khi rê chuột → Chế độ
+  hiệu năng: Nhanh / Cân bằng / Chính xác). Đổi kích thước vùng chụp và
+  ngưỡng tin cậy khi phải OCR (không đọc được trực tiếp qua Accessibility) —
+  Nhanh ưu tiên tốc độ, Chính xác ưu tiên không cắt cụt câu. Mặc định Cân
+  bằng, giữ nguyên số đã đo thực nghiệm từ trước.
+- **Loại trừ ứng dụng khỏi việc đọc màn hình** (Cài đặt → Riêng tư). Hai
+  setting đã có từ trước nhưng chưa từng hoạt động — nay thêm được tên ứng
+  dụng tuỳ ý vào danh sách loại trừ, và tự động tạm dừng khi trình quản lý
+  mật khẩu phổ biến (1Password, Bitwarden, LastPass...) đang được chọn. Chỉ
+  áp dụng cho nội dung đọc qua Accessibility, chưa áp dụng cho OCR.
 - **Icon thay cho text/ký tự thuần và emoji khắp app.** 10 tab Cài đặt, nút
   Dừng/Sao chép ở khung kết quả, nút Thêm/Xoá ở lịch sử chat và danh sách
   API key, nút sắp xếp thứ tự dịch vụ dịch — tất cả dùng bộ icon

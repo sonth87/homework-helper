@@ -498,10 +498,71 @@ với máy Mac thật + "đo thực nghiệm". Xem ghi chú CHƯA KIỂM CHỨNG
 
 ## Phase 5 — Sản phẩm hoá
 
-- [ ] Đa màn hình, Retina/DPI, fullscreen, exclusion zone cho app nhạy cảm
+- [x] Đa màn hình, Retina/DPI — **đã có từ Phase 2/3**, không phải việc mới:
+      `capture/display.ts` dùng `screen.getAllDisplays()`/`scaleFactor` đúng
+      cách xuyên suốt (không phải scaffolding). `fullscreen` — mới có phần
+      overlay CỦA CHÍNH APP nổi trên app khác đang fullscreen
+      (`setVisibleOnAllWorkspaces`), KHÔNG có phát hiện "app đang hover có
+      đang fullscreen không" để tự tạm dừng — cần thêm quan sát native, chưa
+      làm. "Exclusion zone" theo VÙNG MÀN HÌNH (khác loại trừ theo app) chưa
+      tồn tại dạng nào — cần UI vẽ/chọn vùng, phạm vi lớn hơn hẳn việc nối
+      settings có sẵn, chưa làm.
+      2026-09-03: nối 2 setting privacy tồn tại từ Phase 0 nhưng CHƯA TỪNG có
+      logic đọc (chỉ hiện UI suông) — `excludedApps` (thêm UI riêng
+      `ExcludedAppsPanel.tsx`, trước đó `type: 'json'` không có control nào)
+      và `pauseOnSensitiveApps` (danh sách cứng ~10 trình quản lý mật khẩu
+      phổ biến — KHÔNG phủ được "app ngân hàng" như mô tả setting đã hứa,
+      không có danh sách đủ đầy đủ để liệt kê cứng). Cả hai áp qua
+      `privacy/app-exclusion.ts`, chỉ hoạt động với nội dung lấy qua
+      Accessibility (nguồn duy nhất biết tên app) — nhánh OCR fallback không
+      loại trừ được. `pauseWhenScreenSharing` VẪN CHƯA nối — không có API
+      đáng tin cậy để phát hiện "app khác đang ghi màn hình mình", làm giả
+      sẽ tạo cảm giác an toàn sai (rủi ro riêng tư thật), quyết định không
+      làm thay vì làm ẩu.
 - [ ] electron-builder, ký số (notarize macOS / code-sign Windows), auto-update
-- [ ] Chế độ hiệu năng Fast/Balanced/Accurate (§51 bản gốc)
-- [ ] Telemetry opt-in, trang chẩn đoán (§92 bản gốc)
+      — **CHỜ chứng chỉ thật**, xác nhận với người dùng 2026-09-03: chưa có
+      Developer ID Apple / cert Windows. electron-builder.yml đã sẵn sàng
+      đóng gói (xem mục Phase 4), chỉ thiếu bước ký. auto-update
+      (electron-updater) CỐ Ý cũng chưa làm — auto-update không ký trên
+      macOS gần như vô dụng (Gatekeeper chặn bản tải về), viết code cho một
+      tính năng phụ thuộc trực tiếp vào thứ chưa có là lãng phí, đợi ký số
+      xong làm cả hai cùng lúc.
+- [x] Chế độ hiệu năng Fast/Balanced/Accurate (§51 bản gốc) — 2026-09-03.
+      Setting `performanceMode` (acquisition.settings.ts) + `LIMITS.ocr.
+      performanceModes` (limits.config.ts) — điều chỉnh CHIỀU CAO vùng chụp
+      OCR fallback + NGƯỠNG TIN CẬY tối thiểu, đúng phạm vi §51 gốc (không
+      phải chọn model AI khác — đã đọc kỹ tài liệu gốc trước khi làm, tránh
+      hiểu sai phạm vi). `balanced` = nguyên số ĐÃ ĐO THỰC NGHIỆM 2026-09-01
+      (không đổi mặc định). `fast`/`accurate` là ước lượng có lý do dựa trên
+      số đã đo, chưa đo riêng — chưa có máy để đo lại.
+- [x] Trang chẩn đoán (§92 bản gốc) — 2026-09-03, **KHÔNG có phần gửi
+      telemetry**, xác nhận với người dùng: không có backend phân tích thật
+      để gửi tới, và "gửi giả" hay "không gửi gì nhưng báo đã bật" đều tệ
+      hơn không làm. `telemetryEnabled` (privacy.settings.ts) vẫn tồn tại
+      trên UI nhưng KHÔNG có logic nào đọc nó — y hệt hiện trạng trước khi
+      làm việc này, không giả vờ đã xong. Trang chẩn đoán (tab riêng "Chẩn
+      đoán", `DiagnosticsPanel.tsx` + `diagnostics.service.ts` +
+      IPC `diagnostics:get`) hiện trạng thái THẬT (không mock) của: platform/
+      arch/version, quyền Accessibility + Ghi màn hình (`checkPermissions()`
+      có sẵn), provider Accessibility/OCR có khởi động được không (gọi thật
+      `getAccessibilityProvider()`/`getOcrProvider()`, có tác dụng phụ khởi
+      động sớm helper native — chấp nhận được, cùng việc sẽ xảy ra khi hover
+      lần đầu), hover translate + clipboard watcher đang bật/tắt, số
+      provider AI/dịch đã bật. Đúng phạm vi §92 (trạng thái subsystem cho
+      người dùng tự chẩn đoán) — KHÔNG phải §91/§151 "Debug Mode" (vẽ
+      bounding-box OCR + info kỹ thuật từng lần dịch), một tính năng khác,
+      chưa làm.
+      **Phát hiện thật khi xây xong, đáng chú ý:** ảnh chụp màn hình lúc
+      kiểm chứng cho thấy `screenRecordingGranted` báo ✓ (đã cấp) trên máy
+      này, nhưng `captureDisplay()` thực tế vẫn lỗi "Ảnh chụp rỗng — thường
+      là do chưa cấp quyền Ghi màn hình" ngay sau đó trong cùng phiên chạy —
+      nghĩa là `systemPreferences.getMediaAccessStatus('screen')`
+      (permissions.service.ts) có thể báo sai/lạc hậu so với hành vi capture
+      thật, ít nhất trong môi trường dev chưa ký số. Trang chẩn đoán phản
+      ánh ĐÚNG những gì API hệ thống trả lời — không tự "sửa" cho khớp thực
+      tế capture, vì làm vậy sẽ che mất chính phát hiện này. Chưa điều tra
+      sâu thêm (nằm ngoài phạm vi "xây trang chẩn đoán"), ghi lại ở đây để
+      quay lại nếu ai đó gặp lại đúng triệu chứng này.
 - [x] **Bổ sung ngoài 4 mục gốc** (yêu cầu thêm khi quay lại Phase 5, 2026-09-01) —
       icon Lucide khắp app, chủ đề Sáng/Tối/Theo hệ thống, tuỳ chỉnh giao diện
       tooltip dịch (màu nền/độ trong suốt/màu chữ/cỡ chữ/độ mờ/bo góc). Chi

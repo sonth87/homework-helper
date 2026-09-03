@@ -46,4 +46,17 @@ export const acquisitionSettings = defineSettings('acquisition', 'groupAcquisiti
     type: 'boolean', default: false,
     i18n: 'setClipboardWatcher', i18nDesc: 'setClipboardWatcherDesc',
   },
+  // Chỉ ảnh hưởng nhánh OCR fallback (không phải Accessibility) của Lane A —
+  // xem LIMITS.ocr.performanceModes (limits.config.ts) cho số cụ thể từng
+  // chế độ, và acquire.ts cho nơi áp dụng. 'balanced' là mặc định vì đó là bộ
+  // số ĐÃ ĐO THỰC NGHIỆM — không đổi mặc định người dùng chưa từng chạm tới.
+  performanceMode: {
+    type: 'enum', default: 'balanced',
+    options: [
+      { value: 'fast', i18n: 'perfFast' },
+      { value: 'balanced', i18n: 'perfBalanced' },
+      { value: 'accurate', i18n: 'perfAccurate' },
+    ],
+    i18n: 'setPerformanceMode', i18nDesc: 'setPerformanceModeDesc',
+  },
 } as const);

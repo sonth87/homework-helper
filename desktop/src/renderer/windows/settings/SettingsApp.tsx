@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import {
   Languages, Palette, Brain, KeyRound, MousePointerClick,
-  Sparkles, Keyboard, ShieldCheck, Database, Settings2,
+  Sparkles, Keyboard, ShieldCheck, Database, Settings2, Stethoscope,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { UI_GROUPS, DEFAULT_SETTINGS } from '@config/settings';
@@ -18,6 +18,8 @@ import { SettingControl } from './controls/SettingControl';
 import { HotkeyControl } from './controls/HotkeyControl';
 import { ApiKeysPanel } from './ApiKeysPanel';
 import { TranslateProvidersPanel } from './TranslateProvidersPanel';
+import { ExcludedAppsPanel } from './ExcludedAppsPanel';
+import { DiagnosticsPanel } from './DiagnosticsPanel';
 import { INTENTS } from '@config/intents.config';
 import type { Intent } from '@shared/types/intent';
 import '@renderer/theme/theme.css';
@@ -36,6 +38,7 @@ const GROUP_ICONS: Record<string, LucideIcon> = {
   privacy: ShieldCheck,
   storage: Database,
   system: Settings2,
+  diagnostics: Stethoscope,
 };
 
 /** Nhãn cho từng phím tắt, dựng từ intent registry — không hardcode. */
@@ -88,6 +91,10 @@ export function SettingsApp() {
         {activeGroup === 'apiKeys' && (
           <ApiKeysPanel configs={settings.apiConfigs} t={t} onChange={(v) => patch('apiConfigs', v)} />
         )}
+        {activeGroup === 'privacy' && (
+          <ExcludedAppsPanel apps={settings.excludedApps} t={t} onChange={(v) => patch('excludedApps', v)} />
+        )}
+        {activeGroup === 'diagnostics' && <DiagnosticsPanel t={t} />}
 
         {group?.items
           .filter(({ def }) => !def.showWhen || settings[def.showWhen as keyof Settings])

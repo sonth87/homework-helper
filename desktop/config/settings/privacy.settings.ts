@@ -2,8 +2,10 @@ import { z } from 'zod';
 import { defineSettings } from './define';
 
 export const privacySettings = defineSettings('privacy', 'groupPrivacy', {
+  // internal: true — danh sách động (thêm/xoá tên app), không phải input đơn.
+  // Có UI riêng (ExcludedAppsPanel.tsx), cùng mẫu apiConfigs/translateProviders.
   excludedApps: {
-    type: 'json', default: [] as string[], schema: z.array(z.string()),
+    type: 'json', default: [] as string[], schema: z.array(z.string()), internal: true,
     i18n: 'setExcludedApps', i18nDesc: 'setExcludedAppsDesc',
   },
   // Ba tuỳ chọn dưới đây là lý do chính khiến người dùng tin được một app đọc
