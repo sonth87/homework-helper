@@ -246,5 +246,6 @@ export default {
   diagExportBundleDone: 'Salvo em:',
   diagExportBundleCanceled: 'Cancelado.',
   diagExportDialogTitle: 'Exportar pacote de depuração',
+  diagLogFilterAll: 'Todos',
 
 } as const satisfies Dictionary;

@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain } from 'electron';
+import { BrowserWindow, app, dialog, ipcMain } from 'electron';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createTranslator } from '@shared/i18n';
@@ -18,6 +18,15 @@ import type { SettingsService } from '../settings/settings.service';
  */
 export function registerDiagnosticsIpc(settings: SettingsService): void {
   ipcMain.handle('diagnostics:get', () => getDiagnostics(settings.get()));
+
+  // Đẩy MỌI dòng log mới ghi (không chỉ lúc bấm nút) tới mọi cửa sổ đang mở —
+  // trang Chẩn đoán tự cập nhật danh sách log theo thời gian thực thay vì
+  // phải bấm lại "Xem log gần đây" để thấy dòng mới. Đăng ký một lần ở đây
+  // (registerDiagnosticsIpc chỉ gọi một lần lúc khởi động app), sống suốt
+  // vòng đời app — không cần huỷ đăng ký.
+  logger.onEntry((entry) => {
+    for (const win of BrowserWindow.getAllWindows()) win.webContents.send('diagnostics:logEntry', entry);
+  });
 
   ipcMain.handle('diagnostics:getLogs', () => logger.recent());
 

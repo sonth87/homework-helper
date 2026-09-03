@@ -4,6 +4,33 @@
  * SettingsApp.tsx, TRƯỚC file này) — không khai lại ở đây.
  */
 
+/* Màu theo mức log (khung "Xem log gần đây" ở Chẩn đoán) — CHỈ dùng trong cửa
+   sổ này nên khai riêng ở đây, không đưa vào theme.css (token dùng chung cho
+   cả 7 cửa sổ). Theo đúng cơ chế 3 lớp system/light/dark như theme.css. */
+:root {
+  --log-error: #dc2626; --log-error-soft: rgba(220, 38, 38, 0.1);
+  --log-warn: #d97706; --log-warn-soft: rgba(217, 119, 6, 0.12);
+  --log-info: #0284c7; --log-info-soft: rgba(2, 132, 199, 0.1);
+  --log-debug: #7c3aed; --log-debug-soft: rgba(124, 58, 237, 0.1);
+  --log-trace: #61656e; --log-trace-soft: rgba(97, 101, 110, 0.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --log-error: #f87171; --log-error-soft: rgba(248, 113, 113, 0.16);
+    --log-warn: #fbbf24; --log-warn-soft: rgba(251, 191, 36, 0.16);
+    --log-info: #38bdf8; --log-info-soft: rgba(56, 189, 248, 0.16);
+    --log-debug: #a78bfa; --log-debug-soft: rgba(167, 139, 250, 0.18);
+    --log-trace: #9aa0ab; --log-trace-soft: rgba(154, 160, 171, 0.14);
+  }
+}
+:root[data-theme='dark'] {
+  --log-error: #f87171; --log-error-soft: rgba(248, 113, 113, 0.16);
+  --log-warn: #fbbf24; --log-warn-soft: rgba(251, 191, 36, 0.16);
+  --log-info: #38bdf8; --log-info-soft: rgba(56, 189, 248, 0.16);
+  --log-debug: #a78bfa; --log-debug-soft: rgba(167, 139, 250, 0.18);
+  --log-trace: #9aa0ab; --log-trace-soft: rgba(154, 160, 171, 0.14);
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -311,11 +338,45 @@ body {
 .diag__debugRow select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); }
 .diag__debugHint { margin: 0 0 8px; color: var(--text-dim); font-size: 11px; }
 .diag__debugConfirm { color: var(--success); font-size: 12px; }
-.diag__logbox {
-  margin: 4px 0 8px; padding: 10px 12px; max-height: 220px; overflow: auto;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
-  font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+
+.diag__logPanel { margin: 4px 0 8px; display: grid; gap: 6px; }
+
+.diag__logToolbar { display: flex; flex-wrap: wrap; gap: 6px; }
+.diag__logChip {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 9px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--panel); color: var(--text-dim); font-size: 11px; cursor: pointer;
+  opacity: 0.55;
 }
+.diag__logChip.is-active { opacity: 1; color: var(--text); }
+.diag__logChipDot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.diag__logChip--error.is-active { background: var(--log-error-soft); border-color: var(--log-error); color: var(--log-error); }
+.diag__logChip--warn.is-active { background: var(--log-warn-soft); border-color: var(--log-warn); color: var(--log-warn); }
+.diag__logChip--info.is-active { background: var(--log-info-soft); border-color: var(--log-info); color: var(--log-info); }
+.diag__logChip--debug.is-active { background: var(--log-debug-soft); border-color: var(--log-debug); color: var(--log-debug); }
+.diag__logChip--trace.is-active { background: var(--log-trace-soft); border-color: var(--log-trace); color: var(--log-trace); }
+
+.diag__logbox {
+  padding: 4px 0; max-height: 260px; overflow: auto;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+  font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.6;
+}
+.diag__logEmpty { margin: 0; padding: 10px 12px; color: var(--text-dim); }
+.diag__logline {
+  display: flex; gap: 8px; padding: 2px 12px; border-left: 3px solid transparent;
+  white-space: pre-wrap; word-break: break-word;
+}
+.diag__loglineTime { flex: none; color: var(--text-dim); }
+.diag__loglineLevel { flex: none; font-weight: 700; width: 42px; }
+.diag__loglineMsg { flex: 1 1 auto; color: var(--text); }
+.diag__logline--error { border-left-color: var(--log-error); background: var(--log-error-soft); }
+.diag__logline--error .diag__loglineLevel { color: var(--log-error); }
+.diag__logline--warn { border-left-color: var(--log-warn); background: var(--log-warn-soft); }
+.diag__logline--warn .diag__loglineLevel { color: var(--log-warn); }
+.diag__logline--info .diag__loglineLevel { color: var(--log-info); }
+.diag__logline--debug .diag__loglineLevel { color: var(--log-debug); }
+.diag__logline--trace .diag__loglineLevel { color: var(--log-trace); }
+.diag__logline--trace .diag__loglineMsg { color: var(--text-dim); }
 
 .providers__toggle { display: flex; align-items: center; gap: 8px; }
 

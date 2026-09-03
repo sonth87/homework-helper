@@ -246,5 +246,6 @@ export default {
   diagExportBundleDone: '已儲存至：',
   diagExportBundleCanceled: '已取消。',
   diagExportDialogTitle: '匯出偵錯包',
+  diagLogFilterAll: '全部',
 
 } as const satisfies Dictionary;

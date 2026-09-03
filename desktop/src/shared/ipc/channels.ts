@@ -171,6 +171,10 @@ export const IPC = {
   'diagnostics:get': req<void, DiagnosticsInfo>(),
 
   // Công cụ debug trong trang Chẩn đoán — xem diagnostics.ipc.ts.
+  // `diagnostics:logEntry` (main → renderer, mỗi dòng log mới) KHÔNG khai ở
+  // đây — cùng lý do 'settings:changed' không khai: đây là kênh main chủ động
+  // đẩy xuống, không phải renderer gọi rồi chờ, nên đi qua `onLogEntry` riêng
+  // trong RendererApi (xem preload/api.ts) thay vì `invoke`/`stream`/`send`.
   'diagnostics:getLogs': req<void, LogEntry[]>(),
   'diagnostics:getLogLevel': req<void, LogLevel>(),
   'diagnostics:setLogLevel': req<{ level: LogLevel }, void>(),
@@ -224,4 +228,6 @@ export type RendererApi = {
   send<K extends SendChannelName>(channel: K, payload: PayloadOf<K>): void;
 
   onSettingsChanged(cb: (settings: Settings) => void): () => void;
+  /** Trang Chẩn đoán → "Xem log gần đây": mỗi dòng log mới ghi ở main, đẩy xuống ngay lúc đó. */
+  onLogEntry(cb: (entry: LogEntry) => void): () => void;
 };

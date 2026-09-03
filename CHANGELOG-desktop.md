@@ -27,6 +27,11 @@ chạy trên macOS và Windows.
   cấu hình thường, `settings.get()` vốn không đọc được nó). Không phải Debug
   Mode (roadmap §91/§151 — vẽ bounding-box OCR trên overlay mỗi lần dịch, tính
   năng khác, phức tạp hơn nhiều, chưa làm).
+  Khung log hiện theo thời gian thực (dòng mới tự xuất hiện, không cần bấm lại
+  "Xem log gần đây"), có thanh công cụ lọc/tô màu theo mức log kiểu Chrome
+  DevTools (mỗi mức một nút bật/tắt kèm số đếm, tắt một mức là ẩn hết nhóm dòng
+  của mức đó), và trạng thái (log đã mở, mức đang lọc) không còn bị xoá khi
+  chuyển sang tab Cài đặt khác rồi quay lại.
 
 - **Trang Chẩn đoán** (Cài đặt → Chẩn đoán) — hiện trạng thái thật của từng
   phần: nền tảng/phiên bản, quyền Accessibility + Ghi màn hình, provider đọc

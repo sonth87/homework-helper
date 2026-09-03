@@ -7,7 +7,7 @@
  * chưa làm).
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Download, ScrollText, Trash2, XCircle } from 'lucide-react';
 import type { DiagnosticsInfo } from '@shared/types/diagnostics';
 import type { LogEntry, LogLevel } from '@shared/types/log';
@@ -28,20 +28,79 @@ const LOG_LEVEL_KEY: Record<LogLevel, I18nKey> = {
 };
 
 function formatLogLine(entry: LogEntry): string {
-  const time = entry.time.slice(11, 19); // chỉ giờ:phút:giây, ngày không cần thiết khi xem log một phiên
   const data = entry.data !== undefined ? ` ${JSON.stringify(entry.data)}` : '';
-  return `[${time}] ${entry.level.toUpperCase()} ${entry.message}${data}`;
+  return `${entry.message}${data}`;
+}
+
+function LogLine({ entry }: { entry: LogEntry }) {
+  const time = entry.time.slice(11, 19);
+  return (
+    <div className={`diag__logline diag__logline--${entry.level}`}>
+      <span className="diag__loglineTime">{time}</span>
+      <span className="diag__loglineLevel">{entry.level.toUpperCase()}</span>
+      <span className="diag__loglineMsg">{formatLogLine(entry)}</span>
+    </div>
+  );
+}
+
+/** Toolbar kiểu Chrome DevTools — mỗi mức là một chip bật/tắt riêng, có đếm số dòng. */
+function LevelFilterToolbar({
+  t, counts, total, visible, onToggle, onShowAll,
+}: {
+  t: Props['t'];
+  counts: Record<LogLevel, number>;
+  total: number;
+  visible: Set<LogLevel>;
+  onToggle: (level: LogLevel) => void;
+  onShowAll: () => void;
+}) {
+  const allVisible = visible.size === LOG_LEVELS.length;
+  return (
+    <div className="diag__logToolbar" role="group" aria-label={t('diagLogLevel')}>
+      <button
+        type="button"
+        className={`diag__logChip${allVisible ? ' is-active' : ''}`}
+        onClick={onShowAll}
+      >
+        {t('diagLogFilterAll')} ({total})
+      </button>
+      {LOG_LEVELS.map((lvl) => (
+        <button
+          key={lvl}
+          type="button"
+          className={`diag__logChip diag__logChip--${lvl}${visible.has(lvl) ? ' is-active' : ''}`}
+          aria-pressed={visible.has(lvl)}
+          onClick={() => onToggle(lvl)}
+        >
+          <span className="diag__logChipDot" aria-hidden="true" />
+          {t(LOG_LEVEL_KEY[lvl])} ({counts[lvl]})
+        </button>
+      ))}
+    </div>
+  );
 }
 
 /** Cụm "Công cụ debug" ở cuối trang — riêng, KHÔNG phải phần thông tin thuần phía trên. */
 function DebugTools({ t }: Props) {
   const [logs, setLogs] = useState<LogEntry[] | null>(null);
+  const [visibleLevels, setVisibleLevels] = useState<Set<LogLevel>>(() => new Set(LOG_LEVELS));
   const [logLevel, setLogLevel] = useState<LogLevel | null>(null);
   const [cleared, setCleared] = useState(false);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
 
   useEffect(() => {
     window.api?.invoke('diagnostics:getLogLevel').then(setLogLevel).catch(() => undefined);
+  }, []);
+
+  // Đăng ký MỘT LẦN lúc mount (Panel nay được giữ sống khi chuyển tab, xem
+  // SettingsApp.tsx) — dùng functional update nên không cần `logs` trong deps,
+  // và dòng log mới vẫn được thêm đúng dù panel đang ẩn (`hidden`) ở tab khác.
+  // Trước khi bấm "Xem log gần đây" lần đầu (`logs === null`), bỏ qua — chưa
+  // ai cần xem thì chưa tích luỹ làm gì.
+  useEffect(() => {
+    return window.api?.onLogEntry((entry) => {
+      setLogs((prev) => (prev === null ? prev : [...prev, entry].slice(-500)));
+    });
   }, []);
 
   const loadLogs = () => {
@@ -51,6 +110,15 @@ function DebugTools({ t }: Props) {
   const changeLevel = (level: LogLevel) => {
     setLogLevel(level);
     window.api?.invoke('diagnostics:setLogLevel', { level }).catch(() => undefined);
+  };
+
+  const toggleVisibleLevel = (level: LogLevel) => {
+    setVisibleLevels((prev) => {
+      const next = new Set(prev);
+      if (next.has(level)) next.delete(level);
+      else next.add(level);
+      return next;
+    });
   };
 
   const clearCaches = () => {
@@ -66,6 +134,17 @@ function DebugTools({ t }: Props) {
       setExportMsg(res.canceled ? t('diagExportBundleCanceled') : `${t('diagExportBundleDone')} ${res.path}`);
     }).catch(() => undefined);
   };
+
+  const counts = useMemo(() => {
+    const c: Record<LogLevel, number> = { error: 0, warn: 0, info: 0, debug: 0, trace: 0 };
+    for (const entry of logs ?? []) c[entry.level]++;
+    return c;
+  }, [logs]);
+
+  const filteredLogs = useMemo(
+    () => (logs ?? []).filter((entry) => visibleLevels.has(entry.level)),
+    [logs, visibleLevels],
+  );
 
   return (
     <div className="diag__debug">
@@ -86,9 +165,21 @@ function DebugTools({ t }: Props) {
       <p className="diag__debugHint">{t('diagLogLevelHint')}</p>
 
       {logs !== null && (
-        <pre className="diag__logbox">
-          {logs.length === 0 ? t('diagLogsEmpty') : logs.map(formatLogLine).join('\n')}
-        </pre>
+        <div className="diag__logPanel">
+          <LevelFilterToolbar
+            t={t}
+            counts={counts}
+            total={logs.length}
+            visible={visibleLevels}
+            onToggle={toggleVisibleLevel}
+            onShowAll={() => setVisibleLevels(new Set(LOG_LEVELS))}
+          />
+          <div className="diag__logbox">
+            {filteredLogs.length === 0
+              ? <p className="diag__logEmpty">{t('diagLogsEmpty')}</p>
+              : filteredLogs.map((entry, i) => <LogLine key={i} entry={entry} />)}
+          </div>
+        </div>
       )}
 
       <div className="diag__debugRow">

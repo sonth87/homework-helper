@@ -246,5 +246,6 @@ export default {
   diagExportBundleDone: 'Сохранено в:',
   diagExportBundleCanceled: 'Отменено.',
   diagExportDialogTitle: 'Экспортировать отладочный пакет',
+  diagLogFilterAll: 'Все',
 
 } as const satisfies Dictionary;

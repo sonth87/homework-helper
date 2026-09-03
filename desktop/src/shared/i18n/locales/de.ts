@@ -246,5 +246,6 @@ export default {
   diagExportBundleDone: 'Gespeichert unter:',
   diagExportBundleCanceled: 'Abgebrochen.',
   diagExportDialogTitle: 'Debug-Paket exportieren',
+  diagLogFilterAll: 'Alle',
 
 } as const satisfies Dictionary;

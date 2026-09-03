@@ -246,5 +246,6 @@ export default {
   diagExportBundleDone: 'Enregistré dans :',
   diagExportBundleCanceled: 'Annulé.',
   diagExportDialogTitle: 'Exporter le paquet de débogage',
+  diagLogFilterAll: 'Tous',
 
 } as const satisfies Dictionary;

@@ -10,11 +10,20 @@ let threshold = ORDER.info;
 const MAX_ENTRIES = 500;
 const buffer: LogEntry[] = [];
 
+// Đăng ký nhận MỖI dòng log ngay lúc ghi — trang Chẩn đoán dùng để hiện log
+// theo thời gian thực, không phải chỉ chụp một lần lúc bấm nút. Cố ý KHÔNG tự
+// gọi BrowserWindow.webContents.send() ở đây — logger.ts không nên biết gì về
+// Electron/cửa sổ, việc phát tới các cửa sổ là của diagnostics.ipc.ts (nơi đã
+// làm việc với BrowserWindow sẵn).
+const listeners = new Set<(entry: LogEntry) => void>();
+
 function emit(level: LogLevel, message: string, data?: unknown): void {
   if (ORDER[level] > threshold) return;
   const time = new Date().toISOString();
-  buffer.push({ time, level, message, data });
+  const entry: LogEntry = { time, level, message, data };
+  buffer.push(entry);
   if (buffer.length > MAX_ENTRIES) buffer.shift();
+  for (const listener of listeners) listener(entry);
 
   const line = `[${time}] ${level.toUpperCase()} ${message}`;
   if (level === 'error') console.error(line, data ?? '');
@@ -31,6 +40,11 @@ export const logger = {
   /** `limit` dòng gần nhất, mới nhất ở cuối mảng — chỉ những dòng đã qua ngưỡng lọc lúc ghi. */
   recent(limit = MAX_ENTRIES): LogEntry[] {
     return buffer.slice(-limit);
+  },
+  /** Gọi `cb` với MỌI dòng log mới ghi sau thời điểm đăng ký. Trả về hàm huỷ đăng ký. */
+  onEntry(cb: (entry: LogEntry) => void): () => void {
+    listeners.add(cb);
+    return () => listeners.delete(cb);
   },
   error: (m: string, d?: unknown) => emit('error', m, d),
   warn: (m: string, d?: unknown) => emit('warn', m, d),

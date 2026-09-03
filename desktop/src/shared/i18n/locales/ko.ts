@@ -246,5 +246,6 @@ export default {
   diagExportBundleDone: '저장 위치:',
   diagExportBundleCanceled: '취소했습니다.',
   diagExportDialogTitle: '디버그 번들 내보내기',
+  diagLogFilterAll: '전체',
 
 } as const satisfies Dictionary;

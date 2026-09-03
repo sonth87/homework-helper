@@ -244,5 +244,6 @@ export default {
   diagExportBundleDone: 'Đã lưu vào:',
   diagExportBundleCanceled: 'Đã huỷ.',
   diagExportDialogTitle: 'Xuất gói debug',
+  diagLogFilterAll: 'Tất cả',
 
 } as const satisfies Dictionary;

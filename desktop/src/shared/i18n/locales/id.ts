@@ -246,5 +246,6 @@ export default {
   diagExportBundleDone: 'Disimpan ke:',
   diagExportBundleCanceled: 'Dibatalkan.',
   diagExportDialogTitle: 'Ekspor paket debug',
+  diagLogFilterAll: 'Semua',
 
 } as const satisfies Dictionary;

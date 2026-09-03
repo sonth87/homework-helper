@@ -246,5 +246,6 @@ export default {
   diagExportBundleDone: 'บันทึกไว้ที่:',
   diagExportBundleCanceled: 'ยกเลิกแล้ว',
   diagExportDialogTitle: 'ส่งออกชุดข้อมูลดีบัก',
+  diagLogFilterAll: 'ทั้งหมด',
 
 } as const satisfies Dictionary;

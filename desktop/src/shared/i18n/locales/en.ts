@@ -245,5 +245,6 @@ export default {
   diagExportBundleDone: 'Saved to:',
   diagExportBundleCanceled: 'Canceled.',
   diagExportDialogTitle: 'Export debug bundle',
+  diagLogFilterAll: 'All',
 
 } as const;

@@ -50,6 +50,18 @@ const HOTKEY_LABELS = [
 export function SettingsApp() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [activeGroup, setActiveGroup] = useState(UI_GROUPS[0]?.id ?? '');
+  // Chẩn đoán từng unmount hoàn toàn mỗi khi rời tab (render kiểu `{cond && <Panel/>}`
+  // bên dưới) — mất luôn log đã tải, mức lọc đang chọn... mỗi lần quay lại. Nay
+  // một khi đã ghé qua lần đầu thì giữ Panel SỐNG (ẩn bằng `hidden`, không unmount)
+  // để trạng thái không bị xoá khi chuyển tab rồi quay lại. Vẫn chỉ mount lần đầu
+  // KHI người dùng thực sự mở tab này — DiagnosticsPanel gọi getAccessibilityProvider()/
+  // getOcrProvider() có tác dụng phụ khởi động sớm helper native, không nên chạy
+  // ở mọi lần mở Cài đặt nếu chưa từng xem trang Chẩn đoán.
+  const [visitedDiagnostics, setVisitedDiagnostics] = useState(false);
+
+  useEffect(() => {
+    if (activeGroup === 'diagnostics') setVisitedDiagnostics(true);
+  }, [activeGroup]);
 
   useEffect(() => {
     window.api?.invoke('settings:get').then(setSettings).catch(console.error);
@@ -94,7 +106,11 @@ export function SettingsApp() {
         {activeGroup === 'privacy' && (
           <ExcludedAppsPanel apps={settings.excludedApps} t={t} onChange={(v) => patch('excludedApps', v)} />
         )}
-        {activeGroup === 'diagnostics' && <DiagnosticsPanel t={t} />}
+        {visitedDiagnostics && (
+          <div hidden={activeGroup !== 'diagnostics'}>
+            <DiagnosticsPanel t={t} />
+          </div>
+        )}
 
         {group?.items
           .filter(({ def }) => !def.showWhen || settings[def.showWhen as keyof Settings])

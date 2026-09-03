@@ -5,6 +5,7 @@ import type {
   SendChannelName, StreamChannelName,
 } from '@shared/ipc/channels';
 import type { Settings } from '@config/settings';
+import type { LogEntry } from '@shared/types/log';
 
 let streamSeq = 0;
 
@@ -55,6 +56,12 @@ export function createApi(): RendererApi {
       const listener = (_e: unknown, settings: Settings) => cb(settings);
       ipcRenderer.on('settings:changed', listener);
       return () => ipcRenderer.removeListener('settings:changed', listener);
+    },
+
+    onLogEntry(cb: (entry: LogEntry) => void) {
+      const listener = (_e: unknown, entry: LogEntry) => cb(entry);
+      ipcRenderer.on('diagnostics:logEntry', listener);
+      return () => ipcRenderer.removeListener('diagnostics:logEntry', listener);
     },
   };
 }

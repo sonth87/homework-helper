@@ -246,5 +246,6 @@ export default {
   diagExportBundleDone: '保存先:',
   diagExportBundleCanceled: 'キャンセルしました。',
   diagExportDialogTitle: 'デバッグ情報を書き出す',
+  diagLogFilterAll: 'すべて',
 
 } as const satisfies Dictionary;
