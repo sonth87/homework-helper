@@ -13,7 +13,14 @@
  *
  * None of these take an API key. AI-model translation is a separate path that
  * goes through the key pool (see `AiEngine`), not through this module.
+ *
+ * Display names come from `shared/translate-providers.js`, which is also what
+ * the pickers draw from — a content script cannot import this file at all
+ * (`background/*` is not web-accessible), so keeping the names in one shared
+ * place is what stops a picker row and its engine from drifting apart.
  */
+
+import { providerName } from '../shared/translate-providers.js';
 
 /**
  * Google's public translate-html endpoint, with the API key the Chrome/Edge
@@ -198,13 +205,21 @@ export async function lookupWord({ word, from = 'auto', to = 'en', displayLang =
   const term = (word || '').trim();
   if (!term) return null;
 
+  // This endpoint's phonetic (sentences[].src_translit) and example-sentence
+  // (examples.example) blocks are oddly case-sensitive — a capitalized query
+  // (the ordinary case for a word copied from the start of a sentence, e.g.
+  // "Result") comes back with both fields simply absent, while the lowercase
+  // spelling of the exact same word returns them in full. The translation
+  // and part-of-speech groups aren't affected, only those two. Querying
+  // lowercase and keeping `term` (the original casing) for the returned
+  // headword gets the fuller data without changing what the user sees.
   const params = new URLSearchParams({
     client: 'dict-chrome-ex',
     sl: normalizeSource(from) || 'auto',
     tl: to,
     hl: displayLang,
     dj: '1',
-    q: term,
+    q: term.toLowerCase(),
   });
   // dt selects the data blocks: t=translation, bd=bilingual dictionary,
   // rm=romanization/phonetics, ex=example sentences.
@@ -249,11 +264,11 @@ export async function lookupWord({ word, from = 'auto', to = 'en', displayLang =
  * `maxLength` is each service's practical per-request ceiling.
  */
 export const FREE_ENGINES = [
-  { id: 'bing', name: 'Microsoft Translator', maxLength: 1800, run: translateBing },
-  { id: 'google', name: 'Google Translate', maxLength: 5000, run: translateGoogle },
-  { id: 'google-legacy', name: 'Google Translate (legacy)', maxLength: 1500, run: translateGoogleLegacy, hidden: true },
-  { id: 'volc', name: 'Volcano Translate', maxLength: 2000, run: translateVolc },
-  { id: 'mymemory', name: 'MyMemory', maxLength: 500, run: translateMyMemory },
+  { id: 'bing', name: providerName('bing'), maxLength: 1800, run: translateBing },
+  { id: 'google', name: providerName('google'), maxLength: 5000, run: translateGoogle },
+  { id: 'google-legacy', name: providerName('google-legacy'), maxLength: 1500, run: translateGoogleLegacy, hidden: true },
+  { id: 'volc', name: providerName('volc'), maxLength: 2000, run: translateVolc },
+  { id: 'mymemory', name: providerName('mymemory'), maxLength: 500, run: translateMyMemory },
 ];
 
 /** Engines offered in pickers — `google-legacy` only ever runs as a fallback. */

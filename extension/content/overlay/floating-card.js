@@ -7,8 +7,12 @@ import { Storage, SUPPORTED_LANGUAGES, buildNanoPrompts } from '../../shared/sto
 import { renderAnswer } from '../../shared/markdown-katex.js';
 import { getFloatingPopupI18n, getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
-import { speak, isSpeechAvailable } from '../../shared/tts.js';
+import { speak, isSpeechAvailable, bindSpeakButtons } from '../../shared/tts.js';
 import { parseDictionaryEntry } from '../../shared/dictionary.js';
+import { EnginePicker } from '../../shared/engine-picker.js';
+import { AI_PROVIDER_ID, PICKABLE_PROVIDER_IDS } from '../../shared/translate-providers.js';
+import { TranslateHistorySheet } from '../../shared/translate-history-sheet.js';
+import { ensureStylesheet } from '../shadow-root.js';
 
 export class OverlayFloatingCard {
   constructor(overlay) {
@@ -20,6 +24,24 @@ export class OverlayFloatingCard {
     this.popupImageBase64 = null;
     this.popupImageMode = 'solve';
     this.targetLang = 'en';
+    // Which service translates a selection. Kept separate from the toolbar
+    // popup's own `popupTranslateEngine`: this card has always run on the
+    // user's AI models, and defaulting it to anything else would silently
+    // change what an existing user gets from Translate.
+    this.translateEngine = AI_PROVIDER_ID;
+    this.enginePicker = null;
+    this.historySheet = null;
+    // The Storage.translateHistory entry the currently displayed translate
+    // result was recorded as — null whenever the card isn't showing a fresh
+    // translation (any other mode, or nothing translated yet this run).
+    this.currentHistoryEntryId = null;
+    // Title for the listen buttons a rendered reply draws inline. Held here
+    // because the drawer renders into this card while streaming and has only
+    // the general dictionary in hand, not the card's own.
+    this.speakLabel = 'Listen';
+    // Bumped per free-engine request so a reply that arrives after the user
+    // has moved on cannot overwrite a newer one.
+    this.freeTranslateEpoch = 0;
     this.activeCardResponseText = '';
     this.activeCardNotices = [];
     this.loadingStepsInterval = null;
@@ -37,49 +59,212 @@ export class OverlayFloatingCard {
     this.makeCollapsedFabDraggable();
     this.setupListeners();
     this.setupFloatTab();
+    this.setupEnginePicker();
+    this.setupHistorySheet();
+    // One delegated listener for every listen button a rendered reply draws
+    // inline — they are re-created on each streamed chunk, so nothing can be
+    // wired per button. See bindSpeakButtons() in shared/tts.js.
+    bindSpeakButtons(this.shadow);
   }
 
-  // Compact mode's floating title tab lives outside .hw-solution-card (see
+  /**
+   * Past translations, shared with the toolbar popup (see
+   * Storage.addTranslateHistory()) — never with the AI chat history the
+   * hwBtnCardHistory button opens in every other mode. Mounted straight into
+   * the card itself (already position:fixed) rather than portalled, per
+   * translate-history-sheet.js's own doc comment — the sheet is meant to
+   * cover exactly this card's content area, clipped by the card's own
+   * overflow:hidden.
+   */
+  async setupHistorySheet() {
+    ensureStylesheet('shared/translate-history-sheet.css');
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const cardDict = getFloatingPopupI18n(uiLanguage);
+    this.historySheet = new TranslateHistorySheet(this.popupCard, {
+      labels: this.historyLabels(cardDict),
+      speakLabel: () => this.speakLabel,
+    });
+  }
+
+  // Prefixed (unlike the toolbar popup's own historyLabels()) because this
+  // dictionary already has a historyTitle/historyDesc pair for the
+  // hwBtnCardHistory button's *other* job — the chat conversation panel
+  // every non-translate mode opens with it.
+  historyLabels(cardDict = {}) {
+    return {
+      title: cardDict.translateHistoryTitle,
+      tabHistory: cardDict.translateHistoryTabHistory,
+      tabFavorite: cardDict.translateHistoryTabFavorite,
+      close: cardDict.translateHistoryClose,
+      favorite: cardDict.favorite,
+      emptyHistory: cardDict.translateHistoryEmpty,
+      emptyFavorite: cardDict.translateHistoryEmptyFavorite,
+      clear: cardDict.translateHistoryClear,
+      confirmClear: cardDict.translateHistoryConfirmClear,
+      deleteAll: cardDict.translateHistoryDeleteAll,
+      moreDeleteOptions: cardDict.translateHistoryMoreDeleteOptions,
+      confirmClearAll: cardDict.translateHistoryConfirmClearAll,
+      selectedCount: cardDict.translateHistorySelectedCount,
+    };
+  }
+
+  /** Called by the overlay when the interface language changes. */
+  applyHistorySheetLabels(cardDict) {
+    this.historySheet?.setLabels(this.historyLabels(cardDict));
+  }
+
+  /**
+   * Records the just-finished translation into the shared history and syncs
+   * the footer's Favorite button + an already-open history sheet to match.
+   * Called from both translate paths — the free-engine one-shot reply and
+   * the AI streaming one (via OverlayDrawer.finalizeStream()) — never for a
+   * screenshot/image translation, which isn't a text lookup a history list
+   * of source→translated pairs makes sense for.
+   */
+  async recordTranslateHistory(sourceText, translatedRaw) {
+    if (!sourceText?.trim() || !translatedRaw) return;
+    const entry = await Storage.addTranslateHistory({
+      sourceText,
+      translatedRaw,
+      sourceLang: 'auto',
+      targetLang: this.targetLang,
+    });
+    this.currentHistoryEntryId = entry?.id || null;
+    this.syncFavoriteButton(entry?.isFavorite);
+    this.historySheet?.refresh();
+  }
+
+  /**
+   * Only meaningful once a translation has actually been recorded — an
+   * always-visible star with nothing to attach to would be worse than none,
+   * same reasoning as the Listen button (syncSpeakButton()).
+   */
+  syncFavoriteButton(isFavorite) {
+    const btn = this.shadow.getElementById('hwBtnCardFavorite');
+    if (!btn) return;
+    btn.style.display = this.currentHistoryEntryId ? 'flex' : 'none';
+    btn.classList.toggle('is-active', !!isFavorite);
+  }
+
+  /**
+   * The translation-source dropdown in the card's translate bar. Its menu is
+   * portalled to the shadow root (the card clips its own children), so the
+   * stylesheet has to be in that root too — overlay.css alone would not carry
+   * it.
+   */
+  async setupEnginePicker() {
+    ensureStylesheet('shared/engine-picker.css');
+    const mount = this.shadow.getElementById('hwCardEnginePicker');
+    if (!mount) return;
+
+    const { cardTranslateEngine, uiLanguage = 'en' } = await Storage.get(['cardTranslateEngine', 'uiLanguage']);
+    if (PICKABLE_PROVIDER_IDS.includes(cardTranslateEngine)) this.translateEngine = cardTranslateEngine;
+    const cardDict = getFloatingPopupI18n(uiLanguage);
+    this.speakLabel = cardDict.listen || this.speakLabel;
+
+    this.enginePicker = new EnginePicker(mount, {
+      value: this.translateEngine,
+      labels: this.engineLabels(cardDict),
+      onChange: (id) => {
+        this.translateEngine = id;
+        Storage.set({ cardTranslateEngine: id });
+        // Re-run immediately rather than making the user press Retry — the
+        // whole point of switching source is to see the other result.
+        if (this.popupSourceText) this.executePopupAction('translate', this.popupSourceText);
+      },
+    });
+  }
+
+  engineLabels(cardDict = {}) {
+    return {
+      groupFree: cardDict.sourceGroupFree || 'Free services',
+      groupAi: cardDict.sourceGroupAi || 'Your AI',
+      ai: cardDict.sourceAi || 'AI models',
+    };
+  }
+
+  /** Called by the overlay when the interface language changes. */
+  applyEnginePickerLabels(cardDict) {
+    this.speakLabel = cardDict?.listen || this.speakLabel;
+    this.enginePicker?.setLabels(this.engineLabels(cardDict));
+  }
+
+  // Compact mode's floating chrome lives outside .hw-solution-card (see
   // overlay.js/overlay.css) so it can slide above the card's own top edge
   // without being clipped by the card's overflow:hidden (needed for its
   // rounded corners + native resize handle) and without ever pushing the
-  // card's own content down. Since it's a sibling rather than a descendant,
-  // plain CSS :hover on the card can't reveal it — position and visibility
-  // are kept in sync here instead.
+  // card's own content down. Since these are siblings rather than
+  // descendants, plain CSS :hover on the card can't reveal them — position
+  // and visibility are kept in sync here instead.
+  //
+  // Deliberately TWO separate floating elements, not one bar spanning the
+  // card's width: a small title chip (icon + name, sized to its own content)
+  // on the left, and the three history/collapse/close buttons — with no
+  // shared background of their own — pinned to the right. The buttons move
+  // here for real (not cloned — a clone would lose its click listeners),
+  // physically relocated while compact. In every other card size they stay
+  // put inside the real header; compact is the one mode where that header
+  // collapses to zero height, which used to leave these three absolutely
+  // positioned right on top of whatever content starts at the card's very
+  // top edge — the translate bar's two selects, most often.
   setupFloatTab() {
     const tab = this.shadow.getElementById('hwCardFloatTab');
+    const titleMirror = this.shadow.getElementById('hwCardFloatTabTitle');
+    const actionsFloat = this.shadow.getElementById('hwCardFloatActions');
+    const header = this.shadow.getElementById('hwCardHeader');
+    const actions = this.shadow.getElementById('hwCardHeaderActions');
     const card = this.popupCard;
-    if (!tab || !card) return;
+    if (!tab || !titleMirror || !actionsFloat || !header || !actions || !card) return;
 
     const syncPosition = () => {
       const isOpen = getComputedStyle(card).display !== 'none';
       const isCompact = card.classList.contains('hw-card-compact');
+
+      if (isCompact && actions.parentElement !== actionsFloat) actionsFloat.appendChild(actions);
+      else if (!isCompact && actions.parentElement !== header) header.appendChild(actions);
+
       if (!isOpen || !isCompact) {
         tab.style.display = 'none';
+        actionsFloat.style.display = 'none';
         return;
       }
       const titleEl = card.querySelector('.hw-card-title');
       if (titleEl) {
-        tab.innerHTML = titleEl.innerHTML;
+        titleMirror.innerHTML = titleEl.innerHTML;
         // Strip any mirrored id (e.g. #hwPopupTitle) so it doesn't collide
         // with the original still living inside the (hidden) header.
-        tab.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+        titleMirror.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
       }
+
       tab.style.display = 'flex';
+      actionsFloat.style.display = 'flex';
       const cardRect = card.getBoundingClientRect();
-      const tabRect = tab.getBoundingClientRect();
       tab.style.left = `${Math.round(cardRect.left + 10)}px`;
-      tab.style.top = `${Math.round(cardRect.top - tabRect.height + 2)}px`;
+      const tabRect = tab.getBoundingClientRect();
+      const actionsRect = actionsFloat.getBoundingClientRect();
+      // Both sit on the same horizontal band above the card — the taller of
+      // the two (usually the actions row, whose 24px buttons stand slightly
+      // taller than the title chip's own text+padding) sets that band so
+      // neither one looks like it's floating half a step off from the other.
+      const bandHeight = Math.max(tabRect.height, actionsRect.height);
+      const top = Math.round(cardRect.top - bandHeight + 2);
+      tab.style.top = `${top}px`;
+      actionsFloat.style.top = `${top}px`;
+      actionsFloat.style.left = `${Math.round(cardRect.right - actionsRect.width - 8)}px`;
     };
 
     let hideTimer = null;
     const reveal = () => {
       clearTimeout(hideTimer);
       tab.classList.add('hw-visible');
+      actionsFloat.classList.add('hw-visible');
     };
     const scheduleHide = () => {
       clearTimeout(hideTimer);
-      hideTimer = setTimeout(() => tab.classList.remove('hw-visible'), 120);
+      hideTimer = setTimeout(() => {
+        tab.classList.remove('hw-visible');
+        actionsFloat.classList.remove('hw-visible');
+      }, 120);
     };
 
     card.addEventListener('mouseenter', reveal);
@@ -88,8 +273,11 @@ export class OverlayFloatingCard {
     card.addEventListener('focusout', scheduleHide);
     tab.addEventListener('mouseenter', reveal);
     tab.addEventListener('mouseleave', scheduleHide);
+    actionsFloat.addEventListener('mouseenter', reveal);
+    actionsFloat.addEventListener('mouseleave', scheduleHide);
 
     new ResizeObserver(syncPosition).observe(card);
+    new ResizeObserver(syncPosition).observe(actionsFloat);
     new MutationObserver(syncPosition).observe(card, { attributes: true, attributeFilter: ['style', 'class'] });
     const titleEl = card.querySelector('.hw-card-title');
     if (titleEl) new MutationObserver(syncPosition).observe(titleEl, { childList: true, characterData: true, subtree: true });
@@ -314,6 +502,13 @@ export class OverlayFloatingCard {
     });
 
     s.getElementById('hwBtnCardHistory')?.addEventListener('click', () => {
+      // Translate mode opens the shared translate-history sheet instead of
+      // the chat conversation panel every other mode uses here — the two
+      // are deliberately separate concepts (see recordTranslateHistory()).
+      if (this.popupMode === 'translate') {
+        this.historySheet?.toggle();
+        return;
+      }
       const panel = s.getElementById('hwCardHistoryPanel');
       const isVisible = panel.style.display === 'flex';
       if (isVisible) {
@@ -322,6 +517,13 @@ export class OverlayFloatingCard {
         panel.style.display = 'flex';
         this.renderCardHistory();
       }
+    });
+
+    s.getElementById('hwBtnCardFavorite')?.addEventListener('click', async () => {
+      if (!this.currentHistoryEntryId) return;
+      const updated = await Storage.toggleTranslateFavorite(this.currentHistoryEntryId);
+      this.syncFavoriteButton(updated?.isFavorite);
+      this.historySheet?.refresh();
     });
 
     s.getElementById('hwBtnCloseCardHistory')?.addEventListener('click', () => {
@@ -410,7 +612,11 @@ export class OverlayFloatingCard {
   syncSpeakButton() {
     const btn = this.shadow.getElementById('hwBtnCardSpeak');
     if (!btn) return;
-    const target = isSpeechAvailable() ? this.getSpeechTarget() : null;
+    // A dictionary reply draws its own listen buttons beside the phonetic and
+    // beside the translation, which is where a reader looks for them — the
+    // footer button only stands in for replies that have no such row.
+    const hasInline = !!this.shadow.getElementById('hwCardAnswerContent')?.querySelector('[data-hw-speak]');
+    const target = (!hasInline && isSpeechAvailable()) ? this.getSpeechTarget() : null;
     btn.style.display = target?.text ? 'flex' : 'none';
   }
 
@@ -479,9 +685,14 @@ export class OverlayFloatingCard {
       'routingStrategy',
     ]);
     const cardDict = getFloatingPopupI18n(uiLanguage);
+    this.speakLabel = cardDict.listen || this.speakLabel;
     const genDict = getI18n(uiLanguage);
     this.overlay.drawer.currentDict = genDict;
     const studyMode = mode === 'translate' ? 'translate' : savedStudyMode;
+    // A screenshot solve/translate is never a text lookup — no history entry
+    // to favorite here, regardless of what the last text translation left behind.
+    this.currentHistoryEntryId = null;
+    this.syncFavoriteButton(false);
 
     s.getElementById('hwPopupTitle').textContent = mode === 'translate' ? cardDict.translateTitle : cardDict.helperTitle;
     s.getElementById('hwTranslateBar').style.display = 'none';
@@ -677,6 +888,7 @@ export class OverlayFloatingCard {
 
     const { uiLanguage = 'en', outputLanguage = 'en' } = await Storage.get(['uiLanguage', 'outputLanguage']);
     const cardDict = getFloatingPopupI18n(uiLanguage);
+    this.speakLabel = cardDict.listen || this.speakLabel;
 
     s.getElementById('hwCardThumb').style.display = 'none';
 
@@ -744,7 +956,75 @@ export class OverlayFloatingCard {
     this.executePopupAction(type, text);
   }
 
+  /**
+   * Translate through one of the keyless services (Microsoft, Google, …)
+   * instead of the user's AI models.
+   *
+   * The background's TRANSLATE_TEXT handler does the work, including the
+   * dictionary lookup it runs first for a single word — which is why a free
+   * engine can still fill the same card layout, phonetic and all, that the AI
+   * path produces.
+   */
+  async runFreeEngineTranslate(text) {
+    const s = this.shadow;
+    const content = s.getElementById('hwCardAnswerContent');
+    if (!content) return;
+
+    // A stream still writing into this card would overwrite the free engine's
+    // answer the moment its next chunk lands — switching source has to end it,
+    // not race it.
+    if (this.overlay.drawer.isStreaming && this.overlay.drawer.activeTarget === 'card') {
+      this.overlay.drawer.stopStream();
+    }
+
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const cardDict = getFloatingPopupI18n(uiLanguage);
+    this.speakLabel = cardDict.listen || this.speakLabel;
+
+    this.stopLoadingSteps();
+    this.activeCardResponseText = '';
+    this.activeCardNotices = [];
+    this.resetNoticeIcon();
+    this.currentHistoryEntryId = null;
+    this.syncFavoriteButton(false);
+    this.syncSpeakButton();
+    content.innerHTML = `<span style="color:var(--hw-text-muted);">${cardDict.processing || 'Translating…'}</span>`;
+
+    const epoch = ++this.freeTranslateEpoch;
+    let res = null;
+    try {
+      res = await chrome.runtime.sendMessage({
+        action: 'TRANSLATE_TEXT',
+        payload: { text, from: 'auto', to: this.targetLang, engine: this.translateEngine },
+      });
+    } catch {
+      res = null;
+    }
+    if (epoch !== this.freeTranslateEpoch) return;
+
+    if (!res?.success) {
+      content.innerHTML = `<span style="color:var(--hw-danger);">${cardDict.translateFailed || 'Could not translate'}</span>`;
+      this.syncSpeakButton();
+      return;
+    }
+
+    this.activeCardResponseText = res.translation;
+    content.innerHTML = renderAnswer(res.translation, {
+      speakLabel: cardDict.listen,
+      targetLang: this.targetLang,
+    });
+    this.syncSpeakButton();
+    this.recordTranslateHistory(text, res.translation);
+  }
+
   async executePopupAction(type, text) {
+    // A free service answers in one shot over a plain message, with no key
+    // pool, no streaming, and nothing to record in the chat history — none of
+    // the AI setup below applies to it.
+    if (type === 'translate' && this.translateEngine !== AI_PROVIDER_ID) {
+      return this.runFreeEngineTranslate(text);
+    }
+
     // PHẢI lấy TRƯỚC Storage.addChatMessage() ở dưới — lấy sau sẽ dính đua tranh.
     const priorMessages = await Storage.getChatHistory();
     const s = this.shadow;
@@ -760,6 +1040,10 @@ export class OverlayFloatingCard {
     this.syncSpeakButton();
     this.activeCardNotices = [];
     this.resetNoticeIcon();
+    if (type === 'translate') {
+      this.currentHistoryEntryId = null;
+      this.syncFavoriteButton(false);
+    }
     this.overlay.drawer.isStreaming = true;
     this.overlay.drawer.activeTarget = 'card';
     this.overlay.drawer.activeRequestId = `req_${Date.now()}`;
@@ -902,6 +1186,7 @@ export class OverlayFloatingCard {
 
       el.addEventListener('click', async () => {
         this.stopLoadingSteps();
+        const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
         await Storage.switchConversation(conv.id);
         this.shadow.getElementById('hwCardHistoryPanel').style.display = 'none';
 
@@ -940,7 +1225,11 @@ export class OverlayFloatingCard {
         // replies still sitting in saved conversations — structured JSON
         // entries carry their own layout classes and need no such hint.
         ansContent.classList.toggle('hw-dict-mode', /^\*\*.+?\*\*\s*\/[^/\n]+\//.test(replyText.trim()));
-        ansContent.innerHTML = renderAnswer(replyText, { allowMarkdownDict: true });
+        ansContent.innerHTML = renderAnswer(replyText, {
+          allowMarkdownDict: true,
+          speakLabel: getFloatingPopupI18n(uiLanguage).listen,
+          targetLang: this.targetLang,
+        });
         this.activeCardResponseText = replyText;
         this.syncSpeakButton();
       });

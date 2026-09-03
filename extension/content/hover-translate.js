@@ -21,6 +21,8 @@
 
 import { Storage } from '../shared/storage.js';
 import { getHoverTranslateI18n } from '../shared/i18n.js';
+import { Icons } from '../shared/icons.js';
+import { speak, isSpeechAvailable } from '../shared/tts.js';
 import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
 
 const SETTINGS_KEYS = [
@@ -68,6 +70,7 @@ class HoverTranslate {
     this.epoch = 0;
     this._activeRect = null;
     this._lastText = null;
+    this._spokenText = '';
     this._lastPoint = null;
     this._highlightBoxes = [];
     this.init();
@@ -181,7 +184,7 @@ class HoverTranslate {
     // any stale highlight boxes (via removeTooltip()) before either is
     // recreated — applying the new highlight after it, not before, so it
     // isn't immediately wiped out by that cleanup.
-    this.showLoadingTooltip(detection.rect);
+    this.showLoadingTooltip(detection.rect, detection.text);
     this.applyTextEffects(detection.range);
     this.runTranslate(detection.text, detection.rect);
   }
@@ -354,9 +357,10 @@ class HoverTranslate {
   // Tooltip rendering
   // ============================================================
 
-  showLoadingTooltip(rect) {
+  showLoadingTooltip(rect, sourceText = '') {
     this.epoch++;
     this.removeTooltip();
+    this._spokenText = sourceText;
 
     const tip = document.createElement('div');
     tip.className = `hw-hover-translate-tip theme-${this.settings.hoverTranslateTheme || 'glass-light'}`;
@@ -372,7 +376,19 @@ class HoverTranslate {
       `)
       .join('');
 
+    // Pronounces the hovered text, not the translation: the reader already
+    // reads their own language in the tip — what they cannot do is say the
+    // foreign word they just looked up. Same reasoning as the solution card's
+    // Listen button (content/overlay/floating-card.js). Omitted entirely where
+    // the browser has no speech engine, rather than left there doing nothing.
+    const speakBtnHtml = (sourceText && isSpeechAvailable())
+      ? `<button class="hw-ht-speak-btn" title="${this.dict.listenSource || ''}">${Icons.volume2(13)}</button>`
+      : '';
+
+    if (speakBtnHtml) tip.classList.add('has-speak');
+
     tip.innerHTML = `
+      ${speakBtnHtml}
       <div class="hw-ht-gran-switch">${granDotsHtml}</div>
       <div class="hw-ht-body hw-ht-loading">${this.dict.loadingLabel || 'Translating…'}</div>
     `;
@@ -383,6 +399,13 @@ class HoverTranslate {
         e.stopPropagation();
         this.changeGranularity(btn.dataset.gran);
       });
+    });
+    tip.querySelector('.hw-ht-speak-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // 'auto' — the hovered text carries no declared language, so its script
+      // picks the voice, with the page's own lang breaking the Han tie.
+      speak(this._spokenText, 'auto', document.documentElement.lang || '');
     });
 
     getSharedShadowRoot().appendChild(tip);
@@ -448,6 +471,7 @@ class HoverTranslate {
       this.tooltip = null;
     }
     this._activeRect = null;
+    this._spokenText = '';
     this.clearTextEffects();
   }
 

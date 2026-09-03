@@ -7,6 +7,7 @@ import { Icons } from '../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
 import { formatMarkdownAndMath, renderAnswer } from '../shared/markdown-katex.js';
 import { getI18n } from '../shared/i18n.js';
+import { bindSpeakButtons } from '../shared/tts.js';
 import { checkNanoAvailability, NANO_STATUS } from '../shared/nano-status.js';
 import { SidePanelTooltips } from './sidepanel-tooltips.js';
 import { SidePanelKeysModal } from './sidepanel-keys-modal.js';
@@ -21,6 +22,11 @@ export class SidePanelController {
     this.activeAiBubble = null;
     this.currentResponseText = '';
     this.loadingStepsInterval = null;
+
+    // One delegated listener for the listen buttons a dictionary reply draws
+    // inline — the bubbles are re-rendered on every streamed chunk, so nothing
+    // can be wired per button. See bindSpeakButtons() in shared/tts.js.
+    bindSpeakButtons(document);
 
     this.keysModal = new SidePanelKeysModal(this);
     this.historyModal = new SidePanelHistory(this);
@@ -542,6 +548,18 @@ export class SidePanelController {
     icon.setAttribute('data-tooltip-desc', notices.join('<br><br>'));
   }
 
+  /**
+   * What renderAnswer() needs to draw a reply's inline listen buttons: a title
+   * for them, and the language a translation was asked for, so the translated
+   * side is spoken with the right voice instead of guessed from its script.
+   */
+  answerRenderOptions() {
+    return {
+      speakLabel: this.currentDict?.listen || '',
+      targetLang: document.getElementById('spSelectLang')?.value || '',
+    };
+  }
+
   appendChunk(chunk, meta) {
     if (!this.activeAiBubble) return;
 
@@ -571,7 +589,7 @@ export class SidePanelController {
     const content = this.activeAiBubble.querySelector('.sp-ai-content');
     if (content) {
       content.style.color = 'inherit';
-      content.innerHTML = renderAnswer(this.currentResponseText);
+      content.innerHTML = renderAnswer(this.currentResponseText, this.answerRenderOptions());
     }
 
     const body = document.getElementById('spChatBody');
@@ -763,7 +781,7 @@ export class SidePanelController {
         el.innerHTML = `
           <div class="sp-msg-bubble">
             ${imgHtml}
-            <div class="${msg.role === 'assistant' ? 'sp-ai-content' : ''}">${msg.role === 'assistant' ? renderAnswer(msg.content) : formatMarkdownAndMath(msg.content)}</div>
+            <div class="${msg.role === 'assistant' ? 'sp-ai-content' : ''}">${msg.role === 'assistant' ? renderAnswer(msg.content, this.answerRenderOptions()) : formatMarkdownAndMath(msg.content)}</div>
             ${footerHtml}
           </div>
         `;

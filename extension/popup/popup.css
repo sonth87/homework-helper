@@ -1,3 +1,115 @@
+/* Dark theme
+ *
+ * Same token names/values as content/styles/overlay.css's :host block (the
+ * in-page card) and sidepanel.css's :root, so the extension shares one dark
+ * palette across surfaces even though each has to define it independently —
+ * a plain popup document, a shadow root, and a normal page can't share CSS
+ * custom properties across their boundaries.
+ *
+ * 'auto' (OS-driven) is the @media block; 'light'/'dark' are an explicit
+ * user override applied via [data-theme] on <html> — see getOverlayThemeAttr()
+ * in shared/theme.js, read once at startup in popup.js. */
+:root {
+  --hw-bg-primary: #ffffff;
+  --hw-bg-secondary: #f8fafc;
+  --hw-bg-hover: #f1f5f9;
+  --hw-border-color: #e2e8f0;
+  --hw-text-main: #0f172a;
+  --hw-text-muted: #64748b;
+  --hw-text-faint: #94a3b8;
+  --hw-accent: #0284c7;
+  --hw-accent-hover: #0369a1;
+  --hw-accent-tint: #e0f2fe;
+  --hw-danger: #ef4444;
+  --hw-danger-rgb: 239, 68, 68;
+  --hw-warning: #f59e0b;
+  /* Tells the browser which palette to render native form controls in —
+     checkbox box/border chrome, scrollbars — since CSS alone (accent-color
+     covers only the checked-state fill) can't reach that chrome. Without
+     this, checkboxes stay light-styled regardless of the theme above. */
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --hw-bg-primary: #0f172a;
+    --hw-bg-secondary: #1e293b;
+    --hw-bg-hover: #334155;
+    --hw-border-color: #334155;
+    --hw-text-main: #f8fafc;
+    --hw-text-muted: #94a3b8;
+    --hw-text-faint: #64748b;
+    --hw-accent: #38bdf8;
+    --hw-accent-hover: #0ea5e9;
+    --hw-accent-tint: rgba(56, 189, 248, 0.18);
+    --hw-danger: #f87171;
+    --hw-danger-rgb: 248, 113, 113;
+    --hw-warning: #fbbf24;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --hw-bg-primary: #0f172a;
+  --hw-bg-secondary: #1e293b;
+  --hw-bg-hover: #334155;
+  --hw-border-color: #334155;
+  --hw-text-main: #f8fafc;
+  --hw-text-muted: #94a3b8;
+  --hw-text-faint: #64748b;
+  --hw-accent: #38bdf8;
+  --hw-accent-hover: #0ea5e9;
+  --hw-accent-tint: rgba(56, 189, 248, 0.18);
+  --hw-danger: #f87171;
+  --hw-danger-rgb: 248, 113, 113;
+  --hw-warning: #fbbf24;
+  color-scheme: dark;
+}
+
+/* The shared translation-source dropdown (shared/engine-picker.css) and the
+   translate-history bottom sheet (shared/translate-history-sheet.css) each
+   resolve through their own token families (--ep- and --th- prefixed) with
+   light-only defaults, so they can be dropped into any surface. This popup
+   document loads both stylesheets before this one (see popup.html), so this
+   remap wins on cascade order alone — no extra specificity trick needed
+   here, unlike the in-page card's shadow root (see overlay.css's
+   :host .hw-ep comment). */
+.hw-ep,
+.hw-ep-menu,
+.hw-th-sheet {
+  --ep-bg: var(--hw-bg-primary);
+  --ep-fg: var(--hw-text-main);
+  --ep-muted: var(--hw-text-muted);
+  --ep-border: var(--hw-border-color);
+  --ep-hover: var(--hw-bg-hover);
+  --ep-accent: var(--hw-accent);
+  --ep-accent-tint: var(--hw-accent-tint);
+  --th-bg: var(--hw-bg-primary);
+  --th-fg: var(--hw-text-main);
+  --th-muted: var(--hw-text-muted);
+  --th-border: var(--hw-border-color);
+  --th-hover: var(--hw-bg-hover);
+  --th-accent: var(--hw-accent);
+  --th-accent-tint: var(--hw-accent-tint);
+  --th-warning: var(--hw-warning);
+}
+
+/* shared/translate-history-sheet.css sizes the sheet with `position:
+   absolute; inset: 0` against its nearest positioned ancestor — for the
+   in-page card that's a fixed-size floating element, so it's already exactly
+   viewport-sized. Here the ancestor is .pop-container, whose height is
+   whatever .pop-body's content needs (it has to be, so Chrome's popup
+   auto-resize can grow/shrink the window to fit a translation result) — so
+   once that content is taller than the popup's own max height, .pop-container
+   ends up taller than what's actually visible, and inset:0 against it makes
+   the sheet (and .hw-th-panel's bottom:0 inside it) reach past the visible
+   fold too, off the bottom of the real window. `fixed` anchors it to the
+   popup's actual viewport instead, which is always exactly what's visible —
+   this is a popup-only override, not a change to the shared stylesheet. */
+.hw-th-sheet {
+  position: fixed;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -8,11 +120,30 @@ body {
   width: 360px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 13px;
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--hw-bg-primary);
+  color: var(--hw-text-main);
+}
+
+/* A shown translation result can push .pop-body past Chrome's max popup
+   height, giving the popup document its own native scrollbar — independent
+   of the history sheet's own .hw-th-list scroll, so wheeling over the sheet
+   could scroll the popup underneath it instead (or behind it). html has no
+   overflow of its own set, so this propagates up and locks the whole
+   viewport while the sheet — which already fully covers .pop-container —
+   is open. Toggled from popup.js via TranslateHistorySheet's onToggle. */
+body.hw-th-sheet-open {
+  overflow: hidden;
 }
 
 .pop-container {
+  position: relative;
+  /* Clips the history sheet's closed panel (translateY(100%), see
+     shared/translate-history-sheet.css) to the popup's own bounds. Without
+     this, the panel — still full height, just pushed below the visible
+     edge — extended the page's scrollable area, and Chrome's popup
+     auto-sizing grew the window to fit it, dragging the "closed" sheet back
+     into view at the bottom. */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -22,7 +153,13 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--hw-bg-hover);
+}
+
+.pop-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .pop-brand {
@@ -48,7 +185,7 @@ body {
 
 .pop-sub {
   font-size: 11px;
-  color: #64748b;
+  color: var(--hw-text-muted);
 }
 
 .pop-icon-btn {
@@ -57,7 +194,7 @@ body {
   border-radius: 6px;
   background: transparent;
   border: none;
-  color: #64748b;
+  color: var(--hw-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -65,8 +202,8 @@ body {
 }
 
 .pop-icon-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--hw-bg-hover);
+  color: var(--hw-text-main);
 }
 
 .pop-body {
@@ -88,22 +225,22 @@ body {
   align-items: center;
   justify-content: space-between;
   font-size: 12px;
-  color: #334155;
+  color: var(--hw-text-main);
   cursor: pointer;
 }
 
 .pop-footer {
   padding: 10px 16px 14px 16px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--hw-bg-hover);
 }
 
 .pop-btn-settings {
   width: 100%;
   padding: 8px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #334155;
+  border: 1px solid var(--hw-border-color);
+  background: var(--hw-bg-secondary);
+  color: var(--hw-text-main);
   font-size: 12px;
   font-weight: 600;
   display: flex;
@@ -115,8 +252,8 @@ body {
 }
 
 .pop-btn-settings:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--hw-bg-hover);
+  color: var(--hw-text-main);
 }
 
 /* ---------- Quick translator ---------- */
@@ -132,9 +269,9 @@ body {
   min-width: 0;
   padding: 7px 8px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #0f172a;
+  border: 1px solid var(--hw-border-color);
+  background: var(--hw-bg-primary);
+  color: var(--hw-text-main);
   font-size: 12px;
   font-family: inherit;
   cursor: pointer;
@@ -142,7 +279,7 @@ body {
 
 .pop-select:focus {
   outline: none;
-  border-color: #0284c7;
+  border-color: var(--hw-accent);
 }
 
 .pop-swap-btn {
@@ -152,7 +289,7 @@ body {
   border-radius: 6px;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: var(--hw-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -160,8 +297,8 @@ body {
 }
 
 .pop-swap-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--hw-bg-hover);
+  color: var(--hw-text-main);
 }
 
 .pop-engine-row {
@@ -173,11 +310,20 @@ body {
 .pop-engine-label {
   flex: 0 0 auto;
   font-size: 12px;
-  color: #64748b;
+  color: var(--hw-text-muted);
 }
 
-.pop-select-engine {
+.pop-engine-picker {
   flex: 1;
+  min-width: 0;
+}
+
+.pop-engine-picker .hw-ep-trigger {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .pop-field {
@@ -188,9 +334,9 @@ body {
   width: 100%;
   padding: 9px 28px 9px 10px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #0f172a;
+  border: 1px solid var(--hw-border-color);
+  background: var(--hw-bg-primary);
+  color: var(--hw-text-main);
   font-size: 13px;
   font-family: inherit;
   line-height: 1.45;
@@ -201,7 +347,7 @@ body {
 
 .pop-textarea:focus {
   outline: none;
-  border-color: #0284c7;
+  border-color: var(--hw-accent);
 }
 
 .pop-clear-btn {
@@ -213,7 +359,7 @@ body {
   border: none;
   border-radius: 5px;
   background: transparent;
-  color: #94a3b8;
+  color: var(--hw-text-faint);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -221,8 +367,19 @@ body {
 }
 
 .pop-clear-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--hw-bg-hover);
+  color: var(--hw-text-main);
+}
+
+/* Enter runs the translation now, so the way back to a new line has to be
+   stated somewhere the user is already looking — the same hint the chat panel
+   carries under its own textarea (sidepanel/sidepanel.html, .sp-hint). */
+.pop-hint {
+  margin-top: -6px;
+  margin-bottom: -2px;
+  text-align: right;
+  font-size: 10.5px;
+  color: var(--hw-text-faint);
 }
 
 .pop-note {
@@ -232,13 +389,13 @@ body {
   gap: 8px;
   margin-top: -4px;
   font-size: 11px;
-  color: #64748b;
+  color: var(--hw-text-muted);
 }
 
 .pop-link-btn {
   border: none;
   background: transparent;
-  color: #0284c7;
+  color: var(--hw-accent);
   font-size: 11px;
   font-weight: 600;
   font-family: inherit;
@@ -254,9 +411,9 @@ body {
   width: 100%;
   padding: 9px;
   border-radius: 10px;
-  border: 1px solid #0284c7;
-  background: #0284c7;
-  color: #ffffff;
+  border: 1px solid var(--hw-accent);
+  background: var(--hw-accent);
+  color: var(--hw-bg-primary);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -269,8 +426,8 @@ body {
 }
 
 .pop-translate-btn:hover:not(:disabled) {
-  background: #0369a1;
-  border-color: #0369a1;
+  background: var(--hw-accent-hover);
+  border-color: var(--hw-accent-hover);
 }
 
 .pop-translate-btn:disabled {
@@ -279,9 +436,9 @@ body {
 }
 
 .pop-result-box {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--hw-border-color);
   border-radius: 10px;
-  background: #f8fafc;
+  background: var(--hw-bg-secondary);
   overflow: hidden;
 }
 
@@ -291,12 +448,12 @@ body {
   justify-content: space-between;
   gap: 8px;
   padding: 6px 10px;
-  border-bottom: 1px solid #eef2f7;
+  border-bottom: 1px solid var(--hw-bg-hover);
 }
 
 .pop-result-meta {
   font-size: 11px;
-  color: #64748b;
+  color: var(--hw-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -306,8 +463,8 @@ body {
   padding: 9px 10px;
   font-size: 13px;
   line-height: 1.5;
-  color: #0f172a;
-  max-height: 190px;
+  color: var(--hw-text-main);
+  max-height: fit-content;
   overflow-y: auto;
   overflow-wrap: anywhere;
 }
@@ -323,11 +480,25 @@ body {
 .pop-error {
   padding: 8px 10px;
   border-radius: 8px;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  color: #b91c1c;
+  border: 1px solid rgba(var(--hw-danger-rgb), 0.35);
+  background: rgba(var(--hw-danger-rgb), 0.1);
+  color: var(--hw-danger);
   font-size: 12px;
   line-height: 1.4;
+}
+
+/* Separates the translate action (input/button/result) from the quick
+   actions row below it — .pop-body's own flex gap already spaces it out,
+   this just draws the line in that gap. The negative horizontal margin
+   cancels .pop-body's 16px side padding so the line bleeds edge-to-edge,
+   matching .pop-header/.pop-footer's border-bottom/border-top (those sit
+   on elements with no side padding of their own, so their borders are
+   already flush with the container). */
+.pop-divider {
+  height: 1px;
+  margin: 2px -16px;
+  background: var(--hw-border-color);
+  flex: 0 0 auto;
 }
 
 .pop-widgets {
@@ -345,24 +516,24 @@ body {
   gap: 5px;
   padding: 9px 3px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #334155;
+  border: 1px solid var(--hw-border-color);
+  background: var(--hw-bg-primary);
+  color: var(--hw-text-main);
   font-family: inherit;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .pop-widget:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #0f172a;
+  background: var(--hw-bg-secondary);
+  border-color: var(--hw-border-color);
+  color: var(--hw-text-main);
 }
 
 .pop-widget[data-active="true"] {
-  border-color: #0284c7;
-  background: #e0f2fe;
-  color: #0369a1;
+  border-color: var(--hw-accent);
+  background: var(--hw-accent-tint);
+  color: var(--hw-accent-hover);
 }
 
 .pop-widget-icon {
@@ -387,91 +558,130 @@ body {
 
 .pop-status {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--hw-text-faint);
   text-align: center;
 }
 
 /* Dictionary card for single-word AI lookups. Same class names as the in-page
    overlay and the side panel (overlay.css / sidepanel.css) so a lookup reads
    the same wherever it is opened — only the scale differs here. */
-.pop-result-body .hw-dict-headword {
+.pop-result-body .hw-dict-headword,
+.hw-th-detail-body .hw-dict-headword {
   font-size: 14px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--hw-text-main);
   margin-bottom: 8px;
 }
 
-.pop-result-body .hw-dict-phonetic {
+.pop-result-body .hw-dict-phonetic,
+.hw-th-detail-body .hw-dict-phonetic {
   font-size: 11px;
   font-weight: 400;
-  color: #64748b;
+  color: var(--hw-text-muted);
   margin-left: 2px;
 }
 
-.pop-result-body .hw-dict-sense {
+/* Listen buttons the dictionary card renders inline (shared/markdown-katex.js):
+   one beside the phonetic, one beside the translation — the two places a
+   reader is already looking when they want to hear something. */
+.pop-result-body .hw-dict-speak,
+.hw-th-detail-body .hw-dict-speak {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  width: 20px;
+  height: 20px;
+  margin-left: 5px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--hw-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.pop-result-body .hw-dict-speak:hover,
+.hw-th-detail-body .hw-dict-speak:hover {
+  background: var(--hw-accent-tint);
+  color: var(--hw-accent);
+}
+
+.pop-result-body .hw-dict-sense,
+.hw-th-detail-body .hw-dict-sense {
   display: flex;
   gap: 8px;
   margin-bottom: 10px;
 }
 
-.pop-result-body .hw-dict-sense:last-of-type {
+.pop-result-body .hw-dict-sense:last-of-type,
+.hw-th-detail-body .hw-dict-sense:last-of-type {
   margin-bottom: 0;
 }
 
-.pop-result-body .hw-dict-pos {
+.pop-result-body .hw-dict-pos,
+.hw-th-detail-body .hw-dict-pos {
   flex: 0 0 auto;
   min-width: 30px;
   max-width: 88px;
   font-size: 10px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--hw-text-muted);
   padding-top: 2px;
 }
 
-.pop-result-body .hw-dict-body {
+.pop-result-body .hw-dict-body,
+.hw-th-detail-body .hw-dict-body {
   flex: 1;
   min-width: 0;
 }
 
-.pop-result-body .hw-dict-gloss {
+.pop-result-body .hw-dict-gloss,
+.hw-th-detail-body .hw-dict-gloss {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--hw-text-main);
   margin-bottom: 3px;
 }
 
-.pop-result-body .hw-dict-example {
+.pop-result-body .hw-dict-example,
+.hw-th-detail-body .hw-dict-example {
   font-size: 11px;
-  color: #64748b;
+  color: var(--hw-text-muted);
   line-height: 1.5;
 }
 
-.pop-result-body .hw-dict-example code.inline-code {
+.pop-result-body .hw-dict-example code.inline-code,
+.hw-th-detail-body .hw-dict-example code.inline-code {
   font-family: inherit;
   font-size: inherit;
   background: none;
   padding: 0;
-  color: #0284c7;
+  color: var(--hw-accent);
   font-weight: 600;
 }
 
-.pop-result-body .hw-dict-desc {
+.pop-result-body .hw-dict-desc,
+.hw-th-detail-body .hw-dict-desc {
   margin-top: 6px;
   padding: 7px 9px;
-  background: #eef2f7;
+  background: var(--hw-bg-hover);
   border-radius: 8px;
   font-size: 11px;
   line-height: 1.5;
 }
 
-.pop-result-body .hw-dict-desc-term {
+.pop-result-body .hw-dict-desc-term,
+.hw-th-detail-body .hw-dict-desc-term {
   font-size: 12px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--hw-text-main);
   margin-bottom: 3px;
 }
 
-.pop-result-body .hw-dict-desc-text {
-  color: #64748b;
+.pop-result-body .hw-dict-desc-text,
+.hw-th-detail-body .hw-dict-desc-text {
+  color: var(--hw-text-muted);
 }
 
 .pop-swap-btn:disabled {
@@ -481,7 +691,7 @@ body {
 
 .pop-swap-btn:disabled:hover {
   background: transparent;
-  color: #64748b;
+  color: var(--hw-text-muted);
 }
 
 .pop-field-actions {
@@ -503,7 +713,7 @@ body {
   border: none;
   border-radius: 5px;
   background: transparent;
-  color: #64748b;
+  color: var(--hw-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -513,8 +723,22 @@ body {
 }
 
 .pop-icon-mini:hover {
-  background: #e0f2fe;
-  color: #0284c7;
+  background: var(--hw-accent-tint);
+  color: var(--hw-accent);
+}
+
+.pop-icon-mini svg {
+  fill: none;
+}
+
+/* #popBtnFavorite toggled on (see popup.js's syncFavoriteButton()) — filled
+   star in the same amber the history sheet's own favorite icon uses. */
+.pop-icon-mini.is-active {
+  color: var(--hw-warning);
+}
+
+.pop-icon-mini.is-active svg {
+  fill: currentColor;
 }
 
 .pop-result-head .pop-result-meta {

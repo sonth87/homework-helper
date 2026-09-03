@@ -34,6 +34,20 @@ export class OverlayDrawer {
     this.makeDrawerResizable();
   }
 
+  /**
+   * What renderAnswer() needs to draw a reply's inline listen buttons: a
+   * title for them, and the language a translation was asked for so the
+   * translated side is spoken with the right voice rather than guessed from
+   * its script. The label comes from the card's dictionary because both
+   * surfaces live in this one shadow root and share its interface language.
+   */
+  answerRenderOptions() {
+    return {
+      speakLabel: this.overlay.floatingCard?.speakLabel || '',
+      targetLang: this.shadow.getElementById('hwLangSelect')?.value || '',
+    };
+  }
+
   async applyDrawerWidth() {
     const { drawerWidth } = await Storage.get(['drawerWidth']);
     const drawer = this.shadow.getElementById('hwDrawer');
@@ -589,7 +603,11 @@ export class OverlayDrawer {
       if (content) {
         content.innerHTML = renderAnswer(
           this.overlay.floatingCard.activeCardResponseText,
-          { allowMarkdownDict: content.classList.contains('hw-dict-mode') }
+          {
+            allowMarkdownDict: content.classList.contains('hw-dict-mode'),
+            speakLabel: this.overlay.floatingCard.speakLabel,
+            targetLang: this.overlay.floatingCard.targetLang,
+          }
         );
       }
       return;
@@ -602,7 +620,7 @@ export class OverlayDrawer {
     const content = this.activeAiBubble.querySelector('.hw-ai-content');
     if (content) {
       content.style.color = 'var(--hw-text-main)';
-      content.innerHTML = renderAnswer(this.currentDrawerResponseText);
+      content.innerHTML = renderAnswer(this.currentDrawerResponseText, this.answerRenderOptions());
     }
 
     const body = this.shadow.getElementById('hwChatBody');
@@ -619,6 +637,12 @@ export class OverlayDrawer {
       this.overlay.floatingCard.stopLoadingSteps();
       this.overlay.floatingCard.syncSpeakButton();
       Storage.addChatMessage({ role: 'assistant', content: this.overlay.floatingCard.activeCardResponseText });
+      if (this.overlay.floatingCard.popupMode === 'translate') {
+        this.overlay.floatingCard.recordTranslateHistory(
+          this.overlay.floatingCard.popupSourceText,
+          this.overlay.floatingCard.activeCardResponseText
+        );
+      }
       return;
     }
 
@@ -736,7 +760,7 @@ export class OverlayDrawer {
         el.innerHTML = `
           <div class="hw-msg-bubble">
             ${imgHtml}
-            <div class="${msg.role === 'assistant' ? 'hw-ai-content' : ''}">${msg.role === 'assistant' ? renderAnswer(msg.content) : formatMarkdownAndMath(msg.content)}</div>
+            <div class="${msg.role === 'assistant' ? 'hw-ai-content' : ''}">${msg.role === 'assistant' ? renderAnswer(msg.content, this.answerRenderOptions()) : formatMarkdownAndMath(msg.content)}</div>
             ${footerHtml}
           </div>
         `;

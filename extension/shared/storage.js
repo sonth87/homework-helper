@@ -255,7 +255,7 @@ export const DEFAULT_SETTINGS = {
   toolbarBlur: 16,
   toolbarShowText: true, // true: icon + label, false: icon only
   toolbarSize: "normal", // 'compact' | 'normal' | 'large'
-  toolbarTheme: "glass-light", // 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple'
+  toolbarTheme: "auto", // 'auto' (follows OS light/dark) | 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple'
   toolbarCustomColor: "#0284c7",
   toolbarLayout: DEFAULT_TOOLBAR_LAYOUT, // ordered [{ id, area: 'main' | 'dropdown' }] — see shared/toolbar-items.js
   // Action-popup quick translator (popup/popup.js). Kept separate from
@@ -309,7 +309,27 @@ export const DEFAULT_SETTINGS = {
   chatHistory: [],
   conversations: [], // [{ id, title, createdAt, updatedAt, thumbnail, messages: [] }]
   activeConversationId: null,
+  // Shared between the two translate surfaces — the in-page card (opened
+  // from the selection toolbar) and the toolbar popup — never the AI chat
+  // history above, which is a separate concept entirely. See
+  // Storage.addTranslateHistory().
+  // [{ id, key, sourceText, translatedRaw, sourceLang, targetLang, isFavorite, updatedAt }]
+  translateHistory: [],
 };
+
+/**
+ * Two entries with the same source text translated to the same target
+ * language are the same lookup re-run — addTranslateHistory() uses this to
+ * update that entry in place (and bump it back to the top) rather than
+ * growing a duplicate every time a word gets looked up again.
+ */
+function translateHistoryKey(sourceText, targetLang) {
+  return `${sourceText.trim()}::${targetLang || ''}`;
+}
+
+// Plenty for a text-only list (no images, unlike chatHistory's 50-message
+// cap) while still keeping chrome.storage.local's per-item write cheap.
+const TRANSLATE_HISTORY_LIMIT = 300;
 
 export const Storage = {
   async get(keys = null) {
@@ -637,6 +657,68 @@ export const Storage = {
       delete updated[lang];
     }
     await this.set({ installedOcrModels: updated });
+    return updated;
+  },
+
+  // =======================================================
+  // Translate History — shared by the in-page card's translate mode and the
+  // toolbar popup, never by AI chat (see DEFAULT_SETTINGS.translateHistory)
+  // =======================================================
+  async getTranslateHistory() {
+    const { translateHistory = [] } = await this.get(["translateHistory"]);
+    return translateHistory;
+  },
+
+  /**
+   * Record one completed translation, or refresh it if the same text was
+   * already looked up in the same target language — re-running a lookup
+   * updates that entry in place and moves it back to the front instead of
+   * piling up a duplicate.
+   *
+   * `translatedRaw` is stored exactly as the translate engine returned it —
+   * a dictionary-schema JSON string for a single word, plain text otherwise
+   * — so the history sheet can render it through the same renderAnswer()
+   * path a fresh translation uses, word card and all.
+   *
+   * @returns {Promise<object|null>} the stored entry, or null for empty input.
+   */
+  async addTranslateHistory({ sourceText, translatedRaw, sourceLang = "auto", targetLang }) {
+    const text = (sourceText || "").trim();
+    if (!text || !translatedRaw) return null;
+
+    const history = await this.getTranslateHistory();
+    const key = translateHistoryKey(text, targetLang);
+    const existing = history.find((h) => h.key === key);
+
+    const entry = {
+      id: existing?.id || `th_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      key,
+      sourceText: text,
+      translatedRaw,
+      sourceLang,
+      targetLang,
+      isFavorite: existing?.isFavorite || false,
+      updatedAt: Date.now(),
+    };
+
+    const updated = [entry, ...history.filter((h) => h.key !== key)].slice(0, TRANSLATE_HISTORY_LIMIT);
+    await this.set({ translateHistory: updated });
+    return entry;
+  },
+
+  async toggleTranslateFavorite(id) {
+    const history = await this.getTranslateHistory();
+    const updated = history.map((h) => (h.id === id ? { ...h, isFavorite: !h.isFavorite } : h));
+    await this.set({ translateHistory: updated });
+    return updated.find((h) => h.id === id) || null;
+  },
+
+  /** Bulk delete — the history sheet's checkbox + Clear flow. */
+  async removeTranslateHistory(ids) {
+    const idSet = new Set(Array.isArray(ids) ? ids : [ids]);
+    const history = await this.getTranslateHistory();
+    const updated = history.filter((h) => !idSet.has(h.id));
+    await this.set({ translateHistory: updated });
     return updated;
   },
 };

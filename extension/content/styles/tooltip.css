@@ -512,6 +512,78 @@
   background: #f1f5f9 !important;
 }
 
+/* Listen button (content/hover-translate.js) — speaks the hovered text in its
+   own language. Mirrors the granularity tab at the opposite corner, straddling
+   the tip's top edge so it costs the translation no room; unlike that tab it
+   stays at full size, because a 6px dot is not a target you can hit on the
+   first try for a control you press once and are done with. */
+/* The button's lower half sits over the tip's own top padding, so that padding
+   grows to keep it off the first line of the translation. */
+.hw-hover-translate-tip.has-speak {
+  padding-top: 14px;
+}
+
+.hw-ht-speak-btn {
+  position: absolute;
+  right: 10px;
+  top: 0;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, var(--ht-alpha, 0.96));
+  backdrop-filter: blur(var(--ht-blur, 18px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--ht-blur, 18px)) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.hw-ht-speak-btn:hover {
+  background: #0284c7;
+  color: #ffffff;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.hw-ht-speak-btn:active {
+  transform: translateY(-50%) scale(0.94);
+}
+
+.hw-hover-translate-tip.theme-glass-dark .hw-ht-speak-btn {
+  background: rgba(15, 23, 42, var(--ht-alpha, 0.96));
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+}
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-speak-btn { background: rgba(2, 132, 199, var(--ht-alpha, 0.96)); }
+.hw-hover-translate-tip.theme-emerald .hw-ht-speak-btn { background: rgba(5, 150, 105, var(--ht-alpha, 0.96)); }
+.hw-hover-translate-tip.theme-purple .hw-ht-speak-btn { background: rgba(124, 58, 237, var(--ht-alpha, 0.96)); }
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-speak-btn,
+.hw-hover-translate-tip.theme-emerald .hw-ht-speak-btn,
+.hw-hover-translate-tip.theme-purple .hw-ht-speak-btn {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+
+/* On the solid-colour themes the accent hover fill would vanish into the
+   background, so those invert to a light chip instead. */
+.hw-hover-translate-tip.theme-glass-dark .hw-ht-speak-btn:hover {
+  background: #0284c7;
+  color: #ffffff;
+}
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-speak-btn:hover,
+.hw-hover-translate-tip.theme-emerald .hw-ht-speak-btn:hover,
+.hw-hover-translate-tip.theme-purple .hw-ht-speak-btn:hover {
+  background: #ffffff;
+  color: #0f172a;
+}
+
 .hw-ht-body.hw-ht-loading {
   opacity: 0.65;
   font-style: italic;

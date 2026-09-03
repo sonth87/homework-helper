@@ -16,6 +16,27 @@ export function escapeHtml(str) {
 }
 
 /**
+ * A listen button rendered inline in a dictionary card — beside the headword,
+ * and beside the translation of it.
+ *
+ * The click is not wired here: the card's HTML is rebuilt on every streamed
+ * chunk, so the surface delegates instead (bindSpeakButtons in shared/tts.js
+ * picks these up by their data attribute). `lang` is the language to
+ * pronounce the text in, or 'auto' to let the script decide — a headword
+ * carries no declared language, while a translation is in the target the
+ * caller asked for.
+ */
+const SPEAK_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>';
+
+function speakButton(text, lang, label) {
+  const spoken = (text || '').trim();
+  if (!spoken) return '';
+  const title = escapeHtml(label || 'Listen');
+  return `<button type="button" class="hw-dict-speak" data-hw-speak="${escapeHtml(spoken)}"`
+    + ` data-hw-speak-lang="${escapeHtml(lang || 'auto')}" title="${title}" aria-label="${title}">${SPEAK_ICON}</button>`;
+}
+
+/**
  * Render LaTeX math expression via KaTeX
  */
 function renderMath(formula, displayMode = false) {
@@ -242,7 +263,7 @@ function formatDictDesc(paraText) {
  * "*n.* **...**"). Matching those near-misses still gets a clean structured
  * card instead of falling all the way back to raw, unstyled text.
  */
-export function formatDictionaryEntry(text) {
+export function formatDictionaryEntry(text, { speakLabel = '' } = {}) {
   if (!text) return '';
 
   const paragraphs = text.trim().split(/\n\s*\n/).filter((p) => p.trim());
@@ -269,7 +290,7 @@ export function formatDictionaryEntry(text) {
   // a phrase/sentence reply), so don't force a dictionary layout onto it.
   if (!word || /\s/.test(word)) return formatMarkdownAndMath(text);
 
-  let html = `<div class="hw-dict-headword"><strong>${escapeHtml(word)}</strong>${phonetic ? ` <span class="hw-dict-phonetic">${escapeHtml(phonetic)}</span>` : ''}</div>`;
+  let html = `<div class="hw-dict-headword"><strong>${escapeHtml(word)}</strong>${phonetic ? ` <span class="hw-dict-phonetic">${escapeHtml(phonetic)}</span>` : ''}${speakButton(word, 'auto', speakLabel)}</div>`;
 
   const strictSenseRe = /^\*([^*\n]+?)\.?\*\s*\*\*([^*\n]+?)\*\*/;
   let senseCount = 0;
@@ -342,13 +363,17 @@ function renderExample(sentence, highlight) {
  * simply doesn't draw, so the card fills downward rather than switching
  * between different-looking layouts as it completes.
  */
-export function renderDictionaryEntry(entry) {
+export function renderDictionaryEntry(entry, { speakLabel = '', targetLang = '' } = {}) {
   if (!entry || !entry.word) return '';
 
+  // The headword's own pronunciation belongs next to the phonetic it
+  // transcribes, not in a footer several rows away — that is the one place a
+  // reader looks when they want to hear how the word sounds.
   let html = `<div class="hw-dict-headword"><strong>${escapeHtml(entry.word)}</strong>`;
   if (entry.phonetic) {
     html += ` <span class="hw-dict-phonetic">${escapeHtml(entry.phonetic)}</span>`;
   }
+  html += speakButton(entry.word, 'auto', speakLabel);
   html += '</div>';
 
   for (const sense of entry.senses || []) {
@@ -366,8 +391,11 @@ export function renderDictionaryEntry(entry) {
   }
 
   if (entry.translation || entry.description) {
+    // The translation gets its own button, spoken in the target language
+    // rather than guessed from its script — 'auto' cannot tell Spanish from
+    // French, and both are targets a reader may have picked.
     html += `<div class="hw-dict-desc">
-      ${entry.translation ? `<div class="hw-dict-desc-term">${escapeHtml(entry.translation)}</div>` : ''}
+      ${entry.translation ? `<div class="hw-dict-desc-term">${escapeHtml(entry.translation)}${speakButton(entry.translation, targetLang || 'auto', speakLabel)}</div>` : ''}
       ${entry.description ? `<div class="hw-dict-desc-text">${escapeHtml(entry.description)}</div>` : ''}
     </div>`;
   }
@@ -385,12 +413,12 @@ export function renderDictionaryEntry(entry) {
  * providers that rejected the schema — it is off by default so an ordinary
  * homework answer can never be coerced into a dictionary card.
  */
-export function renderAnswer(text, { allowMarkdownDict = false } = {}) {
+export function renderAnswer(text, { allowMarkdownDict = false, speakLabel = '', targetLang = '' } = {}) {
   const entry = parseDictionaryEntry(text);
-  if (entry) return renderDictionaryEntry(entry);
+  if (entry) return renderDictionaryEntry(entry, { speakLabel, targetLang });
   // A structured reply that hasn't yielded a usable entry yet — still
   // streaming its first field — must not fall through to the text renderers,
   // which would flash raw JSON at the user for a few frames.
   if (looksLikeDictionaryJson(text)) return '';
-  return allowMarkdownDict ? formatDictionaryEntry(text) : formatMarkdownAndMath(text);
+  return allowMarkdownDict ? formatDictionaryEntry(text, { speakLabel }) : formatMarkdownAndMath(text);
 }

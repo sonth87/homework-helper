@@ -231,16 +231,22 @@ class ScreenCropper {
       uiLanguage = 'en',
       toolbarShowText = true,
       toolbarSize = 'normal',
-      toolbarTheme = 'glass-light',
+      toolbarTheme = 'auto',
       toolbarOpacity = 90,
       toolbarBlur = 16,
     } = await Storage.get(['uiLanguage', 'toolbarShowText', 'toolbarSize', 'toolbarTheme', 'toolbarOpacity', 'toolbarBlur']);
     const dict = getCropperI18n(uiLanguage);
     const genDict = getI18n(uiLanguage);
     const iconOnlyCls = toolbarShowText ? '' : 'icon-only';
+    // Same resolution as selection-tooltip.js's renderToolbar(): 'auto' picks
+    // whichever of the two Liquid Glass looks matches the OS preference,
+    // since tooltip.css never styled a third .theme-auto variant.
+    const resolvedTheme = toolbarTheme === 'auto'
+      ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
+      : toolbarTheme;
 
     this.toolbar = document.createElement('div');
-    this.toolbar.className = `hw-selection-toolbar hw-crop-toolbar size-${toolbarSize} theme-${toolbarTheme}`;
+    this.toolbar.className = `hw-selection-toolbar hw-crop-toolbar size-${toolbarSize} theme-${resolvedTheme}`;
     this.toolbar.style.setProperty('--tb-alpha', `${(toolbarOpacity / 100).toFixed(2)}`);
     this.toolbar.style.setProperty('--tb-blur', `${toolbarBlur}px`);
     // .hw-selection-toolbar's own position:absolute is left as-is — it's

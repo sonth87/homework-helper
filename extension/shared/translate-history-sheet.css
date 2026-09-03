@@ -1,0 +1,404 @@
+/* Translate history bottom sheet (shared/translate-history-sheet.js)
+ *
+ * Loaded by two surfaces with different theming systems — the toolbar popup
+ * (a plain document, popup/popup.css) and the in-page card (a shadow root
+ * whose palette lives on :host in content/styles/overlay.css) — so
+ * everything here resolves through --th-* tokens, defined with light
+ * defaults below and remapped onto each surface's own palette there.
+ *
+ * Unlike shared/engine-picker.css's dropdown, this is NOT a portal: it
+ * renders as a child of whatever container the caller mounts it into, and
+ * covers that container's own content area — see the class doc comment in
+ * translate-history-sheet.js for why.
+ */
+
+.hw-th-sheet {
+  --th-bg: #ffffff;
+  --th-fg: #0f172a;
+  --th-muted: #64748b;
+  --th-border: #e2e8f0;
+  --th-hover: #f1f5f9;
+  --th-accent: #0284c7;
+  --th-accent-tint: #e0f2fe;
+  --th-warning: #f59e0b;
+  --th-backdrop: rgba(15, 23, 42, 0.5);
+
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.hw-th-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--th-backdrop);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.hw-th-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 86%;
+  display: flex;
+  flex-direction: column;
+  background: var(--th-bg);
+  color: var(--th-fg);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.2);
+  transform: translateY(100%);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.hw-th-sheet.is-open {
+  pointer-events: auto;
+}
+
+.hw-th-sheet.is-open .hw-th-backdrop {
+  opacity: 1;
+}
+
+.hw-th-sheet.is-open .hw-th-panel {
+  transform: translateY(0);
+}
+
+.hw-th-grip {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 4px;
+  margin: 8px auto 2px;
+  border-radius: 999px;
+  background: var(--th-border);
+}
+
+.hw-th-header {
+  /* Own stacking context, above .hw-th-list (a plain static-position sibling
+     that follows it in DOM order and would otherwise paint on top of it) —
+     needed so .hw-th-delete-menu, nested well inside here, reliably sits
+     above the list's rows instead of getting hit-tested through to them. */
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px 8px;
+  border-bottom: 1px solid var(--th-border);
+}
+
+.hw-th-header-left,
+.hw-th-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hw-th-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.hw-th-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--th-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.hw-th-tab:hover {
+  background: var(--th-hover);
+  color: var(--th-fg);
+}
+
+.hw-th-tab.is-active {
+  background: var(--th-accent-tint);
+  color: var(--th-accent);
+}
+
+.hw-th-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--th-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.hw-th-close:hover {
+  background: var(--th-hover);
+  color: var(--th-fg);
+}
+
+/* "Đã chọn N" — shown only once a row is selected (see syncSelectionUi()). */
+.hw-th-selected-count {
+  font-size: 11.5px;
+  color: var(--th-muted);
+  white-space: nowrap;
+}
+
+/* Split button: left segment deletes the current selection, right segment
+   opens a one-item menu for "delete all" — independent of any selection, so
+   it doesn't belong on the left segment itself. Danger-tinted like the old
+   single .hw-th-clear button it replaces, so it still reads as destructive
+   at a glance. Hidden only when there's nothing at all to delete; the left
+   segment disables on top of that once nothing is selected (see
+   syncSelectionUi()), since the right segment's menu stays usable regardless. */
+.hw-th-delete-group {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  height: 28px;
+  color: #ef4444;
+}
+
+/* Rounded corners live on each segment (rather than `overflow: hidden` on
+   the group) since the dropdown menu below hangs outside the group's own
+   box — clipping the group would clip the menu right along with it. */
+.hw-th-delete-btn,
+.hw-th-delete-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.hw-th-delete-btn {
+  width: 28px;
+  border-radius: 8px 0 0 8px;
+}
+
+.hw-th-delete-toggle {
+  width: 16px;
+  border-radius: 0 8px 8px 0;
+  border-left: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.hw-th-delete-btn:hover,
+.hw-th-delete-toggle:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+
+.hw-th-delete-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  background: transparent;
+  color: inherit;
+}
+
+.hw-th-delete-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 132px;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--th-bg);
+  border: 1px solid var(--th-border);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2);
+  z-index: 5;
+}
+
+.hw-th-delete-all-btn {
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #ef4444;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.hw-th-delete-all-btn:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.hw-th-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 2px 4px 10px;
+  /* Stops a wheel scroll that hits the top/bottom of this list from
+   * chaining into whatever scrolls behind the sheet — the popup's own body,
+   * on the toolbar popup, which used to scroll right along with (or instead
+   * of) the list once it ran out of room to scroll further itself. */
+  overscroll-behavior: contain;
+}
+
+.hw-th-empty {
+  padding: 28px 16px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--th-muted);
+}
+
+.hw-th-item {
+  border-bottom: 1px solid var(--th-border);
+}
+
+.hw-th-item:last-child {
+  border-bottom: none;
+}
+
+.hw-th-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.hw-th-row:hover {
+  background: var(--th-hover);
+}
+
+/* Clicking a row toggles this — bulk-delete selection, independent of
+   is-expanded (a row can be selected without ever being opened). */
+.hw-th-row.is-selected {
+  background: var(--th-accent-tint);
+}
+
+.hw-th-row.is-selected:hover {
+  background: var(--th-accent-tint);
+}
+
+.hw-th-col {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hw-th-source {
+  color: var(--th-fg);
+  font-weight: 600;
+}
+
+.hw-th-target {
+  color: var(--th-muted);
+}
+
+.hw-th-fav {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--th-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.hw-th-fav svg {
+  fill: none;
+}
+
+.hw-th-fav:hover {
+  background: var(--th-hover);
+  color: var(--th-accent);
+}
+
+.hw-th-fav.is-active {
+  color: var(--th-warning);
+}
+
+.hw-th-fav.is-active svg {
+  fill: currentColor;
+}
+
+/* The only part of a row that expands/collapses it — clicking the row
+   itself toggles selection instead (see .hw-th-row.is-selected). A real
+   button (not the old decorative span) so it's its own hit target. */
+.hw-th-chevron-btn {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--th-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.2s ease;
+}
+
+.hw-th-chevron-btn:hover {
+  background: var(--th-hover);
+  color: var(--th-fg);
+}
+
+.hw-th-item.is-expanded {
+  background: var(--hw-bg-hover);
+}
+
+.hw-th-item.is-expanded .hw-th-chevron-btn {
+  transform: rotate(180deg);
+}
+
+/* Animate to the detail's natural height without knowing it up front — a
+   1-cell grid whose row track tweens between 0fr (fully collapsed, and the
+   default even before any row has ever been expanded) and 1fr. */
+.hw-th-detail {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.2s ease;
+}
+
+.hw-th-detail-body,
+.hw-th-detail-source,
+.hw-th-detail-answer {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.hw-th-item.is-expanded .hw-th-detail {
+  grid-template-rows: 1fr;
+}
+
+.hw-th-detail-body {
+  padding: 2px 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.hw-th-detail-source {
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background: var(--th-hover);
+  color: var(--th-fg);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

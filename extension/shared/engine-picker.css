@@ -1,0 +1,165 @@
+/* Translation-source dropdown (shared/engine-picker.js)
+ *
+ * Loaded by two surfaces with different theming systems: the toolbar popup
+ * (a plain document, popup/popup.css) and the in-page card (a shadow root
+ * whose palette lives on :host in content/styles/overlay.css). Everything
+ * here therefore resolves through --ep-* tokens, defined with light defaults
+ * below and remapped onto the overlay's --hw-* palette in overlay.css.
+ *
+ * The menu is a portal — a sibling of the card, not a descendant — so it
+ * carries its own copy of the tokens rather than inheriting them from the
+ * trigger.
+ */
+
+.hw-ep,
+.hw-ep-menu {
+  --ep-bg: #ffffff;
+  --ep-fg: #0f172a;
+  --ep-muted: #64748b;
+  --ep-border: #e2e8f0;
+  --ep-hover: #f1f5f9;
+  --ep-accent: #0284c7;
+  --ep-accent-tint: #e0f2fe;
+}
+
+.hw-ep {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+}
+
+.hw-ep-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 4px 7px;
+  border-radius: 8px;
+  border: 1px solid var(--ep-border);
+  background: var(--ep-bg);
+  color: var(--ep-fg);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.hw-ep-trigger:hover {
+  border-color: var(--ep-accent);
+  background: var(--ep-hover);
+}
+
+/* flex:1 pushes the caret to the trigger's far right edge (like a native
+   <select>'s arrow) instead of hugging the text — the empty width from the
+   trigger's own width:100% (set per-surface, e.g. popup.css) would otherwise
+   sit unused to the right of the caret. */
+.hw-ep-trigger .hw-ep-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hw-ep-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: var(--ep-accent);
+}
+
+.hw-ep-mark svg {
+  display: block;
+}
+
+.hw-ep-caret {
+  flex: 0 0 auto;
+  color: var(--ep-muted);
+}
+
+/* position:fixed against the viewport — see the portal note in
+   engine-picker.js. The z-index clears the in-page card (2147483642). */
+.hw-ep-menu {
+  position: fixed;
+  z-index: 2147483646;
+  max-width: 280px;
+  max-height: min(60vh, 380px);
+  overflow-y: auto;
+  padding: 5px;
+  border-radius: 12px;
+  border: 1px solid var(--ep-border);
+  background: var(--ep-bg);
+  color: var(--ep-fg);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.18), 0 2px 6px rgba(15, 23, 42, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 12px;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.hw-ep-menu.is-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hw-ep-group {
+  padding: 6px 8px 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ep-muted);
+}
+
+.hw-ep-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ep-fg);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hw-ep-item:hover {
+  background: var(--ep-hover);
+}
+
+.hw-ep-item.is-selected {
+  background: var(--ep-accent-tint);
+  font-weight: 600;
+}
+
+.hw-ep-item .hw-ep-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The tick keeps its slot at all times so the rows never shift width when
+   the selection moves. */
+.hw-ep-check {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--ep-accent);
+  visibility: hidden;
+}
+
+.hw-ep-item.is-selected .hw-ep-check {
+  visibility: visible;
+}

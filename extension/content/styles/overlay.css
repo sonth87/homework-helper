@@ -33,6 +33,14 @@
   --hw-danger: #ef4444;
   --hw-warning: #f59e0b;
   --hw-modal-backdrop: rgba(15, 23, 42, 0.5);
+  /* Halo behind an icon that floats directly over the host page's own
+     content (compact mode's history/collapse/close buttons — see
+     .hw-card-float-actions) rather than over one of this palette's own
+     surfaces, where --hw-text-main alone can't be counted on for contrast
+     against an arbitrary background. Opposite luminance from the icon
+     colour itself: a soft white glow behind a dark icon here, a soft black
+     one behind a light icon in the dark blocks below. */
+  --hw-float-icon-shadow: rgba(255, 255, 255, 0.9);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -56,6 +64,7 @@
     --hw-danger: #f87171;
     --hw-warning: #fbbf24;
     --hw-modal-backdrop: rgba(0, 0, 0, 0.65);
+    --hw-float-icon-shadow: rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -79,6 +88,7 @@
   --hw-danger: #f87171;
   --hw-warning: #fbbf24;
   --hw-modal-backdrop: rgba(0, 0, 0, 0.65);
+  --hw-float-icon-shadow: rgba(0, 0, 0, 0.6);
 }
 
 *,
@@ -430,13 +440,81 @@
 /* Secondary Translate Bar */
 .hw-translate-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px 8px;
   padding: 6px 14px;
   /* background: var(--hw-bg-secondary); */
   border-bottom: 1px solid var(--hw-border-color);
   font-size: 11.5px;
   color: var(--hw-text-muted);
+}
+
+/* The card can be resized down to 240px wide, and the source picker's own
+   label ("Microsoft Translator", "AI models (3)"...) has no natural cap — so
+   this row needs two independent safety nets rather than one: the picker
+   itself truncates past a fixed budget (max-width + the ellipsis already
+   built into .hw-ep-trigger .hw-ep-label), and if "Dịch sang:" + its select
+   still don't fit on the same line after that, flex-wrap above lets them
+   drop to a second line instead of pushing off the card's edge — which is
+   what used to let them run under the header buttons floating above compact
+   mode's card (see the .hw-card-compact block further down). */
+.hw-translate-bar #hwCardEnginePicker {
+  max-width: 62%;
+}
+
+/* Pushes "Dịch sang:" and its language select to the right, leaving the
+   translation-source picker on the left where the eye starts — but never at
+   the cost of wrapping the label itself onto its own line mid-phrase. */
+.hw-translate-bar-to {
+  margin-left: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.hw-translate-bar .hw-lang-target {
+  min-width: 0;
+  max-width: 110px;
+}
+
+/* The shared translation-source dropdown (shared/engine-picker.css) resolves
+   everything through --ep-* tokens so it can live in two differently themed
+   surfaces. Here they map onto the overlay palette, which follows the page's
+   dark mode. Both selectors are needed: the menu is portalled to the shadow
+   root as a sibling of the card, so it never inherits from .hw-ep.
+   Same idea just below for the translate-history bottom sheet
+   (shared/translate-history-sheet.css) via its own --th-* tokens.
+
+   Both remaps are prefixed with :host on purpose. engine-picker.css and
+   translate-history-sheet.css each declare their OWN light-only defaults on
+   this exact selector (`.hw-ep, .hw-ep-menu { --ep-bg: #fff; ... }`), loaded
+   into this shadow root *after* this stylesheet (floating-card.js's
+   setupEnginePicker()/setupHistorySheet() call ensureStylesheet() well after
+   overlay.css is already linked). Same selector, same specificity — CSS
+   cascade order alone would let whichever stylesheet loaded LAST win, and
+   that was always the light defaults, overriding this remap regardless of
+   the actual theme. `:host .hw-ep` outweighs plain `.hw-ep` on specificity
+   alone, so this wins unconditionally instead of racing load order. */
+:host .hw-ep,
+:host .hw-ep-menu {
+  --ep-bg: var(--hw-bg-primary);
+  --ep-fg: var(--hw-text-main);
+  --ep-muted: var(--hw-text-muted);
+  --ep-border: var(--hw-border-color);
+  --ep-hover: var(--hw-bg-hover);
+  --ep-accent: var(--hw-accent);
+  --ep-accent-tint: var(--hw-accent-tint);
+}
+
+:host .hw-th-sheet {
+  --th-bg: var(--hw-bg-primary);
+  --th-fg: var(--hw-text-main);
+  --th-muted: var(--hw-text-muted);
+  --th-border: var(--hw-border-color);
+  --th-hover: var(--hw-bg-hover);
+  --th-accent: var(--hw-accent);
+  --th-accent-tint: var(--hw-accent-tint);
+  --th-warning: var(--hw-warning);
 }
 
 .hw-lang-target {
@@ -536,30 +614,64 @@
 /* Structured layout built by formatDictionaryEntry() in markdown-katex.js —
    a two-column row per sense (part-of-speech on the left, gloss + example on
    the right) plus a soft, low-emphasis box for the trailing description. */
-.hw-card-answer-content .hw-dict-headword {
+.hw-card-answer-content .hw-dict-headword,
+.hw-th-detail-body .hw-dict-headword {
   font-size: 15px;
   font-weight: 700;
   margin-bottom: 10px;
 }
 
-.hw-card-answer-content .hw-dict-phonetic {
+.hw-card-answer-content .hw-dict-phonetic,
+.hw-th-detail-body .hw-dict-phonetic {
   font-size: 12px;
   font-weight: 400;
   color: var(--hw-text-muted);
   margin-left: 2px;
 }
 
-.hw-card-answer-content .hw-dict-sense {
+/* Listen buttons the dictionary card renders inline (shared/markdown-katex.js):
+   one beside the phonetic, one beside the translation — where a reader looks
+   when they want to hear something, rather than down in the card footer. */
+.hw-card-answer-content .hw-dict-speak,
+.hw-ai-content .hw-dict-speak,
+.hw-th-detail-body .hw-dict-speak {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--hw-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.hw-card-answer-content .hw-dict-speak:hover,
+.hw-ai-content .hw-dict-speak:hover,
+.hw-th-detail-body .hw-dict-speak:hover {
+  background: var(--hw-accent-tint);
+  color: var(--hw-accent);
+}
+
+.hw-card-answer-content .hw-dict-sense,
+.hw-th-detail-body .hw-dict-sense {
   display: flex;
   gap: 10px;
   margin-bottom: 12px;
 }
 
-.hw-card-answer-content .hw-dict-sense:last-of-type {
+.hw-card-answer-content .hw-dict-sense:last-of-type,
+.hw-th-detail-body .hw-dict-sense:last-of-type {
   margin-bottom: 0;
 }
 
-.hw-card-answer-content .hw-dict-pos {
+.hw-card-answer-content .hw-dict-pos,
+.hw-th-detail-body .hw-dict-pos {
   flex: 0 0 auto;
   min-width: 32px;
   max-width: 104px;
@@ -569,23 +681,27 @@
   padding-top: 2px;
 }
 
-.hw-card-answer-content .hw-dict-body {
+.hw-card-answer-content .hw-dict-body,
+.hw-th-detail-body .hw-dict-body {
   flex: 1;
   min-width: 0;
 }
 
-.hw-card-answer-content .hw-dict-gloss {
+.hw-card-answer-content .hw-dict-gloss,
+.hw-th-detail-body .hw-dict-gloss {
   font-weight: 700;
   margin-bottom: 4px;
 }
 
-.hw-card-answer-content .hw-dict-example {
+.hw-card-answer-content .hw-dict-example,
+.hw-th-detail-body .hw-dict-example {
   font-size: 12px;
   color: var(--hw-text-muted);
   line-height: 1.5;
 }
 
-.hw-card-answer-content .hw-dict-example code.inline-code {
+.hw-card-answer-content .hw-dict-example code.inline-code,
+.hw-th-detail-body .hw-dict-example code.inline-code {
   font-family: inherit;
   font-size: inherit;
   background: none;
@@ -594,7 +710,8 @@
   font-weight: 600;
 }
 
-.hw-card-answer-content .hw-dict-desc {
+.hw-card-answer-content .hw-dict-desc,
+.hw-th-detail-body .hw-dict-desc {
   margin-top: 8px;
   padding: 8px 10px;
   background: rgba(var(--hw-glass-rgb), 0.5);
@@ -604,14 +721,16 @@
   line-height: 1.5;
 }
 
-.hw-card-answer-content .hw-dict-desc-term {
+.hw-card-answer-content .hw-dict-desc-term,
+.hw-th-detail-body .hw-dict-desc-term {
   font-size: 13px;
   font-weight: 700;
   color: var(--hw-text-main);
   margin-bottom: 4px;
 }
 
-.hw-card-answer-content .hw-dict-desc-text {
+.hw-card-answer-content .hw-dict-desc-text,
+.hw-th-detail-body .hw-dict-desc-text {
   color: var(--hw-text-muted);
 }
 
@@ -714,40 +833,41 @@
   color: var(--hw-text-main);
 }
 
+.hw-btn-card-action svg {
+  fill: none;
+}
+
+/* #hwBtnCardFavorite toggled on (see floating-card.js's syncFavoriteButton()) */
+.hw-btn-card-action.is-active {
+  border-color: var(--hw-warning);
+  color: var(--hw-warning);
+}
+
+.hw-btn-card-action.is-active svg {
+  fill: currentColor;
+}
+
 /* ========================================================= */
 /* Compact display mode for the solution popup — the header    */
 /* bar itself takes up no permanent space (0 height, no         */
 /* padding/border) and its in-flow title is hidden entirely;    */
 /* a separate #hwCardFloatTab element (sibling of the card, see  */
-/* below) mirrors it and floats ABOVE the card's own top edge —  */
-/* outside the card's box, so it never overlaps or pushes down   */
-/* any of the card's content (translate-bar included) and never  */
-/* resizes the popup itself. The history/collapse/close icons    */
-/* form a small always-on cluster pinned over the top-right of   */
-/* the content. The whole footer (secondary Copy/Retry buttons    */
+/* below) mirrors the title and PHYSICALLY HOSTS the real         */
+/* history/collapse/close buttons (relocated there by JS, not    */
+/* cloned — see setupFloatTab() in floating-card.js), floating   */
+/* ABOVE the card's own top edge, outside the card's box. That's  */
+/* what keeps them from sitting on top of the card's own content  */
+/* (the translate bar's two selects, most often — wide enough to  */
+/* reach the top-right corner where these buttons used to float   */
+/* as an absolutely-positioned overlay) and from resizing the     */
+/* popup itself. The whole footer (secondary Copy/Retry buttons   */
 /* and the primary Next Question / Continue in chat CTA) fades    */
-/* in/out with opacity on hover, same as the floating title tab.  */
+/* in/out with opacity on hover, same as the floating title bar.  */
 /* ========================================================= */
 .hw-solution-card.hw-card-compact .hw-card-header {
   padding: 0;
   border-bottom: none;
   background: transparent;
-}
-
-.hw-solution-card.hw-card-compact .hw-card-header-actions {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  z-index: 2;
-  gap: 2px;
-  padding: 2px;
-  /* background: rgba(var(--hw-glass-rgb), 0.85); */
-  border-radius: 8px;
-}
-
-.hw-solution-card.hw-card-compact .hw-card-header-actions .hw-icon-btn {
-  width: 24px;
-  height: 24px;
 }
 
 .hw-solution-card.hw-card-compact .hw-card-title {
@@ -790,21 +910,26 @@
 }
 
 .hw-solution-card.hw-card-compact #hwBtnCardCopyLabel,
+.hw-solution-card.hw-card-compact #hwBtnCardFavoriteLabel,
 .hw-solution-card.hw-card-compact #hwBtnCardRetryLabel,
 .hw-solution-card.hw-card-compact #hwBtnPrimaryLabel {
   display: none;
 }
 
-/* Floating title tab for compact mode — lives OUTSIDE .hw-solution-card
-   (a sibling, positioned via JS in floating-card.js) so it can render
-   above the card's top edge without being clipped by the card's own
-   overflow:hidden (required for its rounded corners + native resize
-   handle to work) and without shifting any of the card's own content. */
+/* Floating title chip for compact mode — lives OUTSIDE .hw-solution-card (a
+   sibling, positioned via JS in floating-card.js) so it can render above the
+   card's top edge without being clipped by the card's own overflow:hidden
+   (required for its rounded corners + native resize handle to work) and
+   without shifting any of the card's own content. Sized to its own content
+   (icon + name), not stretched to the card's width — see
+   .hw-card-float-actions right below for the separate, backgroundless
+   button cluster that floats independently next to it. */
 .hw-card-float-tab {
   position: fixed;
   z-index: 2147483643;
+  display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   padding: 2px 10px;
   font-size: 11px;
   font-weight: 700;
@@ -823,11 +948,64 @@
   user-select: none;
 }
 
+.hw-card-float-tab-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .hw-card-float-tab:active {
   cursor: grabbing;
 }
 
 .hw-card-float-tab.hw-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Floating action buttons for compact mode — a second sibling, deliberately
+   separate from .hw-card-float-tab above rather than packed into one long
+   bar together: three independent icons, no shared background of their own
+   (each .hw-icon-btn already paints its own hover state). Hosts the REAL
+   #hwCardHeaderActions node while compact — physically relocated there by
+   setupFloatTab(), not cloned, so the buttons keep working wherever they
+   currently live. Fades in/out together with the title chip. */
+.hw-card-float-actions {
+  position: fixed;
+  z-index: 2147483643;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.hw-card-float-actions .hw-card-header-actions {
+  gap: 2px;
+}
+
+/* --hw-text-main already flips light/dark, but these three icons float
+   directly over the host page's own content rather than one of this
+   palette's own surfaces — a muted-strength colour that reads fine against
+   the card's controlled background can vanish against an arbitrary page.
+   Full-strength theme colour plus an opposite-luminance halo (see
+   --hw-float-icon-shadow) keeps them legible regardless of what's behind
+   them. */
+.hw-card-float-actions .hw-icon-btn {
+  width: 24px;
+  height: 24px;
+  color: var(--hw-text-main);
+  filter: drop-shadow(0 1px 3px var(--hw-float-icon-shadow)) drop-shadow(0 0 4px var(--hw-float-icon-shadow));
+}
+
+.hw-card-float-actions.hw-visible {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;

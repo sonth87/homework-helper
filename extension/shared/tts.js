@@ -135,6 +135,43 @@ export async function speak(text, lang = 'en', hint = '') {
   }
 }
 
+/**
+ * Wire every listen button a rendered reply carries.
+ *
+ * `renderAnswer()` puts the buttons inline — beside a dictionary headword and
+ * beside its translation (shared/markdown-katex.js) — and that HTML is
+ * replaced wholesale on every streamed chunk, so per-button listeners would
+ * be lost within a frame. One delegated listener on the container survives
+ * every re-render instead, and each root only ever needs binding once.
+ *
+ * `root` may be a document, an element, or a ShadowRoot: composedPath() finds
+ * the button across a shadow boundary where closest() on a retargeted event
+ * would not.
+ */
+const BOUND_SPEAK_ROOTS = new WeakSet();
+
+export function bindSpeakButtons(root) {
+  if (!root || BOUND_SPEAK_ROOTS.has(root)) return;
+  BOUND_SPEAK_ROOTS.add(root);
+
+  root.addEventListener('click', (event) => {
+    const path = event.composedPath ? event.composedPath() : [event.target];
+    const btn = path.find((node) => node?.getAttribute && node.hasAttribute('data-hw-speak'));
+    if (!btn) return;
+    event.preventDefault();
+    event.stopPropagation();
+    // The page's own lang is the only thing that can tell a Japanese kanji
+    // word from a Chinese one — see guessLang(). On an extension page it is
+    // the UI language, which guessLang ignores for every script that
+    // identifies itself.
+    speak(
+      btn.getAttribute('data-hw-speak'),
+      btn.getAttribute('data-hw-speak-lang') || 'auto',
+      document.documentElement.lang || ''
+    );
+  });
+}
+
 export function stopSpeaking() {
   if (isSpeechAvailable()) {
     try { speechSynthesis.cancel(); } catch { /* nothing playing */ }

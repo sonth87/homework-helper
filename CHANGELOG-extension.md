@@ -17,6 +17,109 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.8.0] — 2026-09-03
+
+### Thêm mới
+- **Lịch sử dịch, dùng chung cho thanh công cụ bôi đen và popup trên thanh
+  công cụ.** Dịch một từ/câu ở đâu cũng vào chung một danh sách — không liên
+  quan tới lịch sử chat. Bấm nút Lịch sử (mới, trên cả hai nơi) để xem dạng
+  bottom sheet ngay trong popup: mỗi dòng 2 cột (từ gốc — bản dịch, tự động
+  rút gọn bằng "..." nếu quá dài), bấm vào dòng để mở rộng xem chi tiết —
+  dịch từ thì hiện phiên âm, ví dụ, nghĩa và nút nghe; dịch câu/đoạn thì hiện
+  câu gốc kèm bản dịch. Dịch lại đúng nội dung cũ sẽ cập nhật dòng đó và đưa
+  lên đầu thay vì tạo dòng mới. Có tab Yêu thích riêng — đánh dấu sao ngay
+  trên kết quả vừa dịch hoặc trong danh sách lịch sử, lọc xem lại sau. Mỗi
+  dòng có ô tick riêng, ô tick "chọn tất cả" ở đầu danh sách, và nút Xoá
+  (kèm xác nhận) hiện ra ngay khi có ít nhất một dòng được chọn.
+- **Chủ đề màu Toolbar có thêm lựa chọn "Tự động"**, và đây cũng là lựa chọn
+  mặc định — tự chuyển giữa Liquid Glass Light và Liquid Glass Dark theo đúng
+  giao diện sáng/tối hiện tại, không cần tự chọn tay. Bốn phong cách màu cũ
+  (Light/Dark/Cyber Blue/Emerald/Purple) vẫn chọn được như trước.
+- **Nghe phát âm ngay cạnh phiên âm.** Thẻ tra từ giờ có nút loa ngay sau phần
+  phiên âm để nghe chính từ gốc, và một nút nữa cạnh nghĩa đã dịch để nghe bản
+  dịch. Áp dụng cho cả popup trong trang, popup trên thanh công cụ và Side Panel.
+  Nút loa cũ dưới chân thẻ chỉ còn xuất hiện với những câu trả lời không phải
+  thẻ tra từ.
+- **Chọn nguồn dịch ngay trên popup trong trang.** Thanh dịch có thêm ô chọn
+  Microsoft Translator, Google Translate, Volcano Translate, MyMemory hoặc AI
+  của bạn — đổi nguồn là dịch lại ngay. Trước đây popup này luôn dùng AI, tốn
+  lượt gọi cho những câu chỉ cần dịch máy. Lựa chọn được ghi nhớ riêng, không
+  ảnh hưởng tới popup trên thanh công cụ.
+- **Nghe phát âm ngay trên tooltip dịch khi rê chuột.** Nút loa nhỏ ở góc trên
+  tooltip đọc to đúng phần văn bản đang rê chuột (từ, câu hoặc đoạn) bằng giọng
+  của chính ngôn ngữ đó — không phải bản dịch. Dùng giọng có sẵn của hệ điều
+  hành: không cần API key, không gửi gì lên mạng. Nút tự ẩn trên máy không có
+  giọng đọc.
+
+### Thay đổi
+- **Ô chọn nguồn dịch nay hiện logo kèm tên nhà cung cấp**, thay cho danh sách
+  chữ trơn — nhận ra dịch vụ đang dùng nhanh hơn nhiều. Dùng chung một kiểu
+  dropdown cho cả popup trên thanh công cụ lẫn popup trong trang.
+- **Popup trên thanh công cụ: nhấn Enter là dịch luôn.** Muốn xuống dòng thì giữ
+  Shift rồi nhấn Enter — giống ô chat trong Side Panel. Gợi ý phím được ghi ngay
+  dưới ô nhập. Gõ tiếng Việt kiểu telex hay tiếng Trung/Nhật/Hàn vẫn an toàn:
+  phím Enter dùng để chốt chữ đang gõ dở không kích hoạt dịch.
+- **Mở popup trên thanh công cụ là con trỏ nằm sẵn trong ô nhập**, gõ hoặc dán
+  được ngay không cần bấm chuột.
+- **Đổi icon nút "Hover Translate"** trên popup thành hình con trỏ chuột, đúng
+  với việc tính năng này kích hoạt bằng cách rê chuột chứ không phải click.
+- **Thanh tiêu đề của popup dịch trong trang, ở chế độ thu gọn, tách làm hai.**
+  Tên popup (icon + tên) giờ là một chip nhỏ gọn riêng; ba nút lịch sử/thu
+  gọn/đóng nằm độc lập bên cạnh, không còn chung một thanh nền dài — đúng
+  bằng bề rộng thẻ dịch như trước, chỉ để vừa 3 icon. Ba nút này giờ cũng nổi
+  rõ trên mọi nền trang web: đổi màu theo giao diện sáng/tối và có viền mờ
+  cùng tông để không bị chìm vào nội dung trang phía sau.
+- **Popup trên thanh công cụ giờ theo đúng giao diện sáng/tối/tự động** đã
+  chọn trong Cài đặt, thay vì luôn cố định giao diện sáng như trước.
+- **Vô hiệu hoá chuột phải trong popup trên thanh công cụ** — popup không có
+  nội dung trang nào để dùng menu chuột phải mặc định của trình duyệt.
+- **Cách chọn/xoá mục trong bottom sheet Lịch sử làm lại hoàn toàn, bỏ hẳn
+  checkbox.** Bấm vào một dòng là chọn dòng đó (bấm lại để bỏ chọn); bấm
+  riêng mũi tên bên phải mới là mở rộng/thu gọn chi tiết. Khi có dòng đang
+  được chọn, số lượng hiện cạnh nút xoá. Nút xoá giờ là nút gộp hai phần:
+  phần chính xoá các dòng đang chọn, phần mũi tên nhỏ mở menu "Xoá tất cả"
+  (xoá toàn bộ danh sách đang xem, không phụ thuộc dòng nào đang được chọn).
+  Cả hai thao tác xoá đều có hộp thoại xác nhận trước khi xoá thật.
+
+### Sửa lỗi
+- **Bottom sheet Lịch sử ở popup trên thanh công cụ đóng không dứt điểm** —
+  trước đây đóng lại nhưng vẫn còn thấy một phần ở mép dưới popup. Nút Lịch
+  sử cũng được dời lại gần nút Cài đặt cho gọn thay vì tách xa nhau.
+- **Popup dịch trong trang: ô chọn nguồn dịch và bottom sheet Lịch sử bị kẹt
+  giao diện sáng khi bật giao diện tối** — chữ khó đọc trên nền trắng giữa
+  một thẻ toàn màu tối. Nguyên nhân do thứ tự nạp CSS, đã sửa tận gốc.
+- **Mục "Google Gemini" trong "Cấu hình AI Models & API Keys" hiển thị nền
+  trắng lạc quẻ giữa các mục khác đã theo đúng giao diện tối.**
+- **Thanh công cụ bôi đen bị nháy liên tục** nếu bôi đen một đoạn văn bản mới
+  trong lúc một bản dịch/câu trả lời khác đang generate dần dần ở nơi khác
+  trên trang — dữ liệu nội bộ đổi liên tục trong lúc đó khiến thanh công cụ
+  cứ tự vẽ lại dù không có gì thực sự thay đổi ở nó.
+- **Từ điển tra nhanh (Google) thiếu phiên âm và ví dụ khi từ cần tra viết
+  hoa chữ đầu** — ví dụ "Result" copy từ đầu câu ra thiếu hẳn hai phần này,
+  trong khi "result" viết thường lại đầy đủ. API của Google phân biệt hoa
+  thường ở đúng hai trường này; giờ tra bằng chữ thường nhưng vẫn hiển thị
+  đúng cách viết gốc.
+- **Tự dịch clipboard khi mở popup trên thanh công cụ đôi khi không chạy** —
+  ô nhập trống trơn, không dán cũng không dịch. Nguyên nhân xác nhận qua log
+  lỗi thật: trình duyệt đôi khi chưa kịp trao focus cho popup vào đúng lúc
+  code đọc clipboard chạy, khiến `NotAllowedError: Document is not focused`.
+  Giờ chủ động chờ sự kiện focus thật rồi thử đọc lại nhiều lần thay vì chỉ
+  một lần, đủ để chờ cả những máy trao focus chậm; nếu người dùng đã gõ chữ
+  vào ô nhập trong lúc chờ thì không còn bị nội dung clipboard ghi đè lên.
+- **Bottom sheet Lịch sử cao vượt quá phần hiển thị của popup** khi đang có
+  sẵn một bản dịch dài khiến popup vốn đã cần cuộn — sheet trồi dài xuống
+  tận "chân" thật của popup (phần đã nằm ngoài khung nhìn), thay vì vừa
+  khít đúng phần đang hiển thị. Sheet giờ luôn khớp đúng khung nhìn thực tế
+  của popup, không phụ thuộc nội dung phía sau nó dài hay ngắn. Kèm theo:
+  khoá cuộn cả popup trong lúc sheet đang mở, tránh cuộn nhầm phần nội dung
+  ở phía sau.
+
+### Gỡ bỏ
+- **Bỏ nút "Hoàn tác" ở popup** khi văn bản được tự lấy từ clipboard. Nút xoá
+  (×) ngay trong ô nhập đã làm đúng việc đó rồi.
+
+---
+
 ## [1.7.2] — 2026-09-01
 
 ### Thay đổi

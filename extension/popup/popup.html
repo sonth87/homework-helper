@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Homework Helper</title>
+  <link rel="stylesheet" href="../shared/engine-picker.css">
+  <link rel="stylesheet" href="../shared/translate-history-sheet.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -16,7 +18,10 @@
           <div class="pop-sub" id="popBrandSub">Zero-Login Academic AI</div>
         </div>
       </div>
-      <button class="pop-icon-btn" id="popBtnOptions" title="Settings"></button>
+      <div class="pop-header-actions">
+        <button class="pop-icon-btn" id="popBtnHistory" title="History"></button>
+        <button class="pop-icon-btn" id="popBtnOptions" title="Settings"></button>
+      </div>
     </header>
 
     <div class="pop-body">
@@ -30,21 +35,22 @@
       <!-- Engine picker -->
       <div class="pop-engine-row">
         <span class="pop-engine-label" id="popEngineLabel">Engine:</span>
-        <select class="pop-select pop-select-engine" id="popEngine"></select>
+        <div class="pop-engine-picker" id="popEnginePicker"></div>
       </div>
 
       <!-- Source text -->
       <div class="pop-field">
-        <textarea id="popInput" class="pop-textarea" rows="3" placeholder="Type or paste text..."></textarea>
+        <textarea id="popInput" class="pop-textarea" rows="2" placeholder="Type or paste text..."></textarea>
         <div class="pop-field-actions">
           <button class="pop-icon-mini" id="popBtnSpeakSource" title="Listen" hidden></button>
           <button class="pop-clear-btn" id="popBtnClear" title="Clear" hidden></button>
         </div>
       </div>
 
+      <div class="pop-hint" id="popInputHint"></div>
+
       <div class="pop-note" id="popClipboardNote" hidden>
         <span id="popClipboardNoteText"></span>
-        <button class="pop-link-btn" id="popBtnUndoClipboard"></button>
       </div>
 
       <button class="pop-translate-btn" id="popBtnTranslate">
@@ -56,6 +62,7 @@
       <div class="pop-result-box" id="popResultBox" hidden>
         <div class="pop-result-head">
           <span class="pop-result-meta" id="popResultMeta"></span>
+          <button class="pop-icon-mini" id="popBtnFavorite" title="Favorite" hidden></button>
           <button class="pop-icon-mini" id="popBtnSpeakResult" title="Listen" hidden></button>
           <button class="pop-link-btn" id="popBtnCopy"></button>
         </div>
@@ -63,6 +70,8 @@
       </div>
 
       <div class="pop-error" id="popError" hidden></div>
+
+      <div class="pop-divider"></div>
 
       <!-- Quick actions -->
       <div class="pop-widgets">

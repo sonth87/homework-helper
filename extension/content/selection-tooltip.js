@@ -36,8 +36,23 @@ class SelectionTooltip {
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local' && (changes.apiConfigs || changes.nanoDownloadState || changes.isNanoReady)) {
+          // apiConfigs in particular can rewrite itself several times in quick
+          // succession while an unrelated generation is in flight elsewhere on
+          // the page (key-rotator.js stamping a cooldown per failed key). A
+          // toolbar already open for a *different* selection has nothing to do
+          // with that generation, but used to remove and rebuild itself on
+          // every single one of those writes — flickering for as long as the
+          // other request kept rotating keys. Only re-render when the gating
+          // state this toolbar actually reflects (blocked/nano status/download
+          // progress) has genuinely changed.
+          const prevBlocked = this.isAiBlocked;
+          const prevStatus = this.nanoStatus;
+          const prevDownload = JSON.stringify(this.nanoDownloadState);
           this.refreshGatingState().then(() => {
-            if (this.toolbar && this._lastRect) this.renderToolbar(this._lastRect);
+            const stateChanged = this.isAiBlocked !== prevBlocked
+              || this.nanoStatus !== prevStatus
+              || JSON.stringify(this.nanoDownloadState) !== prevDownload;
+            if (stateChanged && this.toolbar && this._lastRect) this.renderToolbar(this._lastRect);
           });
         }
       });
@@ -142,7 +157,7 @@ class SelectionTooltip {
       toolbarBlur = 14,
       toolbarShowText = true,
       toolbarSize = 'normal',
-      toolbarTheme = 'glass-light',
+      toolbarTheme = 'auto',
       toolbarPosition = 'above',
       toolbarLayout,
       uiLanguage = 'en',
@@ -155,8 +170,16 @@ class SelectionTooltip {
     const dict = getSelectionTooltipI18n(uiLanguage);
     const layout = normalizeToolbarLayout(toolbarLayout);
 
+    // 'auto' isn't a skin of its own — tooltip.css only ever styled
+    // glass-light (the default look) and a .theme-glass-dark override, so
+    // resolve to whichever of those two matches the OS's current preference
+    // rather than adding a third, parallel @media-driven variant.
+    const resolvedTheme = toolbarTheme === 'auto'
+      ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
+      : toolbarTheme;
+
     this.toolbar = document.createElement('div');
-    this.toolbar.className = `hw-selection-toolbar size-${toolbarSize} theme-${toolbarTheme}`;
+    this.toolbar.className = `hw-selection-toolbar size-${toolbarSize} theme-${resolvedTheme}`;
 
     // Liquid Glass CSS Variables (avoids CSS opacity bug on backdrop-filter)
     this.toolbar.style.setProperty('--tb-alpha', `${(toolbarOpacity / 100).toFixed(2)}`);

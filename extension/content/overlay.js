@@ -72,7 +72,7 @@ class InPageOverlay {
             ${Icons.appLogo(16)}
             <span id="hwPopupTitle">Homework Helper</span>
           </div>
-          <div class="hw-card-header-actions">
+          <div class="hw-card-header-actions" id="hwCardHeaderActions">
             <button class="hw-icon-btn" id="hwBtnCardHistory" data-tooltip-title="Lịch sử các câu hỏi" data-tooltip-desc="Xem lại các câu hỏi hoặc bài tập đã giải gần đây.">${Icons.history(14)}</button>
             <button class="hw-icon-btn" id="hwBtnCardCollapse" data-tooltip-title="Thu gọn" data-tooltip-desc="Thu popup thành một nút tròn nổi, kéo thả để di chuyển.">${Icons.chevronDown(14)}</button>
             <button class="hw-icon-btn" id="hwBtnCloseCard" data-tooltip-title="Đóng cửa sổ" data-tooltip-desc="Tắt popup giải bài">${Icons.x(14)}</button>
@@ -100,7 +100,8 @@ class InPageOverlay {
 
         <!-- Secondary Translate Target Language Bar -->
         <div class="hw-translate-bar" id="hwTranslateBar" style="display: none;">
-          <span>Dịch sang:</span>
+          <div class="hw-ep" id="hwCardEnginePicker"></div>
+          <span class="hw-translate-bar-to" id="hwTranslateToLabel">Dịch sang:</span>
           <select class="hw-lang-target" id="hwLangTarget"></select>
         </div>
 
@@ -130,6 +131,9 @@ class InPageOverlay {
             <button class="hw-btn-card-action" id="hwBtnCardCopy">
               ${Icons.copy(14)} <span id="hwBtnCardCopyLabel">Sao chép</span>
             </button>
+            <button class="hw-btn-card-action" id="hwBtnCardFavorite" style="display:none;">
+              ${Icons.star(14)} <span id="hwBtnCardFavoriteLabel">Yêu thích</span>
+            </button>
             <button class="hw-btn-card-action" id="hwBtnCardRetry">
               ${Icons.refresh(14)} <span id="hwBtnCardRetryLabel">Thử lại</span>
             </button>
@@ -140,11 +144,22 @@ class InPageOverlay {
         </div>
       </div>
 
-      <!-- Compact-mode floating title tab — sibling of .hw-solution-card
+      <!-- Compact-mode floating title chip — sibling of .hw-solution-card
            (not a descendant), positioned via JS so it can slide above the
            card's own top edge without being clipped by the card's
-           overflow:hidden. Its content is mirrored from .hw-card-title. -->
-      <div class="hw-card-float-tab" id="hwCardFloatTab" style="display: none;"></div>
+           overflow:hidden. The span is a mirror (its content is copied in),
+           kept deliberately small (icon + name only) rather than stretched
+           to the card's width. -->
+      <div class="hw-card-float-tab" id="hwCardFloatTab" style="display: none;">
+        <span class="hw-card-float-tab-title" id="hwCardFloatTabTitle"></span>
+      </div>
+
+      <!-- Compact-mode floating action buttons — a SEPARATE sibling (not
+           sharing the title chip's background) so the three controls read as
+           independent icons, not one long bar, next to it. Physically hosts
+           the REAL #hwCardHeaderActions node (not a clone) while compact —
+           see setupFloatTab() in floating-card.js. -->
+      <div class="hw-card-float-actions" id="hwCardFloatActions" style="display: none;"></div>
 
       <!-- Collapsed Solution Popup — round draggable FAB, snaps to nearest screen edge -->
       <button class="hw-card-collapsed-fab" id="hwCardCollapsedFab" style="display: none;">
@@ -567,6 +582,8 @@ class InPageOverlay {
     const btnCardCopyLabel = s.getElementById('hwBtnCardCopyLabel');
     const btnCardSpeakLabel = s.getElementById('hwBtnCardSpeakLabel');
     const btnCardRetryLabel = s.getElementById('hwBtnCardRetryLabel');
+    const btnCardFavoriteLabel = s.getElementById('hwBtnCardFavoriteLabel');
+    const translateToLabel = s.getElementById('hwTranslateToLabel');
     const configModalTitle = s.getElementById('hwConfigModalTitle');
 
     if (textarea) textarea.placeholder = dict.placeholder;
@@ -584,6 +601,10 @@ class InPageOverlay {
     if (btnCardCopyLabel) btnCardCopyLabel.textContent = cardDict.copy || 'Copy';
     if (btnCardSpeakLabel) btnCardSpeakLabel.textContent = cardDict.listen || 'Listen';
     if (btnCardRetryLabel) btnCardRetryLabel.textContent = cardDict.retry || 'Retry';
+    if (btnCardFavoriteLabel) btnCardFavoriteLabel.textContent = cardDict.favorite || 'Favorite';
+    if (translateToLabel) translateToLabel.textContent = cardDict.translateToLabel || 'Translate to:';
+    this.floatingCard?.applyEnginePickerLabels(cardDict);
+    this.floatingCard?.applyHistorySheetLabels(cardDict);
 
     // Populate native language options (with compact names for display)
     if (langSelect) {

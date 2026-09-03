@@ -23,7 +23,7 @@ export class AppearanceTab {
       popupCardSize = 'normal',
       toolbarShowText = true,
       toolbarSize = 'normal',
-      toolbarTheme = 'glass-light',
+      toolbarTheme = 'auto',
       toolbarPosition = 'above',
       toolbarOpacity = 90,
       toolbarBlur = 14,
@@ -190,7 +190,13 @@ export class AppearanceTab {
       if (prevToolbar && rangeToolbarOpacity && rangeToolbarBlur && toolbarThemeSelect) {
         const tbAlpha = (parseInt(rangeToolbarOpacity.value, 10) / 100).toFixed(2);
         const tbBlurVal = parseInt(rangeToolbarBlur.value, 10);
-        const tbTheme = toolbarThemeSelect.value;
+        // 'auto' isn't a real skin of its own — it resolves to whichever of
+        // the two Liquid Glass looks matches the OS's current preference,
+        // same as content/selection-tooltip.js does at render time.
+        const tbThemeSetting = toolbarThemeSelect.value;
+        const tbTheme = tbThemeSetting === 'auto'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
+          : tbThemeSetting;
         const tbSize = toolbarSizeSelect?.value || 'normal';
         const showText = checkToolbarText ? checkToolbarText.checked : true;
 

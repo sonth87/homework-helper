@@ -416,6 +416,7 @@ export class OptionsController {
     setText('optFabOptSmall', dict.fabOptSmall);
     setText('optFabOptNormal', dict.fabOptNormal);
     setText('optFabOptLarge', dict.fabOptLarge);
+    setText('optThemeOptAuto', dict.toolbarThemeOptAuto);
     setText('optThemeOptLight', dict.toolbarThemeOptLight);
     setText('optThemeOptDark', dict.toolbarThemeOptDark);
     setText('optThemeOptBlue', dict.toolbarThemeOptBlue);

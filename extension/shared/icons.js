@@ -139,6 +139,15 @@ export const Icons = {
     <path d="m6 6 12 12"></path>
   `, size, cls),
 
+  // Favorite toggle (translate history). The path carries no fill of its own
+  // so it inherits — an outline by default, solid once a caller's CSS sets
+  // `fill: currentColor` on an `.is-active` state (a stylesheet rule beats
+  // this svg's own `fill="none"`, since presentation attributes lose to any
+  // author rule).
+  star: (size = 18, cls = '') => createSvg(`
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+  `, size, cls),
+
   maximize: (size = 18, cls = '') => createSvg(`
     <polyline points="15 3 21 3 21 9"></polyline>
     <polyline points="9 21 3 21 3 15"></polyline>
@@ -165,6 +174,12 @@ export const Icons = {
     <path d="M7 2h1"></path>
     <path d="m22 22-5-10-5 10"></path>
     <path d="M14 18h6"></path>
+  `, size, cls),
+
+  // Cursor pointer — Quick Hover Translate: reading a word by hovering
+  // rather than clicking/selecting it, so the mark itself is the cursor.
+  mousePointer: (size = 18, cls = '') => createSvg(`
+    <path d="M4.037 4.688a.495.495 0 0 1 .651-.651l16.5 6.5a.5.5 0 0 1-.06.947l-6.917 1.781a2 2 0 0 0-1.442 1.442L11.988 21.6a.5.5 0 0 1-.947.06z"></path>
   `, size, cls),
 
   volume2: (size = 18, cls = '') => createSvg(`
