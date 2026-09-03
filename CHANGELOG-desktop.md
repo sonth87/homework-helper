@@ -125,6 +125,17 @@ chạy trên macOS và Windows.
 
 ### Sửa lỗi
 
+- **Dịch khi rê chuột dính lỗi 429 (Google)/401 (Bing) thường xuyên hơn hẳn so
+  với extension**, dù cả hai chạy trên cùng máy, cùng mạng. Nguyên nhân: khi
+  chọn endpoint cho desktop (xem ADR-0009), đã lỡ tham chiếu mã một extension
+  dịch **của bên thứ ba** khác thay vì `extension/` của chính dự án này —
+  `extension/background/translate-engines.js` thực ra đã dùng hai endpoint
+  tốt hơn hẳn từ trước: `translate-pa.googleapis.com` cho Google (khoan dung
+  hơn hẳn endpoint cũ, đúng như ghi chú "vẫn trả 200 khi endpoint cũ đã 429"),
+  và `edge.microsoft.com` cho Bing (không cần bootstrap token dễ vỡ, không
+  còn bị hệ chống bot của Microsoft chặn như endpoint scrape cũ). Đã gọi thật
+  cả hai endpoint mới trước khi đổi. Xem cập nhật trong
+  [ADR-0009](./dev/decisions/0009-chuoi-fallback-provider-dich.md).
 - **Provider dịch bị chặn dài hạn (như Bing bị hệ chống bot chặn, trả 401)
   vẫn cứ thử lại mỗi 30 giây vô thời hạn.** Trước đây mọi lỗi không phải 429
   đều dùng chung một mức tạm ngưng 30 giây, kể cả lỗi 401/403 vốn không tự

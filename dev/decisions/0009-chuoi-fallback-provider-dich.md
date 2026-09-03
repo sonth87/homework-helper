@@ -158,3 +158,38 @@ khi" bên dưới đã cập nhật theo phát hiện này.
   endpoint Papago hiện tại.
 - Google tiếp tục bị chặn thường xuyên với người dùng thật — cân nhắc đổi thứ
   tự mặc định, không còn ưu tiên Google tuyệt đối.
+
+## Cập nhật 2026-09-03 — Đổi hẳn endpoint Google + Bing, sai lầm ban đầu: "kế thừa" nhầm extension
+
+Người dùng báo desktop dính 429/401 thường xuyên trong khi **extension của
+chính dự án này** dùng Google/Bing/MyMemory bình thường, không lỗi gì. Kiểm
+tra lại phát hiện: mục "Khảo sát" ở trên đọc mã một extension **BÊN THỨ BA**
+("Từ điển Anh Việt ENVI") để chọn endpoint cho desktop — không phải đọc
+`extension/background/translate-engines.js` của **chính dự án này**, vốn đã
+tồn tại song song từ trước và dùng hẳn hai endpoint khác, tốt hơn:
+
+| | Trước (bản ENVI) | `translate-engines.js` (đúng của dự án này) |
+|---|---|---|
+| Google | `translate.googleapis.com/translate_a/single` — chính engine này bị 429 sớm nhất, theo đúng ghi chú trong `translate-engines.js` | `translate-pa.googleapis.com/v1/translateHtml` — khoan dung hơn hẳn, vẫn 200 khi endpoint kia đã 429 |
+| Bing | `bing.com/translator` scrape token + `ttranslatev3` — đã bị chặn 401 ngay từ lúc kiểm chứng ban đầu | `edge.microsoft.com/translate/translatetext` — không cần token, ghi chú "đáng tin cậy nhất" trong 4 engine |
+
+**Đã gọi thật cả hai endpoint mới** (curl trực tiếp, rồi gọi qua đúng hàm
+TypeScript `googleTranslate`/`bingTranslate` bằng `tsx`, không chỉ đọc code
+extension rồi tin) trước khi đổi — cả hai trả 200, dịch đúng nghĩa nhiều cặp
+ngôn ngữ (en↔vi, en→zh-CN).
+
+**Phát hiện thêm lúc gọi thật**: `translateHtml` trả text đã ESCAPE HTML entity
+(`"`→`&quot;`, `'`→`&#39;`, `&`→`&amp;`, `<`/`>`→`&lt;`/`&gt;`) — hợp lý vì
+endpoint này định để chèn thẳng vào DOM. `google.provider.ts` nay tự giải mã
+5 entity chuẩn trước khi trả về, vì kết quả ở app này hiện qua chuỗi JSX
+(tương đương `textContent`), không tự động decode entity như gán qua
+`innerHTML`. `edge.microsoft.com` (Bing) không escape, không cần bước này.
+
+Thêm `TRANSLATE_PROVIDER_MAX_LENGTH` cho `google`/`bing` (5000/1800 ký tự) —
+kế thừa số đo thực nghiệm CỦA CHÍNH `translate-engines.js`, hợp lệ vì giờ
+cùng gọi đúng một endpoint.
+
+**Bài học**: "kế thừa từ extension" phải là extension **của đúng dự án này**
+— khảo sát mã nguồn ngoài chỉ nên dùng khi không có sẵn cách làm nội bộ để
+tham chiếu, và phải nói rõ đó là extension ngoài, không phải giả định người
+đọc ADR sau này hiểu nhầm là "extension" luôn ám chỉ `extension/` trong repo.
