@@ -53,6 +53,11 @@ class TranslateRotator {
   reportSuccess(id: TranslateProviderId): void {
     this.cooldowns.delete(id);
   }
+
+  /** Xoá mọi cooldown đang chờ — nút "Xoá cache/cooldown" ở trang Chẩn đoán, để test lại từ đầu không cần khởi động lại app. */
+  clearAll(): void {
+    this.cooldowns.clear();
+  }
 }
 
 export const translateRotator = new TranslateRotator();

@@ -18,6 +18,7 @@ import type { AiDelta, ProviderId } from '../types/ai';
 import type { OcrResult } from '../types/content';
 import type { PermissionKind, PermissionStatus } from '../types/permissions';
 import type { DiagnosticsInfo } from '../types/diagnostics';
+import type { LogEntry, LogLevel } from '../types/log';
 
 // ── Khai báo kiểu kênh ──────────────────────────────────────────────────────
 
@@ -168,6 +169,13 @@ export const IPC = {
 
   /** Cài đặt → Chẩn đoán — xem diagnostics.service.ts. */
   'diagnostics:get': req<void, DiagnosticsInfo>(),
+
+  // Công cụ debug trong trang Chẩn đoán — xem diagnostics.ipc.ts.
+  'diagnostics:getLogs': req<void, LogEntry[]>(),
+  'diagnostics:getLogLevel': req<void, LogLevel>(),
+  'diagnostics:setLogLevel': req<{ level: LogLevel }, void>(),
+  'diagnostics:clearCaches': req<void, void>(),
+  'diagnostics:exportDebugBundle': req<void, { canceled: true } | { canceled: false; path: string }>(),
 } as const;
 
 // ── Kiểu dẫn xuất — không viết tay ──────────────────────────────────────────

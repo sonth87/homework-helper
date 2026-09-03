@@ -299,6 +299,24 @@ body {
 .diag__ok { color: var(--success); }
 .diag__bad { color: var(--danger); }
 
+.diag__debug { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); display: grid; gap: 6px; }
+.diag__debugTitle { margin: 0; font-size: 13px; font-weight: 600; }
+.diag__debugDesc { margin: 0 0 6px; color: var(--text-dim); font-size: 12px; }
+.diag__debugRow { display: flex; align-items: center; gap: 10px; }
+.diag__debugRow button {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--panel); color: var(--text); font-size: 12px; cursor: pointer;
+}
+.diag__debugRow select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); }
+.diag__debugHint { margin: 0 0 8px; color: var(--text-dim); font-size: 11px; }
+.diag__debugConfirm { color: var(--success); font-size: 12px; }
+.diag__logbox {
+  margin: 4px 0 8px; padding: 10px 12px; max-height: 220px; overflow: auto;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+  font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+}
+
 .providers__toggle { display: flex; align-items: center; gap: 8px; }
 
 .settings__reopen-onboarding {

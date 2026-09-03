@@ -17,6 +17,17 @@ chạy trên macOS và Windows.
 
 ### Thêm mới
 
+- **"Công cụ debug" ở cuối trang Chẩn đoán.** Xem log gần đây ngay trong app
+  (không cần mở terminal/Console.app), đổi mức log (Error/Warning/Info/Debug/
+  Trace) ngay lúc app đang chạy (tự về mặc định ở lần khởi động kế tiếp,
+  không cần sửa file cấu hình), xoá thủ công cache OCR + cooldown dịch (để
+  test lại từ đầu không cần khởi động lại app), và xuất một file JSON gồm
+  thông tin chẩn đoán + cấu hình + log gần đây để đính kèm khi báo lỗi — **không
+  bao giờ kèm API key** (API key nằm ở keychain hệ điều hành, tách hẳn khỏi
+  cấu hình thường, `settings.get()` vốn không đọc được nó). Không phải Debug
+  Mode (roadmap §91/§151 — vẽ bounding-box OCR trên overlay mỗi lần dịch, tính
+  năng khác, phức tạp hơn nhiều, chưa làm).
+
 - **Trang Chẩn đoán** (Cài đặt → Chẩn đoán) — hiện trạng thái thật của từng
   phần: nền tảng/phiên bản, quyền Accessibility + Ghi màn hình, provider đọc
   màn hình/OCR có sẵn sàng không, dịch khi rê chuột/theo dõi clipboard đang
