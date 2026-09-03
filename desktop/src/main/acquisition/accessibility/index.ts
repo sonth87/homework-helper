@@ -10,10 +10,14 @@
 import { platform } from 'node:process';
 import type { AccessibilityText } from '@shared/types/content';
 import type { Point } from '@shared/types/geometry';
+import type { ModifierState } from '@shared/types/modifiers';
 
 export type AccessibilityProvider = {
   isTrusted(): Promise<boolean>;
   getTextAtPoint(point: Point<'screen-logical'>): Promise<AccessibilityText | null>;
+  /** `null` khi không hỏi được (helper lỗi/timeout) — gọi nơi PHẢI phân biệt
+   *  được "không giữ phím nào" với "không biết chắc", xem init-mouse-tracker.ts. */
+  getModifiers(): Promise<ModifierState | null>;
 };
 
 let cached: AccessibilityProvider | null = null;

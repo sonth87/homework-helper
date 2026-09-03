@@ -17,6 +17,7 @@ import { app } from 'electron';
 import type { AccessibilityText } from '@shared/types/content';
 import { rect } from '@shared/types/geometry';
 import type { Point } from '@shared/types/geometry';
+import type { ModifierState } from '@shared/types/modifiers';
 import { logger } from '../../logging/logger';
 
 type PendingResolve = (value: Record<string, unknown>) => void;
@@ -129,6 +130,20 @@ export class WindowsAccessibility {
       return res.trusted === true;
     } catch {
       return false;
+    }
+  }
+
+  async getModifiers(): Promise<ModifierState | null> {
+    try {
+      const res = await this.request('modifiers');
+      return {
+        command: res.command === true,
+        control: res.control === true,
+        option: res.option === true,
+        shift: res.shift === true,
+      };
+    } catch {
+      return null;
     }
   }
 

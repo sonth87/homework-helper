@@ -43,6 +43,33 @@ public class DpiHelper {
 Add-Type -TypeDefinition $dpiHelperSrc -Language CSharp
 [DpiHelper]::SetProcessDpiAwarenessContext([IntPtr](-4)) | Out-Null
 
+# GetAsyncKeyState cho lệnh 'modifiers' — tương đương NSEvent.modifierFlags
+# của macOS (main.swift): trạng thái phím NGAY LÚC gọi, không cần cửa sổ có
+# focus hay đợi sự kiện. Bit cao nhất (0x8000) của giá trị trả về = phím đang
+# được giữ tại thời điểm gọi; bit thấp (đã bỏ qua ở đây) mới là "có sự kiện
+# nhấn kể từ lần gọi trước" — hai ý nghĩa khác nhau, dễ nhầm nếu không đọc kỹ
+# tài liệu Win32.
+$keyboardHelperSrc = @"
+using System;
+using System.Runtime.InteropServices;
+public class KeyboardHelper {
+    [DllImport("user32.dll")]
+    public static extern short GetAsyncKeyState(int vKey);
+}
+"@
+Add-Type -TypeDefinition $keyboardHelperSrc -Language CSharp
+
+# Mã phím ảo (Virtual-Key Codes), xem winuser.h.
+$VK_SHIFT = 0x10
+$VK_CONTROL = 0x11
+$VK_MENU = 0x12  # Alt — tương ứng 'option' trên macOS, không có phím Option thật trên Windows
+$VK_LWIN = 0x5B
+$VK_RWIN = 0x5C
+
+function Test-KeyDown([int]$vKey) {
+    return ([KeyboardHelper]::GetAsyncKeyState($vKey) -band 0x8000) -ne 0
+}
+
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 
@@ -128,6 +155,17 @@ while ($null -ne ($line = [Console]::In.ReadLine())) {
                     }
                 }
             }
+        }
+        elseif ($req.cmd -eq 'modifiers') {
+            # Trạng thái phím bổ trợ NGAY LÚC hỏi — dùng cho setting
+            # hoverModifiers, khớp cách main.swift trả lời lệnh 'modifiers' bên
+            # macOS (NSEvent.modifierFlags). 'command' không có phím tương ứng
+            # thật trên Windows — map sang phím Windows/Meta (trái hoặc phải)
+            # làm quy ước, vì đó là phím "bổ trợ hệ điều hành" gần nghĩa nhất.
+            $response.command = (Test-KeyDown $VK_LWIN) -or (Test-KeyDown $VK_RWIN)
+            $response.control = Test-KeyDown $VK_CONTROL
+            $response.option = Test-KeyDown $VK_MENU
+            $response.shift = Test-KeyDown $VK_SHIFT
         }
         else {
             $response.error = "Lệnh không rõ: $($req.cmd)"

@@ -277,6 +277,21 @@ while let line = readLine(strippingNewline: true) {
     case "trusted":
         writeResponse(req.id, ["trusted": AXIsProcessTrusted()])
 
+    // Trạng thái phím bổ trợ (Command/Control/Option/Shift) NGAY LÚC hỏi —
+    // dùng cho setting hoverModifiers (acquisition.settings.ts): dịch khi rê
+    // chuột chỉ kích hoạt khi các phím này đang được giữ. NSEvent.modifierFlags
+    // là thuộc tính CLASS (không cần event/focus cụ thể nào) — cho trạng thái
+    // bàn phím toàn hệ thống tại thời điểm gọi, đúng thứ cần cho việc polling
+    // này, khác hẳn việc lắng nghe sự kiện bàn phím (cần cửa sổ có focus).
+    case "modifiers":
+        let flags = NSEvent.modifierFlags
+        writeResponse(req.id, [
+            "command": flags.contains(.command),
+            "control": flags.contains(.control),
+            "option": flags.contains(.option),
+            "shift": flags.contains(.shift),
+        ])
+
     case "queryPoint":
         guard let x = req.x, let y = req.y else {
             writeResponse(req.id, ["error": "missing x/y"]); continue

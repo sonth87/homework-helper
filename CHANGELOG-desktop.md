@@ -109,6 +109,14 @@ chạy trên macOS và Windows.
 
 ### Sửa lỗi
 
+- **Setting "Phím kích hoạt" (giữ Command/Control/Option/Shift khi rê chuột)
+  không có tác dụng gì — dịch khi rê chuột luôn kích hoạt dù không giữ phím
+  nào.** Setting này chưa từng được nối vào logic thật, chỉ hiện trên UI. Nay
+  đọc trạng thái phím thật (macOS: `NSEvent.modifierFlags` qua helper có sẵn;
+  Windows: `GetAsyncKeyState`, chưa kiểm chứng trên máy Windows thật) ngay
+  trước khi quyết định có dịch hay không. Không xác định được trạng thái phím
+  (helper lỗi) thì coi như chưa đủ, không dịch — an toàn hơn dịch nhầm lúc
+  không nên dịch.
 - Với đoạn văn dài hơn 500 ký tự, MyMemory (dịch vụ dự phòng cuối) trước đây
   luôn bị từ chối lỗi mà vẫn tốn một lượt gọi mạng. Nay bỏ qua thẳng dịch vụ
   này khi biết trước sẽ bị từ chối — **không cắt bớt văn bản** để cố vừa giới

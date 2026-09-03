@@ -1,5 +1,6 @@
 import { MouseTracker } from '../acquisition/mouse/tracker';
 import { acquire } from '../acquisition/acquire';
+import { getAccessibilityProvider } from '../acquisition/accessibility';
 import { checkTrigger } from '../pipeline/guards';
 import { checkAppExcluded } from '../privacy/app-exclusion';
 import { quickTranslate } from '../translate/translate.service';
@@ -10,6 +11,7 @@ import type { Settings } from '@config/settings';
 import type { Point } from '@shared/types/geometry';
 import { estimateTextOffsetFraction } from '@shared/types/geometry';
 import type { AcquiredContent } from '@shared/types/content';
+import type { ModifierState } from '@shared/types/modifiers';
 import { LIMITS } from '@config/limits.config';
 import { logger } from '../logging/logger';
 
@@ -97,6 +99,13 @@ async function onHoverStable(point: Point<'screen-logical'>, settings: SettingsS
   if (!trigger.allowed) return;
 
   const s = settings.get();
+
+  // Rẻ hơn hẳn acquire() (một round-trip nhỏ tới helper, không phải AX/OCR đầy
+  // đủ) — kiểm tra TRƯỚC để không tốn công thu nhận nội dung rồi mới phát hiện
+  // thiếu phím. `s.hoverModifiers` rỗng (mặc định) nghĩa là không yêu cầu giữ
+  // phím nào — hoverModifiersHeld() tự trả true ngay, không gọi helper.
+  if (!(await hoverModifiersHeld(s.hoverModifiers))) return;
+
   const start = performance.now();
 
   const acquired = await resolveHoverContent(point, s, ctx);
@@ -163,6 +172,28 @@ async function onHoverStable(point: Point<'screen-logical'>, settings: SettingsS
     // gánh việc khi dùng thật — dữ liệu mà ADR-0008 nói cần có trước khi xây tiếp.
     offset: acquired.offsetSource ?? 'ước lượng',
   });
+}
+
+/**
+ * `hoverModifiers` (acquisition.settings.ts) từng chỉ hiện trên UI Cài đặt mà
+ * KHÔNG CÓ logic nào đọc — bug thật đã gặp: bật "Control" lên nhưng hover ở
+ * đâu cũng dịch, không cần giữ phím gì cả. Nối qua AccessibilityProvider.
+ * getModifiers() (main.swift lệnh 'modifiers' / helper.ps1 tương đương).
+ *
+ * Không xác định được trạng thái phím (helper lỗi/timeout, hoặc không có
+ * provider — ví dụ Linux trong tương lai) → coi như CHƯA đủ, KHÔNG kích hoạt.
+ * Người dùng đã CHỦ Ý cấu hình yêu cầu giữ phím; lặng lẽ bỏ qua yêu cầu đó khi
+ * không chắc còn tệ hơn một lần hover không phản hồi — "không dịch" luôn an
+ * toàn hơn "dịch nhầm lúc không nên dịch" (đúng nguyên tắc xuyên suốt dự án).
+ */
+async function hoverModifiersHeld(required: readonly string[]): Promise<boolean> {
+  if (required.length === 0) return true;
+
+  const provider = await getAccessibilityProvider();
+  const state = await provider?.getModifiers();
+  if (!state) return false;
+
+  return required.every((key) => state[key as keyof ModifierState] === true);
 }
 
 /**
