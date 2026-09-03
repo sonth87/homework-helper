@@ -23,6 +23,7 @@ import { getAccessibilityProvider } from './accessibility';
 import { getOcrProvider } from './ocr';
 import type { OcrProvider } from './ocr';
 import { getTesseractProvider } from './ocr/tesseract';
+import { getCachedOcrResult, setCachedOcrResult } from './ocr/region-cache';
 import { layoutBlocks } from './ocr/blocks';
 import { logger } from '../logging/logger';
 
@@ -185,8 +186,16 @@ async function recognizeWith(
   { point, box, scaleFactor, minConfidence }: OcrHitContext,
 ): Promise<AcquiredContent | null> {
   try {
-    const result = await provider.recognize(base64);
-    logger.debug('OCR fallback', { engine: result.engine, textLength: result.text.length, blocks: result.blocks.length, durationMs: result.durationMs });
+    // Cache theo NỘI DUNG ảnh, không phải toạ độ — rê chuột sang từ kế bên
+    // trong cùng dòng/đoạn thường chụp trúng gần như đúng y hệt vùng ảnh lần
+    // trước (xem region-cache.ts). Chỉ bỏ qua bước OCR THẬT (chậm, ~300-400ms
+    // đo được), MỌI xử lý sau đó (lọc confidence, layoutBlocks) vẫn chạy lại
+    // bình thường — performanceMode có thể đã đổi giữa hai lần hover dù ảnh
+    // giống hệt, nên không được cache luôn cả kết quả ĐÃ lọc.
+    const cached = getCachedOcrResult(base64, label);
+    const result = cached ?? (await provider.recognize(base64));
+    if (!cached) setCachedOcrResult(base64, label, result);
+    logger.debug('OCR fallback', { engine: result.engine, textLength: result.text.length, blocks: result.blocks.length, durationMs: result.durationMs, fromCache: cached !== null });
     if (!result.text.trim()) return null;
 
     const bestConfidence = result.blocks.reduce((max, b) => Math.max(max, b.confidence), 0);

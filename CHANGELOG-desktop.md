@@ -109,6 +109,22 @@ chạy trên macOS và Windows.
 
 ### Sửa lỗi
 
+- **Provider dịch bị chặn dài hạn (như Bing bị hệ chống bot chặn, trả 401)
+  vẫn cứ thử lại mỗi 30 giây vô thời hạn.** Trước đây mọi lỗi không phải 429
+  đều dùng chung một mức tạm ngưng 30 giây, kể cả lỗi 401/403 vốn không tự
+  hết sau vài giây. Đo được thật trong log người dùng gửi: Bing trả 401 lặp
+  lại đều đặn ~38 giây một lần trong nhiều phút liền. Nay lỗi 401/403 dùng
+  mức tạm ngưng riêng, dài hơn hẳn (30 phút) — provider vẫn tự thử lại sau đó
+  (không có khái niệm "tắt vĩnh viễn" cho provider không cần cấu hình API
+  key), chỉ đỡ tốn lượt gọi vô ích trong lúc bị chặn.
+- **OCR khi rê chuột chạy lại từ đầu dù ảnh chụp giống hệt lần vừa rồi.** Rê
+  chuột chầm chậm trong cùng một dòng/đoạn thường chụp trúng gần như đúng y
+  hệt vùng ảnh của lần hover ngay trước, nhưng mỗi lần đều nhận dạng lại toàn
+  bộ (~300-400ms/lần, đo được thật trong log người dùng gửi). Nay nhớ tạm kết
+  quả OCR theo đúng nội dung ảnh đã chụp (không theo toạ độ, nên vẫn tự đúng
+  khi màn hình đổi nội dung) — ảnh giống hệt thì trả lại ngay không nhận dạng
+  lại. Chưa đo hiệu quả thật khi rê chuột thật (mới kiểm bằng test cô lập,
+  không phải kiểm bằng thao tác chuột sống).
 - **Setting "Phím kích hoạt" (giữ Command/Control/Option/Shift khi rê chuột)
   không có tác dụng gì — dịch khi rê chuột luôn kích hoạt dù không giữ phím
   nào.** Setting này chưa từng được nối vào logic thật, chỉ hiện trên UI. Nay

@@ -4,9 +4,21 @@
  */
 
 export const LIMITS = {
-  /** Thời gian tạm ngưng một key sau khi lỗi. Bám theo hành vi đã kiểm chứng ở
-   *  extension (background/key-rotator.js): 60s cho rate limit, 30s cho lỗi máy chủ. */
-  cooldown: { rateLimitMs: 60_000, serverErrorMs: 30_000 },
+  /**
+   * Thời gian tạm ngưng một key/provider sau khi lỗi. Bám theo hành vi đã
+   * kiểm chứng ở extension (background/key-rotator.js): 60s cho rate limit,
+   * 30s cho lỗi máy chủ.
+   *
+   * `authErrorMs` thêm 2026-09-03: 401/403 (ví dụ Bing bị hệ chống bot chặn —
+   * xem bing.provider.ts) nhiều khả năng là chặn DÀI HẠN, không phải quá tải
+   * tạm thời như 429/5xx — thử lại sau 30s gần như chắc chắn vẫn lỗi y hệt,
+   * chỉ tổ tốn thêm request. Không có khái niệm "tắt hẳn tới khi người dùng
+   * tự bật lại" (translateRotator không có UI cho việc đó, và với provider
+   * keyless thì cũng không có "cấu hình" nào để người dùng sửa) — thay vào
+   * đó cooldown dài hơn hẳn (30 phút) để không dồn dập gọi vào một endpoint
+   * đang bị chặn, nhưng vẫn tự thử lại nếu tình trạng chặn chỉ là tạm thời.
+   */
+  cooldown: { rateLimitMs: 60_000, serverErrorMs: 30_000, authErrorMs: 30 * 60_000 },
 
   /** Lane A phải phản hồi trong khoảng này để cảm giác tức thì. */
   fastLane: { targetLatencyMs: 400, timeoutMs: 5_000, cacheTtlMs: 7 * 24 * 60 * 60 * 1000, cacheMaxEntries: 10_000 },

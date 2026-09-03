@@ -76,6 +76,35 @@ test('reportFailure(): lỗi có "429" trong message dùng cooldown DÀI hơn l�
   }
 });
 
+test('reportFailure(): lỗi 401/403 dùng cooldown DÀI HƠN cả 429 — nhiều khả năng chặn dài hạn', () => {
+  assert.ok(
+    LIMITS.cooldown.authErrorMs > LIMITS.cooldown.rateLimitMs,
+    'giả định nền: authErrorMs phải dài hơn rateLimitMs, không chỉ dài hơn serverErrorMs',
+  );
+  resetAll();
+
+  const realNow = Date.now;
+  let now = 1_000_000;
+  Date.now = () => now;
+  try {
+    // Đúng thông điệp lỗi thật của bing.provider.ts khi bị hệ chống bot chặn.
+    translateRotator.reportFailure('bing', new Error('Bing Translate trả lỗi HTTP 401'));
+    translateRotator.reportFailure('google', new Error('HTTP 429 Too Many Requests'));
+
+    // Vượt qua cooldown-429 nhưng CHƯA hết cooldown-401.
+    now += LIMITS.cooldown.rateLimitMs + 1;
+    const mid = translateRotator.candidates([cfg('bing', 0), cfg('google', 1)]);
+    assert.deepEqual(mid.map((c) => c.id), ['google'], 'google (429) đã hết cooldown, bing (401) vẫn còn bị chặn');
+
+    now += LIMITS.cooldown.authErrorMs;
+    const later = translateRotator.candidates([cfg('bing', 0), cfg('google', 1)]);
+    assert.deepEqual(later.map((c) => c.id).sort(), ['bing', 'google'], 'cả hai đều hết cooldown');
+  } finally {
+    Date.now = realNow;
+    resetAll();
+  }
+});
+
 test('candidates(): danh sách rỗng không ném lỗi', () => {
   assert.deepEqual(translateRotator.candidates([]), []);
 });

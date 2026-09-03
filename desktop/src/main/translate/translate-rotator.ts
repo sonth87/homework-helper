@@ -27,15 +27,25 @@ class TranslateRotator {
   }
 
   /**
-   * Tạm ngưng provider vừa lỗi. Không phân biệt được mã lỗi HTTP có cấu trúc
-   * cho cả ba provider (Bing trả 401 khi bị chống bot, không phải 429 chuẩn) —
-   * chỉ so khớp chuỗi "429" trong message, còn lại dùng thời gian tạm ngưng
-   * mặc định. Đơn giản nhưng đủ dùng: hậu quả của đoán sai chỉ là tạm ngưng
-   * hơi lâu/hơi ngắn hơn lý tưởng, không phải sai kết quả dịch.
+   * Tạm ngưng provider vừa lỗi. Vẫn KHÔNG phân biệt được mã lỗi HTTP có cấu
+   * trúc cho cả ba provider (Bing trả 401 khi bị chống bot, không phải 429
+   * chuẩn) — chỉ so khớp chuỗi trong message, không parse status code thật.
+   * Đơn giản nhưng đủ dùng: hậu quả của đoán sai chỉ là tạm ngưng hơi lâu/hơi
+   * ngắn hơn lý tưởng, không phải sai kết quả dịch.
+   *
+   * 2026-09-03: thêm nhánh 401/403 riêng (xem authErrorMs trong
+   * limits.config.ts) — trước đó rơi chung vào serverErrorMs (30s), khiến một
+   * provider bị chặn dài hạn (như Bing bị hệ chống bot chặn) cứ 30s lại thử
+   * lại vô hạn, đo được thật trong log người dùng gửi (401 lặp lại cách nhau
+   * ~38s, khớp 30s cooldown + thời gian xử lý).
    */
   reportFailure(id: TranslateProviderId, error: unknown): void {
     const message = error instanceof Error ? error.message : String(error);
-    const ms = message.includes('429') ? LIMITS.cooldown.rateLimitMs : LIMITS.cooldown.serverErrorMs;
+    const ms = message.includes('429')
+      ? LIMITS.cooldown.rateLimitMs
+      : message.includes('401') || message.includes('403')
+        ? LIMITS.cooldown.authErrorMs
+        : LIMITS.cooldown.serverErrorMs;
     this.cooldowns.set(id, Date.now() + ms);
     logger.warn('Tạm ngưng provider dịch', { id, ms, reason: message });
   }
