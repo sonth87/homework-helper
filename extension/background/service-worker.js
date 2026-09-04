@@ -71,19 +71,29 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 });
 
 // 3. Command Keybinding Listener (Alt+K, Alt+C, etc.)
-chrome.commands.onCommand.addListener(async (command, tab) => {
+//
+// Deliberately NOT an async listener, and deliberately uses the `tab` this
+// callback is already handed instead of re-querying it. chrome.sidePanel.open()
+// only works while Chrome still considers this call part of the user's
+// keypress ("transient user activation") — awaiting anything (even a cheap
+// chrome.tabs.query) before calling it spends that activation on the await
+// instead, so open() silently rejects and .catch(() => {}) swallowed it.
+// That's why Cmd+E (screenshot — plain tabs.sendMessage, no gesture
+// requirement) kept working while Cmd+K (chat) quietly did nothing: this used
+// to `await chrome.tabs.query(...)` before ever reaching sidePanel.open().
+chrome.commands.onCommand.addListener((command, tab) => {
   console.log('[Background] Received command:', command);
-
-  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!activeTab || !activeTab.id) return;
+  if (!tab || !tab.id) return;
 
   if (command === 'screenshot' || command === 'capture') {
-    chrome.tabs.sendMessage(activeTab.id, { action: 'START_CROP' }).catch(() => {});
+    chrome.tabs.sendMessage(tab.id, { action: 'START_CROP' }).catch(() => {});
   } else if (command === 'chat' || command === 'open_sidepanel') {
     if (chrome.sidePanel) {
-      await chrome.sidePanel.open({ windowId: activeTab.windowId }).catch(() => {});
+      chrome.sidePanel.open({ windowId: tab.windowId }).catch((err) => {
+        console.warn('[Background] sidePanel.open() failed:', err);
+      });
     } else {
-      chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_OVERLAY' }).catch(() => {});
+      chrome.tabs.sendMessage(tab.id, { action: 'TOGGLE_OVERLAY' }).catch(() => {});
     }
   }
 });
@@ -91,6 +101,17 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 // 4. Runtime Message Listener
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const { action, payload } = message || {};
+
+  // content scripts can't call chrome.commands directly (that API isn't
+  // exposed to their isolated world), so overlay.js asks here instead — it
+  // needs the real per-OS bound accelerator to show next to the in-page FAB
+  // buttons (e.g. "⌘K" on macOS) instead of a hardcoded Windows/Linux hint.
+  if (action === 'GET_COMMAND_SHORTCUTS') {
+    chrome.commands.getAll((cmds) => {
+      sendResponse(Object.fromEntries((cmds || []).map((c) => [c.name, c.shortcut])));
+    });
+    return true; // Keep channel open (async sendResponse)
+  }
 
   // Capture current tab viewport screenshot
   if (action === 'CAPTURE_VISIBLE_TAB') {

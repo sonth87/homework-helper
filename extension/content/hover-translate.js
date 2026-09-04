@@ -88,7 +88,16 @@ class HoverTranslate {
     document.addEventListener('scroll', () => this.hideTooltip(), true);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') this.hideTooltip();
+      this.refreshModifierState(e);
     });
+    // ctrlKey/shiftKey/altKey/metaKey on this.lastPoint are otherwise only
+    // ever refreshed by mousemove — pressing (or releasing) the configured
+    // modifier while the cursor is already resting still on text, with no
+    // further mouse movement, left the pending dwell check reading whatever
+    // modifier state happened to be true on the last real mousemove instead
+    // of what's actually held right now, so it silently failed
+    // modifiersMatch() until the next move. See refreshModifierState().
+    document.addEventListener('keyup', (e) => this.refreshModifierState(e));
     document.addEventListener('mousedown', (e) => {
       if (this.tooltip && !e.target.closest('.hw-hover-translate-tip')) this.hideTooltip();
     });
@@ -129,6 +138,28 @@ class HoverTranslate {
       if (!overTooltip && !nearWord) this.hideTooltip();
     }
 
+    if (!this.settings.enableHoverTranslate) return;
+    this.dwellTimer = setTimeout(() => this.onDwell(), this.settings.hoverTranslateDelay || 350);
+  }
+
+  // Keydown/keyup handler: the cursor doesn't move when a modifier key alone
+  // is pressed or released, so if the mouse was already resting still on
+  // text before/without any further mousemove, this.lastPoint's
+  // ctrlKey/shiftKey/altKey/metaKey would otherwise stay frozen at whatever
+  // they were on the last real mousemove — e.g. still false right after
+  // pressing Ctrl, since no mousemove has happened since to update it. That
+  // made the feature only reliably fire when the modifier was already held
+  // *before* the cursor arrived (so a genuine mousemove captured it), not
+  // when pressed while already hovering. Refreshing here and re-arming the
+  // dwell timer makes both orders work the same way.
+  refreshModifierState(e) {
+    if (!this.lastPoint) return;
+    if (!['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+    this.lastPoint = {
+      ...this.lastPoint,
+      ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey, metaKey: e.metaKey,
+    };
+    clearTimeout(this.dwellTimer);
     if (!this.settings.enableHoverTranslate) return;
     this.dwellTimer = setTimeout(() => this.onDwell(), this.settings.hoverTranslateDelay || 350);
   }
@@ -306,12 +337,34 @@ class HoverTranslate {
   // into one string, recording each node's starting offset within it — the
   // mapping offsetToBoundary() uses to turn a segment's character range back
   // into real DOM boundary points.
+  //
+  // Also walks <br> elements (SHOW_ELEMENT, filtered to just those) purely to
+  // insert a space at each one — without it, a heading like
+  // `<h1>foo <br><span>bar</span></h1>` flattened to "foo" + "bar" with
+  // nothing in between the two text nodes, so "foo bar" came out as
+  // "foobar" (a real page hit this with a <br> splitting one visual line
+  // into two: "...vai trò" / "dựng từ..." merged into "...vai tròdựng từ...").
+  // Other block-level splits don't need this: findBlockContainer() already
+  // stops at the nearest real block tag, so everything collectTextNodes()
+  // walks is inline content where <br> is the only element that introduces
+  // a line break without its own text node.
   collectTextNodes(container) {
-    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
+      acceptNode(node) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          return node.tagName === 'BR' ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
     const nodes = [];
     let text = '';
     let n;
     while ((n = walker.nextNode())) {
+      if (n.nodeType === Node.ELEMENT_NODE) {
+        if (text && !/\s$/.test(text)) text += ' ';
+        continue;
+      }
       nodes.push({ node: n, start: text.length });
       text += n.data;
     }

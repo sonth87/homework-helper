@@ -787,10 +787,12 @@
    the tip's top edge so it costs the translation no room; unlike that tab it
    stays at full size, because a 6px dot is not a target you can hit on the
    first try for a control you press once and are done with. */
-/* The button's lower half sits over the tip's own top padding, so that padding
-   grows to keep it off the first line of the translation. */
+/* The button's lower half (11px — half of its own 22px height, centered on
+   the tip's top edge) sits over the tip's own top padding, so that padding
+   grows just enough to clear it (11px + 1px buffer) — kept close to the
+   base 8px so the content doesn't look top-heavy. */
 .hw-hover-translate-tip.has-speak {
-  padding-top: 14px;
+  padding-top: 8px;
 }
 
 .hw-ht-speak-btn {

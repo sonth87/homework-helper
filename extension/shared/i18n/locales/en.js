@@ -163,7 +163,7 @@ export default {
         desc: "Response format: Step-by-Step, Direct Answer, Hint, or Deep Theory.",
       },
       capture: {
-        title: "Screen Capture (Alt+C)",
+        title: "Screen Capture",
         desc: "Crop any problem or diagram on the screen to solve instantly.",
       },
       upload: {
@@ -184,10 +184,10 @@ export default {
       },
       close: {
         title: "Close Chat Panel",
-        desc: "Collapse the side drawer to the screen edge (Alt+K).",
+        desc: "Collapse the side drawer to the screen edge.",
       },
       open: {
-        title: "Open Chat Panel (Alt+K)",
+        title: "Open Chat Panel",
         desc: "Open AI drawer assistant to solve homework and ask questions.",
       },
       guide: {
@@ -286,7 +286,7 @@ export default {
     brandSub: "AI Homework Solver & Study Assistant",
     openSidePanel: "Open AI Side Panel",
     openSidePanelDesc: "Native workspace right next to your webpage",
-    cropSolve: "Crop & Solve (Alt+C)",
+    cropSolve: "Crop & Solve",
     cropSolveDesc: "Capture formula or diagrams",
     keysPool: "API Keys Pool:",
     rotationMode: "Rotation Mode:",
@@ -317,6 +317,19 @@ export default {
     widgetHover: "Hover translate",
     widgetSettings: "Settings",
     autoClipboard: "Auto-translate clipboard",
+    // Rich tooltips for the 4 quick-action widgets and 3 feature toggles
+    // (see popup-tooltips.js / popup.js's applyTooltips()).
+    widgetChatDesc: "Open the AI Chat panel to ask questions or chat freely.",
+    widgetCaptureDesc: "Select an area of the screen (a question, formula, chart…) for AI to read and solve directly.",
+    widgetHoverDesc: "Turn hover-to-translate on or off for text on any webpage.",
+    widgetSettingsDesc: "Open the extension's full Settings page.",
+    formsAssistantDesc: "Automatically detects questions on Google Forms and shows an «AI Solve» button next to each one.",
+    selectionTooltipDesc: "Shows a floating toolbar (Solve, Copy, Translate…) whenever you select text on a webpage.",
+    autoClipboardDesc: "When this popup opens, instantly translate whatever is already in your clipboard.",
+    hoverShortcutHeld: "Hold",
+    hoverShortcutNone: "Just hover, no key needed",
+    shortcutNotSet: "No shortcut assigned — set one at chrome://extensions/shortcuts",
+    shortcutsPanelTitle: "Keyboard Shortcuts",
     rotationRandom: "Random",
     rotationRoundRobin: "Round Robin",
     historyBtn: "History",
@@ -457,7 +470,7 @@ export default {
     overlayThemeOptDark: "Dark",
     cardFabTitle: "In-Page Floating Buttons (FABs)",
     labelFabDisplay: "Show floating buttons on websites",
-    labelFabDisplayDesc: "Display quick shortcut buttons (Alt+C) at the screen edge to open chat drawer or crop homework.",
+    labelFabDisplayDesc: "Display quick shortcut buttons at the screen edge to open chat drawer or crop homework.",
     labelFabSize: "Floating button size",
     labelFabOpacity: "Floating button opacity",
     labelFabOpacityDesc: "Adjust glass transparency level of the floating buttons.",

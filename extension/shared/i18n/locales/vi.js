@@ -166,7 +166,7 @@ export default {
         desc: "Chọn kiểu phản hồi: Từng bước (Step-by-Step), Đáp án ngay (Direct), Gợi ý (Hint), hoặc Giải thích sâu lý thuyết.",
       },
       capture: {
-        title: "Chụp màn hình (Alt+C)",
+        title: "Chụp màn hình",
         desc: "Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.",
       },
       upload: {
@@ -187,10 +187,10 @@ export default {
       },
       close: {
         title: "Đóng chat panel",
-        desc: "Thu gọn ngăn kéo vào cạnh màn hình (Alt+K).",
+        desc: "Thu gọn ngăn kéo vào cạnh màn hình.",
       },
       open: {
-        title: "Mở chat panel (Alt+K)",
+        title: "Mở chat panel",
         desc: "Mở ngăn kéo AI hỗ trợ giải bài tập chi tiết và đặt câu hỏi.",
       },
       guide: {
@@ -289,7 +289,7 @@ export default {
     brandSub: "AI Học tập & Giải bài tập",
     openSidePanel: "Mở AI Side Panel",
     openSidePanelDesc: "Không gian giải bài ngay cạnh trang web",
-    cropSolve: "Chụp & Giải bài (Alt+C)",
+    cropSolve: "Chụp & Giải bài",
     cropSolveDesc: "Khoanh vùng công thức hoặc đồ thị",
     keysPool: "Danh sách Key:",
     rotationMode: "Chế độ xoay vòng:",
@@ -320,6 +320,17 @@ export default {
     widgetHover: "Rê chuột dịch",
     widgetSettings: "Cài đặt",
     autoClipboard: "Tự dịch nội dung đã copy",
+    widgetChatDesc: "Mở khung chat AI để hỏi bài hoặc trò chuyện tự do.",
+    widgetCaptureDesc: "Khoanh vùng màn hình (đề bài, công thức, đồ thị…) để AI đọc và giải trực tiếp.",
+    widgetHoverDesc: "Bật/tắt tính năng dịch nhanh khi rê chuột vào văn bản trên trang web.",
+    widgetSettingsDesc: "Mở trang Cài đặt đầy đủ của tiện ích.",
+    formsAssistantDesc: "Tự động nhận diện câu hỏi trên Google Forms và hiện nút «AI Giải» ngay cạnh mỗi câu.",
+    selectionTooltipDesc: "Hiện thanh công cụ nổi (Giải, Sao chép, Dịch…) mỗi khi bôi đen văn bản trên trang web.",
+    autoClipboardDesc: "Khi mở popup này, tự động dịch ngay nội dung đang có sẵn trong clipboard.",
+    hoverShortcutHeld: "Giữ",
+    hoverShortcutNone: "Chỉ cần di chuột, không cần giữ phím",
+    shortcutNotSet: "Chưa gán phím tắt — vào chrome://extensions/shortcuts để đặt",
+    shortcutsPanelTitle: "Phím tắt",
     rotationRandom: "Ngẫu nhiên",
     rotationRoundRobin: "Xoay vòng",
     historyBtn: "Lịch sử",
@@ -463,7 +474,7 @@ export default {
     cardFabTitle: "Nút Nổi Trong Trang (Floating FABs)",
     labelFabDisplay: "Hiển thị nút nổi trên website",
     labelFabDisplayDesc:
-      "Hiện nút chụp nhanh (Alt+C) và mở trợ lý ở mép phải màn hình.",
+      "Hiện nút chụp nhanh và mở trợ lý ở mép phải màn hình.",
     labelFabSize: "Kích thước nút nổi FAB",
     labelFabOpacity: "Độ trong suốt nút nổi",
     labelFabOpacityDesc: "Độ mờ kính của 2 nút nổi.",

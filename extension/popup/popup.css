@@ -23,6 +23,10 @@
   --hw-danger: #ef4444;
   --hw-danger-rgb: 239, 68, 68;
   --hw-warning: #f59e0b;
+  /* RGB triplet (no alpha) so a glass surface can be composed as
+     rgba(var(--hw-glass-rgb), alpha) — same idea as overlay.css's own
+     --hw-glass-rgb. */
+  --hw-glass-rgb: 255, 255, 255;
   /* Tells the browser which palette to render native form controls in —
      checkbox box/border chrome, scrollbars — since CSS alone (accent-color
      covers only the checked-state fill) can't reach that chrome. Without
@@ -45,6 +49,7 @@
     --hw-danger: #f87171;
     --hw-danger-rgb: 248, 113, 113;
     --hw-warning: #fbbf24;
+    --hw-glass-rgb: 15, 23, 42;
     color-scheme: dark;
   }
 }
@@ -63,6 +68,7 @@
   --hw-danger: #f87171;
   --hw-danger-rgb: 248, 113, 113;
   --hw-warning: #fbbf24;
+  --hw-glass-rgb: 15, 23, 42;
   color-scheme: dark;
 }
 
@@ -743,4 +749,141 @@ body.hw-th-sheet-open {
 
 .pop-result-head .pop-result-meta {
   flex: 1;
+}
+
+/* ========================================================= */
+/* Rich Tooltip (Popup) — mirrors .opt-tooltip-popup / .sp-tooltip-popup,   */
+/* sized for this popup's fixed 360px-wide window instead.                 */
+/* ========================================================= */
+.pop-tooltip-popup {
+  position: fixed;
+  z-index: 2147483647;
+  max-width: 240px;
+  background: rgba(var(--hw-glass-rgb), 0.3);
+  backdrop-filter: blur(6px) saturate(180%);
+  -webkit-backdrop-filter: blur(6px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 8px 12px;
+  pointer-events: none;
+  opacity: 0;
+  display: none;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  color: var(--hw-text-main);
+}
+
+.pop-tooltip-popup.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.pop-tooltip-title {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--hw-accent);
+  margin-bottom: 2px;
+}
+
+.pop-tooltip-desc {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--hw-text-muted);
+}
+
+.pop-tooltip-shortcut {
+  margin-top: 5px;
+  font-size: 10.5px;
+  color: var(--hw-text-faint);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ========================================================= */
+/* Keyboard Shortcuts panel (#popBtnShortcuts, popup.js)      */
+/* ========================================================= */
+.pop-shortcuts-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+}
+
+.pop-shortcuts-panel {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  z-index: 41;
+  background: var(--hw-bg-primary);
+  border: 1px solid var(--hw-border-color);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+  padding: 10px 14px 14px;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.pop-shortcuts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--hw-text-main);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--hw-bg-hover);
+}
+
+.pop-shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pop-shortcut-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pop-shortcut-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pop-shortcut-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--hw-text-main);
+}
+
+.pop-shortcut-desc {
+  font-size: 11.5px;
+  color: var(--hw-text-muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.pop-shortcut-key {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+  color: var(--hw-accent);
+  background: var(--hw-accent-tint);
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+/* Chrome never bound the suggested_key (a conflict with another extension
+   or the OS/browser itself) — see popup.js's commandShortcuts. Flags it
+   instead of silently showing a key combo that does nothing. */
+.pop-shortcut-key.is-unset {
+  color: var(--hw-danger);
+  background: rgba(var(--hw-danger-rgb), 0.12);
+  font-family: inherit;
+  font-weight: 500;
 }

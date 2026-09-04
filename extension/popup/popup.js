@@ -9,12 +9,13 @@
 
 import { Icons } from '../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
-import { getPopupI18n } from '../shared/i18n.js';
+import { getPopupI18n, getOptionsI18n } from '../shared/i18n.js';
 import { EnginePicker } from '../shared/engine-picker.js';
 import { AI_PROVIDER_ID, PICKABLE_PROVIDER_IDS, providerName } from '../shared/translate-providers.js';
 import { TranslateHistorySheet } from '../shared/translate-history-sheet.js';
 import { renderAnswer } from '../shared/markdown-katex.js';
 import { speak, isSpeechAvailable, bindSpeakButtons } from '../shared/tts.js';
+import { PopupTooltips } from './popup-tooltips.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // navigator.clipboard.readText() (see pickUpClipboard() near the bottom)
@@ -30,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     logo: $('popLogo'),
     btnOptions: $('popBtnOptions'),
     btnHistory: $('popBtnHistory'),
+    btnShortcuts: $('popBtnShortcuts'),
     brandSub: $('popBrandSub'),
     langFrom: $('popLangFrom'),
     langTo: $('popLangTo'),
@@ -59,9 +61,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   els.logo.innerHTML = Icons.appLogo(24);
   els.btnOptions.innerHTML = Icons.settings(16);
   els.btnHistory.innerHTML = Icons.history(16);
+  els.btnShortcuts.innerHTML = Icons.keyboard(16);
   els.btnFavorite.innerHTML = Icons.star(13);
   els.btnSwap.innerHTML = Icons.refresh(14);
   els.btnClear.innerHTML = Icons.x(13);
+  $('popBtnCloseShortcuts').innerHTML = Icons.x(13);
   els.iconTranslate.innerHTML = Icons.languages(15);
   els.btnSpeakSource.innerHTML = Icons.volume2(13);
   els.btnSpeakResult.innerHTML = Icons.volume2(13);
@@ -78,6 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     enableFormsAdapter = true,
     enableTextTooltip = true,
     enableHoverTranslate = false,
+    hoverTranslateModifiers = ['alt'],
     popupTranslateEngine = 'bing',
     popupTranslateSource = 'auto',
     popupTranslateTarget = 'vi',
@@ -97,6 +102,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   let dict = getPopupI18n(uiLanguage);
+  // Only for the 4 generic modifier-key names (Ctrl/Shift/Alt/Cmd) in the
+  // Hover Translate tooltip below — reuses Options' own translations for
+  // those instead of duplicating them into the popup block, same as
+  // content/overlay.js's feature-guide panel already does for the same 4
+  // strings (see its optDict.hoverModCtrl usage).
+  const optDict = getOptionsI18n(uiLanguage);
+
+  // Real, currently-bound accelerator for each declared command (manifest.json
+  // 'commands') — not just the manifest's suggested_key. Chrome silently
+  // leaves a suggested_key unbound when it collides with another extension or
+  // a browser/OS shortcut, so reading the actual binding here is what lets
+  // the tooltips below show the truth (including "not bound") instead of
+  // repeating a suggestion that may never have taken effect.
+  const commandShortcuts = await new Promise((resolve) => {
+    chrome.commands.getAll((cmds) => resolve(Object.fromEntries((cmds || []).map((c) => [c.name, c.shortcut]))));
+  });
 
   const enabledKeys = apiConfigs.filter(
     (c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')
@@ -180,6 +201,101 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
   }
 
+  // ---------- Tooltips ----------
+  // Rich (non-native) tooltips for the 4 quick-action widgets and the 3
+  // feature toggles below them — see popup-tooltips.js. Called from
+  // applyLanguage() purely so it sits next to the rest of this popup's
+  // one-time text setup, not because uiLanguage can change mid-session here.
+  function setTooltip(el, title, desc, shortcut) {
+    if (!el) return;
+    el.setAttribute('data-tooltip-title', title);
+    if (desc) el.setAttribute('data-tooltip-desc', desc);
+    if (shortcut) el.setAttribute('data-tooltip-shortcut', shortcut);
+  }
+
+  function formatHoverModifierShortcut() {
+    const modNames = {
+      ctrl: optDict.hoverModCtrl,
+      shift: optDict.hoverModShift,
+      alt: optDict.hoverModAlt,
+      meta: optDict.hoverModMeta,
+    };
+    const active = (hoverTranslateModifiers || []).map((m) => modNames[m]).filter(Boolean);
+    return active.length > 0 ? `${dict.hoverShortcutHeld} ${active.join(' + ')}` : dict.hoverShortcutNone;
+  }
+
+  function applyTooltips() {
+    setTooltip(
+      $('popWidgetChat'),
+      dict.widgetChat,
+      dict.widgetChatDesc,
+      commandShortcuts.chat || dict.shortcutNotSet
+    );
+    setTooltip(
+      $('popWidgetCapture'),
+      dict.widgetCapture,
+      dict.widgetCaptureDesc,
+      commandShortcuts.screenshot || dict.shortcutNotSet
+    );
+    setTooltip($('popWidgetHover'), dict.widgetHover, dict.widgetHoverDesc, formatHoverModifierShortcut());
+    setTooltip($('popWidgetSettings'), dict.widgetSettings, dict.widgetSettingsDesc);
+
+    // On the checkbox itself, not the whole row — hovering the label text
+    // too felt cumbersome (e.g. it fought with clicking the text to toggle).
+    setTooltip($('popToggleForms'), dict.formsAssistant, dict.formsAssistantDesc);
+    setTooltip($('popToggleTooltip'), dict.selectionTooltip, dict.selectionTooltipDesc);
+    setTooltip($('popToggleAutoClipboard'), dict.autoClipboard, dict.autoClipboardDesc);
+  }
+
+  // ---------- Keyboard Shortcuts panel ----------
+  // Same 3 entries as the widget tooltips above (reuses their title/desc
+  // strings) collected into one list — for "is any shortcut actually working"
+  // to be answerable at a glance instead of hovering each button in turn.
+  function renderShortcutsList() {
+    const rows = [
+      { title: dict.widgetChat, desc: dict.widgetChatDesc, key: commandShortcuts.chat },
+      { title: dict.widgetCapture, desc: dict.widgetCaptureDesc, key: commandShortcuts.screenshot },
+      { title: dict.widgetHover, desc: dict.widgetHoverDesc, key: formatHoverModifierShortcut(), alwaysSet: true },
+    ];
+    $('popShortcutsList').innerHTML = rows.map((r) => {
+      // Only the two real chrome.commands entries can come back unbound
+      // (Chrome silently drops a suggested_key that collides with another
+      // extension or the OS/browser) — the hover-modifier "shortcut" is a
+      // Storage setting, always has a value, never needs the warning style.
+      const isUnset = !r.alwaysSet && !r.key;
+      const keyLabel = isUnset ? dict.shortcutNotSet : r.key;
+      return `
+        <div class="pop-shortcut-row">
+          <div class="pop-shortcut-info">
+            <div class="pop-shortcut-title">${r.title}</div>
+            <div class="pop-shortcut-desc">${r.desc}</div>
+          </div>
+          <span class="pop-shortcut-key${isUnset ? ' is-unset' : ''}">${keyLabel}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openShortcutsPanel() {
+    renderShortcutsList();
+    const headerRect = document.querySelector('.pop-header').getBoundingClientRect();
+    $('popShortcutsPanel').style.top = `${headerRect.bottom}px`;
+    $('popShortcutsPanel').hidden = false;
+    $('popShortcutsBackdrop').hidden = false;
+  }
+
+  function closeShortcutsPanel() {
+    $('popShortcutsPanel').hidden = true;
+    $('popShortcutsBackdrop').hidden = true;
+  }
+
+  els.btnShortcuts.addEventListener('click', () => {
+    if ($('popShortcutsPanel').hidden) openShortcutsPanel();
+    else closeShortcutsPanel();
+  });
+  $('popBtnCloseShortcuts').addEventListener('click', closeShortcutsPanel);
+  $('popShortcutsBackdrop').addEventListener('click', closeShortcutsPanel);
+
   // ---------- i18n ----------
   function applyLanguage() {
     dict = getPopupI18n(uiLanguage);
@@ -192,6 +308,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     els.inputHint.textContent = dict.inputHint;
     enginePicker?.setLabels(engineLabels());
     els.btnClear.title = dict.btnClear;
+    els.btnShortcuts.title = dict.shortcutsPanelTitle;
+    $('popShortcutsTitle').textContent = dict.shortcutsPanelTitle;
     els.btnSpeakSource.title = dict.listen;
     els.btnSpeakResult.title = dict.listen;
     els.btnOptions.title = dict.widgetSettings;
@@ -209,10 +327,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('popLabelAutoClipboard').textContent = dict.autoClipboard;
     $('popConfigureBtnText').textContent = dict.configureBtn;
 
+    applyTooltips();
+
     const mode = rotationStrategy === 'random' ? dict.rotationRandom : dict.rotationRoundRobin;
     els.keyStatus.textContent = `${dict.keysPool} ${enabledKeys.length} · ${dict.rotationMode} ${mode}`;
   }
 
+  PopupTooltips.init();
   applyLanguage();
   buildLangSelects();
   buildEnginePicker();

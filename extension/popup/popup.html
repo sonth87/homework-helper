@@ -20,9 +20,20 @@
       </div>
       <div class="pop-header-actions">
         <button class="pop-icon-btn" id="popBtnHistory" title="History"></button>
+        <button class="pop-icon-btn" id="popBtnShortcuts" title="Keyboard Shortcuts"></button>
         <button class="pop-icon-btn" id="popBtnOptions" title="Settings"></button>
       </div>
     </header>
+
+    <!-- Keyboard Shortcuts panel — toggled by #popBtnShortcuts (popup.js) -->
+    <div class="pop-shortcuts-backdrop" id="popShortcutsBackdrop" hidden></div>
+    <div class="pop-shortcuts-panel" id="popShortcutsPanel" hidden>
+      <div class="pop-shortcuts-header">
+        <span id="popShortcutsTitle">Keyboard Shortcuts</span>
+        <button class="pop-icon-mini" id="popBtnCloseShortcuts"></button>
+      </div>
+      <div class="pop-shortcuts-list" id="popShortcutsList"></div>
+    </div>
 
     <div class="pop-body">
       <!-- Language pair -->

@@ -19,7 +19,25 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ## [1.8.1] — 2026-09-04
 
+### Thêm mới
+- Nút "Phím tắt" mới trên header của popup (cạnh nút Cài đặt) — bấm vào để
+  xem danh sách các phím tắt hiện có (Chat AI, Chụp & Giải, Rê chuột dịch)
+  kèm mô tả ngắn. Phím tắt hiển thị là phím Chrome **thực sự đang gán**, báo
+  rõ nếu chưa gán được thay vì im lặng hiện sai.
+
 ### Thay đổi
+- Tooltip tùy chỉnh (Cài đặt, Side Panel, Popup, và các nút nổi/thẻ trong
+  trang) nay đồng bộ theo phong cách Liquid Glass — 30% trong suốt, 6px mờ
+  nền — và tự chuyển sáng/tối theo đúng theme đang dùng ở từng nơi, mặc định
+  là sáng. Riêng trang Cài đặt hiện chưa có chế độ tối nên tooltip ở đó luôn
+  là bản sáng.
+- 4 nút tắt nhanh (Chat AI, Chụp & Giải, Rê chuột dịch, Cài đặt) và 3 công tắc
+  bên dưới trong popup thanh công cụ nay có tooltip mô tả rõ chức năng và
+  phím tắt tương ứng khi rê chuột vào. Riêng "Rê chuột dịch" hiện đúng phím
+  bổ trợ người dùng đang cấu hình (Ctrl/Shift/Alt/Cmd...), và phím tắt của
+  "Chat AI"/"Chụp & Giải" đọc trực tiếp từ trạng thái gán phím thật của
+  Chrome — nếu Chrome chưa gán được phím tắt do trùng tổ hợp, tooltip báo rõ
+  thay vì hiện một phím tắt có thể không hoạt động.
 - Tooltip Dịch nhanh khi di chuột nay có độ trong suốt và độ mờ nền mặc định
   giống hệt Thanh Công Cụ Bôi Đen (90% / 16px thay vì 96% / 18px trước đây) —
   trước đây quá đục nên trông không "kính mờ" (glass) như thanh công cụ.
@@ -37,6 +55,33 @@ _Chưa có thay đổi nào chờ phát hành._
   đó chưa có tác dụng gì.
 
 ### Sửa lỗi
+- Dịch nhanh khi di chuột đôi khi không hiện lên dù đã giữ đúng phím bổ trợ
+  (ví dụ Ctrl) và để chuột yên trên chữ. Nguyên nhân: trạng thái phím
+  Ctrl/Shift/Alt/Cmd chỉ được cập nhật mỗi khi chuột *di chuyển* — nếu giữ
+  phím sau khi chuột đã đứng yên trên chữ (không có thao tác di chuột nào
+  nữa), lần kiểm tra "đến lượt dịch chưa" vẫn dùng trạng thái phím cũ (chưa
+  giữ) nên coi như chưa đúng điều kiện, im lặng bỏ qua. Đó là vì sao rê
+  chuột ra ngoài rồi giữ phím và rê vào lại luôn có tác dụng — thao tác đó
+  luôn tạo ra chuyển động chuột mới trong lúc đang giữ phím. Nay trạng thái
+  phím được cập nhật ngay khi bấm/nhả, không cần đợi chuột nhúc nhích nữa.
+- Phím tắt mở khung chat (⌘K trên macOS, Alt+K trên Windows/Linux) không mở
+  được gì cả. Nguyên nhân: đoạn code xử lý phím tắt có một bước chờ
+  (`await`) trước khi gọi API mở Side Panel — Chrome coi "cú bấm phím" đã
+  hết hiệu lực ngay khi gặp `await` đó, nên lệnh mở Side Panel bị từ chối
+  âm thầm. Phím Chụp màn hình (⌘E/Alt+C) không bị ảnh hưởng vì không đụng
+  tới API này. Đã bỏ bước chờ thừa, phím tắt mở chat giờ hoạt động đúng.
+- 2 nút nổi trên trang (Chụp màn hình, Mở chat panel) hiện tooltip phím tắt
+  sai trên macOS — luôn ghi "Alt+C"/"Alt+K" dù phím thật trên Mac là ⌘E/⌘K.
+  Nay tooltip đọc đúng phím Chrome đang thực sự gán cho từng hệ điều hành,
+  giống cách đã sửa cho tooltip trong popup.
+- Tooltip Dịch nhanh khi di chuột giảm khoảng đệm phía trên phần nội dung
+  (14px → 12px) cho cân đối hơn với 3 cạnh còn lại — vẫn đủ chừa chỗ cho nút
+  nghe nổi lên mép trên.
+- Dịch nhanh khi di chuột: khi câu cần dịch bị ngắt bởi thẻ `<br>` giữa các
+  thẻ HTML con (ví dụ tiêu đề xuống dòng giữa chừng bằng `<br>` rồi qua
+  `<span>` khác), chữ ở hai bên bị dính liền vào nhau (ví dụ "vai trò" +
+  "dựng từ" thành "tròdựng") do phần gộp text bỏ qua khoảng trắng tại vị trí
+  `<br>`. Nay đã tự thêm khoảng trắng ở đúng vị trí đó.
 - Mục "Dịch nhanh khi di chuột" không còn hiện trùng lặp tiêu đề (tiêu đề mục
   và tên công tắc bật/tắt bên dưới trước đây giống hệt nhau) — công tắc giờ
   hiện đúng nhãn "Bật Dịch nhanh khi di chuột".

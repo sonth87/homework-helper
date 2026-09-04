@@ -27,6 +27,14 @@ class InPageOverlay {
     this.createShadowDOM();
     this.mountSubcomponents();
     this.setupGlobalListeners();
+    // Real per-OS bound accelerator (e.g. "⌘K" on macOS vs "Alt+K" on
+    // Windows/Linux) for the FAB tooltips below — chrome.commands isn't
+    // exposed to a content script's isolated world, so this asks the
+    // background for it instead (see its GET_COMMAND_SHORTCUTS handler).
+    // Falls back to {} (no shortcut shown) if the message ever fails.
+    this.commandShortcuts = await new Promise((resolve) => {
+      chrome.runtime.sendMessage({ action: 'GET_COMMAND_SHORTCUTS' }, (res) => resolve(res || {}));
+    }).catch(() => ({}));
     await this.applyAppearanceSettings();
     await this.applyLanguageI18n();
   }
@@ -55,10 +63,10 @@ class InPageOverlay {
       <!-- Jitter-free Slide-out FAB Container -->
       <div class="hw-fab-container" id="hwFabContainer">
         <div class="hw-fab-inner">
-          <button class="hw-fab-btn" id="hwFabCrop" data-tooltip-title="Chụp màn hình (Alt+C)" data-tooltip-desc="Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.">
+          <button class="hw-fab-btn" id="hwFabCrop" data-tooltip-title="Chụp màn hình" data-tooltip-desc="Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.">
             ${Icons.scissors(15)}
           </button>
-          <button class="hw-fab-btn hw-fab-primary" id="hwFabToggle" data-tooltip-title="Mở chat panel (Alt+K)" data-tooltip-desc="Mở ngăn kéo AI hỗ trợ giải bài tập chi tiết và đặt câu hỏi.">
+          <button class="hw-fab-btn hw-fab-primary" id="hwFabToggle" data-tooltip-title="Mở chat panel" data-tooltip-desc="Mở ngăn kéo AI hỗ trợ giải bài tập chi tiết và đặt câu hỏi.">
             ${Icons.sparkles(16)}
           </button>
         </div>
@@ -239,7 +247,7 @@ class InPageOverlay {
         <div class="hw-input-container">
           <div class="hw-tools">
             <div class="hw-tools-left">
-              <button class="hw-btn-capture" id="hwBtnCapture" data-tooltip-title="Chụp màn hình (Alt+C)" data-tooltip-desc="Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.">
+              <button class="hw-btn-capture" id="hwBtnCapture" data-tooltip-title="Chụp màn hình" data-tooltip-desc="Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.">
                 ${Icons.scissors(14)} <span id="hwCaptureBtnLabel">Chụp ảnh</span>
               </button>
               <button class="hw-tool-btn" id="hwBtnUploadImg" data-tooltip-title="Tải ảnh bài tập" data-tooltip-desc="Đính kèm file hình ảnh bài tập từ máy tính.">
@@ -654,10 +662,21 @@ class InPageOverlay {
     // Update tooltips with refined strings
     if (dict.tooltips) {
       const t = dict.tooltips;
-      s.getElementById('hwFabToggle')?.setAttribute('data-tooltip-title', t.open?.title || 'Mở chat panel (Alt+K)');
+      // Base titles carry no keybinding hint of their own (13 locales'
+      // general.tooltips.open/capture.title) — appending the real bound
+      // accelerator here instead of baking a Windows/Linux-only "(Alt+K)"
+      // into the translation is what makes this show "(⌘K)" on macOS.
+      const withShortcut = (title, shortcut) => (shortcut ? `${title} (${shortcut})` : title);
+      s.getElementById('hwFabToggle')?.setAttribute(
+        'data-tooltip-title',
+        withShortcut(t.open?.title || 'Mở chat panel', this.commandShortcuts?.chat)
+      );
       s.getElementById('hwFabToggle')?.setAttribute('data-tooltip-desc', t.open?.desc || '');
 
-      s.getElementById('hwFabCrop')?.setAttribute('data-tooltip-title', t.capture?.title || 'Chụp màn hình (Alt+C)');
+      s.getElementById('hwFabCrop')?.setAttribute(
+        'data-tooltip-title',
+        withShortcut(t.capture?.title || 'Chụp màn hình', this.commandShortcuts?.screenshot)
+      );
       s.getElementById('hwFabCrop')?.setAttribute('data-tooltip-desc', t.capture?.desc || '');
 
       s.getElementById('hwDrawerEdgeClose')?.setAttribute('data-tooltip-title', t.close?.title || 'Đóng chat panel');
@@ -686,7 +705,10 @@ class InPageOverlay {
       s.getElementById('hwBtnConfigGuide')?.setAttribute('data-tooltip-title', t.guide?.title || 'Xem hướng dẫn nhanh');
       s.getElementById('hwBtnConfigGuide')?.setAttribute('data-tooltip-desc', t.guide?.desc || '');
 
-      s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-title', t.capture?.title || 'Chụp màn hình (Alt+C)');
+      s.getElementById('hwBtnCapture')?.setAttribute(
+        'data-tooltip-title',
+        withShortcut(t.capture?.title || 'Chụp màn hình', this.commandShortcuts?.screenshot)
+      );
       s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-desc', t.capture?.desc || 'Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.');
 
       // Floating Solution Card Popups Tooltips
