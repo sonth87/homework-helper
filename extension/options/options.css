@@ -192,8 +192,8 @@ body {
 }
 
 .blob-2 {
-  width: 150px;
-  height: 150px;
+  width: 180px;
+  height: 180px;
   background: rgba(236, 72, 153, 0.35);
   bottom: 30px;
   right: 40px;
@@ -291,6 +291,10 @@ body {
 }
 
 /* Preview Toolbar */
+.opt-preview-toolbar-wrapper {
+  width: 100%;
+}
+
 .opt-preview-toolbar {
   position: relative;
   z-index: 5;
@@ -332,10 +336,11 @@ body {
 /* Mirrors .hw-selection-toolbar.size-compact/.size-large in tooltip.css so
    the live preview actually reflects the "Kích cỡ Toolbar" select. */
 .opt-preview-toolbar.size-compact {
-  padding: 2px 6px;
+  padding: 0px 0px;
+  gap: 0px;
 }
 .opt-preview-toolbar.size-compact .prev-tb-btn {
-  padding: 3px 6px;
+  padding: 4px 4px;
   font-size: 10px;
 }
 
@@ -1331,6 +1336,23 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* Wraps the settings that only matter while a card's own on/off toggle
+   (the row above it) is enabled — e.g. FAB size/opacity, or every Hover
+   Translate option below its "Enable" checkbox. Same flex/gap as
+   .opt-settings-list itself so nesting it doesn't collapse the vertical
+   rhythm between rows. */
+.opt-settings-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.opt-settings-sub.is-dimmed {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
 }
 
 .opt-setting-row {

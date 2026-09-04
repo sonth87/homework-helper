@@ -176,6 +176,10 @@ class SelectionTooltip {
 
     const dict = getSelectionTooltipI18n(uiLanguage);
     const layout = normalizeToolbarLayout(toolbarLayout);
+    // Whether every tool has been moved into the dropdown lane (Options >
+    // Appearance drag-and-drop layout editor) — computed up front so both
+    // the container class below and the innerHTML further down agree on it.
+    const hasMainItems = layout.some((item) => item.area === 'main');
 
     // 'auto' isn't a skin of its own — tooltip.css only ever styled
     // glass-light (the default look) and a .theme-glass-dark override, so
@@ -191,19 +195,23 @@ class SelectionTooltip {
     this.resolvedTheme = resolvedTheme;
 
     this.toolbar = document.createElement('div');
-    this.toolbar.className = `hw-selection-toolbar size-${toolbarSize} theme-${resolvedTheme}`;
+    // With no main items, the bar has nothing left but the logo — drop the
+    // pill chrome (background/border/shadow) so it reads as a bare icon
+    // instead of an empty-looking pill (see .hw-tb-logo-only in tooltip.css).
+    this.toolbar.className = `hw-selection-toolbar size-${toolbarSize} theme-${resolvedTheme}${hasMainItems ? '' : ' hw-tb-logo-only'}`;
 
     // Liquid Glass CSS Variables (avoids CSS opacity bug on backdrop-filter)
     this.toolbar.style.setProperty('--tb-alpha', `${(toolbarOpacity / 100).toFixed(2)}`);
     this.toolbar.style.setProperty('--tb-blur', `${toolbarBlur}px`);
 
-    const top = toolbarPosition === 'below'
-      ? window.scrollY + rect.bottom + 10
-      : window.scrollY + rect.top - 46;
-    const left = window.scrollX + rect.left + rect.width / 2;
-
-    this.toolbar.style.top = `${Math.max(10, top)}px`;
-    this.toolbar.style.left = `${Math.max(10, Math.min(window.innerWidth - 360, left - 140))}px`;
+    // Real top/left are computed after the toolbar is in the DOM (see the
+    // getBoundingClientRect() call by appendChild below) so centering uses
+    // its actual rendered width/height instead of a guessed box size — the
+    // full pill and the logo-only bare icon (.hw-tb-logo-only in
+    // tooltip.css) are different enough that a fixed guess for one drifts
+    // off-center for the other. Hidden until then so it doesn't flash at
+    // the browser's default (top-left-ish) position first.
+    this.toolbar.style.visibility = 'hidden';
 
     // Stop mousedown/mouseup inside the toolbar from propagating to
     // document. Beyond the original "don't dismiss on our own click" intent,
@@ -217,7 +225,6 @@ class SelectionTooltip {
     this.toolbar.addEventListener('mouseup', (e) => e.stopPropagation());
 
     const iconOnlyCls = toolbarShowText ? '' : 'icon-only';
-    const hasMainItems = layout.some((item) => item.area === 'main');
     // toggleDropdown() needs this to know whether it should wire up the
     // hover-to-keep-open behaviour on the dropdown/submenu it creates — that
     // behaviour only belongs to this (no main items) hover-triggered flow,
@@ -248,7 +255,7 @@ class SelectionTooltip {
     // trigger — so the chevron button is dropped and the logo becomes the
     // hover-to-open trigger instead (see the mouseenter wiring below).
     this.toolbar.innerHTML = `
-      <div class="hw-tb-logo${hasMainItems ? '' : ' hw-tb-logo-hoverable'}" id="hwTbLogo">${Icons.appLogo(18)}</div>
+      <div class="hw-tb-logo${hasMainItems ? '' : ' hw-tb-logo-hoverable'}" id="hwTbLogo">${Icons.appLogo(hasMainItems ? 18 : 16)}</div>
       ${statusPillHtml}
       ${mainButtonsHtml}
       ${hasMainItems ? `
@@ -293,6 +300,20 @@ class SelectionTooltip {
     }
 
     getSharedShadowRoot().appendChild(this.toolbar);
+
+    // Now that it exists in the DOM, measure its real box to center it
+    // horizontally on the selection and place it above/below with a fixed
+    // gap — see the visibility:hidden note above for why this waits until
+    // after appendChild instead of guessing a size beforehand.
+    const tbRect = this.toolbar.getBoundingClientRect();
+    const top = toolbarPosition === 'below'
+      ? window.scrollY + rect.bottom + 10
+      : window.scrollY + rect.top - tbRect.height - 8;
+    const left = window.scrollX + rect.left + rect.width / 2 - tbRect.width / 2;
+
+    this.toolbar.style.top = `${Math.max(10, top)}px`;
+    this.toolbar.style.left = `${Math.max(10, Math.min(window.innerWidth - tbRect.width - 10, left))}px`;
+    this.toolbar.style.visibility = 'visible';
   }
 
   /** Cancels a pending scheduleDropdownClose(). */

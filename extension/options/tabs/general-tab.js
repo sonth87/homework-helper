@@ -50,7 +50,18 @@ export class GeneralTab {
 
     if (checkTooltip) {
       checkTooltip.checked = enableTextTooltip;
-      checkTooltip.onchange = () => Storage.set({ enableTextTooltip: checkTooltip.checked });
+      checkTooltip.onchange = () => {
+        Storage.set({ enableTextTooltip: checkTooltip.checked });
+        // Dispatches a real 'change' (not just setting .checked) so the
+        // Appearance tab's own listener on this same checkbox also runs —
+        // it's what dims/undims the toolbar's other settings, which a plain
+        // property assignment would silently skip.
+        const inlineCheck = document.getElementById('optCheckToolbarEnableInline');
+        if (inlineCheck) {
+          inlineCheck.checked = checkTooltip.checked;
+          inlineCheck.dispatchEvent(new Event('change'));
+        }
+      };
     }
 
     const checkHoverTranslate = document.getElementById('optCheckHoverTranslate');
@@ -58,8 +69,14 @@ export class GeneralTab {
       checkHoverTranslate.checked = enableHoverTranslate;
       checkHoverTranslate.onchange = () => {
         Storage.set({ enableHoverTranslate: checkHoverTranslate.checked });
+        // Same reasoning as checkTooltip above — a real 'change' event lets
+        // the Appearance tab's own listener dim/undim its Hover Translate
+        // settings instead of leaving them stuck in the old state.
         const inlineCheck = document.getElementById('optCheckHoverTranslateInline');
-        if (inlineCheck) inlineCheck.checked = checkHoverTranslate.checked;
+        if (inlineCheck) {
+          inlineCheck.checked = checkHoverTranslate.checked;
+          inlineCheck.dispatchEvent(new Event('change'));
+        }
       };
     }
 

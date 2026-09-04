@@ -74,6 +74,42 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+.hw-selection-toolbar.theme-rose {
+  background: rgba(225, 29, 72, var(--tb-alpha, 0.82));
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+.hw-selection-toolbar.theme-rose .hw-tb-btn {
+  color: #ffffff;
+}
+.hw-selection-toolbar.theme-rose .hw-tb-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hw-selection-toolbar.theme-amber {
+  background: rgba(217, 119, 6, var(--tb-alpha, 0.82));
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+.hw-selection-toolbar.theme-amber .hw-tb-btn {
+  color: #ffffff;
+}
+.hw-selection-toolbar.theme-amber .hw-tb-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hw-selection-toolbar.theme-indigo {
+  background: rgba(79, 70, 229, var(--tb-alpha, 0.82));
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+.hw-selection-toolbar.theme-indigo .hw-tb-btn {
+  color: #ffffff;
+}
+.hw-selection-toolbar.theme-indigo .hw-tb-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 /* .hw-tb-dropdown/.hw-tb-submenu (further below) used to be styled only via
    .hw-selection-toolbar.theme-X descendant selectors, back when they were
    DOM children of .hw-selection-toolbar — so they stayed the plain
@@ -164,6 +200,63 @@
   border-top-color: rgba(255, 255, 255, 0.25);
 }
 
+.hw-tb-dropdown.theme-rose,
+.hw-tb-submenu.theme-rose {
+  background: rgba(225, 29, 72, var(--tb-alpha, 0.82));
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.hw-tb-dropdown.theme-rose .hw-tb-menu-item,
+.hw-tb-submenu.theme-rose .hw-tb-sub-item {
+  color: #ffffff;
+}
+.hw-tb-dropdown.theme-rose .hw-tb-menu-item:hover,
+.hw-tb-submenu.theme-rose .hw-tb-sub-item:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+.hw-tb-submenu.theme-rose .hw-tb-sub-footer {
+  color: rgba(255, 255, 255, 0.75);
+  border-top-color: rgba(255, 255, 255, 0.25);
+}
+
+.hw-tb-dropdown.theme-amber,
+.hw-tb-submenu.theme-amber {
+  background: rgba(217, 119, 6, var(--tb-alpha, 0.82));
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.hw-tb-dropdown.theme-amber .hw-tb-menu-item,
+.hw-tb-submenu.theme-amber .hw-tb-sub-item {
+  color: #ffffff;
+}
+.hw-tb-dropdown.theme-amber .hw-tb-menu-item:hover,
+.hw-tb-submenu.theme-amber .hw-tb-sub-item:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+.hw-tb-submenu.theme-amber .hw-tb-sub-footer {
+  color: rgba(255, 255, 255, 0.75);
+  border-top-color: rgba(255, 255, 255, 0.25);
+}
+
+.hw-tb-dropdown.theme-indigo,
+.hw-tb-submenu.theme-indigo {
+  background: rgba(79, 70, 229, var(--tb-alpha, 0.82));
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.hw-tb-dropdown.theme-indigo .hw-tb-menu-item,
+.hw-tb-submenu.theme-indigo .hw-tb-sub-item {
+  color: #ffffff;
+}
+.hw-tb-dropdown.theme-indigo .hw-tb-menu-item:hover,
+.hw-tb-submenu.theme-indigo .hw-tb-sub-item:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+.hw-tb-submenu.theme-indigo .hw-tb-sub-footer {
+  color: rgba(255, 255, 255, 0.75);
+  border-top-color: rgba(255, 255, 255, 0.25);
+}
+
 .hw-tb-logo {
   display: flex;
   align-items: center;
@@ -178,6 +271,25 @@
    smiley logo itself becomes the hover trigger instead. */
 .hw-tb-logo.hw-tb-logo-hoverable {
   cursor: pointer;
+}
+
+/* Bare-icon mode: with no main items the bar is just the logo, so the pill
+   chrome (background/border/shadow/backdrop-filter/padding) reads as an
+   empty-looking blob around a single icon rather than a toolbar — strip it
+   down to the icon itself. Placed after the theme-X blocks above so it wins
+   the cascade against them (same specificity, two classes each). */
+.hw-selection-toolbar.hw-tb-logo-only {
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 0;
+}
+.hw-selection-toolbar.hw-tb-logo-only .hw-tb-logo {
+  width: 20px;
+  height: 20px;
+  margin-right: 0;
 }
 
 .hw-tb-btn {
@@ -378,11 +490,12 @@
 
 /* Toolbar Size Variants */
 .hw-selection-toolbar.size-compact {
-  padding: 2px 6px;
+  padding: 0px 0px;
+  gap: 0px;
 }
 .hw-selection-toolbar.size-compact .hw-tb-btn {
-  padding: 4px 6px;
-  font-size: 11px;
+  padding: 4px 4px;
+  font-size: 10px;
 }
 
 .hw-selection-toolbar.size-large {
@@ -399,9 +512,9 @@
   z-index: 2147483641;
   max-width: var(--ht-max-width, 300px);
   padding: 8px 12px;
-  background: rgba(255, 255, 255, var(--ht-alpha, 0.96));
-  backdrop-filter: blur(var(--ht-blur, 18px)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--ht-blur, 18px)) saturate(180%);
+  background: rgba(255, 255, 255, var(--ht-alpha, 0.9));
+  backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 12px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -422,23 +535,38 @@
 }
 
 .hw-hover-translate-tip.theme-glass-dark {
-  background: rgba(15, 23, 42, var(--ht-alpha, 0.96));
+  background: rgba(15, 23, 42, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
   color: #f8fafc;
 }
 .hw-hover-translate-tip.theme-cyber-blue {
-  background: rgba(2, 132, 199, var(--ht-alpha, 0.96));
+  background: rgba(2, 132, 199, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.35);
   color: #ffffff;
 }
 .hw-hover-translate-tip.theme-emerald {
-  background: rgba(5, 150, 105, var(--ht-alpha, 0.96));
+  background: rgba(5, 150, 105, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.35);
   color: #ffffff;
 }
 .hw-hover-translate-tip.theme-purple {
-  background: rgba(124, 58, 237, var(--ht-alpha, 0.96));
+  background: rgba(124, 58, 237, var(--ht-alpha, 0.9));
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+.hw-hover-translate-tip.theme-rose {
+  background: rgba(225, 29, 72, var(--ht-alpha, 0.9));
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+.hw-hover-translate-tip.theme-amber {
+  background: rgba(217, 119, 6, var(--ht-alpha, 0.9));
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+.hw-hover-translate-tip.theme-indigo {
+  background: rgba(79, 70, 229, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.35);
   color: #ffffff;
 }
@@ -469,9 +597,9 @@
    icons would float bare over whatever the page behind the tip's outer half
    happens to look like, with no contrast guarantee. */
 .hw-ht-gran-switch:hover {
-  background: rgba(255, 255, 255, var(--ht-alpha, 0.96));
-  backdrop-filter: blur(var(--ht-blur, 18px)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--ht-blur, 18px)) saturate(180%);
+  background: rgba(255, 255, 255, var(--ht-alpha, 0.9));
+  backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
   border-color: rgba(255, 255, 255, 0.5);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
@@ -537,7 +665,7 @@
 }
 
 .hw-hover-translate-tip.theme-glass-dark .hw-ht-gran-switch:hover {
-  background: rgba(15, 23, 42, var(--ht-alpha, 0.96));
+  background: rgba(15, 23, 42, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
@@ -565,30 +693,45 @@
   color: #0f172a !important;
 }
 
-.hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-switch:hover { background: rgba(2, 132, 199, var(--ht-alpha, 0.96)); }
-.hw-hover-translate-tip.theme-emerald .hw-ht-gran-switch:hover { background: rgba(5, 150, 105, var(--ht-alpha, 0.96)); }
-.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover { background: rgba(124, 58, 237, var(--ht-alpha, 0.96)); }
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-switch:hover { background: rgba(2, 132, 199, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-emerald .hw-ht-gran-switch:hover { background: rgba(5, 150, 105, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover { background: rgba(124, 58, 237, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-rose .hw-ht-gran-switch:hover { background: rgba(225, 29, 72, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-amber .hw-ht-gran-switch:hover { background: rgba(217, 119, 6, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-indigo .hw-ht-gran-switch:hover { background: rgba(79, 70, 229, var(--ht-alpha, 0.9)); }
 .hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-switch:hover,
 .hw-hover-translate-tip.theme-emerald .hw-ht-gran-switch:hover,
-.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover {
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover,
+.hw-hover-translate-tip.theme-rose .hw-ht-gran-switch:hover,
+.hw-hover-translate-tip.theme-amber .hw-ht-gran-switch:hover,
+.hw-hover-translate-tip.theme-indigo .hw-ht-gran-switch:hover {
   border-color: rgba(255, 255, 255, 0.4);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
 }
 
 .hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-dot,
 .hw-hover-translate-tip.theme-emerald .hw-ht-gran-dot,
-.hw-hover-translate-tip.theme-purple .hw-ht-gran-dot {
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-dot,
+.hw-hover-translate-tip.theme-rose .hw-ht-gran-dot,
+.hw-hover-translate-tip.theme-amber .hw-ht-gran-dot,
+.hw-hover-translate-tip.theme-indigo .hw-ht-gran-dot {
   background: rgba(255, 255, 255, 0.4);
   color: #ffffff;
 }
 .hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-switch:hover .hw-ht-gran-dot,
 .hw-hover-translate-tip.theme-emerald .hw-ht-gran-switch:hover .hw-ht-gran-dot,
-.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover .hw-ht-gran-dot {
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover .hw-ht-gran-dot,
+.hw-hover-translate-tip.theme-rose .hw-ht-gran-switch:hover .hw-ht-gran-dot,
+.hw-hover-translate-tip.theme-amber .hw-ht-gran-switch:hover .hw-ht-gran-dot,
+.hw-hover-translate-tip.theme-indigo .hw-ht-gran-switch:hover .hw-ht-gran-dot {
   background: rgba(255, 255, 255, 0.18);
 }
 .hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-dot.active,
 .hw-hover-translate-tip.theme-emerald .hw-ht-gran-dot.active,
-.hw-hover-translate-tip.theme-purple .hw-ht-gran-dot.active {
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-dot.active,
+.hw-hover-translate-tip.theme-rose .hw-ht-gran-dot.active,
+.hw-hover-translate-tip.theme-amber .hw-ht-gran-dot.active,
+.hw-hover-translate-tip.theme-indigo .hw-ht-gran-dot.active {
   background: #ffffff;
 }
 .hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-switch:hover .hw-ht-gran-dot.active {
@@ -606,15 +749,36 @@
   background: #ffffff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
+.hw-hover-translate-tip.theme-rose .hw-ht-gran-switch:hover .hw-ht-gran-dot.active {
+  color: #e11d48;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.hw-hover-translate-tip.theme-amber .hw-ht-gran-switch:hover .hw-ht-gran-dot.active {
+  color: #d97706;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.hw-hover-translate-tip.theme-indigo .hw-ht-gran-switch:hover .hw-ht-gran-dot.active {
+  color: #4f46e5;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
 .hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-dot:hover,
 .hw-hover-translate-tip.theme-emerald .hw-ht-gran-dot:hover,
-.hw-hover-translate-tip.theme-purple .hw-ht-gran-dot:hover {
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-dot:hover,
+.hw-hover-translate-tip.theme-rose .hw-ht-gran-dot:hover,
+.hw-hover-translate-tip.theme-amber .hw-ht-gran-dot:hover,
+.hw-hover-translate-tip.theme-indigo .hw-ht-gran-dot:hover {
   background: rgba(255, 255, 255, 0.35) !important;
   color: #ffffff !important;
 }
 .hw-hover-translate-tip.theme-cyber-blue .hw-ht-gran-switch:hover .hw-ht-gran-dot.active:hover,
 .hw-hover-translate-tip.theme-emerald .hw-ht-gran-switch:hover .hw-ht-gran-dot.active:hover,
-.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover .hw-ht-gran-dot.active:hover {
+.hw-hover-translate-tip.theme-purple .hw-ht-gran-switch:hover .hw-ht-gran-dot.active:hover,
+.hw-hover-translate-tip.theme-rose .hw-ht-gran-switch:hover .hw-ht-gran-dot.active:hover,
+.hw-hover-translate-tip.theme-amber .hw-ht-gran-switch:hover .hw-ht-gran-dot.active:hover,
+.hw-hover-translate-tip.theme-indigo .hw-ht-gran-switch:hover .hw-ht-gran-dot.active:hover {
   background: #f1f5f9 !important;
 }
 
@@ -641,9 +805,9 @@
   height: 22px;
   padding: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, var(--ht-alpha, 0.96));
-  backdrop-filter: blur(var(--ht-blur, 18px)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--ht-blur, 18px)) saturate(180%);
+  background: rgba(255, 255, 255, var(--ht-alpha, 0.9));
+  backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
   color: #475569;
@@ -662,17 +826,23 @@
 }
 
 .hw-hover-translate-tip.theme-glass-dark .hw-ht-speak-btn {
-  background: rgba(15, 23, 42, var(--ht-alpha, 0.96));
+  background: rgba(15, 23, 42, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
   color: #cbd5e1;
 }
-.hw-hover-translate-tip.theme-cyber-blue .hw-ht-speak-btn { background: rgba(2, 132, 199, var(--ht-alpha, 0.96)); }
-.hw-hover-translate-tip.theme-emerald .hw-ht-speak-btn { background: rgba(5, 150, 105, var(--ht-alpha, 0.96)); }
-.hw-hover-translate-tip.theme-purple .hw-ht-speak-btn { background: rgba(124, 58, 237, var(--ht-alpha, 0.96)); }
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-speak-btn { background: rgba(2, 132, 199, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-emerald .hw-ht-speak-btn { background: rgba(5, 150, 105, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-purple .hw-ht-speak-btn { background: rgba(124, 58, 237, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-rose .hw-ht-speak-btn { background: rgba(225, 29, 72, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-amber .hw-ht-speak-btn { background: rgba(217, 119, 6, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-indigo .hw-ht-speak-btn { background: rgba(79, 70, 229, var(--ht-alpha, 0.9)); }
 .hw-hover-translate-tip.theme-cyber-blue .hw-ht-speak-btn,
 .hw-hover-translate-tip.theme-emerald .hw-ht-speak-btn,
-.hw-hover-translate-tip.theme-purple .hw-ht-speak-btn {
+.hw-hover-translate-tip.theme-purple .hw-ht-speak-btn,
+.hw-hover-translate-tip.theme-rose .hw-ht-speak-btn,
+.hw-hover-translate-tip.theme-amber .hw-ht-speak-btn,
+.hw-hover-translate-tip.theme-indigo .hw-ht-speak-btn {
   border-color: rgba(255, 255, 255, 0.35);
   color: #ffffff;
 }
@@ -685,7 +855,10 @@
 }
 .hw-hover-translate-tip.theme-cyber-blue .hw-ht-speak-btn:hover,
 .hw-hover-translate-tip.theme-emerald .hw-ht-speak-btn:hover,
-.hw-hover-translate-tip.theme-purple .hw-ht-speak-btn:hover {
+.hw-hover-translate-tip.theme-purple .hw-ht-speak-btn:hover,
+.hw-hover-translate-tip.theme-rose .hw-ht-speak-btn:hover,
+.hw-hover-translate-tip.theme-amber .hw-ht-speak-btn:hover,
+.hw-hover-translate-tip.theme-indigo .hw-ht-speak-btn:hover {
   background: #ffffff;
   color: #0f172a;
 }

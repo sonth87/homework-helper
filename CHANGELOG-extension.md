@@ -17,6 +17,39 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.8.1] — 2026-09-04
+
+### Thay đổi
+- Tooltip Dịch nhanh khi di chuột nay có độ trong suốt và độ mờ nền mặc định
+  giống hệt Thanh Công Cụ Bôi Đen (90% / 16px thay vì 96% / 18px trước đây) —
+  trước đây quá đục nên trông không "kính mờ" (glass) như thanh công cụ.
+- Thêm 3 chủ đề màu mới cho "Chủ đề Màu sắc Toolbar" và tooltip Dịch nhanh khi di
+  chuột: Rose Pink (Hồng), Amber Gold (Cam), Indigo Night (Chàm) — bên cạnh các
+  màu Cyber Blue, Emerald Green, Purple Glass đã có.
+- Trang Cài đặt > Giao diện & Tùy biến Trực quan: các mục "Nút Nổi Trong Trang
+  (Floating FABs)" và "Popup Giải Bài Nổi (Floating Solution Card)" nay có
+  thêm nút "Khôi phục mặc định" giống các mục còn lại.
+- Mục "Thanh Công Cụ Bôi Đen (Selection Toolbar)" nay có thêm công tắc bật/tắt
+  ngay tại đây thay vì phải sang tab "Cài Đặt Chung" mới bật/tắt được — đồng bộ
+  hai chiều với công tắc bên đó.
+- Các mục có công tắc bật/tắt riêng (FAB, Thanh Công Cụ Bôi Đen, Dịch nhanh khi
+  di chuột) nay làm mờ phần tùy chỉnh bên dưới khi tắt, vì lúc đó các tùy chỉnh
+  đó chưa có tác dụng gì.
+
+### Sửa lỗi
+- Mục "Dịch nhanh khi di chuột" không còn hiện trùng lặp tiêu đề (tiêu đề mục
+  và tên công tắc bật/tắt bên dưới trước đây giống hệt nhau) — công tắc giờ
+  hiện đúng nhãn "Bật Dịch nhanh khi di chuột".
+- Khi mục "Trên Toolbar" (Giao diện > Sắp xếp Toolbar) không còn công cụ nào,
+  thanh công cụ nổi lúc bôi đen chỉ còn mỗi icon mặt cười — trước đây icon này
+  vẫn bị bọc trong khung nền/viền/bóng đổ như một thanh công cụ đầy đủ, giờ
+  hiện đúng mỗi icon trần, không nền không viền, và icon cũng nhỏ lại một
+  chút (18px → 16px) cho gọn. Vị trí thanh công cụ (cả icon lẫn dạng đầy đủ)
+  giờ canh giữa chính xác theo đúng phần chữ vừa bôi đen — trước đây dùng số
+  đo cố định giả định trước kích thước nên bị lệch, nhất là ở dạng chỉ-icon.
+
+---
+
 ## [1.8.0] — 2026-09-03
 
 ### Thêm mới

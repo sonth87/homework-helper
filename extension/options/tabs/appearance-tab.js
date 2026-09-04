@@ -3,6 +3,23 @@ import { Storage, DEFAULT_SETTINGS } from '../../shared/storage.js';
 import { getSelectionTooltipI18n } from '../../shared/i18n.js';
 import { TOOLBAR_ITEM_ICONS, DEFAULT_TOOLBAR_LAYOUT, normalizeToolbarLayout } from '../../shared/toolbar-items.js';
 
+// Solid-colour toolbar/hover-tip themes, shared by the two live-preview
+// branches below — one source of truth for the RGB triples so adding a new
+// theme (see content/styles/tooltip.css's own .theme-X rules, which this
+// mirrors) means adding one entry here instead of a new if/else arm in both
+// updatePreview() branches. 'glass-light' (the default) and 'glass-dark' are
+// handled separately since only glass-dark needs a distinct border/text
+// colour pairing rather than the white-on-solid-colour look every entry here
+// shares.
+const SOLID_THEME_COLORS = {
+  'cyber-blue': '2, 132, 199',
+  emerald: '5, 150, 105',
+  purple: '124, 58, 237',
+  rose: '225, 29, 72',
+  amber: '217, 119, 6',
+  indigo: '79, 70, 229',
+};
+
 export class AppearanceTab {
   constructor(optionsController) {
     this.controller = optionsController;
@@ -21,6 +38,7 @@ export class AppearanceTab {
       popupOpacity = 92,
       popupBlur = 16,
       popupCardSize = 'normal',
+      enableTextTooltip = true,
       toolbarShowText = true,
       toolbarSize = 'normal',
       toolbarTheme = 'auto',
@@ -48,6 +66,10 @@ export class AppearanceTab {
     const fabSizeSelect = document.getElementById('optFabSizeSelect');
     const rangeFabOpacity = document.getElementById('optRangeFabOpacity');
     const valFabOpacity = document.getElementById('valFabOpacity');
+    const btnResetFab = document.getElementById('optBtnResetFab');
+    const fabSettingsSub = document.getElementById('optFabSettingsSub');
+    const checkToolbarEnableInline = document.getElementById('optCheckToolbarEnableInline');
+    const toolbarSettingsSub = document.getElementById('optToolbarSettingsSub');
     const checkToolbarText = document.getElementById('optCheckToolbarText');
     const toolbarSizeSelect = document.getElementById('optToolbarSizeSelect');
     const toolbarThemeSelect = document.getElementById('optToolbarThemeSelect');
@@ -80,6 +102,7 @@ export class AppearanceTab {
     const rangeHoverMaxWidth = document.getElementById('optRangeHoverMaxWidth');
     const valHoverMaxWidth = document.getElementById('valHoverMaxWidth');
     const btnResetHover = document.getElementById('optBtnResetHover');
+    const hoverSettingsSub = document.getElementById('optHoverSettingsSub');
     const prevHoverTip = document.getElementById('prevHoverTip');
 
     const popupCardSizeSelect = document.getElementById('optPopupCardSizeSelect');
@@ -87,6 +110,7 @@ export class AppearanceTab {
     const valPopupOpacity = document.getElementById('valPopupOpacity');
     const rangePopupBlur = document.getElementById('optRangePopupBlur');
     const valPopupBlur = document.getElementById('valPopupBlur');
+    const btnResetPopup = document.getElementById('optBtnResetPopup');
 
     // Live Preview Elements
     const prevToolbar = document.getElementById('prevToolbar');
@@ -95,14 +119,28 @@ export class AppearanceTab {
 
     if (!checkFab) return;
 
+    // Dims (and truly disables, not just visually) a card's own sub-settings
+    // while its "enable this whole feature" checkbox above it is off — those
+    // controls have nothing to act on until the feature is back on.
+    const setSubDimmed = (subEl, dimmed) => {
+      if (!subEl) return;
+      subEl.classList.toggle('is-dimmed', dimmed);
+      subEl.querySelectorAll('input, select, button, textarea').forEach((el) => {
+        el.disabled = dimmed;
+      });
+    };
+
     // Populate initial values
     if (overlayThemeSelect) overlayThemeSelect.value = overlayTheme;
     checkFab.checked = enableFloatingButton;
+    setSubDimmed(fabSettingsSub, !enableFloatingButton);
     if (fabSizeSelect) fabSizeSelect.value = fabSize;
     if (rangeFabOpacity) {
       rangeFabOpacity.value = fabOpacity;
       if (valFabOpacity) valFabOpacity.textContent = `${fabOpacity}%`;
     }
+    if (checkToolbarEnableInline) checkToolbarEnableInline.checked = enableTextTooltip;
+    setSubDimmed(toolbarSettingsSub, !enableTextTooltip);
     if (checkToolbarText) checkToolbarText.checked = toolbarShowText;
     if (toolbarSizeSelect) toolbarSizeSelect.value = toolbarSize;
     if (toolbarThemeSelect) toolbarThemeSelect.value = toolbarTheme;
@@ -118,6 +156,7 @@ export class AppearanceTab {
     }
 
     if (checkHoverTranslateInline) checkHoverTranslateInline.checked = enableHoverTranslate;
+    setSubDimmed(hoverSettingsSub, !enableHoverTranslate);
     Object.entries(checkHoverMods).forEach(([mod, el]) => {
       if (el) el.checked = hoverTranslateModifiers.includes(mod);
     });
@@ -210,20 +249,13 @@ export class AppearanceTab {
         prevToolbar.style.backdropFilter = `blur(${tbBlurVal}px) saturate(180%)`;
         prevToolbar.style.webkitBackdropFilter = `blur(${tbBlurVal}px) saturate(180%)`;
 
+        const tbSolidRgb = SOLID_THEME_COLORS[tbTheme];
         if (tbTheme === 'glass-dark') {
           prevToolbar.style.background = `rgba(15, 23, 42, ${tbAlpha})`;
           prevToolbar.style.color = '#f8fafc';
           prevToolbar.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-        } else if (tbTheme === 'cyber-blue') {
-          prevToolbar.style.background = `rgba(2, 132, 199, ${tbAlpha})`;
-          prevToolbar.style.color = '#ffffff';
-          prevToolbar.style.borderColor = 'rgba(255, 255, 255, 0.35)';
-        } else if (tbTheme === 'emerald') {
-          prevToolbar.style.background = `rgba(5, 150, 105, ${tbAlpha})`;
-          prevToolbar.style.color = '#ffffff';
-          prevToolbar.style.borderColor = 'rgba(255, 255, 255, 0.35)';
-        } else if (tbTheme === 'purple') {
-          prevToolbar.style.background = `rgba(124, 58, 237, ${tbAlpha})`;
+        } else if (tbSolidRgb) {
+          prevToolbar.style.background = `rgba(${tbSolidRgb}, ${tbAlpha})`;
           prevToolbar.style.color = '#ffffff';
           prevToolbar.style.borderColor = 'rgba(255, 255, 255, 0.35)';
         } else {
@@ -260,17 +292,12 @@ export class AppearanceTab {
         prevHoverTip.style.backdropFilter = `blur(${htBlurVal}px) saturate(180%)`;
         prevHoverTip.style.webkitBackdropFilter = `blur(${htBlurVal}px) saturate(180%)`;
 
+        const htSolidRgb = SOLID_THEME_COLORS[htTheme];
         if (htTheme === 'glass-dark') {
           prevHoverTip.style.background = `rgba(15, 23, 42, ${htAlpha})`;
           prevHoverTip.style.color = '#f8fafc';
-        } else if (htTheme === 'cyber-blue') {
-          prevHoverTip.style.background = `rgba(2, 132, 199, ${htAlpha})`;
-          prevHoverTip.style.color = '#ffffff';
-        } else if (htTheme === 'emerald') {
-          prevHoverTip.style.background = `rgba(5, 150, 105, ${htAlpha})`;
-          prevHoverTip.style.color = '#ffffff';
-        } else if (htTheme === 'purple') {
-          prevHoverTip.style.background = `rgba(124, 58, 237, ${htAlpha})`;
+        } else if (htSolidRgb) {
+          prevHoverTip.style.background = `rgba(${htSolidRgb}, ${htAlpha})`;
           prevHoverTip.style.color = '#ffffff';
         } else {
           prevHoverTip.style.background = `rgba(255, 255, 255, ${htAlpha})`;
@@ -298,6 +325,7 @@ export class AppearanceTab {
 
     checkFab.addEventListener('change', () => {
       Storage.set({ enableFloatingButton: checkFab.checked });
+      setSubDimmed(fabSettingsSub, !checkFab.checked);
       updatePreview();
     });
 
@@ -310,6 +338,36 @@ export class AppearanceTab {
       if (valFabOpacity) valFabOpacity.textContent = `${rangeFabOpacity.value}%`;
       Storage.set({ fabOpacity: parseInt(rangeFabOpacity.value, 10) });
       updatePreview();
+    });
+
+    // Resets every control in this card back to DEFAULT_SETTINGS — deliberately
+    // leaves enableFloatingButton untouched, same reasoning as btnResetHover
+    // below: on/off is a separate decision from "what should the default
+    // behavior/appearance be".
+    btnResetFab?.addEventListener('click', () => {
+      const d = DEFAULT_SETTINGS;
+
+      if (fabSizeSelect) fabSizeSelect.value = d.fabSize;
+      if (rangeFabOpacity) {
+        rangeFabOpacity.value = d.fabOpacity;
+        if (valFabOpacity) valFabOpacity.textContent = `${d.fabOpacity}%`;
+      }
+
+      Storage.set({
+        fabSize: d.fabSize,
+        fabOpacity: d.fabOpacity,
+      });
+      updatePreview();
+    });
+
+    // Same setting (enableTextTooltip) as General tab's own "Text Selection
+    // Quick Tooltip" checkbox (#optCheckTooltip) — kept in sync both ways,
+    // same pattern as checkHoverTranslateInline below.
+    checkToolbarEnableInline?.addEventListener('change', () => {
+      Storage.set({ enableTextTooltip: checkToolbarEnableInline.checked });
+      setSubDimmed(toolbarSettingsSub, !checkToolbarEnableInline.checked);
+      const generalCheck = document.getElementById('optCheckTooltip');
+      if (generalCheck) generalCheck.checked = checkToolbarEnableInline.checked;
     });
 
     checkToolbarText?.addEventListener('change', () => {
@@ -345,6 +403,7 @@ export class AppearanceTab {
 
     checkHoverTranslateInline?.addEventListener('change', () => {
       Storage.set({ enableHoverTranslate: checkHoverTranslateInline.checked });
+      setSubDimmed(hoverSettingsSub, !checkHoverTranslateInline.checked);
       const generalCheck = document.getElementById('optCheckHoverTranslate');
       if (generalCheck) generalCheck.checked = checkHoverTranslateInline.checked;
     });
@@ -469,6 +528,31 @@ export class AppearanceTab {
     rangePopupBlur?.addEventListener('input', () => {
       if (valPopupBlur) valPopupBlur.textContent = `${rangePopupBlur.value}px`;
       Storage.set({ popupBlur: parseInt(rangePopupBlur.value, 10) });
+      updatePreview();
+    });
+
+    // Resets every control in this card back to DEFAULT_SETTINGS. Unlike FAB/
+    // Hover, this card has no "enable this whole feature" checkbox of its own
+    // to leave untouched — the Homework Helper Popup's own on/off lives
+    // elsewhere (General tab), not here.
+    btnResetPopup?.addEventListener('click', () => {
+      const d = DEFAULT_SETTINGS;
+
+      if (popupCardSizeSelect) popupCardSizeSelect.value = d.popupCardSize;
+      if (rangePopupOpacity) {
+        rangePopupOpacity.value = d.popupOpacity;
+        if (valPopupOpacity) valPopupOpacity.textContent = `${d.popupOpacity}%`;
+      }
+      if (rangePopupBlur) {
+        rangePopupBlur.value = d.popupBlur;
+        if (valPopupBlur) valPopupBlur.textContent = `${d.popupBlur}px`;
+      }
+
+      Storage.set({
+        popupCardSize: d.popupCardSize,
+        popupOpacity: d.popupOpacity,
+        popupBlur: d.popupBlur,
+      });
       updatePreview();
     });
   }

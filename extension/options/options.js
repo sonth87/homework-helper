@@ -101,6 +101,8 @@ export class OptionsController {
     setInner('optIconOcrExplain', Icons.helpCircle(18));
     setInner('optIconResetToolbarLayout', Icons.refresh(14));
     setInner('optIconResetHover', Icons.refresh(14));
+    setInner('optIconResetFab', Icons.refresh(14));
+    setInner('optIconResetPopup', Icons.refresh(14));
 
     // Local Model (Ollama / LM Studio) Panel & Guide Icons
     setInner('optIconServer', Icons.server(16));
@@ -332,8 +334,16 @@ export class OptionsController {
     setText('optLabelFabSize', dict.labelFabSize);
     setText('optLabelFabOpacity', dict.labelFabOpacity);
     setText('optLabelFabOpacityDesc', dict.labelFabOpacityDesc);
+    // Reuses the toolbar layout editor's own "Restore Default" string —
+    // same generic action, no need for a second near-identical i18n key.
+    setText('optBtnResetFabText', dict.toolbarLayoutResetBtn);
     setText('optCardToolbarTitle', dict.cardToolbarTitle);
     setText('optCardPopupTitle', dict.cardPopupTitle);
+    // Reuses the General tab's own enable-toggle strings for this same
+    // setting (enableTextTooltip) — same checkbox, just also surfaced here
+    // next to the toolbar's other appearance settings.
+    setText('optToolbarEnableTitle', dict.tooltipTitle);
+    setText('optToolbarEnableDesc', dict.tooltipDesc);
     setText('optLabelToolbarTheme', dict.labelToolbarTheme);
     setText('optLabelToolbarThemeDesc', dict.labelToolbarThemeDesc);
     setText('optLabelToolbarPosition', dict.labelToolbarPosition);
@@ -350,7 +360,7 @@ export class OptionsController {
 
     // Quick Hover Translate card
     setText('optCardHoverTitle', dict.cardHoverTitle);
-    setText('optHoverTranslateEnableTitle', dict.hoverTranslateTitle);
+    setText('optHoverTranslateEnableTitle', dict.hoverTranslateEnableTitle);
     setText('optHoverTranslateEnableDesc', dict.hoverTranslateDesc);
     setText('optLabelHoverModifier', dict.labelHoverModifier);
     setText('optLabelHoverModifierDesc', dict.labelHoverModifierDesc);
@@ -385,6 +395,9 @@ export class OptionsController {
     setText('optHoverThemeOptBlue', dict.toolbarThemeOptBlue);
     setText('optHoverThemeOptGreen', dict.toolbarThemeOptGreen);
     setText('optHoverThemeOptPurple', dict.toolbarThemeOptPurple);
+    setText('optHoverThemeOptRose', dict.toolbarThemeOptRose);
+    setText('optHoverThemeOptAmber', dict.toolbarThemeOptAmber);
+    setText('optHoverThemeOptIndigo', dict.toolbarThemeOptIndigo);
     setText('optLabelHoverOpacity', dict.labelHoverOpacity);
     setText('optLabelHoverOpacityDesc', dict.labelHoverOpacityDesc);
     setText('optLabelHoverBlur', dict.labelHoverBlur);
@@ -408,6 +421,9 @@ export class OptionsController {
     setText('optLabelPopupOpacityDesc', dict.labelPopupOpacityDesc);
     setText('optLabelPopupBlur', dict.labelPopupBlur);
     setText('optLabelPopupBlurDesc', dict.labelPopupBlurDesc);
+    // Reuses the toolbar layout editor's own "Restore Default" string —
+    // same generic action, no need for a second near-identical i18n key.
+    setText('optBtnResetPopupText', dict.toolbarLayoutResetBtn);
     setText('optLivePreviewBadge', dict.livePreviewBadge);
     setText('optLivePreviewSub', dict.livePreviewSub);
 
@@ -422,6 +438,9 @@ export class OptionsController {
     setText('optThemeOptBlue', dict.toolbarThemeOptBlue);
     setText('optThemeOptGreen', dict.toolbarThemeOptGreen);
     setText('optThemeOptPurple', dict.toolbarThemeOptPurple);
+    setText('optThemeOptRose', dict.toolbarThemeOptRose);
+    setText('optThemeOptAmber', dict.toolbarThemeOptAmber);
+    setText('optThemeOptIndigo', dict.toolbarThemeOptIndigo);
     setText('optSizeOptCompact', dict.toolbarSizeOptCompact);
     setText('optSizeOptNormal', dict.toolbarSizeOptNormal);
     setText('optSizeOptLarge', dict.toolbarSizeOptLarge);

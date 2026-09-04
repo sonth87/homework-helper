@@ -255,7 +255,7 @@ export const DEFAULT_SETTINGS = {
   toolbarBlur: 16,
   toolbarShowText: true, // true: icon + label, false: icon only
   toolbarSize: "normal", // 'compact' | 'normal' | 'large'
-  toolbarTheme: "auto", // 'auto' (follows OS light/dark) | 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple'
+  toolbarTheme: "auto", // 'auto' (follows OS light/dark) | 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple' | 'rose' | 'amber' | 'indigo'
   toolbarCustomColor: "#0284c7",
   toolbarLayout: DEFAULT_TOOLBAR_LAYOUT, // ordered [{ id, area: 'main' | 'dropdown' }] — see shared/toolbar-items.js
   // Action-popup quick translator (popup/popup.js). Kept separate from
@@ -271,11 +271,11 @@ export const DEFAULT_SETTINGS = {
   hoverTranslateModifiers: ["ctrl"], // subset of ['ctrl','shift','alt','meta']; [] = fires on hover alone, no key needed
   hoverTranslateGranularity: "sentence", // 'word' | 'sentence' | 'paragraph'
   hoverTranslateDelay: 350, // ms the pointer must stay still before a lookup fires
-  hoverTranslateOpacity: 96, // 40 - 100%
-  hoverTranslateBlur: 18, // 0 - 30px
+  hoverTranslateOpacity: 90, // 40 - 100% — matches toolbarOpacity's default so the two glass surfaces read the same
+  hoverTranslateBlur: 16, // 0 - 30px — matches toolbarBlur's default, same reasoning
   hoverTranslateFontSize: 13, // 11 - 16px
   hoverTranslateMaxWidth: 300, // 220 - 420px
-  hoverTranslateTheme: "glass-light", // 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple'
+  hoverTranslateTheme: "glass-light", // 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple' | 'rose' | 'amber' | 'indigo'
   hoverTranslateHighlight: true, // marker-style background tint over the word/sentence/paragraph being translated
   hoverTranslateAnimation: "draw", // 'none' | 'pulse' | 'glow' | 'sweep' | 'draw' — effect played on that text while holding the trigger key
   routingStrategy: "prefer_config", // 'prefer_config' (recommended) | 'prefer_nano' | 'nano_only' | 'config_only'

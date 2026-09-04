@@ -364,8 +364,8 @@ class HoverTranslate {
 
     const tip = document.createElement('div');
     tip.className = `hw-hover-translate-tip theme-${this.settings.hoverTranslateTheme || 'glass-light'}`;
-    tip.style.setProperty('--ht-alpha', ((this.settings.hoverTranslateOpacity ?? 96) / 100).toFixed(2));
-    tip.style.setProperty('--ht-blur', `${this.settings.hoverTranslateBlur ?? 18}px`);
+    tip.style.setProperty('--ht-alpha', ((this.settings.hoverTranslateOpacity ?? 90) / 100).toFixed(2));
+    tip.style.setProperty('--ht-blur', `${this.settings.hoverTranslateBlur ?? 16}px`);
     tip.style.setProperty('--ht-font-size', `${this.settings.hoverTranslateFontSize ?? 13}px`);
     tip.style.setProperty('--ht-max-width', `${this.settings.hoverTranslateMaxWidth ?? 300}px`);
 
