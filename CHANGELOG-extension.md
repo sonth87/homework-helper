@@ -71,8 +71,6 @@ _Chưa có thay đổi nào chờ phát hành._
   cùng tông để không bị chìm vào nội dung trang phía sau.
 - **Popup trên thanh công cụ giờ theo đúng giao diện sáng/tối/tự động** đã
   chọn trong Cài đặt, thay vì luôn cố định giao diện sáng như trước.
-- **Vô hiệu hoá chuột phải trong popup trên thanh công cụ** — popup không có
-  nội dung trang nào để dùng menu chuột phải mặc định của trình duyệt.
 - **Cách chọn/xoá mục trong bottom sheet Lịch sử làm lại hoàn toàn, bỏ hẳn
   checkbox.** Bấm vào một dòng là chọn dòng đó (bấm lại để bỏ chọn); bấm
   riêng mũi tên bên phải mới là mở rộng/thu gọn chi tiết. Khi có dòng đang
@@ -82,6 +80,18 @@ _Chưa có thay đổi nào chờ phát hành._
   Cả hai thao tác xoá đều có hộp thoại xác nhận trước khi xoá thật.
 
 ### Sửa lỗi
+- **Menu "..." của thanh công cụ bôi đen (Giải thích/Tóm tắt/Kiểm tra ngữ pháp/Tắt
+  công cụ...) và menu con của nó luôn hiện kiểu kính sáng màu trắng cố định,
+  gần như không mờ, bất kể đang chọn theme màu nào hay chỉnh độ trong suốt/độ
+  mờ backdrop nào trong Cài đặt** — lạc tông hẳn so với chính thanh công cụ
+  ngay phía trên nó. Nguyên nhân sâu hơn một bước so với tưởng ban đầu: 2 menu
+  này vốn nằm *bên trong* thanh công cụ mà chính thanh công cụ cũng có hiệu ứng
+  kính mờ riêng — hiệu ứng mờ của phần tử con bị "nhốt" trong phạm vi vẽ của
+  phần tử cha, không lấy được nội dung trang thật phía sau để làm mờ, dù giá
+  trị CSS đặt ra đúng. Giờ 2 menu này tách ra render độc lập (không còn là con
+  của thanh công cụ), tự nhuộm màu theo đúng theme đang chọn (Liquid Glass
+  Dark, Cyber Blue, Emerald, Purple) và bám đúng độ trong suốt + độ mờ backdrop
+  đã chỉnh trong Cài đặt.
 - **Bottom sheet Lịch sử ở popup trên thanh công cụ đóng không dứt điểm** —
   trước đây đóng lại nhưng vẫn còn thấy một phần ở mép dưới popup. Nút Lịch
   sử cũng được dời lại gần nút Cài đặt cho gọn thay vì tách xa nhau.

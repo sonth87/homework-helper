@@ -16,10 +16,6 @@ import { TranslateHistorySheet } from '../shared/translate-history-sheet.js';
 import { renderAnswer } from '../shared/markdown-katex.js';
 import { speak, isSpeechAvailable, bindSpeakButtons } from '../shared/tts.js';
 
-// This popup has no use for the browser's native right-click menu (no page
-// content to inspect/reload here), so it's turned off outright.
-document.addEventListener('contextmenu', (e) => e.preventDefault());
-
 document.addEventListener('DOMContentLoaded', async () => {
   // navigator.clipboard.readText() (see pickUpClipboard() near the bottom)
   // throws "Document is not focused" unless this window actually holds OS

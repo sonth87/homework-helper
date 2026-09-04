@@ -74,6 +74,96 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* .hw-tb-dropdown/.hw-tb-submenu (further below) used to be styled only via
+   .hw-selection-toolbar.theme-X descendant selectors, back when they were
+   DOM children of .hw-selection-toolbar — so they stayed the plain
+   light-glass look no matter which of the 4 themes above was active. They're
+   portalled out to the shared shadow root now instead (see toggleDropdown()
+   in selection-tooltip.js — a child's own backdrop-filter barely renders at
+   all nested inside an ancestor that already has one of its own), so they
+   carry the theme-X class directly rather than inheriting it from an
+   ancestor, and these selectors target that class on the element itself.
+   Same tinted "liquid glass" treatment as the toolbar bar: same base colour,
+   same var(--tb-alpha) (copied onto each element by hand in JS now, for the
+   same not-a-descendant-anymore reason) — only the colour needs restating
+   per theme here. */
+.hw-tb-dropdown.theme-glass-dark,
+.hw-tb-submenu.theme-glass-dark {
+  background: rgba(15, 23, 42, var(--tb-alpha, 0.8));
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.hw-tb-dropdown.theme-glass-dark .hw-tb-menu-item,
+.hw-tb-submenu.theme-glass-dark .hw-tb-sub-item {
+  color: #e2e8f0;
+}
+.hw-tb-dropdown.theme-glass-dark .hw-tb-menu-item:hover,
+.hw-tb-submenu.theme-glass-dark .hw-tb-sub-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+.hw-tb-submenu.theme-glass-dark .hw-tb-sub-footer {
+  color: #94a3b8;
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+.hw-tb-dropdown.theme-cyber-blue,
+.hw-tb-submenu.theme-cyber-blue {
+  background: rgba(2, 132, 199, var(--tb-alpha, 0.82));
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.hw-tb-dropdown.theme-cyber-blue .hw-tb-menu-item,
+.hw-tb-submenu.theme-cyber-blue .hw-tb-sub-item {
+  color: #ffffff;
+}
+.hw-tb-dropdown.theme-cyber-blue .hw-tb-menu-item:hover,
+.hw-tb-submenu.theme-cyber-blue .hw-tb-sub-item:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+.hw-tb-submenu.theme-cyber-blue .hw-tb-sub-footer {
+  color: rgba(255, 255, 255, 0.75);
+  border-top-color: rgba(255, 255, 255, 0.25);
+}
+
+.hw-tb-dropdown.theme-emerald,
+.hw-tb-submenu.theme-emerald {
+  background: rgba(5, 150, 105, var(--tb-alpha, 0.82));
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.hw-tb-dropdown.theme-emerald .hw-tb-menu-item,
+.hw-tb-submenu.theme-emerald .hw-tb-sub-item {
+  color: #ffffff;
+}
+.hw-tb-dropdown.theme-emerald .hw-tb-menu-item:hover,
+.hw-tb-submenu.theme-emerald .hw-tb-sub-item:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+.hw-tb-submenu.theme-emerald .hw-tb-sub-footer {
+  color: rgba(255, 255, 255, 0.75);
+  border-top-color: rgba(255, 255, 255, 0.25);
+}
+
+.hw-tb-dropdown.theme-purple,
+.hw-tb-submenu.theme-purple {
+  background: rgba(124, 58, 237, var(--tb-alpha, 0.82));
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.hw-tb-dropdown.theme-purple .hw-tb-menu-item,
+.hw-tb-submenu.theme-purple .hw-tb-sub-item {
+  color: #ffffff;
+}
+.hw-tb-dropdown.theme-purple .hw-tb-menu-item:hover,
+.hw-tb-submenu.theme-purple .hw-tb-sub-item:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+.hw-tb-submenu.theme-purple .hw-tb-sub-footer {
+  color: rgba(255, 255, 255, 0.75);
+  border-top-color: rgba(255, 255, 255, 0.25);
+}
+
 .hw-tb-logo {
   display: flex;
   align-items: center;
@@ -147,14 +237,27 @@
   white-space: nowrap;
 }
 
-/* Dropdown Flyout Menu (Liquid Glass) */
+/* Dropdown Flyout Menu (Liquid Glass)
+   position: absolute, but top/left aren't set here — it's portalled onto
+   the shared shadow root rather than laid out as a child of the toolbar
+   (see toggleDropdown()'s portal note in selection-tooltip.js), so its
+   position is computed in JS against the toolbar's own box instead. */
 .hw-tb-dropdown {
   position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(18px) saturate(180%);
-  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  /* --tb-alpha is copied onto this element by hand in JS (toggleDropdown())
+     — it no longer inherits down from .hw-selection-toolbar now that this
+     is a portalled sibling rather than a child. Opacity reads the same at
+     any size, so no adjustment needed there, unlike blur just below. */
+  background: rgba(255, 255, 255, var(--tb-alpha, 0.8));
+  /* Blur radius, unlike opacity, does NOT read as "equally blurred" at any
+     size: the same radius smooths a thin bar into one soft blend, but on
+     this much taller panel it only softens each edge locally — the page's
+     own pattern behind it (text, images, anything with real detail) still
+     reads through clearly at a glance, looking barely blurred at all next
+     to the bar right above it. 1.5× the bar's own --tb-blur closes that gap
+     (confirmed by eye against a few multiples) while still scaling with it. */
+  backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%);
+  -webkit-backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 14px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -201,14 +304,18 @@
   gap: 8px;
 }
 
-/* Submenu for Disable (Liquid Glass) */
+/* Submenu for Disable (Liquid Glass)
+   Also portalled — see toggleDropdown()'s portal note — with its top/left
+   computed in JS (positionSubmenu()) against the "disable" row's own box,
+   including the left/right flip. */
 .hw-tb-submenu {
   position: absolute;
-  top: 0;
-  left: calc(100% + 6px);
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(18px) saturate(180%);
-  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  /* Same reasoning as .hw-tb-dropdown just above: opacity follows
+     --tb-alpha as-is (copied on by hand in JS), blur radius is boosted 1.5×
+     to look comparably blurred to the bar despite this panel's larger size. */
+  background: rgba(255, 255, 255, var(--tb-alpha, 0.8));
+  backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%);
+  -webkit-backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 14px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -235,11 +342,10 @@
   height: 100%;
 }
 
-/* Opened leftwards when there is no room on the right (set from JS). */
-.hw-tb-submenu.flip-left {
-  left: auto;
-  right: calc(100% + 6px);
-}
+/* Opened leftwards when there is no room on the right — positionSubmenu()
+   in selection-tooltip.js sets the flipped `left` itself now (it has to,
+   since JS also owns the non-flipped case), this class just repoints the
+   hover bridge above to the opposite side to match. */
 .hw-tb-submenu.flip-left::before {
   right: auto;
   left: 100%;
