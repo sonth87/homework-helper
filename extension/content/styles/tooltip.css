@@ -878,18 +878,31 @@
   pointer-events: none;
   border-radius: 3px;
   background: transparent;
+  /* Defaults — applyTextEffects() overrides both per box, from
+     hoverTranslateHighlightColor (a curated swatch, not a free color) and
+     hoverTranslateHighlightOpacity, so every rule below that paints the
+     highlight fill reads the user's chosen color/strength instead of a
+     hardcoded one. Glow/sweep below intentionally keep their own fixed
+     amber accent — a pale user-chosen fill color would make those barely
+     visible as a shadow/underline. */
+  --hl-rgb: 254, 240, 138;
+  --hl-alpha: 0.4;
 }
 
 .hw-hlbox.hw-hl-on {
-  background: rgba(254, 240, 138, 0.6);
+  background: rgba(var(--hl-rgb), var(--hl-alpha));
 }
 
 .hw-hlbox.hw-anim-pulse {
   animation: hwHlPulse 1.1s ease-in-out infinite;
 }
+/* The 0.367/1.083 multipliers keep pulse's low/high swing the same
+   proportion of --hl-alpha as the original fixed 0.22/0.65 were of the old
+   fixed 0.6 base, so the pulse still visibly "breathes" at any opacity
+   setting instead of flattening out at low ones. */
 @keyframes hwHlPulse {
-  0%, 100% { background-color: rgba(254, 240, 138, 0.22); }
-  50% { background-color: rgba(254, 240, 138, 0.65); }
+  0%, 100% { background-color: rgba(var(--hl-rgb), calc(var(--hl-alpha) * 0.367)); }
+  50% { background-color: rgba(var(--hl-rgb), calc(var(--hl-alpha) * 1.083)); }
 }
 
 .hw-hlbox.hw-anim-glow {
@@ -905,7 +918,7 @@
    staggers this per line (via animation-delay) so a multi-line
    sentence/paragraph draws line by line instead of all at once. */
 .hw-hlbox.hw-anim-draw {
-  background: rgba(254, 240, 138, 0.6);
+  background: rgba(var(--hl-rgb), var(--hl-alpha));
   transform: scaleX(0);
   transform-origin: left;
   animation: hwHlDraw 0.35s ease-out forwards;

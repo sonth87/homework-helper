@@ -2,6 +2,7 @@ import { Icons } from '../../shared/icons.js';
 import { Storage, DEFAULT_SETTINGS } from '../../shared/storage.js';
 import { getSelectionTooltipI18n } from '../../shared/i18n.js';
 import { TOOLBAR_ITEM_ICONS, DEFAULT_TOOLBAR_LAYOUT, normalizeToolbarLayout } from '../../shared/toolbar-items.js';
+import { HOVER_HIGHLIGHT_COLORS } from '../../shared/hover-highlight-colors.js';
 
 // Solid-colour toolbar/hover-tip themes, shared by the two live-preview
 // branches below — one source of truth for the RGB triples so adding a new
@@ -19,6 +20,16 @@ const SOLID_THEME_COLORS = {
   amber: '217, 119, 6',
   indigo: '79, 70, 229',
 };
+
+// '#rrggbb' -> 'R, G, B', matching content/hover-translate.js's own
+// hexToRgbString() — the preview here and the real highlight boxes both
+// need bare components to compose rgba(var(--hl-rgb), alpha).
+function hexToRgbString(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+}
 
 export class AppearanceTab {
   constructor(optionsController) {
@@ -52,6 +63,8 @@ export class AppearanceTab {
       hoverTranslateDelay = 350,
       hoverTranslateTheme = 'glass-light',
       hoverTranslateHighlight = true,
+      hoverTranslateHighlightColor = '#fef08a',
+      hoverTranslateHighlightOpacity = 40,
       hoverTranslateAnimation = 'none',
       hoverTranslateOpacity = 96,
       hoverTranslateBlur = 18,
@@ -91,6 +104,9 @@ export class AppearanceTab {
     const rangeHoverDelay = document.getElementById('optRangeHoverDelay');
     const valHoverDelay = document.getElementById('valHoverDelay');
     const checkHoverHighlight = document.getElementById('optCheckHoverHighlight');
+    const swatchGroupHoverHighlight = document.getElementById('optHoverHighlightSwatches');
+    const rangeHoverHighlightOpacity = document.getElementById('optRangeHoverHighlightOpacity');
+    const valHoverHighlightOpacity = document.getElementById('valHoverHighlightOpacity');
     const hoverAnimationSelect = document.getElementById('optHoverAnimationSelect');
     const hoverThemeSelect = document.getElementById('optHoverThemeSelect');
     const rangeHoverOpacity = document.getElementById('optRangeHoverOpacity');
@@ -130,6 +146,24 @@ export class AppearanceTab {
       });
     };
 
+    // Curated pastel swatches for hoverTranslateHighlightColor (see
+    // shared/hover-highlight-colors.js) — rebuilt (not just re-marked) each
+    // call since it's also how loadAppearanceSettings()'s one-time initial
+    // render and btnResetHover's reset both populate it.
+    function renderHoverHighlightSwatches(selected) {
+      if (!swatchGroupHoverHighlight) return;
+      swatchGroupHoverHighlight.innerHTML = HOVER_HIGHLIGHT_COLORS.map((hex) => `
+        <button type="button" class="opt-color-swatch${hex === selected ? ' active' : ''}" data-color="${hex}" style="background:${hex};" aria-label="${hex}"></button>
+      `).join('');
+      swatchGroupHoverHighlight.querySelectorAll('.opt-color-swatch').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          Storage.set({ hoverTranslateHighlightColor: btn.dataset.color });
+          swatchGroupHoverHighlight.querySelectorAll('.opt-color-swatch').forEach((b) => b.classList.toggle('active', b === btn));
+          updatePreview();
+        });
+      });
+    }
+
     // Populate initial values
     if (overlayThemeSelect) overlayThemeSelect.value = overlayTheme;
     checkFab.checked = enableFloatingButton;
@@ -166,6 +200,11 @@ export class AppearanceTab {
       if (valHoverDelay) valHoverDelay.textContent = `${hoverTranslateDelay}ms`;
     }
     if (checkHoverHighlight) checkHoverHighlight.checked = hoverTranslateHighlight;
+    renderHoverHighlightSwatches(hoverTranslateHighlightColor);
+    if (rangeHoverHighlightOpacity) {
+      rangeHoverHighlightOpacity.value = hoverTranslateHighlightOpacity;
+      if (valHoverHighlightOpacity) valHoverHighlightOpacity.textContent = `${hoverTranslateHighlightOpacity}%`;
+    }
     if (hoverAnimationSelect) hoverAnimationSelect.value = hoverTranslateAnimation;
     if (hoverThemeSelect) hoverThemeSelect.value = hoverTranslateTheme;
     if (rangeHoverOpacity) {
@@ -277,6 +316,12 @@ export class AppearanceTab {
         if (checkHoverHighlight?.checked) prevDemoHighlight.classList.add('opt-preview-hl-on');
         const animVal = hoverAnimationSelect?.value || 'none';
         if (animVal !== 'none') prevDemoHighlight.classList.add(`opt-preview-anim-${animVal}`);
+        const selectedSwatch = swatchGroupHoverHighlight?.querySelector('.opt-color-swatch.active');
+        const hlRgb = hexToRgbString(selectedSwatch?.dataset.color);
+        if (hlRgb) prevDemoHighlight.style.setProperty('--hl-rgb', hlRgb);
+        if (rangeHoverHighlightOpacity) {
+          prevDemoHighlight.style.setProperty('--hl-alpha', (parseInt(rangeHoverHighlightOpacity.value, 10) / 100).toFixed(2));
+        }
       }
 
       // 2.5 Quick Hover Translate tooltip
@@ -431,6 +476,12 @@ export class AppearanceTab {
       updatePreview();
     });
 
+    rangeHoverHighlightOpacity?.addEventListener('input', () => {
+      if (valHoverHighlightOpacity) valHoverHighlightOpacity.textContent = `${rangeHoverHighlightOpacity.value}%`;
+      Storage.set({ hoverTranslateHighlightOpacity: parseInt(rangeHoverHighlightOpacity.value, 10) });
+      updatePreview();
+    });
+
     hoverAnimationSelect?.addEventListener('change', () => {
       Storage.set({ hoverTranslateAnimation: hoverAnimationSelect.value });
       updatePreview();
@@ -480,6 +531,11 @@ export class AppearanceTab {
         if (valHoverDelay) valHoverDelay.textContent = `${d.hoverTranslateDelay}ms`;
       }
       if (checkHoverHighlight) checkHoverHighlight.checked = d.hoverTranslateHighlight;
+      renderHoverHighlightSwatches(d.hoverTranslateHighlightColor);
+      if (rangeHoverHighlightOpacity) {
+        rangeHoverHighlightOpacity.value = d.hoverTranslateHighlightOpacity;
+        if (valHoverHighlightOpacity) valHoverHighlightOpacity.textContent = `${d.hoverTranslateHighlightOpacity}%`;
+      }
       if (hoverAnimationSelect) hoverAnimationSelect.value = d.hoverTranslateAnimation;
       if (hoverThemeSelect) hoverThemeSelect.value = d.hoverTranslateTheme;
       if (rangeHoverOpacity) {
@@ -504,6 +560,8 @@ export class AppearanceTab {
         hoverTranslateGranularity: d.hoverTranslateGranularity,
         hoverTranslateDelay: d.hoverTranslateDelay,
         hoverTranslateHighlight: d.hoverTranslateHighlight,
+        hoverTranslateHighlightColor: d.hoverTranslateHighlightColor,
+        hoverTranslateHighlightOpacity: d.hoverTranslateHighlightOpacity,
         hoverTranslateAnimation: d.hoverTranslateAnimation,
         hoverTranslateTheme: d.hoverTranslateTheme,
         hoverTranslateOpacity: d.hoverTranslateOpacity,

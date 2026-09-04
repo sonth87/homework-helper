@@ -377,6 +377,10 @@ export class OptionsController {
     setText('optLabelHoverDelayDesc', dict.labelHoverDelayDesc);
     setText('optLabelHoverHighlight', dict.labelHoverHighlight);
     setText('optLabelHoverHighlightDesc', dict.labelHoverHighlightDesc);
+    setText('optLabelHoverHighlightColor', dict.labelHoverHighlightColor);
+    setText('optLabelHoverHighlightColorDesc', dict.labelHoverHighlightColorDesc);
+    setText('optLabelHoverHighlightOpacity', dict.labelHoverHighlightOpacity);
+    setText('optLabelHoverHighlightOpacityDesc', dict.labelHoverHighlightOpacityDesc);
     setText('optLabelHoverAnimation', dict.labelHoverAnimation);
     setText('optLabelHoverAnimationDesc', dict.labelHoverAnimationDesc);
     setText('optHoverAnimOptNone', dict.hoverAnimOptNone);

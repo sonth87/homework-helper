@@ -20,6 +20,11 @@ _Chưa có thay đổi nào chờ phát hành._
 ## [1.8.1] — 2026-09-04
 
 ### Thêm mới
+- Tùy chỉnh được màu tô sáng của Dịch nhanh khi di chuột (Giao diện > Dịch
+  nhanh khi di chuột > "Màu tô sáng") — chọn từ 10 màu pastel dựng sẵn thay
+  vì bảng màu tự do, kèm thanh chỉnh "Độ đậm màu tô sáng" riêng để giữ màu
+  luôn nhẹ nhàng, không bị gắt. Mặc định vẫn là vàng highlight quen thuộc,
+  xem trước ngay trong trang Cài đặt.
 - Nút "Phím tắt" mới trên header của popup (cạnh nút Cài đặt) — bấm vào để
   xem danh sách các phím tắt hiện có (Chat AI, Chụp & Giải, Rê chuột dịch)
   kèm mô tả ngắn. Phím tắt hiển thị là phím Chrome **thực sự đang gán**, báo
@@ -55,6 +60,14 @@ _Chưa có thay đổi nào chờ phát hành._
   đó chưa có tác dụng gì.
 
 ### Sửa lỗi
+- Highlight của Dịch nhanh khi di chuột bị chồng lấn thành nhiều dải màu đậm
+  nhạt không đều khi câu/đoạn cần dịch nằm rải trong nhiều thẻ HTML lồng
+  nhau (ví dụ vài từ in đậm `<b>` xen giữa câu). Nguyên nhân: trình duyệt trả
+  về một hình chữ nhật riêng cho mỗi đoạn DOM cắt qua, kể cả khi chúng nằm
+  chung một dòng — chữ in đậm lại có kích thước dòng hơi khác chữ thường nên
+  các hình chữ nhật đó chồng lên nhau một chút, tạo ra vệt màu đậm nhạt như
+  trong ảnh. Nay các hình chữ nhật cùng dòng được gộp lại thành một dải sáng
+  liền mạch trước khi tô màu.
 - Dịch nhanh khi di chuột đôi khi không hiện lên dù đã giữ đúng phím bổ trợ
   (ví dụ Ctrl) và để chuột yên trên chữ. Nguyên nhân: trạng thái phím
   Ctrl/Shift/Alt/Cmd chỉ được cập nhật mỗi khi chuột *di chuyển* — nếu giữ

@@ -225,16 +225,24 @@ body {
    effects in content/styles/tooltip.css (applied to real page text), reused
    here on an in-flow demo paragraph since there is no real overlay box to
    point the preview at. */
+/* --hl-rgb/--hl-alpha set inline by appearance-tab.js's updatePreview() from
+   the selected swatch + opacity slider — defaults here match tooltip.css's
+   own fallback (#fef08a @ 40%) for when JS hasn't run yet. */
+#prevDemoHighlight {
+  --hl-rgb: 254, 240, 138;
+  --hl-alpha: 0.4;
+}
+
 .opt-preview-hl-on {
-  background: rgba(254, 240, 138, 0.6);
+  background: rgba(var(--hl-rgb), var(--hl-alpha));
 }
 
 .opt-preview-anim-pulse {
   animation: hwHlPulse 1.1s ease-in-out infinite;
 }
 @keyframes hwHlPulse {
-  0%, 100% { background-color: rgba(254, 240, 138, 0.22); }
-  50% { background-color: rgba(254, 240, 138, 0.65); }
+  0%, 100% { background-color: rgba(var(--hl-rgb), calc(var(--hl-alpha) * 0.367)); }
+  50% { background-color: rgba(var(--hl-rgb), calc(var(--hl-alpha) * 1.083)); }
 }
 
 .opt-preview-anim-glow {
@@ -247,7 +255,7 @@ body {
 
 .opt-preview-anim-draw {
   display: inline-block;
-  background: rgba(254, 240, 138, 0.6);
+  background: rgba(var(--hl-rgb), var(--hl-alpha));
   transform: scaleX(0);
   transform-origin: left;
   animation: hwHlDraw 0.35s ease-out forwards;
@@ -625,6 +633,35 @@ body {
 .opt-select:focus,
 .opt-input:focus {
   border-color: #0284c7;
+}
+
+/* Curated pastel swatch picker (hoverTranslateHighlightColor) — a fixed
+   palette instead of a free <input type="color">, populated at runtime by
+   appearance-tab.js from shared/hover-highlight-colors.js. */
+.opt-color-swatch-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.opt-color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12);
+  transition: transform 0.1s ease, border-color 0.15s ease;
+}
+
+.opt-color-swatch:hover {
+  transform: scale(1.1);
+}
+
+.opt-color-swatch.active {
+  border-color: #0284c7;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12), 0 0 0 2px #ffffff, 0 0 0 3px #0284c7;
 }
 
 .opt-textarea {

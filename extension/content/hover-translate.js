@@ -28,11 +28,23 @@ import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
 const SETTINGS_KEYS = [
   'enableHoverTranslate', 'hoverTranslateModifiers', 'hoverTranslateGranularity', 'hoverTranslateDelay',
   'hoverTranslateOpacity', 'hoverTranslateBlur', 'hoverTranslateFontSize', 'hoverTranslateMaxWidth', 'hoverTranslateTheme',
-  'hoverTranslateHighlight', 'hoverTranslateAnimation',
+  'hoverTranslateHighlight', 'hoverTranslateHighlightColor', 'hoverTranslateHighlightOpacity', 'hoverTranslateAnimation',
   'outputLanguage', 'disabledSites', 'uiLanguage',
 ];
 
 const MODIFIER_EVENT_KEYS = { ctrl: 'ctrlKey', shift: 'shiftKey', alt: 'altKey', meta: 'metaKey' };
+
+// '#rrggbb' -> 'R, G, B' for CSS custom properties (tooltip.css's --hl-rgb),
+// which need bare components to compose rgba(var(--hl-rgb), alpha) — a hex
+// string can't be dropped straight into rgba(). Returns null on anything
+// that isn't a plain 6-digit hex color, so callers can fall back cleanly
+// instead of painting a broken/transparent highlight from a bad setting.
+function hexToRgbString(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+}
 
 // Shared by detectParagraph() and findBlockContainer(): the tags treated as
 // "one block of text" when walking up from a hovered Text node.
@@ -549,11 +561,16 @@ class HoverTranslate {
     const anim = this.settings.hoverTranslateAnimation || 'none';
     if (!highlightOn && anim === 'none') return;
 
-    this._highlightBoxes = Array.from(range.getClientRects())
-      .filter((r) => r.width > 0 && r.height > 0)
+    const hlRgb = hexToRgbString(this.settings.hoverTranslateHighlightColor) || '254, 240, 138';
+    const hlAlpha = ((this.settings.hoverTranslateHighlightOpacity ?? 40) / 100).toFixed(2);
+    const rects = Array.from(range.getClientRects()).filter((r) => r.width > 0 && r.height > 0);
+
+    this._highlightBoxes = this.mergeRectsByLine(rects)
       .map((r, i) => {
         const box = document.createElement('div');
         box.className = 'hw-hlbox';
+        box.style.setProperty('--hl-rgb', hlRgb);
+        box.style.setProperty('--hl-alpha', hlAlpha);
         if (highlightOn) box.classList.add('hw-hl-on');
         if (anim !== 'none') box.classList.add(`hw-anim-${anim}`);
         // "draw" mimics a highlighter pen moving across the text: each line
@@ -567,6 +584,33 @@ class HoverTranslate {
         getSharedShadowRoot().appendChild(box);
         return box;
       });
+  }
+
+  // Range.getClientRects() returns one fragment per inline "run" it crosses,
+  // not one per visual line — a sentence broken up by a few <b> tags reports
+  // a separate rect for every plain/bold run even where two runs sit on the
+  // very same line. Bold text's slightly different font metrics then give
+  // that run's rect a marginally different top/height than the plain-text
+  // run right next to it on the same line, so drawing one highlight box per
+  // fragment produced visibly overlapping, unevenly-shaded bands instead of
+  // one clean strip per line (see the bug report's screenshot). Fix: merge
+  // every fragment whose vertical span overlaps another's into a single
+  // line-level box spanning their combined width — same idea PDF.js and
+  // other text-highlighting implementations use for this exact quirk.
+  mergeRectsByLine(rects) {
+    const lines = [];
+    for (const r of [...rects].sort((a, b) => a.top - b.top)) {
+      const line = lines.find((l) => r.top < l.bottom && r.bottom > l.top);
+      if (line) {
+        line.left = Math.min(line.left, r.left);
+        line.right = Math.max(line.right, r.right);
+        line.top = Math.min(line.top, r.top);
+        line.bottom = Math.max(line.bottom, r.bottom);
+      } else {
+        lines.push({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+      }
+    }
+    return lines.map((l) => ({ left: l.left, top: l.top, width: l.right - l.left, height: l.bottom - l.top }));
   }
 
   clearTextEffects() {
