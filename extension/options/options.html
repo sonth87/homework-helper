@@ -643,6 +643,12 @@
                   <input type="range" id="optRangeHoverHighlightOpacity" min="20" max="80" value="40" class="opt-range">
                 </div>
 
+                <div>
+                  <div class="opt-setting-title" id="optLabelHoverHighlightStyle">Kiểu tô sáng</div>
+                  <div class="opt-setting-desc" id="optLabelHoverHighlightStyleDesc" style="margin-bottom:8px;">Hình thức đánh dấu văn bản đang dịch.</div>
+                  <div class="opt-style-swatch-group" id="optHoverHighlightStyles"></div>
+                </div>
+
                 <div class="opt-setting-row">
                   <div>
                     <div class="opt-setting-title" id="optLabelHoverAnimation">Hiệu ứng khi giữ phím + hover</div>
@@ -768,7 +774,7 @@
                 <div class="opt-mock-text">
                   <h3 id="prevDemoTitle">Calculus & Linear Algebra Problem</h3>
                   <p id="prevDemoQuestion">Find the derivative of $f(x) = \int_{0}^{x^2} \sin(t^2) dt$ with respect to $x$.</p>
-                  <p class="highlight-text" id="prevDemoHighlight">According to Leibniz Integral Rule, we differentiate the upper limit...</p>
+                  <div class="opt-hl-preview-anchor" id="prevDemoHighlightAnchor"><p class="highlight-text" id="prevDemoHighlight">According to Leibniz Integral Rule, we differentiate the upper limit...</p></div>
                 </div>
 
                 <!-- Preview Selection Toolbar. #prevTbItems is populated from the

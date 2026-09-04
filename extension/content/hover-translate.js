@@ -23,13 +23,14 @@ import { Storage } from '../shared/storage.js';
 import { getHoverTranslateI18n } from '../shared/i18n.js';
 import { Icons } from '../shared/icons.js';
 import { speak, isSpeechAvailable } from '../shared/tts.js';
+import { buildHighlight, isValidHighlightStyle, DEFAULT_HIGHLIGHT_STYLE } from '../shared/highlight-styles.js';
 import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
 
 const SETTINGS_KEYS = [
   'enableHoverTranslate', 'hoverTranslateModifiers', 'hoverTranslateGranularity', 'hoverTranslateDelay',
   'hoverTranslateOpacity', 'hoverTranslateBlur', 'hoverTranslateFontSize', 'hoverTranslateMaxWidth', 'hoverTranslateTheme',
-  'hoverTranslateHighlight', 'hoverTranslateHighlightColor', 'hoverTranslateHighlightOpacity', 'hoverTranslateAnimation',
-  'outputLanguage', 'disabledSites', 'uiLanguage',
+  'hoverTranslateHighlight', 'hoverTranslateHighlightColor', 'hoverTranslateHighlightOpacity', 'hoverTranslateHighlightStyle',
+  'hoverTranslateAnimation', 'outputLanguage', 'disabledSites', 'uiLanguage',
 ];
 
 const MODIFIER_EVENT_KEYS = { ctrl: 'ctrlKey', shift: 'shiftKey', alt: 'altKey', meta: 'metaKey' };
@@ -561,6 +562,9 @@ class HoverTranslate {
     const anim = this.settings.hoverTranslateAnimation || 'none';
     if (!highlightOn && anim === 'none') return;
 
+    const style = isValidHighlightStyle(this.settings.hoverTranslateHighlightStyle)
+      ? this.settings.hoverTranslateHighlightStyle
+      : DEFAULT_HIGHLIGHT_STYLE;
     const hlRgb = hexToRgbString(this.settings.hoverTranslateHighlightColor) || '254, 240, 138';
     const hlAlpha = ((this.settings.hoverTranslateHighlightOpacity ?? 40) / 100).toFixed(2);
     const rects = Array.from(range.getClientRects()).filter((r) => r.width > 0 && r.height > 0);
@@ -568,19 +572,33 @@ class HoverTranslate {
     this._highlightBoxes = this.mergeRectsByLine(rects)
       .map((r, i) => {
         const box = document.createElement('div');
-        box.className = 'hw-hlbox';
         box.style.setProperty('--hl-rgb', hlRgb);
         box.style.setProperty('--hl-alpha', hlAlpha);
-        if (highlightOn) box.classList.add('hw-hl-on');
+
+        // The chosen style (fill/underline/marker/pencil/...) only actually
+        // draws when the highlight toggle is on — "glow"/"sweep" below stay
+        // available as a lighter decoration even with it off, same as
+        // before. A fresh seed per box+render keeps the hand-drawn styles
+        // looking freshly stroked every time text is hovered again, instead
+        // of the exact same wobble reappearing.
+        let pad = { left: 0, right: 0, top: 0, bottom: 0 };
+        if (highlightOn) {
+          const built = buildHighlight(style, r.width, r.height, (Date.now() ^ (i * 2654435761)) >>> 0);
+          box.className = `hw-hlbox ${built.wrapperClass} hw-hl-on`;
+          box.innerHTML = built.innerHTML;
+          pad = built.pad;
+        } else {
+          box.className = 'hw-hlbox';
+        }
         if (anim !== 'none') box.classList.add(`hw-anim-${anim}`);
         // "draw" mimics a highlighter pen moving across the text: each line
         // rect starts its reveal a little after the previous one instead of
         // all lines filling in at once.
         if (anim === 'draw') box.style.animationDelay = `${i * 120}ms`;
-        box.style.top = `${window.scrollY + r.top}px`;
-        box.style.left = `${window.scrollX + r.left}px`;
-        box.style.width = `${r.width}px`;
-        box.style.height = `${r.height}px`;
+        box.style.top = `${window.scrollY + r.top - pad.top}px`;
+        box.style.left = `${window.scrollX + r.left - pad.left}px`;
+        box.style.width = `${r.width + pad.left + pad.right}px`;
+        box.style.height = `${r.height + pad.top + pad.bottom}px`;
         getSharedShadowRoot().appendChild(box);
         return box;
       });

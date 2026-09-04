@@ -279,6 +279,7 @@ export const DEFAULT_SETTINGS = {
   hoverTranslateHighlight: true, // marker-style background tint over the word/sentence/paragraph being translated
   hoverTranslateHighlightColor: "#fef08a", // one of HOVER_HIGHLIGHT_COLORS (shared/hover-highlight-colors.js) — not a free color picker, a curated pastel swatch
   hoverTranslateHighlightOpacity: 40, // 20 - 80% — tint strength for hoverTranslateHighlight + the 'draw'/'pulse' animations (see content/styles/tooltip.css's --hl-alpha)
+  hoverTranslateHighlightStyle: "fill", // one of HIGHLIGHT_STYLES (shared/highlight-styles.js) — shape drawn over the highlighted text
   hoverTranslateAnimation: "draw", // 'none' | 'pulse' | 'glow' | 'sweep' | 'draw' — effect played on that text while holding the trigger key
   routingStrategy: "prefer_config", // 'prefer_config' (recommended) | 'prefer_nano' | 'nano_only' | 'config_only'
   nanoDownloadState: { inProgress: false, percent: null, updatedAt: 0 }, // shared cross-tab flag: is Gemini Nano's on-device model actively downloading right now

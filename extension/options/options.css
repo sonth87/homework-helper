@@ -215,37 +215,97 @@ body {
 }
 
 .highlight-text {
-  background: rgba(254, 240, 138, 0.6);
   padding: 2px 4px;
   border-radius: 4px;
   width: fit-content;
+  margin: 0;
+  position: relative;
 }
 
-/* Hover-translate highlight/animation live preview — mirrors the .hw-hlbox
-   effects in content/styles/tooltip.css (applied to real page text), reused
-   here on an in-flow demo paragraph since there is no real overlay box to
-   point the preview at. */
-/* --hl-rgb/--hl-alpha set inline by appearance-tab.js's updatePreview() from
-   the selected swatch + opacity slider — defaults here match tooltip.css's
-   own fallback (#fef08a @ 40%) for when JS hasn't run yet. */
-#prevDemoHighlight {
+/* Hover-translate highlight/animation live preview — an exact copy of the
+   .hw-hlbox rendering rules in content/styles/tooltip.css (applied to real
+   page text via content/hover-translate.js + shared/highlight-styles.js).
+   Same class names on purpose: this is a completely separate document/
+   stylesheet from the content script's, so there's no collision, and reusing
+   the names means the preview can never silently drift from the real
+   rendering. #prevDemoHighlightAnchor wraps the demo paragraph so the shape
+   overlay (built by appearance-tab.js, id #prevDemoHighlightShape) can be
+   absolutely positioned over it the same way a real .hw-hlbox sits over
+   page text. */
+.opt-hl-preview-anchor {
+  position: relative;
+  display: inline-block;
+}
+
+.hw-hlbox {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 3px;
+  background: transparent;
   --hl-rgb: 254, 240, 138;
   --hl-alpha: 0.4;
+  --hl-alpha-strong: min(0.95, calc(var(--hl-alpha) * 2.2));
 }
 
-.opt-preview-hl-on {
+.hw-style-fill.hw-hl-on {
   background: rgba(var(--hl-rgb), var(--hl-alpha));
 }
 
-.opt-preview-anim-pulse {
+.hw-hl-bar {
+  position: absolute;
+  border-radius: 2px;
+  background: rgba(var(--hl-rgb), var(--hl-alpha-strong));
+}
+
+.hw-hl-svg {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.hw-hl-stroke {
+  stroke: rgba(var(--hl-rgb), var(--hl-alpha-strong));
+}
+
+.hw-hl-outline {
+  stroke: rgba(var(--hl-rgb), var(--hl-alpha-strong));
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hw-hl-marker-fill {
+  fill: rgba(var(--hl-rgb), var(--hl-alpha));
+}
+
+.hw-hl-marker-edge {
+  stroke: rgba(var(--hl-rgb), calc(var(--hl-alpha) * 0.6));
+  stroke-width: 1;
+}
+
+.hw-hl-pencil-wash {
+  fill: rgba(var(--hl-rgb), calc(var(--hl-alpha) * 0.5));
+}
+
+.hw-hl-hatch-line {
+  stroke: rgba(var(--hl-rgb), var(--hl-alpha-strong));
+  stroke-width: 1.3;
+}
+
+.hw-hl-hatch-line-2 {
+  stroke: rgba(var(--hl-rgb), calc(var(--hl-alpha-strong) * 0.5));
+  stroke-width: 1.1;
+}
+
+.hw-hlbox.hw-anim-pulse {
   animation: hwHlPulse 1.1s ease-in-out infinite;
 }
 @keyframes hwHlPulse {
-  0%, 100% { background-color: rgba(var(--hl-rgb), calc(var(--hl-alpha) * 0.367)); }
-  50% { background-color: rgba(var(--hl-rgb), calc(var(--hl-alpha) * 1.083)); }
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
 }
 
-.opt-preview-anim-glow {
+.hw-hlbox.hw-anim-glow {
   animation: hwHlGlow 1.3s ease-in-out infinite;
 }
 @keyframes hwHlGlow {
@@ -253,9 +313,7 @@ body {
   50% { box-shadow: 0 0 10px 3px rgba(245, 158, 11, 0.55); }
 }
 
-.opt-preview-anim-draw {
-  display: inline-block;
-  background: rgba(var(--hl-rgb), var(--hl-alpha));
+.hw-hlbox.hw-anim-draw {
   transform: scaleX(0);
   transform-origin: left;
   animation: hwHlDraw 0.35s ease-out forwards;
@@ -264,10 +322,7 @@ body {
   to { transform: scaleX(1); }
 }
 
-.opt-preview-anim-sweep {
-  position: relative;
-}
-.opt-preview-anim-sweep::after {
+.hw-hlbox.hw-anim-sweep::after {
   content: '';
   position: absolute;
   left: 0;
@@ -662,6 +717,51 @@ body {
 .opt-color-swatch.active {
   border-color: #0284c7;
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12), 0 0 0 2px #ffffff, 0 0 0 3px #0284c7;
+}
+
+/* Highlight-style picker (hoverTranslateHighlightStyle) — each swatch is a
+   real, tiny rendering of that style (via shared/highlight-styles.js,
+   painted by appearance-tab.js's renderHighlightStyleSwatches()), not an
+   icon standing in for it, so what you pick is exactly what you get. */
+.opt-style-swatch-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.opt-style-swatch {
+  position: relative;
+  width: 76px;
+  height: 42px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  background: #f8fafc;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.1);
+  overflow: hidden;
+  transition: transform 0.1s ease, border-color 0.15s ease;
+}
+
+.opt-style-swatch:hover {
+  transform: translateY(-1px);
+}
+
+.opt-style-swatch.active {
+  border-color: #0284c7;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.1), 0 0 0 2px #ffffff, 0 0 0 3px #0284c7;
+}
+
+.opt-style-swatch-sample {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
 }
 
 .opt-textarea {

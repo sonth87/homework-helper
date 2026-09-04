@@ -17,7 +17,7 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
-## [1.8.1] — 2026-09-04
+## [1.9.0] — 2026-09-04
 
 ### Thêm mới
 - Tùy chỉnh được màu tô sáng của Dịch nhanh khi di chuột (Giao diện > Dịch
@@ -25,6 +25,14 @@ _Chưa có thay đổi nào chờ phát hành._
   vì bảng màu tự do, kèm thanh chỉnh "Độ đậm màu tô sáng" riêng để giữ màu
   luôn nhẹ nhàng, không bị gắt. Mặc định vẫn là vàng highlight quen thuộc,
   xem trước ngay trong trang Cài đặt.
+- Thêm mục "Kiểu tô sáng" cho Dịch nhanh khi di chuột với 9 kiểu đánh dấu để
+  chọn, mỗi kiểu xem trước thật ngay trên nút chọn: 4 kiểu gọn gàng (Tô nền,
+  Gạch dưới, Gạch dưới lượn sóng, Gạch dưới đôi) và 5 kiểu "tự nhiên" như vẽ
+  tay (Bút highlight tự nhiên — rìa nhấp nhô như dạ quang thật; Khoanh tròn
+  và Khoanh chữ nhật tay vẽ quanh chữ; Gạch dưới tự nhiên nguệch ngoạc; Nét
+  chì tự nhiên — tô chữ bằng nét đan chéo như bút chì màu). Mỗi lần dịch một
+  đoạn nhiều dòng, các kiểu tay vẽ đều được "vẽ" lại hơi khác nhau ở mỗi dòng
+  cho tự nhiên, không lặp lại y hệt.
 - Nút "Phím tắt" mới trên header của popup (cạnh nút Cài đặt) — bấm vào để
   xem danh sách các phím tắt hiện có (Chat AI, Chụp & Giải, Rê chuột dịch)
   kèm mô tả ngắn. Phím tắt hiển thị là phím Chrome **thực sự đang gán**, báo

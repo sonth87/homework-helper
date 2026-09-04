@@ -1,8 +1,23 @@
 import { Icons } from '../../shared/icons.js';
 import { Storage, DEFAULT_SETTINGS } from '../../shared/storage.js';
-import { getSelectionTooltipI18n } from '../../shared/i18n.js';
+import { getSelectionTooltipI18n, getOptionsI18n } from '../../shared/i18n.js';
 import { TOOLBAR_ITEM_ICONS, DEFAULT_TOOLBAR_LAYOUT, normalizeToolbarLayout } from '../../shared/toolbar-items.js';
 import { HOVER_HIGHLIGHT_COLORS } from '../../shared/hover-highlight-colors.js';
+import { HIGHLIGHT_STYLES, DEFAULT_HIGHLIGHT_STYLE, buildHighlight } from '../../shared/highlight-styles.js';
+
+// shared/highlight-styles.js only knows style ids — the display name/desc for
+// each lives in i18n (options block) like every other user-facing string.
+const STYLE_I18N_KEYS = {
+  fill: ['hlStyleFill', 'hlStyleFillDesc'],
+  underline: ['hlStyleUnderline', 'hlStyleUnderlineDesc'],
+  'wavy-underline': ['hlStyleWavyUnderline', 'hlStyleWavyUnderlineDesc'],
+  'double-underline': ['hlStyleDoubleUnderline', 'hlStyleDoubleUnderlineDesc'],
+  marker: ['hlStyleMarker', 'hlStyleMarkerDesc'],
+  circle: ['hlStyleCircle', 'hlStyleCircleDesc'],
+  rectangle: ['hlStyleRectangle', 'hlStyleRectangleDesc'],
+  'natural-underline': ['hlStyleNaturalUnderline', 'hlStyleNaturalUnderlineDesc'],
+  pencil: ['hlStylePencil', 'hlStylePencilDesc'],
+};
 
 // Solid-colour toolbar/hover-tip themes, shared by the two live-preview
 // branches below — one source of truth for the RGB triples so adding a new
@@ -65,6 +80,7 @@ export class AppearanceTab {
       hoverTranslateHighlight = true,
       hoverTranslateHighlightColor = '#fef08a',
       hoverTranslateHighlightOpacity = 40,
+      hoverTranslateHighlightStyle = 'fill',
       hoverTranslateAnimation = 'none',
       hoverTranslateOpacity = 96,
       hoverTranslateBlur = 18,
@@ -72,6 +88,8 @@ export class AppearanceTab {
       hoverTranslateMaxWidth = 300,
       uiLanguage = 'vi',
     } = await Storage.get();
+
+    const dict = getOptionsI18n(uiLanguage);
 
     // DOM Controls
     const overlayThemeSelect = document.getElementById('optOverlayThemeSelect');
@@ -107,6 +125,7 @@ export class AppearanceTab {
     const swatchGroupHoverHighlight = document.getElementById('optHoverHighlightSwatches');
     const rangeHoverHighlightOpacity = document.getElementById('optRangeHoverHighlightOpacity');
     const valHoverHighlightOpacity = document.getElementById('valHoverHighlightOpacity');
+    const styleSwatchGroup = document.getElementById('optHoverHighlightStyles');
     const hoverAnimationSelect = document.getElementById('optHoverAnimationSelect');
     const hoverThemeSelect = document.getElementById('optHoverThemeSelect');
     const rangeHoverOpacity = document.getElementById('optRangeHoverOpacity');
@@ -164,6 +183,67 @@ export class AppearanceTab {
       });
     }
 
+    function currentHlRgb() {
+      const hex = swatchGroupHoverHighlight?.querySelector('.opt-color-swatch.active')?.dataset.color;
+      return hexToRgbString(hex) || '254, 240, 138';
+    }
+
+    function currentHlAlpha() {
+      return ((parseInt(rangeHoverHighlightOpacity?.value, 10) || 40) / 100).toFixed(2);
+    }
+
+    // Paints one swatch button with a real, tiny rendering of its style (via
+    // shared/highlight-styles.js) over a plain "Aa" sample — the same
+    // generator the real page overlay uses, so the swatch is never just an
+    // icon standing in for the look.
+    // Fixed sample geometry (not the "Aa" span's real offsetWidth/Height):
+    // this swatch grid is built during loadAppearanceSettings(), which runs
+    // on every page load regardless of which tab is actually visible —
+    // usually not this one, since it's not the default. A hidden
+    // `.opt-section` is `display:none`, so any live measurement here would
+    // read 0x0 and silently paint nothing. A fixed box sidesteps that
+    // entirely (the tiny preview doesn't need to hug the real glyph size).
+    const SWATCH_SAMPLE = { w: 24, h: 16, left: 26, top: 13 };
+
+    function paintStyleSwatch(btn) {
+      btn.querySelectorAll('.hw-hlbox').forEach((b) => b.remove());
+      const { w, h, left, top } = SWATCH_SAMPLE;
+      const built = buildHighlight(btn.dataset.style, w, h, 777);
+      const box = document.createElement('div');
+      box.className = `hw-hlbox ${built.wrapperClass} hw-hl-on`;
+      box.innerHTML = built.innerHTML;
+      box.style.setProperty('--hl-rgb', currentHlRgb());
+      box.style.setProperty('--hl-alpha', currentHlAlpha());
+      box.style.top = `${top - built.pad.top}px`;
+      box.style.left = `${left - built.pad.left}px`;
+      box.style.width = `${w + built.pad.left + built.pad.right}px`;
+      box.style.height = `${h + built.pad.top + built.pad.bottom}px`;
+      btn.appendChild(box);
+    }
+
+    // Rebuilt (not just re-marked) each call, same reasoning as
+    // renderHoverHighlightSwatches() above — it's also how the initial
+    // render and btnResetHover's reset both populate it.
+    function renderHighlightStyleSwatches(selected) {
+      if (!styleSwatchGroup) return;
+      styleSwatchGroup.innerHTML = HIGHLIGHT_STYLES.map(({ id }) => {
+        const [titleKey, descKey] = STYLE_I18N_KEYS[id];
+        return `
+          <button type="button" class="opt-style-swatch${id === selected ? ' active' : ''}" data-style="${id}" data-tooltip-title="${dict[titleKey] || id}" data-tooltip-desc="${dict[descKey] || ''}">
+            <span class="opt-style-swatch-sample">Aa</span>
+          </button>
+        `;
+      }).join('');
+      styleSwatchGroup.querySelectorAll('.opt-style-swatch').forEach((btn) => {
+        paintStyleSwatch(btn);
+        btn.addEventListener('click', () => {
+          Storage.set({ hoverTranslateHighlightStyle: btn.dataset.style });
+          styleSwatchGroup.querySelectorAll('.opt-style-swatch').forEach((b) => b.classList.toggle('active', b === btn));
+          updatePreview();
+        });
+      });
+    }
+
     // Populate initial values
     if (overlayThemeSelect) overlayThemeSelect.value = overlayTheme;
     checkFab.checked = enableFloatingButton;
@@ -205,6 +285,7 @@ export class AppearanceTab {
       rangeHoverHighlightOpacity.value = hoverTranslateHighlightOpacity;
       if (valHoverHighlightOpacity) valHoverHighlightOpacity.textContent = `${hoverTranslateHighlightOpacity}%`;
     }
+    renderHighlightStyleSwatches(hoverTranslateHighlightStyle);
     if (hoverAnimationSelect) hoverAnimationSelect.value = hoverTranslateAnimation;
     if (hoverThemeSelect) hoverThemeSelect.value = hoverTranslateTheme;
     if (rangeHoverOpacity) {
@@ -309,19 +390,43 @@ export class AppearanceTab {
       // .highlight-text demo paragraph as a stand-in for "text on the page",
       // since applyTextEffects() in hover-translate.js styles real page text
       // directly rather than a tooltip; there's nothing else in this mock to
-      // point it at.
+      // point it at. The shape itself is a real .hw-hlbox overlay built by
+      // shared/highlight-styles.js — same code path as the real content
+      // script — appended as a sibling of the paragraph inside the anchor,
+      // rather than a background/class on the paragraph itself, so every
+      // style (not just "fill") can be previewed accurately.
+      const prevDemoHighlightAnchor = document.getElementById('prevDemoHighlightAnchor');
       const prevDemoHighlight = document.getElementById('prevDemoHighlight');
-      if (prevDemoHighlight) {
-        prevDemoHighlight.classList.remove('opt-preview-hl-on', 'opt-preview-anim-pulse', 'opt-preview-anim-glow', 'opt-preview-anim-sweep', 'opt-preview-anim-draw');
-        if (checkHoverHighlight?.checked) prevDemoHighlight.classList.add('opt-preview-hl-on');
+      if (prevDemoHighlightAnchor && prevDemoHighlight) {
+        prevDemoHighlightAnchor.querySelectorAll('.hw-hlbox').forEach((b) => b.remove());
         const animVal = hoverAnimationSelect?.value || 'none';
-        if (animVal !== 'none') prevDemoHighlight.classList.add(`opt-preview-anim-${animVal}`);
-        const selectedSwatch = swatchGroupHoverHighlight?.querySelector('.opt-color-swatch.active');
-        const hlRgb = hexToRgbString(selectedSwatch?.dataset.color);
-        if (hlRgb) prevDemoHighlight.style.setProperty('--hl-rgb', hlRgb);
-        if (rangeHoverHighlightOpacity) {
-          prevDemoHighlight.style.setProperty('--hl-alpha', (parseInt(rangeHoverHighlightOpacity.value, 10) / 100).toFixed(2));
+        const highlightOn = !!checkHoverHighlight?.checked;
+        if (highlightOn || animVal !== 'none') {
+          const box = document.createElement('div');
+          box.style.setProperty('--hl-rgb', currentHlRgb());
+          box.style.setProperty('--hl-alpha', currentHlAlpha());
+          let pad = { left: 0, right: 0, top: 0, bottom: 0 };
+          if (highlightOn) {
+            const activeStyle = styleSwatchGroup?.querySelector('.opt-style-swatch.active')?.dataset.style || DEFAULT_HIGHLIGHT_STYLE;
+            const built = buildHighlight(activeStyle, prevDemoHighlight.offsetWidth, prevDemoHighlight.offsetHeight, 42);
+            box.className = `hw-hlbox ${built.wrapperClass} hw-hl-on`;
+            box.innerHTML = built.innerHTML;
+            pad = built.pad;
+          } else {
+            box.className = 'hw-hlbox';
+          }
+          if (animVal !== 'none') box.classList.add(`hw-anim-${animVal}`);
+          box.style.top = `${prevDemoHighlight.offsetTop - pad.top}px`;
+          box.style.left = `${prevDemoHighlight.offsetLeft - pad.left}px`;
+          box.style.width = `${prevDemoHighlight.offsetWidth + pad.left + pad.right}px`;
+          box.style.height = `${prevDemoHighlight.offsetHeight + pad.top + pad.bottom}px`;
+          prevDemoHighlightAnchor.appendChild(box);
         }
+        // Style-swatch previews stay in sync with the live color/opacity too.
+        styleSwatchGroup?.querySelectorAll('.hw-hlbox').forEach((b) => {
+          b.style.setProperty('--hl-rgb', currentHlRgb());
+          b.style.setProperty('--hl-alpha', currentHlAlpha());
+        });
       }
 
       // 2.5 Quick Hover Translate tooltip
@@ -362,6 +467,27 @@ export class AppearanceTab {
     };
 
     updatePreview();
+
+    // This tab's data loads unconditionally on page init (see options.js's
+    // init()), regardless of which nav tab is actually visible — usually not
+    // this one. A hidden `.opt-section` is `display:none`, so at that first
+    // updatePreview() call the highlight preview's real text box measures
+    // 0x0 and the shape overlay silently skips itself. Re-running once the
+    // section actually gets laid out (display:none -> real size fires this
+    // the same as any other resize) means it's correct as soon as the user
+    // switches to the tab, without needing options.js's nav code to know
+    // anything about this tab's internals.
+    const appearanceSection = document.getElementById('tabAppearance');
+    if (appearanceSection && typeof ResizeObserver !== 'undefined') {
+      let lastWidth = 0;
+      const ro = new ResizeObserver(() => {
+        if (appearanceSection.offsetWidth !== lastWidth) {
+          lastWidth = appearanceSection.offsetWidth;
+          updatePreview();
+        }
+      });
+      ro.observe(appearanceSection);
+    }
 
     // Event Listeners
     overlayThemeSelect?.addEventListener('change', () => {
@@ -536,6 +662,7 @@ export class AppearanceTab {
         rangeHoverHighlightOpacity.value = d.hoverTranslateHighlightOpacity;
         if (valHoverHighlightOpacity) valHoverHighlightOpacity.textContent = `${d.hoverTranslateHighlightOpacity}%`;
       }
+      renderHighlightStyleSwatches(d.hoverTranslateHighlightStyle);
       if (hoverAnimationSelect) hoverAnimationSelect.value = d.hoverTranslateAnimation;
       if (hoverThemeSelect) hoverThemeSelect.value = d.hoverTranslateTheme;
       if (rangeHoverOpacity) {
@@ -562,6 +689,7 @@ export class AppearanceTab {
         hoverTranslateHighlight: d.hoverTranslateHighlight,
         hoverTranslateHighlightColor: d.hoverTranslateHighlightColor,
         hoverTranslateHighlightOpacity: d.hoverTranslateHighlightOpacity,
+        hoverTranslateHighlightStyle: d.hoverTranslateHighlightStyle,
         hoverTranslateAnimation: d.hoverTranslateAnimation,
         hoverTranslateTheme: d.hoverTranslateTheme,
         hoverTranslateOpacity: d.hoverTranslateOpacity,
