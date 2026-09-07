@@ -35,6 +35,7 @@ export const HIGHLIGHT_STYLES = [
   { id: 'rectangle', group: 'hard' },
   { id: 'natural-underline', group: 'hard' },
   { id: 'pencil', group: 'hard' },
+  { id: 'scribble', group: 'hard' },
 ];
 
 export const DEFAULT_HIGHLIGHT_STYLE = 'fill';
@@ -112,19 +113,29 @@ function genFill() {
   return { wrapperClass: 'hw-style-fill', pad: ZERO_PAD, innerHTML: '' };
 }
 
+// How far above the line box's own bottom edge an underline sits. That box
+// (from mergeRectsByLine()) is the font's full line-height, not just the
+// glyphs' visual extent, so anchoring right at h (or below it) can land the
+// mark inside the next line's own line-height on tightly-spaced text —
+// pulling it up by a chunk of the descender space keeps it under this
+// line's text without crowding the one below.
+function underlineRise(h) {
+  return Math.max(2, h * 0.12);
+}
+
 function genUnderline(w, h) {
   const pad = { left: 0, right: 0, top: 0, bottom: 6 };
-  const thickness = Math.max(2, Math.min(4, h * 0.14));
-  const y = h + 1;
+  const thickness = Math.max(1.4, Math.min(2.6, h * 0.1));
+  const y = h - underlineRise(h);
   const html = `<div class="hw-hl-bar" style="left:0;top:${y.toFixed(1)}px;width:${w.toFixed(1)}px;height:${thickness.toFixed(1)}px;"></div>`;
   return { wrapperClass: 'hw-style-underline', pad, innerHTML: html };
 }
 
 function genDoubleUnderline(w, h) {
   const pad = { left: 0, right: 0, top: 0, bottom: 9 };
-  const thickness = 2;
-  const y1 = h + 1;
-  const y2 = h + 6;
+  const thickness = 1.4;
+  const y1 = h - underlineRise(h);
+  const y2 = y1 + 3;
   const bar = (y) => `<div class="hw-hl-bar" style="left:0;top:${y.toFixed(1)}px;width:${w.toFixed(1)}px;height:${thickness}px;"></div>`;
   return { wrapperClass: 'hw-style-double-underline', pad, innerHTML: bar(y1) + bar(y2) };
 }
@@ -149,8 +160,8 @@ function genWavyUnderline(w, h) {
   }
   const svgW = w + pad.left + pad.right;
   const stripH = 10;
-  const inner = `<path d="${d}" fill="none" class="hw-hl-stroke" stroke-width="2" stroke-linecap="round"/>`;
-  return { wrapperClass: 'hw-style-wavy-underline', pad, innerHTML: svgWrap(svgW, stripH, inner, 0, h) };
+  const inner = `<path d="${d}" fill="none" class="hw-hl-stroke" stroke-width="1.4" stroke-linecap="round"/>`;
+  return { wrapperClass: 'hw-style-wavy-underline', pad, innerHTML: svgWrap(svgW, stripH, inner, 0, h - underlineRise(h)) };
 }
 
 // ============================================================
@@ -315,8 +326,8 @@ function genNaturalUnderline(w, h, rng) {
   }
   const d = smoothPath(pts, false);
   const svgW = w + pad.left + pad.right;
-  const inner = `<path d="${d}" fill="none" class="hw-hl-stroke" stroke-width="2.2" stroke-linecap="round"/>`;
-  return { wrapperClass: 'hw-style-natural-underline', pad, innerHTML: svgWrap(svgW, stripH, inner, 0, h) };
+  const inner = `<path d="${d}" fill="none" class="hw-hl-stroke" stroke-width="1.6" stroke-linecap="round"/>`;
+  return { wrapperClass: 'hw-style-natural-underline', pad, innerHTML: svgWrap(svgW, stripH, inner, 0, h - underlineRise(h)) };
 }
 
 let pencilUid = 0;
@@ -360,6 +371,39 @@ function genPencil(w, h, rng) {
   return { wrapperClass: 'hw-style-pencil', pad, innerHTML: svgWrap(svgW, svgH, inner) };
 }
 
+// A single continuous back-and-forth stroke (one path, alternating left-right
+// across the box on each row) — impatient pen scribbling over the text,
+// rather than the smooth solid wash of "marker" or pencil's even cross-hatch.
+// The visible zig-zag turns are what make this read as "scribbled", not just
+// a thinner/lighter marker.
+function genScribble(w, h, rng) {
+  const pad = { left: 4, right: 4, top: 3, bottom: 3 };
+  const rowH = Math.max(3.5, Math.min(6, h * 0.26));
+  const rows = Math.max(3, Math.round(h / rowH));
+  const pts = [];
+  for (let r = 0; r <= rows; r++) {
+    const y = pad.top + (r / rows) * h + rand(rng, -1, 1);
+    const leftX = pad.left - rand(rng, 0, 2.5);
+    const rightX = pad.left + w + rand(rng, 0, 2.5);
+    // A jittered midpoint per traversal (not just at the two ends) keeps
+    // each stroke itself visibly wobbly — without it, every row is close
+    // enough to a straight line that the result reads as a stack of wavy
+    // underlines rather than an actual scribble.
+    const midX = (leftX + rightX) / 2;
+    const midY = y + rand(rng, -2.6, 2.6);
+    if (r % 2 === 0) {
+      pts.push([leftX, y], [midX, midY], [rightX, y + rand(rng, -1.5, 1.5)]);
+    } else {
+      pts.push([rightX, y], [midX, midY], [leftX, y + rand(rng, -1.5, 1.5)]);
+    }
+  }
+  const d = smoothPath(pts, false);
+  const svgW = w + pad.left + pad.right;
+  const svgH = h + pad.top + pad.bottom;
+  const inner = `<path d="${d}" fill="none" class="hw-hl-scribble"/>`;
+  return { wrapperClass: 'hw-style-scribble', pad, innerHTML: svgWrap(svgW, svgH, inner) };
+}
+
 const GENERATORS = {
   fill: genFill,
   underline: genUnderline,
@@ -370,6 +414,7 @@ const GENERATORS = {
   rectangle: genRectangle,
   'natural-underline': genNaturalUnderline,
   pencil: genPencil,
+  scribble: genScribble,
 };
 
 // width/height: the plain text-line box's own size (CSS px), no padding.

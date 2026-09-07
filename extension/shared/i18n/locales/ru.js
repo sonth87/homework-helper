@@ -1,6 +1,7 @@
 export default {
   general: {
     brandTitle: "Homework Helper",
+    miniCloseLabel: "Закрыть",
     placeholder: "Введите ваш вопрос или формулу здесь...",
     shiftEnterHint: "Enter для отправки, Shift+Enter для новой строки",
     listen: "Прослушать",
@@ -223,6 +224,7 @@ export default {
     granularitySentence: "Перевести по предложению",
     granularityParagraph: "Перевести по абзацу",
     listenSource: "Прослушать оригинал",
+    outputLanguageLabel: "Язык перевода",
   },
   cropper: {
     tip: "Нажмите и потяните, чтобы выделить задачу или формулу (ESC для отмены)",
@@ -231,6 +233,9 @@ export default {
   },
   floatingPopup: {
     helperTitle: "Помощник Homework Helper",
+    modeNormalLabel: "Обычный",
+    modeCompactLabel: "Компактный",
+    modeMinimizeLabel: "Свернуть",
     translateTitle: "Перевод",
     translateHeading: "Результат перевода",
     searchTitle: "Поиск и решение",
@@ -492,6 +497,8 @@ export default {
     hlStyleNaturalUnderlineDesc: "Неровное подчёркивание от руки, в отличие от равномерной волны.",
     hlStylePencil: "Естественная карандашная штриховка",
     hlStylePencilDesc: "Перекрёстная штриховка поверх текста, как цветным карандашом, с зернистой текстурой.",
+    hlStyleScribble: "Каракули",
+    hlStyleScribbleDesc: "Заполняет текст одним непрерывным зигзагообразным штрихом, как нетерпеливые каракули, в отличие от гладкой полосы маркера.",
     labelHoverAnimation: "Эффект при удержании клавиши + наведении",
     labelHoverAnimationDesc: "Эффект, воспроизводимый на тексте, пока вы удерживаете клавишу активации и наводите курсор на него.",
     hoverAnimOptNone: "Нет",
@@ -505,9 +512,12 @@ export default {
     toolbarLayoutResetBtn: "Восстановить по умолчанию",
     cardPopupTitle: "Плавающее окно решения и перевода (Floating Card)",
     labelPopupCardSize: "Стиль отображения всплывающего окна",
-    labelPopupCardSizeDesc: "Компактный режим скрывает второстепенные кнопки, показывая их только при наведении курсора на всплывающее окно, что увеличивает плотность контента.",
+    labelPopupCardSizeDesc: "Компактный режим скрывает второстепенные кнопки, показывая их только при наведении курсора на всплывающее окно, что увеличивает плотность контента. Режим Свернуть показывает только маленькую круглую кнопку в углу экрана — наведите на неё курсор, чтобы увидеть результат.",
+    labelPopupTheme: "Цветовая тема всплывающего окна",
+    labelPopupThemeDesc: "Акцентный цвет (кнопки, границы, заголовки) всплывающего окна решения/перевода.",
     popupCardSizeOptNormal: "Обычный",
     popupCardSizeOptCompact: "Компактный",
+    popupCardSizeOptMinimize: "Свернуть",
     labelPopupOpacity: "Прозрачность окна",
     labelPopupBlur: "Размытие фона (Blur)",
     livePreviewBadge: "Живой симулятор",

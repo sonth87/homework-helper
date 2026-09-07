@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     rotationStrategy,
     enableFormsAdapter = true,
     enableTextTooltip = true,
-    enableHoverTranslate = false,
+    enableHoverTranslate = true,
     hoverTranslateModifiers = ['alt'],
     popupTranslateEngine = 'bing',
     popupTranslateSource = 'auto',
@@ -657,10 +657,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     return '';
   }
 
+  /**
+   * Guards pickUpClipboard() against auto-translating clipboard content that
+   * was never meant to be read as prose: a URL, an email address, a base64/
+   * data blob, a hex hash or UUID, a bare file path, or SVG/HTML/XML markup —
+   * all things people routinely have sitting in their clipboard for reasons
+   * that have nothing to do with translation, and which used to trigger an
+   * unwanted auto-translate the instant this popup opened.
+   *
+   * Deliberately errs toward skipping when unsure — worst case a real short
+   * phrase that happens to look structured just waits for the user to press
+   * Translate themselves, which costs nothing; auto-translating a clipboard
+   * full of noise on every open is the actual annoyance this fixes.
+   */
+  function looksTranslatable(text) {
+    const t = text.trim();
+    if (!t) return false;
+
+    if (/^(https?:\/\/|www\.)\S+$/i.test(t)) return false; // URL
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return false; // email
+    if (/^data:[\w/+.-]+;base64,/i.test(t)) return false; // data: URI
+    if (/^<[\s\S]*>$/.test(t)) return false; // wrapped in markup start-to-end (SVG/HTML/XML)
+
+    // A single "word" with no whitespace at all is either a real short word
+    // or name (fine — this is exactly what the single-word dictionary
+    // lookup is for) or one of: a base64 blob, a hex hash, a UUID, a file
+    // path, a long opaque identifier — none of which are prose.
+    if (!/\s/.test(t)) {
+      if (t.length >= 24 && /^[A-Za-z0-9+/=_-]+$/.test(t)) return false; // base64-ish blob
+      if (/^[0-9a-f]{32,}$/i.test(t)) return false; // hex hash
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(t)) return false; // UUID
+      if (/^(?:[a-zA-Z]:)?[/\\][^\s]*$|^\.{1,2}[/\\][^\s]*$/.test(t)) return false; // absolute/relative file path
+      if (!/\p{L}/u.test(t)) return false; // no letters at all — pure symbols/digits
+    }
+
+    return true;
+  }
+
   async function pickUpClipboard() {
     if (!popupAutoTranslateClipboard) return;
     const text = await readClipboardText();
     if (!text) return;
+    if (!looksTranslatable(text)) return;
     // readClipboardText()'s retry loop can take up to ~1.7s in the worst
     // case. If the user already started typing during that wait, don't yank
     // it out from under them with clipboard text they didn't ask for.

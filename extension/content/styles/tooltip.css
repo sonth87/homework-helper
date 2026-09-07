@@ -865,6 +865,125 @@
   color: #0f172a;
 }
 
+/* Output-language switcher, mirrored to the top-left of where the speak
+   button sits top-right (content/hover-translate.js showLoadingTooltip()).
+   Collapsed to a plain 2-letter code chip so the target language is visible
+   at a glance without hovering — the actual complaint this exists to fix —
+   then widens on hover to reveal the real <select>, which is a full-size
+   transparent overlay the whole time (not just once hovered) so a single
+   click opens it without needing to hover first. */
+.hw-ht-lang-switch {
+  position: absolute;
+  left: 10px;
+  top: 0;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, var(--ht-alpha, 0.9));
+  backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+  transition: width 0.18s ease, box-shadow 0.15s ease;
+}
+
+.hw-ht-lang-switch:hover {
+  width: 84px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.hw-ht-lang-code {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #64748b;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.hw-ht-lang-switch:hover .hw-ht-lang-code {
+  opacity: 0;
+}
+
+.hw-ht-lang-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: none;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  font-size: 10.5px;
+  padding: 0 4px;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+
+.hw-ht-lang-switch:hover .hw-ht-lang-select {
+  opacity: 1;
+  color: #1e293b;
+}
+
+.hw-hover-translate-tip.theme-glass-dark .hw-ht-lang-switch {
+  background: rgba(15, 23, 42, var(--ht-alpha, 0.9));
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+.hw-hover-translate-tip.theme-glass-dark .hw-ht-lang-code {
+  color: #cbd5e1;
+}
+.hw-hover-translate-tip.theme-glass-dark .hw-ht-lang-switch:hover .hw-ht-lang-select {
+  color: #f8fafc;
+}
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-lang-switch { background: rgba(2, 132, 199, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-emerald .hw-ht-lang-switch { background: rgba(5, 150, 105, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-purple .hw-ht-lang-switch { background: rgba(124, 58, 237, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-rose .hw-ht-lang-switch { background: rgba(225, 29, 72, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-amber .hw-ht-lang-switch { background: rgba(217, 119, 6, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-indigo .hw-ht-lang-switch { background: rgba(79, 70, 229, var(--ht-alpha, 0.9)); }
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-lang-switch,
+.hw-hover-translate-tip.theme-emerald .hw-ht-lang-switch,
+.hw-hover-translate-tip.theme-purple .hw-ht-lang-switch,
+.hw-hover-translate-tip.theme-rose .hw-ht-lang-switch,
+.hw-hover-translate-tip.theme-amber .hw-ht-lang-switch,
+.hw-hover-translate-tip.theme-indigo .hw-ht-lang-switch {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-lang-code,
+.hw-hover-translate-tip.theme-emerald .hw-ht-lang-code,
+.hw-hover-translate-tip.theme-purple .hw-ht-lang-code,
+.hw-hover-translate-tip.theme-rose .hw-ht-lang-code,
+.hw-hover-translate-tip.theme-amber .hw-ht-lang-code,
+.hw-hover-translate-tip.theme-indigo .hw-ht-lang-code {
+  color: #ffffff;
+}
+.hw-hover-translate-tip.theme-cyber-blue .hw-ht-lang-switch:hover .hw-ht-lang-select,
+.hw-hover-translate-tip.theme-emerald .hw-ht-lang-switch:hover .hw-ht-lang-select,
+.hw-hover-translate-tip.theme-purple .hw-ht-lang-switch:hover .hw-ht-lang-select,
+.hw-hover-translate-tip.theme-rose .hw-ht-lang-switch:hover .hw-ht-lang-select,
+.hw-hover-translate-tip.theme-amber .hw-ht-lang-switch:hover .hw-ht-lang-select,
+.hw-hover-translate-tip.theme-indigo .hw-ht-lang-switch:hover .hw-ht-lang-select {
+  color: #ffffff;
+}
+/* <option> elements always render with the OS's native popup styling
+   regardless of the select's own color, so they need their own explicit
+   dark text — otherwise white select text on a light native dropdown
+   background would be unreadable. */
+.hw-ht-lang-select option {
+  color: #0f172a;
+  background: #ffffff;
+}
+
 .hw-ht-body.hw-ht-loading {
   opacity: 0.65;
   font-style: italic;
@@ -949,6 +1068,13 @@
 .hw-hl-hatch-line-2 {
   stroke: rgba(var(--hl-rgb), calc(var(--hl-alpha-strong) * 0.5));
   stroke-width: 1.1;
+}
+
+.hw-hl-scribble {
+  stroke: rgba(var(--hl-rgb), var(--hl-alpha-strong));
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* Pulse/glow/draw/sweep below are generic — they animate the wrapper box

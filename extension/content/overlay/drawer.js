@@ -155,7 +155,12 @@ export class OverlayDrawer {
     this.setSendButtonStreaming(false);
 
     if (this.activeTarget === 'card') {
-      this.overlay.floatingCard.stopLoadingSteps();
+      this.overlay.floatingCard.cardStatus = 'done';
+      if (this.overlay.minimizedCard?.isActive()) {
+        this.overlay.minimizedCard.finalize();
+      } else {
+        this.overlay.floatingCard.stopLoadingSteps();
+      }
       if (this.overlay.floatingCard.activeCardResponseText) {
         Storage.addChatMessage({ role: 'assistant', content: this.overlay.floatingCard.activeCardResponseText });
       }
@@ -597,8 +602,16 @@ export class OverlayDrawer {
     if (!chunk) return;
 
     if (this.activeTarget === 'card') {
-      this.overlay.floatingCard.stopLoadingSteps();
       this.overlay.floatingCard.activeCardResponseText += chunk;
+      // Minimize mode never shows the real card, so there's nothing to
+      // stop-loading-steps or write into — just hand the running total to
+      // the circle's own popup (see minimized-card.js), which re-renders it
+      // only while actually visible.
+      if (this.overlay.minimizedCard?.isActive()) {
+        this.overlay.minimizedCard.updateContent(this.overlay.floatingCard.activeCardResponseText);
+        return;
+      }
+      this.overlay.floatingCard.stopLoadingSteps();
       const content = this.shadow.getElementById('hwCardAnswerContent');
       if (content) {
         content.innerHTML = renderAnswer(
@@ -634,8 +647,16 @@ export class OverlayDrawer {
     this.updateActiveModelBadge();
 
     if (this.activeTarget === 'card') {
-      this.overlay.floatingCard.stopLoadingSteps();
-      this.overlay.floatingCard.syncSpeakButton();
+      this.overlay.floatingCard.cardStatus = 'done';
+      if (this.overlay.minimizedCard?.isActive()) {
+        this.overlay.minimizedCard.finalize();
+      } else {
+        this.overlay.floatingCard.stopLoadingSteps();
+        this.overlay.floatingCard.syncSpeakButton();
+      }
+      // Chat history is saved the same way regardless of which display mode
+      // rendered the answer — Minimize only changes what's shown on the
+      // page, never what ends up in the chat the user can review later.
       Storage.addChatMessage({ role: 'assistant', content: this.overlay.floatingCard.activeCardResponseText });
       if (this.overlay.floatingCard.popupMode === 'translate') {
         this.overlay.floatingCard.recordTranslateHistory(
@@ -676,6 +697,11 @@ export class OverlayDrawer {
     const errStr = String(err || '');
 
     if (this.activeTarget === 'card') {
+      this.overlay.floatingCard.cardStatus = 'error';
+      if (this.overlay.minimizedCard?.isActive()) {
+        this.overlay.minimizedCard.showError(errStr);
+        return;
+      }
       this.overlay.floatingCard.stopLoadingSteps();
       const content = this.shadow.getElementById('hwCardAnswerContent');
       if (content) {

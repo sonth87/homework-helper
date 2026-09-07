@@ -155,6 +155,20 @@ export const Icons = {
     <line x1="3" y1="21" x2="10" y2="14"></line>
   `, size, cls),
 
+  // Popup display-mode quick switcher (Normal / Compact / Minimize) — see
+  // content/overlay.js's .hw-mode-switch and content/overlay/minimized-card.js.
+  layoutNormal: (size = 18, cls = '') => createSvg(`
+    <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+  `, size, cls),
+
+  layoutCompact: (size = 18, cls = '') => createSvg(`
+    <rect x="3" y="8" width="18" height="8" rx="2"></rect>
+  `, size, cls),
+
+  layoutMinimize: (size = 18, cls = '') => createSvg(`
+    <circle cx="12" cy="12" r="4.5"></circle>
+  `, size, cls),
+
   externalLink: (size = 18, cls = '') => createSvg(`
     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
     <polyline points="15 3 21 3 21 9"></polyline>

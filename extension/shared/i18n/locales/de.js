@@ -1,6 +1,7 @@
 export default {
   general: {
     brandTitle: "Homework Helper",
+    miniCloseLabel: "Schließen",
     placeholder: "Hausaufgabe oder Frage hier eingeben...",
     shiftEnterHint: "Enter zum Senden, Shift+Enter für Zeilenumbruch",
     listen: "Anhören",
@@ -222,6 +223,7 @@ export default {
     granularitySentence: "Satzweise übersetzen",
     granularityParagraph: "Absatzweise übersetzen",
     listenSource: "Original anhören",
+    outputLanguageLabel: "Zielsprache",
   },
   cropper: {
     tip: "Klicken und ziehen, um Formel oder Frage auszuwählen (ESC zum Abbrechen)",
@@ -230,6 +232,9 @@ export default {
   },
   floatingPopup: {
     helperTitle: "Homework Helper Assistent",
+    modeNormalLabel: "Normal",
+    modeCompactLabel: "Kompakt",
+    modeMinimizeLabel: "Minimieren",
     translateTitle: "Übersetzen",
     translateHeading: "Übersetzung",
     searchTitle: "Suchen & Hausaufgabenhilfe",
@@ -490,6 +495,8 @@ export default {
     hlStyleNaturalUnderlineDesc: "Eine unregelmäßige, handgezeichnete Unterstreichung, anders als die gleichmäßige Wellenlinie.",
     hlStylePencil: "Natürliche Bleistiftschraffur",
     hlStylePencilDesc: "Gekreuzte Schraffurstriche über dem Text, wie eine Buntstiftschraffur, mit körniger Textur.",
+    hlStyleScribble: "Gekritzel-Füllung",
+    hlStyleScribbleDesc: "Füllt den Text mit einem einzigen zickzackförmigen Strich, wie ein ungeduldiges Gekritzel, anders als der glatte Streifen des Textmarkers.",
     labelHoverAnimation: "Effekt bei gehaltener Taste + Überfahren",
     labelHoverAnimationDesc: "Effekt, der auf dem Text abgespielt wird, während Sie die Auslösetaste gedrückt halten und darüberfahren.",
     hoverAnimOptNone: "Kein",
@@ -503,9 +510,12 @@ export default {
     toolbarLayoutResetBtn: "Standard wiederherstellen",
     cardPopupTitle: "Schwebendes Lösungs- und Übersetzungspopup",
     labelPopupCardSize: "Popup-Anzeigestil",
-    labelPopupCardSizeDesc: "Im kompakten Modus werden sekundäre Schaltflächen ausgeblendet und nur beim Überfahren des Popups mit der Maus angezeigt, um die Inhaltsdichte zu erhöhen.",
+    labelPopupCardSizeDesc: "Im kompakten Modus werden sekundäre Schaltflächen ausgeblendet und nur beim Überfahren des Popups mit der Maus angezeigt, um die Inhaltsdichte zu erhöhen. Der Modus Minimieren zeigt nur eine kleine runde Schaltfläche in der Bildschirmecke — zum Anzeigen des Ergebnisses mit der Maus darüberfahren.",
+    labelPopupTheme: "Farbthema des Popups",
+    labelPopupThemeDesc: "Akzentfarbe (Schaltflächen, Rahmen, Überschriften) des Lösungs-/Übersetzungs-Popups.",
     popupCardSizeOptNormal: "Normal",
     popupCardSizeOptCompact: "Kompakt",
+    popupCardSizeOptMinimize: "Minimieren",
     labelPopupOpacity: "Popup-Transparenz",
     labelPopupBlur: "Hintergrundunschärfe (Blur)",
     livePreviewBadge: "Live-Vorschau",

@@ -4,6 +4,7 @@
  */
 
 import { parseDictionaryEntry, looksLikeDictionaryJson } from './dictionary.js';
+import { Icons } from './icons.js';
 
 // Escape HTML utility
 export function escapeHtml(str) {
@@ -86,7 +87,29 @@ export function formatMarkdownAndMath(text) {
   let html = text;
   const mathBlocks = [];
 
-  // 1. Extract and protect Display Math: $$...$$ or \[...\]
+  // 1. Extract and protect Code Blocks: ```lang ... ``` — MUST run before
+  // any of the math-extraction/auto-wrap steps below. Those steps used to
+  // run first and would reach straight through an as-yet-unrecognized
+  // ```latex ... ``` fence (code blocks were only extracted at the very
+  // end), auto-wrapping a bare \frac{}{}/\times/etc. *inside* it and then
+  // pulling that back out as its own math block — leaving a
+  // ___MATH_BLOCK_N___ placeholder sitting inside what was supposed to be
+  // the fenced block's literal, escaped code text. That placeholder is a
+  // plain string, so step 7's blind html.replace(placeholder, ...) below
+  // still finds and substitutes it — including inside the code block's own
+  // rendered `data-code="${encodeURIComponent(...)}"` attribute, splicing
+  // raw KaTeX HTML (with its own literal quotes) into the middle of that
+  // attribute value and corrupting the whole button into visible garbage
+  // text. Extracting code blocks first keeps their content fully opaque to
+  // every step that follows, the same way it's already meant to be.
+  const codeBlocks = [];
+  html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]+?)```/g, (match, lang, code) => {
+    const placeholder = `___CODE_BLOCK_${codeBlocks.length}___`;
+    codeBlocks.push({ lang: lang || 'text', code: escapeHtml(code.trim()) });
+    return placeholder;
+  });
+
+  // 2. Extract and protect Display Math: $$...$$ or \[...\]
   html = html.replace(/\$\$([\s\S]+?)\$\$/g, (match, code) => {
     if (!looksLikeMath(code)) return match;
     const placeholder = `___MATH_BLOCK_${mathBlocks.length}___`;
@@ -101,7 +124,7 @@ export function formatMarkdownAndMath(text) {
     return placeholder;
   });
 
-  // 1b. Some responses emit LaTeX alignment/matrix environments
+  // 2b. Some responses emit LaTeX alignment/matrix environments
   // (\begin{aligned}...\end{aligned}) without wrapping them in $$...$$ at
   // all. Catch those bare environments here — before the auto-wrap step
   // below, which would otherwise reach inside the (still unrecognized)
@@ -114,10 +137,10 @@ export function formatMarkdownAndMath(text) {
     return placeholder;
   });
 
-  // 0. Auto-wrap isolated LaTeX commands not enclosed in $...$
+  // 3. Auto-wrap isolated LaTeX commands not enclosed in $...$
   html = html.replace(/(^|[\s(])(\\(?:infty|boxed\{[^}\n]+\}|frac\{[^}\n]+\}\{[^}\n]+\}|sqrt\{[^}\n]+\}|alpha|beta|gamma|theta|pi|pm|times|div|ne|le|ge))(?=[\s),.!?]|$)/g, '$1$$$2$$');
 
-  // 2. Extract and protect Inline Math: $...$ or \(...\)
+  // 4. Extract and protect Inline Math: $...$ or \(...\)
   html = html.replace(/\$([^\$\n]+?)\$/g, (match, code) => {
     if (!looksLikeMath(code)) return match;
     const placeholder = `___MATH_BLOCK_${mathBlocks.length}___`;
@@ -132,15 +155,7 @@ export function formatMarkdownAndMath(text) {
     return placeholder;
   });
 
-  // 3. Extract and protect Code Blocks: ```lang ... ```
-  const codeBlocks = [];
-  html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]+?)```/g, (match, lang, code) => {
-    const placeholder = `___CODE_BLOCK_${codeBlocks.length}___`;
-    codeBlocks.push({ lang: lang || 'text', code: escapeHtml(code.trim()) });
-    return placeholder;
-  });
-
-  // 4. Basic Markdown formatting
+  // 5. Basic Markdown formatting
   // Headers
   html = html.replace(/^### (.*$)/gim, '<h3 class="md-h3">$1</h3>');
   html = html.replace(/^## (.*$)/gim, '<h2 class="md-h2">$1</h2>');
@@ -169,19 +184,19 @@ export function formatMarkdownAndMath(text) {
   html = html.replace(/\n\n/g, '<p class="md-p"></p>');
   html = html.replace(/\n/g, '<br>');
 
-  // 5. Restore Code Blocks
+  // 6. Restore Code Blocks
   codeBlocks.forEach((cb, idx) => {
     const rendered = `<div class="code-block-wrapper">
       <div class="code-header">
         <span class="code-lang">${cb.lang}</span>
-        <button class="copy-code-btn" data-code="${encodeURIComponent(cb.code)}">Copy</button>
+        <button class="copy-code-btn" data-code="${encodeURIComponent(cb.code)}" title="Copy" aria-label="Copy">${Icons.copy(14)}</button>
       </div>
       <pre><code class="language-${cb.lang}">${cb.code}</code></pre>
     </div>`;
     html = html.replace(`___CODE_BLOCK_${idx}___`, rendered);
   });
 
-  // 6. Restore Math Blocks via KaTeX
+  // 7. Restore Math Blocks via KaTeX
   mathBlocks.forEach((mb, idx) => {
     const rendered = renderMath(mb.code, mb.display);
     html = html.replace(`___MATH_BLOCK_${idx}___`, rendered);

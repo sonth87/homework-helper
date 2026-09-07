@@ -19,7 +19,7 @@
  * by content/styles/tooltip.css.
  */
 
-import { Storage } from '../shared/storage.js';
+import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
 import { getHoverTranslateI18n } from '../shared/i18n.js';
 import { Icons } from '../shared/icons.js';
 import { speak, isSpeechAvailable } from '../shared/tts.js';
@@ -248,6 +248,31 @@ class HoverTranslate {
     this.renderDetection(detection);
   }
 
+  // Wired to the language switcher's <select> (showLoadingTooltip()). Persists
+  // the choice as the shared outputLanguage (same setting the Chat panel's own
+  // dropdown uses) and re-translates the text already showing, in place —
+  // unlike changeGranularity() this doesn't rebuild the tooltip itself, since
+  // that would tear out the very <select> the user is mid-interaction with.
+  async changeOutputLanguage(lang) {
+    if (lang === this.settings.outputLanguage || !this.tooltip) return;
+    this.settings.outputLanguage = lang;
+    await Storage.set({ outputLanguage: lang });
+
+    const code = this.tooltip.querySelector('.hw-ht-lang-code');
+    if (code) {
+      const entry = SUPPORTED_LANGUAGES.find((l) => l.id === lang);
+      code.textContent = !entry || entry.id === 'auto' ? '..' : entry.id.split('-')[0].toUpperCase();
+    }
+
+    const body = this.tooltip.querySelector('.hw-ht-body');
+    if (body) {
+      body.classList.add('hw-ht-loading');
+      body.textContent = this.dict.loadingLabel || 'Translating…';
+    }
+    this.epoch++;
+    this.runTranslate(this._spokenText, this._activeRect);
+  }
+
   // ============================================================
   // Word/sentence/paragraph boundary detection at a screen point
   // ============================================================
@@ -428,8 +453,17 @@ class HoverTranslate {
     this.removeTooltip();
     this._spokenText = sourceText;
 
+    // 'auto' isn't a skin of its own — same resolution as the Selection
+    // Toolbar's own toolbarTheme (content/selection-tooltip.js) — tooltip.css
+    // only ever styled glass-light (the default look) and a .theme-glass-dark
+    // override, so pick whichever matches the OS's current preference.
+    const htTheme = this.settings.hoverTranslateTheme || 'glass-light';
+    const resolvedHtTheme = htTheme === 'auto'
+      ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
+      : htTheme;
+
     const tip = document.createElement('div');
-    tip.className = `hw-hover-translate-tip theme-${this.settings.hoverTranslateTheme || 'glass-light'}`;
+    tip.className = `hw-hover-translate-tip theme-${resolvedHtTheme}`;
     tip.style.setProperty('--ht-alpha', ((this.settings.hoverTranslateOpacity ?? 90) / 100).toFixed(2));
     tip.style.setProperty('--ht-blur', `${this.settings.hoverTranslateBlur ?? 16}px`);
     tip.style.setProperty('--ht-font-size', `${this.settings.hoverTranslateFontSize ?? 13}px`);
@@ -453,8 +487,29 @@ class HoverTranslate {
 
     if (speakBtnHtml) tip.classList.add('has-speak');
 
+    // Mirrors the speak button on the opposite corner — which language this
+    // translates to was otherwise never shown anywhere on the tip itself.
+    // Collapsed to the 2-letter code so that's visible without hovering;
+    // hovering just widens the chip to reveal the real <select> underneath
+    // (see tooltip.css) for changing it. Same setting as the Chat panel's
+    // own output-language dropdown (shared/storage.js SUPPORTED_LANGUAGES),
+    // not a separate one just for this feature.
+    const currentLangId = this.settings.outputLanguage || 'en';
+    const currentLang = SUPPORTED_LANGUAGES.find((l) => l.id === currentLangId) || SUPPORTED_LANGUAGES[1];
+    const langCode = currentLang.id === 'auto' ? '..' : currentLang.id.split('-')[0].toUpperCase();
+    const langOptionsHtml = SUPPORTED_LANGUAGES
+      .map((l) => `<option value="${l.id}" ${l.id === currentLangId ? 'selected' : ''}>${l.name}</option>`)
+      .join('');
+    const langSwitchHtml = `
+      <div class="hw-ht-lang-switch" title="${this.dict.outputLanguageLabel || ''}">
+        <span class="hw-ht-lang-code">${langCode}</span>
+        <select class="hw-ht-lang-select">${langOptionsHtml}</select>
+      </div>
+    `;
+
     tip.innerHTML = `
       ${speakBtnHtml}
+      ${langSwitchHtml}
       <div class="hw-ht-gran-switch">${granDotsHtml}</div>
       <div class="hw-ht-body hw-ht-loading">${this.dict.loadingLabel || 'Translating…'}</div>
     `;
@@ -472,6 +527,9 @@ class HoverTranslate {
       // 'auto' — the hovered text carries no declared language, so its script
       // picks the voice, with the page's own lang breaking the Han tie.
       speak(this._spokenText, 'auto', document.documentElement.lang || '');
+    });
+    tip.querySelector('.hw-ht-lang-select')?.addEventListener('change', (e) => {
+      this.changeOutputLanguage(e.target.value);
     });
 
     getSharedShadowRoot().appendChild(tip);

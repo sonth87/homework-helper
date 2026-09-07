@@ -279,6 +279,20 @@
   height: 42px;
 }
 
+/* Popup card accent-color theme (popupCardTheme setting, Options > Appearance
+   > Homework Helper Popup) — independent from overlayTheme's own light/dark
+   glass background above. 'auto' (the default) leaves --hw-accent at
+   whatever :host already set (its own light/dark-aware value); a named
+   theme here overrides just the accent, reusing the same RGB triples as the
+   Selection Toolbar / Quick Hover Translate (shared/toolbar-theme-colors.js)
+   for one consistent set of brand colors across the extension. */
+.hw-solution-card.theme-cyber-blue { --hw-accent: #0284c7; --hw-accent-hover: #0369a1; --hw-accent-rgb: 2, 132, 199; }
+.hw-solution-card.theme-emerald { --hw-accent: #059669; --hw-accent-hover: #047857; --hw-accent-rgb: 5, 150, 105; }
+.hw-solution-card.theme-purple { --hw-accent: #7c3aed; --hw-accent-hover: #6d28d9; --hw-accent-rgb: 124, 58, 237; }
+.hw-solution-card.theme-rose { --hw-accent: #e11d48; --hw-accent-hover: #be123c; --hw-accent-rgb: 225, 29, 72; }
+.hw-solution-card.theme-amber { --hw-accent: #d97706; --hw-accent-hover: #b45309; --hw-accent-rgb: 217, 119, 6; }
+.hw-solution-card.theme-indigo { --hw-accent: #4f46e5; --hw-accent-hover: #4338ca; --hw-accent-rgb: 79, 70, 229; }
+
 /* ========================================================= */
 /* Homework Helper Floating Popup (Liquid Glass Resizable) */
 /* ========================================================= */
@@ -813,11 +827,118 @@
   transform: translateY(-1px);
 }
 
+/* Quick display-mode switcher (Normal/Compact/Minimize). Same collapsed-
+   dots-that-grow-into-icons-on-hover interaction as Quick Hover Translate's
+   own granularity switcher (content/hover-translate.js's .hw-ht-gran-switch),
+   just reusing the card's own accent instead of a separate colour source
+   since this control lives with the card's other buttons, not the toolbar. */
+.hw-mode-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: transparent;
+  transition: background 0.18s ease;
+}
+
+/* A solid-ish glass pill on hover, same idea as .hw-ht-gran-switch's own
+   hover background — a faint accent tint here was barely visible against
+   the card's own glass background, unlike the tooltip's fully opaque one. */
+.hw-mode-switch:hover {
+  background: rgba(var(--hw-glass-rgb), 0.95);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+/* A sibling of .hw-solution-card (not a descendant), position:fixed and
+   placed via JS (setupModeSwitchFloat() in floating-card.js) straddling
+   the card's own bottom edge — half sitting over the card, half poking
+   below it — same as .hw-ht-gran-switch straddles the tooltip's bottom
+   edge and #hwMiniModeSwitch straddles the minimized popup's. Can't be a
+   real descendant instead: .hw-solution-card has overflow:hidden (needed
+   for its native resize handle), which would clip a poke past its true
+   boundary. Normal mode keeps it always visible (.hw-mode-switch-always-
+   visible, toggled by setupModeSwitchFloat()); Compact hides it until
+   hovering the card, same grace-period reveal as the compact-only floating
+   title/actions above it. */
+#hwCardModeSwitch {
+  position: fixed;
+  z-index: 2147483643;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+
+#hwCardModeSwitch.hw-visible,
+#hwCardModeSwitch.hw-mode-switch-always-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.hw-mode-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.5);
+  color: var(--hw-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: width 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.hw-mode-dot svg {
+  width: 0;
+  height: 0;
+  opacity: 0;
+  transition: width 0.15s ease 0.04s, height 0.15s ease 0.04s, opacity 0.15s ease 0.04s;
+}
+
+.hw-mode-dot.active {
+  background: var(--hw-accent);
+}
+
+.hw-mode-switch:hover .hw-mode-dot {
+  width: 22px;
+  height: 22px;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.hw-mode-switch:hover .hw-mode-dot svg {
+  width: 13px;
+  height: 13px;
+  opacity: 1;
+}
+
+.hw-mode-switch:hover .hw-mode-dot.active {
+  color: #ffffff;
+  background: var(--hw-accent);
+  box-shadow: 0 2px 6px rgba(var(--hw-accent-rgb), 0.45);
+}
+
+.hw-mode-dot:hover {
+  background: rgba(var(--hw-accent-rgb), 0.22) !important;
+  color: var(--hw-accent) !important;
+  transform: scale(1.08);
+}
+
+.hw-mode-switch:hover .hw-mode-dot.active:hover {
+  background: var(--hw-accent-hover) !important;
+  color: #ffffff !important;
+}
+
 .hw-btn-card-action {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
+  justify-content: center;
+  padding: 6px 8px;
   background: none;
   border: 1px solid var(--hw-border-color);
   color: var(--hw-text-muted);
@@ -826,6 +947,16 @@
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+/* Icon-only regardless of card size — the label text (Copy/Favorite/Retry)
+   never needs to fill this small a footer strip. Kept as a display:none on
+   the label span rather than dropping it from the DOM so applyLanguageI18n()
+   doesn't need an unrelated exception. */
+#hwBtnCardCopyLabel,
+#hwBtnCardFavoriteLabel,
+#hwBtnCardRetryLabel {
+  display: none;
 }
 
 .hw-btn-card-action:hover {
@@ -901,17 +1032,15 @@
   gap: 0;
 }
 
-/* Copy/Retry/Primary all lose their text label in compact mode — icon only, */
-/* so the already-narrow footer packs tighter once revealed.     */
+/* Copy/Favorite/Retry are already icon-only everywhere (see .hw-btn-card-action
+   above) — compact mode just packs them even tighter, and additionally drops
+   the Primary button's own label (Normal keeps that one, "Continue in chat"/
+   "Next Question" is worth spelling out there). */
 .hw-solution-card.hw-card-compact .hw-btn-card-action {
   padding: 2px 4px;
-  gap: 0;
   border: none;
 }
 
-.hw-solution-card.hw-card-compact #hwBtnCardCopyLabel,
-.hw-solution-card.hw-card-compact #hwBtnCardFavoriteLabel,
-.hw-solution-card.hw-card-compact #hwBtnCardRetryLabel,
 .hw-solution-card.hw-card-compact #hwBtnPrimaryLabel {
   display: none;
 }
@@ -1334,6 +1463,21 @@
   border-radius: 8px;
   margin-bottom: 8px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.hw-msg-ai .code-block-wrapper {
+    overflow: auto;
+    max-width: 100%;
+    position: relative;
+}
+
+.hw-msg-ai .code-header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
 }
 
 .hw-msg-footer {

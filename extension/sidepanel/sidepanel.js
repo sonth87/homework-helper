@@ -326,6 +326,18 @@ export class SidePanelController {
           if (changes.uiLanguage) {
             this.applyLanguageI18n(changes.uiLanguage.newValue);
           }
+          // The panel only ever re-reads chat storage on init() and on its
+          // own "New Chat" click — so a result that lands in the shared
+          // conversation store from elsewhere (Capture & Solve's on-page
+          // floating card, the in-page drawer's own chat) never appears here
+          // until the panel is fully closed and reopened. Skip the refresh
+          // while this panel is mid-stream itself: loadChatHistory() rebuilds
+          // #spChatBody from storage, and the in-progress assistant turn
+          // isn't written until finalizeStream() — refreshing earlier would
+          // wipe the live bubble it's still appending chunks into.
+          if ((changes.conversations || changes.chatHistory || changes.activeConversationId) && !this.isStreaming) {
+            this.loadChatHistory();
+          }
         }
       });
     }

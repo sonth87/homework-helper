@@ -1,6 +1,7 @@
 export default {
   general: {
     brandTitle: "Homework Helper",
+    miniCloseLabel: "ปิด",
     placeholder: "ป้อนโจทย์หรือคำถามการบ้านของคุณที่นี่...",
     shiftEnterHint: "Enter เพื่อส่ง, Shift+Enter เพื่อขึ้นบรรทัดใหม่",
     listen: "ฟัง",
@@ -222,6 +223,7 @@ export default {
     granularitySentence: "แปลตามประโยค",
     granularityParagraph: "แปลตามย่อหน้า",
     listenSource: "ฟังต้นฉบับ",
+    outputLanguageLabel: "ภาษาที่แปลเป็น",
   },
   cropper: {
     tip: "คลิกแล้วลากเพื่อครอบตัดโจทย์หรือสูตร (ESC เพื่อยกเลิก)",
@@ -230,6 +232,9 @@ export default {
   },
   floatingPopup: {
     helperTitle: "ผู้ช่วย Homework Helper",
+    modeNormalLabel: "ปกติ",
+    modeCompactLabel: "กะทัดรัด",
+    modeMinimizeLabel: "ย่อเล็กสุด",
     translateTitle: "แปลภาษา",
     translateHeading: "คำแปล",
     searchTitle: "ค้นหาและเฉลย",
@@ -539,6 +544,8 @@ export default {
     hlStyleNaturalUnderlineDesc: "เส้นใต้แบบลายมือไม่สม่ำเสมอ ต่างจากแบบคลื่น",
     hlStylePencil: "แรเงาดินสอสี",
     hlStylePencilDesc: "แรเงาไขว้คล้ายดินสอสีทับข้อความ ให้พื้นผิวเป็นเม็ด",
+    hlStyleScribble: "แบบขีดเขียนลวก ๆ",
+    hlStyleScribbleDesc: "แรเงาข้อความด้วยเส้นซิกแซกต่อเนื่องคล้ายขีดเขียนลวก ๆ ต่างจากแถบสีเรียบของปากกาไฮไลต์",
     labelHoverAnimation: "เอฟเฟกต์เมื่อกดปุ่มค้าง + ชี้เมาส์",
     labelHoverAnimationDesc: "เอฟเฟกต์ที่แสดงบนข้อความขณะกดปุ่มลัดค้างไว้แล้วชี้เมาส์ไปที่ข้อความนั้น",
     hoverAnimOptNone: "ไม่มี",
@@ -552,9 +559,12 @@ export default {
     toolbarLayoutResetBtn: "คืนค่าเริ่มต้น",
     cardPopupTitle: "หน้าต่างป๊อปอัปเฉลยการบ้าน",
     labelPopupCardSize: "รูปแบบการแสดงป็อปอัป",
-    labelPopupCardSizeDesc: "Compact จะซ่อนปุ่มรองไว้ แสดงเมื่อวางเมาส์เหนือป็อปอัปเท่านั้น เพิ่มความหนาแน่นของเนื้อหา",
+    labelPopupCardSizeDesc: "Compact จะซ่อนปุ่มรองไว้ แสดงเมื่อวางเมาส์เหนือป็อปอัปเท่านั้น เพิ่มความหนาแน่นของเนื้อหา Minimize จะแสดงเพียงปุ่มวงกลมเล็ก ๆ ที่มุมหน้าจอ วางเมาส์เหนือปุ่มเพื่อดูผลลัพธ์",
+    labelPopupTheme: "ธีมสีป็อปอัป",
+    labelPopupThemeDesc: "สีเน้น (ปุ่ม เส้นขอบ หัวข้อ) ของป็อปอัปแก้โจทย์/แปลภาษา",
     popupCardSizeOptNormal: "ปกติ",
     popupCardSizeOptCompact: "กะทัดรัด",
+    popupCardSizeOptMinimize: "ย่อเล็กสุด",
     labelPopupOpacity: "ความโปร่งใสของป๊อปอัป",
     labelPopupOpacityDesc: "ปรับระดับความโปร่งใสของการ์ดป๊อปอัป",
     labelPopupBlur: "ความเบลอของพื้นหลังป๊อปอัป",

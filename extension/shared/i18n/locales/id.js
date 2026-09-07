@@ -1,6 +1,7 @@
 export default {
   general: {
     brandTitle: "Homework Helper",
+    miniCloseLabel: "Tutup",
     placeholder: "Ketik pertanyaan PR atau rumus di sini...",
     shiftEnterHint: "Enter untuk mengirim, Shift+Enter untuk baris baru",
     listen: "Dengarkan",
@@ -225,6 +226,7 @@ export default {
     granularitySentence: "Terjemahkan per kalimat",
     granularityParagraph: "Terjemahkan per paragraf",
     listenSource: "Dengarkan teks asli",
+    outputLanguageLabel: "Bahasa hasil terjemahan",
   },
   cropper: {
     tip: "Klik dan seret untuk memilih soal atau rumus (ESC untuk membatalkan)",
@@ -233,6 +235,9 @@ export default {
   },
   floatingPopup: {
     helperTitle: "Asisten Homework Helper",
+    modeNormalLabel: "Normal",
+    modeCompactLabel: "Compact",
+    modeMinimizeLabel: "Minimalkan",
     translateTitle: "Terjemahkan",
     translateHeading: "Hasil Terjemahan",
     searchTitle: "Cari & Bantuan PR",
@@ -496,6 +501,8 @@ export default {
     hlStyleNaturalUnderlineDesc: "Garis bawah tidak rata seperti gambar tangan, berbeda dari gelombang yang rata.",
     hlStylePencil: "Arsiran pensil alami",
     hlStylePencilDesc: "Garis silang di atas teks seperti arsiran pensil warna, dengan tekstur berbutir.",
+    hlStyleScribble: "Coretan acak",
+    hlStyleScribbleDesc: "Mengisi teks dengan satu goresan zig-zag menerus, seperti coretan tergesa-gesa, berbeda dari pita halus gaya stabilo.",
     labelHoverAnimation: "Efek saat menahan tombol + arahkan kursor",
     labelHoverAnimationDesc: "Efek yang diputar pada teks saat Anda menahan tombol pemicu dan mengarahkan kursor ke teks tersebut.",
     hoverAnimOptNone: "Tidak ada",
@@ -509,9 +516,12 @@ export default {
     toolbarLayoutResetBtn: "Pulihkan Default",
     cardPopupTitle: "Jendela Solusi & Terjemahan Mengambang",
     labelPopupCardSize: "Gaya tampilan Popup",
-    labelPopupCardSizeDesc: "Mode Compact menyembunyikan tombol sekunder, hanya muncul saat kursor diarahkan ke popup, sehingga meningkatkan kepadatan tampilan konten.",
+    labelPopupCardSizeDesc: "Mode Compact menyembunyikan tombol sekunder, hanya muncul saat kursor diarahkan ke popup, sehingga meningkatkan kepadatan tampilan konten. Mode Minimalkan hanya menampilkan tombol bulat kecil di sudut layar — arahkan kursor ke tombol tersebut untuk melihat hasilnya.",
+    labelPopupTheme: "Tema warna popup",
+    labelPopupThemeDesc: "Warna aksen (tombol, garis tepi, judul) popup penyelesaian/terjemahan.",
     popupCardSizeOptNormal: "Normal",
     popupCardSizeOptCompact: "Compact",
+    popupCardSizeOptMinimize: "Minimalkan",
     labelPopupOpacity: "Transparansi Jendela",
     labelPopupBlur: "Tingkat Blur (Blur)",
     livePreviewBadge: "Simulasi Langsung",

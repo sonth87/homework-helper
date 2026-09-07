@@ -1,6 +1,7 @@
 export default {
   general: {
     brandTitle: "Homework Helper",
+    miniCloseLabel: "关闭",
     placeholder: "在此输入您的作业问题或公式...",
     shiftEnterHint: "按 Enter 发送，Shift+Enter 换行",
     listen: "朗读",
@@ -221,6 +222,7 @@ export default {
     granularitySentence: "按句子翻译",
     granularityParagraph: "按段落翻译",
     listenSource: "朗读原文",
+    outputLanguageLabel: "翻译目标语言",
   },
   cropper: {
     tip: "点击并拖拽框选题目或公式 (按 ESC 取消)",
@@ -229,6 +231,9 @@ export default {
   },
   floatingPopup: {
     helperTitle: "Homework Helper 题目助手",
+    modeNormalLabel: "普通",
+    modeCompactLabel: "紧凑",
+    modeMinimizeLabel: "最小化",
     translateTitle: "学术翻译",
     translateHeading: "译文",
     searchTitle: "智能搜题",
@@ -535,6 +540,8 @@ export default {
     hlStyleNaturalUnderlineDesc: "手绘般不规则的下划线，不同于均匀的波浪线。",
     hlStylePencil: "自然铅笔涂色",
     hlStylePencilDesc: "用交叉排线覆盖文字，如彩色铅笔涂色，带颗粒质感。",
+    hlStyleScribble: "潦草涂鸦",
+    hlStyleScribbleDesc: "用一条连续之字形笔画反复涂抹文字，像随手乱画，不同于荧光笔那种平滑色带。",
     labelHoverAnimation: "按住按键 + 悬停时的效果",
     labelHoverAnimationDesc: "按住快捷键并将鼠标悬停在文本上时播放的效果。",
     hoverAnimOptNone: "无",
@@ -548,9 +555,12 @@ export default {
     toolbarLayoutResetBtn: "恢复默认",
     cardPopupTitle: "悬浮解题弹窗 (Solution Card)",
     labelPopupCardSize: "弹窗显示样式",
-    labelPopupCardSizeDesc: "紧凑模式会隐藏次要按钮，仅在鼠标悬停在弹窗上时显示，提升内容密度。",
+    labelPopupCardSizeDesc: "紧凑模式会隐藏次要按钮，仅在鼠标悬停在弹窗上时显示，提升内容密度。最小化模式只在屏幕角落显示一个小圆按钮，鼠标悬停即可查看结果。",
+    labelPopupTheme: "弹窗配色主题",
+    labelPopupThemeDesc: "解题/翻译弹窗的强调色（按钮、边框、标题）。",
     popupCardSizeOptNormal: "普通",
     popupCardSizeOptCompact: "紧凑",
+    popupCardSizeOptMinimize: "最小化",
     labelPopupOpacity: "弹窗背景不透明度",
     labelPopupOpacityDesc: "调整弹窗的玻璃透明度。",
     labelPopupBlur: "弹窗毛玻璃模糊度",

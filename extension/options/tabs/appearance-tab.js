@@ -4,6 +4,7 @@ import { getSelectionTooltipI18n, getOptionsI18n } from '../../shared/i18n.js';
 import { TOOLBAR_ITEM_ICONS, DEFAULT_TOOLBAR_LAYOUT, normalizeToolbarLayout } from '../../shared/toolbar-items.js';
 import { HOVER_HIGHLIGHT_COLORS } from '../../shared/hover-highlight-colors.js';
 import { HIGHLIGHT_STYLES, DEFAULT_HIGHLIGHT_STYLE, buildHighlight } from '../../shared/highlight-styles.js';
+import { TOOLBAR_THEME_COLORS } from '../../shared/toolbar-theme-colors.js';
 
 // shared/highlight-styles.js only knows style ids — the display name/desc for
 // each lives in i18n (options block) like every other user-facing string.
@@ -17,23 +18,7 @@ const STYLE_I18N_KEYS = {
   rectangle: ['hlStyleRectangle', 'hlStyleRectangleDesc'],
   'natural-underline': ['hlStyleNaturalUnderline', 'hlStyleNaturalUnderlineDesc'],
   pencil: ['hlStylePencil', 'hlStylePencilDesc'],
-};
-
-// Solid-colour toolbar/hover-tip themes, shared by the two live-preview
-// branches below — one source of truth for the RGB triples so adding a new
-// theme (see content/styles/tooltip.css's own .theme-X rules, which this
-// mirrors) means adding one entry here instead of a new if/else arm in both
-// updatePreview() branches. 'glass-light' (the default) and 'glass-dark' are
-// handled separately since only glass-dark needs a distinct border/text
-// colour pairing rather than the white-on-solid-colour look every entry here
-// shares.
-const SOLID_THEME_COLORS = {
-  'cyber-blue': '2, 132, 199',
-  emerald: '5, 150, 105',
-  purple: '124, 58, 237',
-  rose: '225, 29, 72',
-  amber: '217, 119, 6',
-  indigo: '79, 70, 229',
+  scribble: ['hlStyleScribble', 'hlStyleScribbleDesc'],
 };
 
 // '#rrggbb' -> 'R, G, B', matching content/hover-translate.js's own
@@ -64,6 +49,7 @@ export class AppearanceTab {
       popupOpacity = 92,
       popupBlur = 16,
       popupCardSize = 'normal',
+      popupCardTheme = 'auto',
       enableTextTooltip = true,
       toolbarShowText = true,
       toolbarSize = 'normal',
@@ -72,11 +58,11 @@ export class AppearanceTab {
       toolbarOpacity = 90,
       toolbarBlur = 14,
       toolbarLayout,
-      enableHoverTranslate = false,
+      enableHoverTranslate = true,
       hoverTranslateModifiers = ['alt'],
       hoverTranslateGranularity = 'word',
       hoverTranslateDelay = 350,
-      hoverTranslateTheme = 'glass-light',
+      hoverTranslateTheme = 'auto',
       hoverTranslateHighlight = true,
       hoverTranslateHighlightColor = '#fef08a',
       hoverTranslateHighlightOpacity = 40,
@@ -141,6 +127,7 @@ export class AppearanceTab {
     const prevHoverTip = document.getElementById('prevHoverTip');
 
     const popupCardSizeSelect = document.getElementById('optPopupCardSizeSelect');
+    const popupThemeSelect = document.getElementById('optPopupThemeSelect');
     const rangePopupOpacity = document.getElementById('optRangePopupOpacity');
     const valPopupOpacity = document.getElementById('valPopupOpacity');
     const rangePopupBlur = document.getElementById('optRangePopupBlur');
@@ -306,6 +293,7 @@ export class AppearanceTab {
     }
 
     if (popupCardSizeSelect) popupCardSizeSelect.value = popupCardSize;
+    if (popupThemeSelect) popupThemeSelect.value = popupCardTheme;
     if (rangePopupOpacity) {
       rangePopupOpacity.value = popupOpacity;
       if (valPopupOpacity) valPopupOpacity.textContent = `${popupOpacity}%`;
@@ -369,7 +357,7 @@ export class AppearanceTab {
         prevToolbar.style.backdropFilter = `blur(${tbBlurVal}px) saturate(180%)`;
         prevToolbar.style.webkitBackdropFilter = `blur(${tbBlurVal}px) saturate(180%)`;
 
-        const tbSolidRgb = SOLID_THEME_COLORS[tbTheme];
+        const tbSolidRgb = TOOLBAR_THEME_COLORS[tbTheme];
         if (tbTheme === 'glass-dark') {
           prevToolbar.style.background = `rgba(15, 23, 42, ${tbAlpha})`;
           prevToolbar.style.color = '#f8fafc';
@@ -435,14 +423,18 @@ export class AppearanceTab {
         const htBlurVal = parseInt(rangeHoverBlur.value, 10);
         const htFontSize = rangeHoverFontSize ? parseInt(rangeHoverFontSize.value, 10) : 13;
         const htMaxWidth = rangeHoverMaxWidth ? parseInt(rangeHoverMaxWidth.value, 10) : 300;
-        const htTheme = hoverThemeSelect.value;
+        // Same 'auto' resolution as the Toolbar preview above.
+        const htThemeSetting = hoverThemeSelect.value;
+        const htTheme = htThemeSetting === 'auto'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
+          : htThemeSetting;
 
         prevHoverTip.style.setProperty('--ht-max-width', `${htMaxWidth}px`);
         prevHoverTip.style.fontSize = `${htFontSize}px`;
         prevHoverTip.style.backdropFilter = `blur(${htBlurVal}px) saturate(180%)`;
         prevHoverTip.style.webkitBackdropFilter = `blur(${htBlurVal}px) saturate(180%)`;
 
-        const htSolidRgb = SOLID_THEME_COLORS[htTheme];
+        const htSolidRgb = TOOLBAR_THEME_COLORS[htTheme];
         if (htTheme === 'glass-dark') {
           prevHoverTip.style.background = `rgba(15, 23, 42, ${htAlpha})`;
           prevHoverTip.style.color = '#f8fafc';
@@ -463,6 +455,15 @@ export class AppearanceTab {
         prevPopup.style.backdropFilter = `blur(${popBlurVal}px) saturate(180%)`;
         prevPopup.style.webkitBackdropFilter = `blur(${popBlurVal}px) saturate(180%)`;
         prevPopup.classList.toggle('compact', (popupCardSizeSelect?.value || 'normal') === 'compact');
+
+        // 'auto' keeps the preview's own long-standing default blue —
+        // matches the real card leaving --hw-accent untouched for 'auto'.
+        const popThemeSetting = popupThemeSelect?.value || 'auto';
+        const popRgb = TOOLBAR_THEME_COLORS[popThemeSetting] || '2, 132, 199';
+        const primaryBtn = prevPopup.querySelector('.prev-btn-blue');
+        const answerHeading = document.getElementById('prevPopupAnswerHeading');
+        if (primaryBtn) primaryBtn.style.background = `rgba(${popRgb}, 0.88)`;
+        if (answerHeading) answerHeading.style.color = `rgb(${popRgb})`;
       }
     };
 
@@ -705,6 +706,11 @@ export class AppearanceTab {
       updatePreview();
     });
 
+    popupThemeSelect?.addEventListener('change', () => {
+      Storage.set({ popupCardTheme: popupThemeSelect.value });
+      updatePreview();
+    });
+
     rangePopupOpacity?.addEventListener('input', () => {
       if (valPopupOpacity) valPopupOpacity.textContent = `${rangePopupOpacity.value}%`;
       Storage.set({ popupOpacity: parseInt(rangePopupOpacity.value, 10) });
@@ -725,6 +731,7 @@ export class AppearanceTab {
       const d = DEFAULT_SETTINGS;
 
       if (popupCardSizeSelect) popupCardSizeSelect.value = d.popupCardSize;
+      if (popupThemeSelect) popupThemeSelect.value = d.popupCardTheme;
       if (rangePopupOpacity) {
         rangePopupOpacity.value = d.popupOpacity;
         if (valPopupOpacity) valPopupOpacity.textContent = `${d.popupOpacity}%`;
@@ -736,11 +743,35 @@ export class AppearanceTab {
 
       Storage.set({
         popupCardSize: d.popupCardSize,
+        popupCardTheme: d.popupCardTheme,
         popupOpacity: d.popupOpacity,
         popupBlur: d.popupBlur,
       });
       updatePreview();
     });
+
+    // Keeps this tab's two enable checkboxes correct when the underlying
+    // setting changes from somewhere with no direct line to this page's own
+    // DOM — the popup's quick-action widgets, or a second Options tab/window
+    // — none of which this tab hears about otherwise. The change-event
+    // dispatch below re-triggers the existing 'change' listeners above (same
+    // element, same handler), so dimming and the General-tab mirror both
+    // still update correctly instead of only the checkbox's visual state.
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area !== 'local') return;
+        if (changes.enableTextTooltip && checkToolbarEnableInline &&
+          checkToolbarEnableInline.checked !== changes.enableTextTooltip.newValue) {
+          checkToolbarEnableInline.checked = changes.enableTextTooltip.newValue;
+          checkToolbarEnableInline.dispatchEvent(new Event('change'));
+        }
+        if (changes.enableHoverTranslate && checkHoverTranslateInline &&
+          checkHoverTranslateInline.checked !== changes.enableHoverTranslate.newValue) {
+          checkHoverTranslateInline.checked = changes.enableHoverTranslate.newValue;
+          checkHoverTranslateInline.dispatchEvent(new Event('change'));
+        }
+      });
+    }
   }
 
   // Drag-and-drop editor for which selection-toolbar tools sit directly on

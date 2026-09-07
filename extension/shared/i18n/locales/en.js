@@ -1,6 +1,7 @@
 export default {
   general: {
     brandTitle: "Homework Helper",
+    miniCloseLabel: "Close",
     placeholder: "Enter your question or math problem here...",
     shiftEnterHint: "Enter to send, Shift+Enter for newline",
     listen: "Listen",
@@ -221,6 +222,7 @@ export default {
     granularitySentence: "Translate by sentence",
     granularityParagraph: "Translate by paragraph",
     listenSource: "Listen to the original",
+    outputLanguageLabel: "Output language",
   },
   cropper: {
     tip: "Click and drag to crop a problem or formula (ESC to cancel)",
@@ -229,6 +231,9 @@ export default {
   },
   floatingPopup: {
     helperTitle: "Homework Helper",
+    modeNormalLabel: "Normal",
+    modeCompactLabel: "Compact",
+    modeMinimizeLabel: "Minimize",
     translateTitle: "Translation",
     translateHeading: "Translation",
     searchTitle: "Search & Solve",
@@ -543,6 +548,8 @@ export default {
     hlStyleNaturalUnderlineDesc: "An irregular hand-drawn underline, unlike the even wavy one.",
     hlStylePencil: "Natural pencil shading",
     hlStylePencilDesc: "Cross-hatched strokes over the text, like colored-pencil shading, with a grainy texture.",
+    hlStyleScribble: "Scribble fill",
+    hlStyleScribbleDesc: "Fills the text with a single zig-zagging pen stroke, like an impatient scribble, unlike the smooth wash of the marker style.",
     labelHoverAnimation: "Effect while holding key + hover",
     labelHoverAnimationDesc: "Effect played on the text while holding the trigger key and hovering over it.",
     hoverAnimOptNone: "None",
@@ -556,9 +563,12 @@ export default {
     toolbarLayoutResetBtn: "Restore Default",
     cardPopupTitle: "Floating Solution Card",
     labelPopupCardSize: "Popup display style",
-    labelPopupCardSizeDesc: "Compact hides secondary buttons until you hover over the popup, increasing content density.",
+    labelPopupCardSizeDesc: "Compact hides secondary buttons until you hover over the popup, increasing content density. Minimize shows just a small circular button in the corner of the screen — hover over it to see the result.",
+    labelPopupTheme: "Popup color theme",
+    labelPopupThemeDesc: "Accent color (buttons, borders, headings) of the solve/translate popup.",
     popupCardSizeOptNormal: "Normal",
     popupCardSizeOptCompact: "Compact",
+    popupCardSizeOptMinimize: "Minimize",
     labelPopupOpacity: "Popup background opacity",
     labelPopupOpacityDesc: "Adjust glass transparency of the popup card.",
     labelPopupBlur: "Popup backdrop blur",

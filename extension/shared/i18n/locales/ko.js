@@ -1,6 +1,7 @@
 export default {
   general: {
     brandTitle: "Homework Helper",
+    miniCloseLabel: "닫기",
     placeholder: "여기에 과제 문제나 수식을 입력하세요...",
     shiftEnterHint: "Enter로 전송, Shift+Enter로 줄바꿈",
     listen: "듣기",
@@ -223,6 +224,7 @@ export default {
     granularitySentence: "문장 단위로 번역",
     granularityParagraph: "문단 단위로 번역",
     listenSource: "원문 듣기",
+    outputLanguageLabel: "번역 대상 언어",
   },
   cropper: {
     tip: "문제나 수식을 클릭 & 드래그하여 선택하세요 (ESC로 취소)",
@@ -231,6 +233,9 @@ export default {
   },
   floatingPopup: {
     helperTitle: "Homework Helper 과제 도우미",
+    modeNormalLabel: "일반",
+    modeCompactLabel: "컴팩트",
+    modeMinimizeLabel: "최소화",
     translateTitle: "학술 번역",
     translateHeading: "번역 결과",
     searchTitle: "검색 및 과제 도우미",
@@ -491,6 +496,8 @@ export default {
     hlStyleNaturalUnderlineDesc: "균일한 물결 밑줄과 달리 손그림처럼 불규칙한 밑줄입니다.",
     hlStylePencil: "자연스러운 색연필 음영",
     hlStylePencilDesc: "색연필로 칠한 듯 교차선을 겹쳐 거친 질감을 표현합니다.",
+    hlStyleScribble: "휘갈겨 칠하기",
+    hlStyleScribbleDesc: "하나로 이어진 지그재그 선으로 텍스트를 반복해 칠하는, 급하게 휘갈겨 쓴 듯한 느낌입니다. 형광펜의 매끄러운 띠와는 다릅니다.",
     labelHoverAnimation: "키를 누른 채 호버할 때 효과",
     labelHoverAnimationDesc: "단축키를 누른 상태로 텍스트에 마우스를 올렸을 때 재생되는 효과입니다.",
     hoverAnimOptNone: "없음",
@@ -504,9 +511,12 @@ export default {
     toolbarLayoutResetBtn: "기본값으로 복원",
     cardPopupTitle: "플로팅 정답 & 번역 팝업 (Floating Card)",
     labelPopupCardSize: "팝업 표시 스타일",
-    labelPopupCardSizeDesc: "컴팩트 모드는 보조 버튼을 숨기고 팝업에 마우스를 올렸을 때만 표시하여 콘텐츠 밀도를 높입니다.",
+    labelPopupCardSizeDesc: "컴팩트 모드는 보조 버튼을 숨기고 팝업에 마우스를 올렸을 때만 표시하여 콘텐츠 밀도를 높입니다. 최소화 모드는 화면 구석에 작은 원형 버튼만 표시하며, 마우스를 올리면 결과를 볼 수 있습니다.",
+    labelPopupTheme: "팝업 색상 테마",
+    labelPopupThemeDesc: "풀이/번역 팝업의 강조 색상(버튼, 테두리, 제목)입니다.",
     popupCardSizeOptNormal: "일반",
     popupCardSizeOptCompact: "컴팩트",
+    popupCardSizeOptMinimize: "최소화",
     labelPopupOpacity: "팝업 투명도",
     labelPopupBlur: "배경 블러 효과 (Blur)",
     livePreviewBadge: "실시간 미리보기",

@@ -17,7 +17,7 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
-## [1.9.0] — 2026-09-04
+## [1.9.1] — 2026-09-07
 
 ### Thêm mới
 - Tùy chỉnh được màu tô sáng của Dịch nhanh khi di chuột (Giao diện > Dịch
@@ -25,18 +25,43 @@ _Chưa có thay đổi nào chờ phát hành._
   vì bảng màu tự do, kèm thanh chỉnh "Độ đậm màu tô sáng" riêng để giữ màu
   luôn nhẹ nhàng, không bị gắt. Mặc định vẫn là vàng highlight quen thuộc,
   xem trước ngay trong trang Cài đặt.
-- Thêm mục "Kiểu tô sáng" cho Dịch nhanh khi di chuột với 9 kiểu đánh dấu để
+- Thêm mục "Kiểu tô sáng" cho Dịch nhanh khi di chuột với 10 kiểu đánh dấu để
   chọn, mỗi kiểu xem trước thật ngay trên nút chọn: 4 kiểu gọn gàng (Tô nền,
-  Gạch dưới, Gạch dưới lượn sóng, Gạch dưới đôi) và 5 kiểu "tự nhiên" như vẽ
+  Gạch dưới, Gạch dưới lượn sóng, Gạch dưới đôi) và 6 kiểu "tự nhiên" như vẽ
   tay (Bút highlight tự nhiên — rìa nhấp nhô như dạ quang thật; Khoanh tròn
   và Khoanh chữ nhật tay vẽ quanh chữ; Gạch dưới tự nhiên nguệch ngoạc; Nét
-  chì tự nhiên — tô chữ bằng nét đan chéo như bút chì màu). Mỗi lần dịch một
-  đoạn nhiều dòng, các kiểu tay vẽ đều được "vẽ" lại hơi khác nhau ở mỗi dòng
-  cho tự nhiên, không lặp lại y hệt.
+  chì tự nhiên — tô chữ bằng nét đan chéo như bút chì màu; Tô nguệch ngoạc —
+  nét bút ngoằn ngoèo qua lại như tô vội). Mỗi lần dịch một đoạn nhiều dòng,
+  các kiểu tay vẽ đều được "vẽ" lại hơi khác nhau ở mỗi dòng cho tự nhiên,
+  không lặp lại y hệt.
 - Nút "Phím tắt" mới trên header của popup (cạnh nút Cài đặt) — bấm vào để
   xem danh sách các phím tắt hiện có (Chat AI, Chụp & Giải, Rê chuột dịch)
   kèm mô tả ngắn. Phím tắt hiển thị là phím Chrome **thực sự đang gán**, báo
   rõ nếu chưa gán được thay vì im lặng hiện sai.
+- Thêm kiểu hiển thị "Minimize" cho popup Giải bài/Dịch (Cài đặt > Giao diện
+  > "Kiểu hiển thị Popup"), bên cạnh Normal và Compact: khi giải bài hoặc
+  dịch, thay vì mở cả thẻ popup, chỉ hiện một nút tròn nhỏ ở góc dưới bên
+  phải màn hình — vòng viền chạy quanh trong lúc chờ, dừng lại ngay khi có
+  kết quả. Rê chuột vào nút tròn để xem đáp án/bản dịch (tự động nằm trong
+  màn hình, không tràn ra ngoài), rê chuột ra là ẩn đi; có nút x nhỏ khi rê
+  chuột vào để đóng hẳn. Popup này tối giản hết mức — không tiêu đề, không
+  nút phía trên/dưới, chỉ nội dung và 2 icon Nghe/Sao chép trần không khung.
+- Thêm 3 nút chuyển nhanh kiểu hiển thị (Normal/Compact/Minimize) ngay dưới
+  popup Giải bài/Dịch — dạng chấm tròn thu gọn, rê chuột vào để hiện icon,
+  giống hệt kiểu 3 nút chuyển độ chi tiết ở tooltip Dịch nhanh khi di chuột.
+  Chuyển kiểu có hiệu lực ngay lập tức kể cả khi đang chờ kết quả hoặc đã có
+  đáp án/lỗi — không cần đợi lần giải/dịch tiếp theo. Nút này cũng có mặt
+  trong popup của nút tròn Minimize để đổi ngược lại được từ đó.
+- Tooltip Dịch nhanh khi di chuột nay có thêm một nút tròn nhỏ ở góc trên bên
+  trái, hiện sẵn 2 chữ cái ngôn ngữ đang dịch ra (ví dụ "VI") để biết ngay
+  đang dịch sang ngôn ngữ nào — rê chuột vào để đổi nhanh, dùng chung danh
+  sách ngôn ngữ với ô "Ngôn ngữ trả lời" trong Chat.
+- Popup Giải bài/Dịch nay có riêng một "Chủ đề màu Popup" (Cài đặt > Giao
+  diện > Homework Helper Popup) — chọn màu nhấn cho nút chính, viền và tiêu
+  đề ANSWER, dùng chung bảng màu với Thanh Công Cụ Bôi Đen (Cyber Blue,
+  Emerald Green, Purple Glass, Rose Pink, Amber Gold, Indigo Night). Mặc
+  định là Tự động, giữ nguyên màu xanh quen thuộc và tự đổi theo giao diện
+  sáng/tối như trước đây.
 
 ### Thay đổi
 - Tooltip tùy chỉnh (Cài đặt, Side Panel, Popup, và các nút nổi/thẻ trong
@@ -66,8 +91,48 @@ _Chưa có thay đổi nào chờ phát hành._
 - Các mục có công tắc bật/tắt riêng (FAB, Thanh Công Cụ Bôi Đen, Dịch nhanh khi
   di chuột) nay làm mờ phần tùy chỉnh bên dưới khi tắt, vì lúc đó các tùy chỉnh
   đó chưa có tác dụng gì.
+- Dịch nhanh khi di chuột nay **bật mặc định** khi cài extension mới, thay vì
+  phải tự vào Cài đặt bật lên.
+- "Chủ đề màu Tooltip" của Dịch nhanh khi di chuột nay có thêm lựa chọn Tự
+  động (theo giao diện sáng/tối) giống Thanh Công Cụ Bôi Đen, và trở thành
+  **mặc định mới** thay vì luôn cố định Liquid Glass Light như trước.
+- Popup Giải bài/Dịch ở kiểu Normal: 3 nút Sao chép/Yêu thích/Thử lại nay chỉ
+  hiện icon (bỏ chữ) để gọn hơn, giống cách kiểu Compact đã làm. Nút chính
+  bên dưới cũng thông minh hơn theo ngữ cảnh: dịch nhanh một đoạn text bôi
+  đen không còn hiện nút "Tiếp tục trong Chat" (vốn không có ý nghĩa với một
+  bản dịch/tra từ đơn thuần), trong khi chụp ảnh để dịch vẫn giữ nút "Chụp
+  lại" như cũ và các thao tác bôi đen khác (Giải thích, Tóm tắt, Tra cứu,
+  Ngữ pháp) vẫn giữ nguyên nút "Tiếp tục trong Chat".
 
 ### Sửa lỗi
+- Popup Minimize không theo cấu hình độ trong suốt/độ mờ nền (Blur) của
+  Homework Helper Popup — luôn cố định một mức bất kể người dùng chỉnh gì
+  trong Cài đặt. Nay dùng chung cấu hình với popup Normal/Compact.
+- Kết quả tra từ điển (dịch một từ) trong popup Minimize hiện phẳng, không có
+  định dạng — nay hiển thị đúng bố cục từ/phiên âm, từ loại, nghĩa, bản dịch
+  như ở popup Normal/Compact, kèm nút Nghe riêng cho từng phần.
+- Lời giải có công thức LaTeX đặt trong khối code (```latex ... ```) đôi khi
+  hiển thị vỡ thành chữ và ký tự mã hoá lộn xộn kèm chữ "Copy" thừa, thay vì
+  một khối công thức có nút Copy hoạt động bình thường. Nguyên nhân: các bước
+  nhận diện công thức toán ($$, \\(...\\), các lệnh LaTeX đơn lẻ...) chạy
+  trước bước nhận diện khối code, nên "nhìn xuyên" vào bên trong khối code
+  chưa được nhận diện và trích một phần nội dung ra ngoài — làm hỏng khối
+  code khi ráp lại. Nay khối code luôn được nhận diện và khoá lại đầu tiên.
+- Tính năng tự dịch nội dung vừa copy khi mở popup: trước đây copy bất kỳ nội
+  dung gì (URL, email, chuỗi base64, mã SVG/HTML, hash, đường dẫn file...)
+  cũng bị coi là văn bản cần dịch và tự động dịch ngay. Nay các dạng nội dung
+  rõ ràng không phải văn bản như trên sẽ được bỏ qua, chỉ tự động dịch khi nội
+  dung thật sự giống câu/từ ngôn ngữ tự nhiên.
+- Bật/tắt "Rê chuột dịch" (hoặc "Thanh Công Cụ Bôi Đen") từ popup thanh công
+  cụ trong khi trang Cài đặt đang mở sẵn ở nơi khác không cập nhật lại 2 công
+  tắc tương ứng trong Cài đặt — vẫn hiện trạng thái cũ cho tới khi tải lại
+  trang. Nay 2 công tắc này tự cập nhật ngay khi giá trị thay đổi từ bất kỳ
+  đâu.
+- Sau khi Chụp & Giải, đôi khi câu hỏi hoặc bài giải bị "mất tích" khỏi lịch sử
+  Chat dù vừa giải xong vẫn thấy trên thẻ nổi. Nguyên nhân: hai lần ghi lịch
+  sử (lượt hỏi và lượt trả lời) chạy gần như đồng thời, cùng đọc dữ liệu cũ
+  rồi ghi đè lên nhau, khiến một trong hai lượt bị ghi đè mất mà không báo
+  lỗi. Nay các lượt ghi lịch sử luôn chạy tuần tự, không còn đè lên nhau.
 - Highlight của Dịch nhanh khi di chuột bị chồng lấn thành nhiều dải màu đậm
   nhạt không đều khi câu/đoạn cần dịch nằm rải trong nhiều thẻ HTML lồng
   nhau (ví dụ vài từ in đậm `<b>` xen giữa câu). Nguyên nhân: trình duyệt trả

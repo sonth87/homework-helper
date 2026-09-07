@@ -1,6 +1,7 @@
 export default {
   general: {
     brandTitle: "Homework Helper",
+    miniCloseLabel: "Cerrar",
     placeholder: "Escribe tu pregunta o fórmula aquí...",
     shiftEnterHint: "Enter para enviar, Shift+Enter para nueva línea",
     listen: "Escuchar",
@@ -223,6 +224,7 @@ export default {
     granularitySentence: "Traducir por oración",
     granularityParagraph: "Traducir por párrafo",
     listenSource: "Escuchar el original",
+    outputLanguageLabel: "Idioma de salida",
   },
   cropper: {
     tip: "Haz clic y arrastra para seleccionar el problema o fórmula (ESC para cancelar)",
@@ -231,6 +233,9 @@ export default {
   },
   floatingPopup: {
     helperTitle: "Asistente Homework Helper",
+    modeNormalLabel: "Normal",
+    modeCompactLabel: "Compacto",
+    modeMinimizeLabel: "Minimizar",
     translateTitle: "Traducir",
     translateHeading: "Traducción",
     searchTitle: "Buscar y resolver",
@@ -493,6 +498,8 @@ export default {
     hlStyleNaturalUnderlineDesc: "Un subrayado irregular a mano alzada, distinto del ondulado uniforme.",
     hlStylePencil: "Sombreado de lápiz natural",
     hlStylePencilDesc: "Trazos cruzados sobre el texto, como un sombreado de lápiz de color, con textura granulada.",
+    hlStyleScribble: "Garabato",
+    hlStyleScribbleDesc: "Rellena el texto con un solo trazo en zigzag, como un garabato impaciente, a diferencia de la franja lisa del rotulador.",
     labelHoverAnimation: "Efecto al mantener la tecla + pasar el cursor",
     labelHoverAnimationDesc: "Efecto que se reproduce sobre el texto mientras mantienes la tecla de activación y pasas el cursor por encima.",
     hoverAnimOptNone: "Ninguno",
@@ -506,9 +513,12 @@ export default {
     toolbarLayoutResetBtn: "Restaurar valores predeterminados",
     cardPopupTitle: "Ventana emergente flotante de solución y traducción",
     labelPopupCardSize: "Estilo de visualización del popup",
-    labelPopupCardSizeDesc: "El modo compacto oculta los botones secundarios, mostrándolos solo al pasar el cursor sobre el popup, para aumentar la densidad de contenido.",
+    labelPopupCardSizeDesc: "El modo compacto oculta los botones secundarios, mostrándolos solo al pasar el cursor sobre el popup, para aumentar la densidad de contenido. El modo Minimizar solo muestra un pequeño botón circular en la esquina de la pantalla; pasa el cursor sobre él para ver el resultado.",
+    labelPopupTheme: "Tema de color del popup",
+    labelPopupThemeDesc: "Color de acento (botones, bordes, títulos) del popup de solución/traducción.",
     popupCardSizeOptNormal: "Normal",
     popupCardSizeOptCompact: "Compacto",
+    popupCardSizeOptMinimize: "Minimizar",
     labelPopupOpacity: "Opacidad de la ventana",
     labelPopupBlur: "Desenfoque de fondo (Blur)",
     livePreviewBadge: "Simulador en vivo",

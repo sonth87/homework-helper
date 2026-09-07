@@ -1,6 +1,7 @@
 export default {
   general: {
     brandTitle: "Homework Helper",
+    miniCloseLabel: "關閉",
     placeholder: "在此輸入您的作業問題或公式...",
     shiftEnterHint: "按 Enter 發送，Shift+Enter 換行",
     listen: "朗讀",
@@ -221,6 +222,7 @@ export default {
     granularitySentence: "依句子翻譯",
     granularityParagraph: "依段落翻譯",
     listenSource: "朗讀原文",
+    outputLanguageLabel: "翻譯目標語言",
   },
   cropper: {
     tip: "按住並拖曳以框選題目或公式 (按 ESC 取消)",
@@ -229,6 +231,9 @@ export default {
   },
   floatingPopup: {
     helperTitle: "Homework Helper 作業助手",
+    modeNormalLabel: "一般",
+    modeCompactLabel: "精簡",
+    modeMinimizeLabel: "最小化",
     translateTitle: "學術翻譯",
     translateHeading: "翻譯結果",
     searchTitle: "搜尋與作業助手",
@@ -484,6 +489,8 @@ export default {
     hlStyleNaturalUnderlineDesc: "手繪般不規則的底線，不同於均勻的波浪線。",
     hlStylePencil: "自然鉛筆塗色",
     hlStylePencilDesc: "用交叉排線覆蓋文字，如彩色鉛筆塗色，帶顆粒質感。",
+    hlStyleScribble: "潦草塗鴉",
+    hlStyleScribbleDesc: "用一條連續之字形筆畫反覆塗抹文字，像隨手亂畫，不同於螢光筆那種平滑色塊。",
     labelHoverAnimation: "按住按鍵 + 懸停時的效果",
     labelHoverAnimationDesc: "按住快捷鍵並將滑鼠懸停在文字上時播放的效果。",
     hoverAnimOptNone: "無",
@@ -497,9 +504,12 @@ export default {
     toolbarLayoutResetBtn: "還原預設值",
     cardPopupTitle: "懸浮解答與翻譯彈窗 (Floating Card)",
     labelPopupCardSize: "彈出視窗顯示樣式",
-    labelPopupCardSizeDesc: "精簡模式會隱藏次要按鈕，僅在滑鼠懸停於彈出視窗上時顯示，提升內容密度。",
+    labelPopupCardSizeDesc: "精簡模式會隱藏次要按鈕，僅在滑鼠懸停於彈出視窗上時顯示，提升內容密度。最小化模式只會在螢幕角落顯示一個小圓按鈕，滑鼠懸停即可查看結果。",
+    labelPopupTheme: "彈出視窗配色主題",
+    labelPopupThemeDesc: "解題/翻譯彈出視窗的強調色（按鈕、邊框、標題）。",
     popupCardSizeOptNormal: "一般",
     popupCardSizeOptCompact: "精簡",
+    popupCardSizeOptMinimize: "最小化",
     labelPopupOpacity: "彈窗透明度",
     labelPopupBlur: "背景模糊度 (Blur)",
     livePreviewBadge: "即時模擬預覽",

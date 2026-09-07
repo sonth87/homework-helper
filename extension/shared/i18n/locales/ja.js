@@ -1,6 +1,7 @@
 export default {
   general: {
     brandTitle: "Homework Helper",
+    miniCloseLabel: "閉じる",
     placeholder: "ここに宿題の質問や数式を入力してください...",
     shiftEnterHint: "Enterで送信、Shift+Enterで改行",
     listen: "読み上げ",
@@ -223,6 +224,7 @@ export default {
     granularitySentence: "文ごとに翻訳",
     granularityParagraph: "段落ごとに翻訳",
     listenSource: "原文を読み上げ",
+    outputLanguageLabel: "翻訳先の言語",
   },
   cropper: {
     tip: "クリック＆ドラッグで問題や数式を選択 (ESCでキャンセル)",
@@ -231,6 +233,9 @@ export default {
   },
   floatingPopup: {
     helperTitle: "Homework Helper アシスタント",
+    modeNormalLabel: "通常",
+    modeCompactLabel: "コンパクト",
+    modeMinimizeLabel: "最小化",
     translateTitle: "翻訳",
     translateHeading: "翻訳結果",
     searchTitle: "検索＆宿題アシスタント",
@@ -489,6 +494,8 @@ export default {
     hlStyleNaturalUnderlineDesc: "均一な波線とは違い、手描きのように不規則な下線です。",
     hlStylePencil: "自然な色鉛筆塗り",
     hlStylePencilDesc: "色鉛筆で塗ったような斜線を重ねた、ざらついた質感の塗り方です。",
+    hlStyleScribble: "殴り書き塗り",
+    hlStyleScribbleDesc: "1本のジグザグの線でテキストを何度も塗りつぶす、殴り書きのような表現です。マーカーの滑らかな帯とは異なります。",
     labelHoverAnimation: "キー押下+ホバー時のエフェクト",
     labelHoverAnimationDesc: "ショートカットキーを押しながらテキストにマウスを重ねたときに再生されるエフェクト。",
     hoverAnimOptNone: "なし",
@@ -502,9 +509,12 @@ export default {
     toolbarLayoutResetBtn: "デフォルトに戻す",
     cardPopupTitle: "フローティング解答・翻訳ポップアップ",
     labelPopupCardSize: "ポップアップ表示スタイル",
-    labelPopupCardSizeDesc: "コンパクトモードでは補助ボタンを非表示にし、ポップアップにマウスを合わせたときだけ表示して、表示密度を高めます。",
+    labelPopupCardSizeDesc: "コンパクトモードでは補助ボタンを非表示にし、ポップアップにマウスを合わせたときだけ表示して、表示密度を高めます。最小化モードでは画面の隅に小さな丸いボタンだけを表示し、マウスを合わせると結果を確認できます。",
+    labelPopupTheme: "ポップアップのカラーテーマ",
+    labelPopupThemeDesc: "解答・翻訳ポップアップのアクセントカラー（ボタン、枠線、見出し）。",
     popupCardSizeOptNormal: "通常",
     popupCardSizeOptCompact: "コンパクト",
+    popupCardSizeOptMinimize: "最小化",
     labelPopupOpacity: "ポップアップの透明度",
     labelPopupBlur: "背景ぼかし (Blur)",
     livePreviewBadge: "リアルタイムプレビュー",

@@ -1,6 +1,7 @@
 export default {
   general: {
     brandTitle: "Homework Helper",
+    miniCloseLabel: "Đóng",
     placeholder: "Nhập câu hỏi hoặc đề bài tập của bạn vào đây...",
     shiftEnterHint: "Enter để gửi, Shift+Enter để xuống dòng",
     listen: "Nghe",
@@ -224,6 +225,7 @@ export default {
     granularitySentence: "Dịch theo câu",
     granularityParagraph: "Dịch theo đoạn văn",
     listenSource: "Nghe bản gốc",
+    outputLanguageLabel: "Ngôn ngữ dịch ra",
   },
   cropper: {
     tip: "Nhấp và kéo để khoanh vùng bài tập hoặc công thức (ESC để hủy)",
@@ -232,6 +234,9 @@ export default {
   },
   floatingPopup: {
     helperTitle: "Trợ lý Homework Helper",
+    modeNormalLabel: "Normal",
+    modeCompactLabel: "Compact",
+    modeMinimizeLabel: "Thu nhỏ",
     translateTitle: "Dịch thuật",
     translateHeading: "Bản dịch",
     searchTitle: "Tìm kiếm & Giải bài",
@@ -547,6 +552,8 @@ export default {
     hlStyleNaturalUnderlineDesc: "Đường gạch dưới nguệch ngoạc, không đều như lượn sóng.",
     hlStylePencil: "Nét chì tự nhiên",
     hlStylePencilDesc: "Tô vùng chữ bằng các nét đan chéo như bút chì màu, có kết cấu hạt.",
+    hlStyleScribble: "Tô nguệch ngoạc",
+    hlStyleScribbleDesc: "Tô vùng chữ bằng các nét ngoằn ngoèo qua lại như nguệch ngoạc bằng bút, khác với mảng màu mượt của bút highlight.",
     labelHoverAnimation: "Hiệu ứng khi giữ phím + hover",
     labelHoverAnimationDesc: "Hiệu ứng chạy trên văn bản khi giữ phím tắt và rê chuột vào.",
     hoverAnimOptNone: "Không có",
@@ -560,9 +567,12 @@ export default {
     toolbarLayoutResetBtn: "Khôi phục mặc định",
     cardPopupTitle: "Popup Giải Bài Nổi (Floating Solution Card)",
     labelPopupCardSize: "Kiểu hiển thị Popup",
-    labelPopupCardSizeDesc: "Compact: ẩn bớt nút phụ, chỉ hiện khi rê chuột vào popup, tăng mật độ hiển thị nội dung.",
+    labelPopupCardSizeDesc: "Compact: ẩn bớt nút phụ, chỉ hiện khi rê chuột vào popup, tăng mật độ hiển thị nội dung. Minimize: chỉ hiện một nút tròn nhỏ ở góc màn hình, rê chuột vào để xem kết quả.",
+    labelPopupTheme: "Chủ đề màu Popup",
+    labelPopupThemeDesc: "Màu nhấn (nút, viền, tiêu đề) của popup giải bài/dịch.",
     popupCardSizeOptNormal: "Normal",
     popupCardSizeOptCompact: "Compact",
+    popupCardSizeOptMinimize: "Thu nhỏ",
     labelPopupOpacity: "Độ trong suốt Popup",
     labelPopupOpacityDesc: "Độ mờ kính của popup card.",
     labelPopupBlur: "Độ mờ hậu cảnh (Blur)",

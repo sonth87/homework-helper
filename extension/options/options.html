@@ -669,6 +669,7 @@
                     <div class="opt-setting-desc" id="optLabelHoverThemeDesc">Phong cách Liquid Glass cho tooltip kết quả dịch.</div>
                   </div>
                   <select id="optHoverThemeSelect" class="opt-select">
+                    <option value="auto" id="optHoverThemeOptAuto" selected>Tự động (theo giao diện sáng/tối)</option>
                     <option value="glass-light" id="optHoverThemeOptLight">Liquid Glass Light</option>
                     <option value="glass-dark" id="optHoverThemeOptDark">Liquid Glass Dark</option>
                     <option value="cyber-blue" id="optHoverThemeOptBlue">Cyber Blue</option>
@@ -726,11 +727,28 @@
                 <div class="opt-setting-row">
                   <div>
                     <div class="opt-setting-title" id="optLabelPopupCardSize">Kiểu hiển thị Popup</div>
-                    <div class="opt-setting-desc" id="optLabelPopupCardSizeDesc">Compact: ẩn bớt nút phụ, chỉ hiện khi rê chuột vào popup, tăng mật độ hiển thị nội dung.</div>
+                    <div class="opt-setting-desc" id="optLabelPopupCardSizeDesc">Compact: ẩn bớt nút phụ, chỉ hiện khi rê chuột vào popup, tăng mật độ hiển thị nội dung. Minimize: chỉ hiện một nút tròn nhỏ ở góc màn hình, rê chuột vào để xem kết quả.</div>
                   </div>
                   <select id="optPopupCardSizeSelect" class="opt-select">
                     <option value="normal" id="optPopupCardSizeOptNormal" selected>Normal</option>
                     <option value="compact" id="optPopupCardSizeOptCompact">Compact</option>
+                    <option value="minimize" id="optPopupCardSizeOptMinimize">Minimize</option>
+                  </select>
+                </div>
+
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title" id="optLabelPopupTheme">Chủ đề màu Popup</div>
+                    <div class="opt-setting-desc" id="optLabelPopupThemeDesc">Màu nhấn (nút, viền, tiêu đề) của popup giải bài/dịch.</div>
+                  </div>
+                  <select id="optPopupThemeSelect" class="opt-select">
+                    <option value="auto" id="optPopupThemeOptAuto" selected>Tự động (theo giao diện sáng/tối)</option>
+                    <option value="cyber-blue" id="optPopupThemeOptBlue">Cyber Blue</option>
+                    <option value="emerald" id="optPopupThemeOptGreen">Emerald Green</option>
+                    <option value="purple" id="optPopupThemeOptPurple">Purple Glass</option>
+                    <option value="rose" id="optPopupThemeOptRose">Rose Pink</option>
+                    <option value="amber" id="optPopupThemeOptAmber">Amber Gold</option>
+                    <option value="indigo" id="optPopupThemeOptIndigo">Indigo Night</option>
                   </select>
                 </div>
 

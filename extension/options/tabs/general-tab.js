@@ -11,7 +11,7 @@ export class GeneralTab {
   }
 
   async loadGeneralSettings() {
-    const { enableFormsAdapter = true, enableTextTooltip = true, enableHoverTranslate = false, uiLanguage = 'en', outputLanguage = 'en', disabledSites = [] } = await Storage.get();
+    const { enableFormsAdapter = true, enableTextTooltip = true, enableHoverTranslate = true, uiLanguage = 'en', outputLanguage = 'en', disabledSites = [] } = await Storage.get();
 
     const uiLangSelect = document.getElementById('optUiLanguageSelect');
     if (uiLangSelect) {

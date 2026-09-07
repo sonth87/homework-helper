@@ -395,7 +395,8 @@ export class OptionsController {
     setText('optBtnResetHoverText', dict.toolbarLayoutResetBtn);
     setText('optLabelHoverTheme', dict.labelHoverTheme);
     setText('optLabelHoverThemeDesc', dict.labelHoverThemeDesc);
-    // Reuses the Selection Toolbar's own theme-option strings (same 5 values).
+    // Reuses the Selection Toolbar's own theme-option strings.
+    setText('optHoverThemeOptAuto', dict.toolbarThemeOptAuto);
     setText('optHoverThemeOptLight', dict.toolbarThemeOptLight);
     setText('optHoverThemeOptDark', dict.toolbarThemeOptDark);
     setText('optHoverThemeOptBlue', dict.toolbarThemeOptBlue);
@@ -423,6 +424,19 @@ export class OptionsController {
     setText('optLabelPopupCardSizeDesc', dict.labelPopupCardSizeDesc);
     setText('optPopupCardSizeOptNormal', dict.popupCardSizeOptNormal);
     setText('optPopupCardSizeOptCompact', dict.popupCardSizeOptCompact);
+    setText('optPopupCardSizeOptMinimize', dict.popupCardSizeOptMinimize);
+    setText('optLabelPopupTheme', dict.labelPopupTheme);
+    setText('optLabelPopupThemeDesc', dict.labelPopupThemeDesc);
+    // Reuses the Selection Toolbar's own theme-option strings (no glass-light/
+    // glass-dark here — the card's own light/dark look already follows the
+    // separate, global overlayTheme setting; this only picks an accent color).
+    setText('optPopupThemeOptAuto', dict.toolbarThemeOptAuto);
+    setText('optPopupThemeOptBlue', dict.toolbarThemeOptBlue);
+    setText('optPopupThemeOptGreen', dict.toolbarThemeOptGreen);
+    setText('optPopupThemeOptPurple', dict.toolbarThemeOptPurple);
+    setText('optPopupThemeOptRose', dict.toolbarThemeOptRose);
+    setText('optPopupThemeOptAmber', dict.toolbarThemeOptAmber);
+    setText('optPopupThemeOptIndigo', dict.toolbarThemeOptIndigo);
     setText('optLabelPopupOpacity', dict.labelPopupOpacity);
     setText('optLabelPopupOpacityDesc', dict.labelPopupOpacityDesc);
     setText('optLabelPopupBlur', dict.labelPopupBlur);

@@ -250,7 +250,8 @@ export const DEFAULT_SETTINGS = {
   drawerWidth: null, // null (default 480px from CSS) | number(px) — set by dragging the drawer's left-edge resize handle
   popupOpacity: 92, // 40 - 100% (Liquid Glass background alpha)
   popupBlur: 16, // 0 - 30px
-  popupCardSize: "normal", // 'normal' | 'compact' (compact hides secondary buttons until hover, tighter padding)
+  popupCardSize: "normal", // 'normal' | 'compact' (compact hides secondary buttons until hover, tighter padding) | 'minimize'
+  popupCardTheme: "auto", // 'auto' (default blue accent, dark-mode aware) | 'cyber-blue' | 'emerald' | 'purple' | 'rose' | 'amber' | 'indigo'
   toolbarOpacity: 90, // 40 - 100%
   toolbarBlur: 16,
   toolbarShowText: true, // true: icon + label, false: icon only
@@ -267,7 +268,7 @@ export const DEFAULT_SETTINGS = {
   popupTranslateTarget: "vi", // a SUPPORTED_LANGUAGES id (never 'auto')
   popupAutoTranslateClipboard: true, // on open, read the clipboard and translate it unprompted
   popupClipboardMaxLength: 2000, // clipboard longer than this is never auto-translated, only offered
-  enableHoverTranslate: false, // hover-to-translate on any webpage text (see content/hover-translate.js)
+  enableHoverTranslate: true, // hover-to-translate on any webpage text (see content/hover-translate.js)
   hoverTranslateModifiers: ["ctrl"], // subset of ['ctrl','shift','alt','meta']; [] = fires on hover alone, no key needed
   hoverTranslateGranularity: "sentence", // 'word' | 'sentence' | 'paragraph'
   hoverTranslateDelay: 350, // ms the pointer must stay still before a lookup fires
@@ -275,7 +276,7 @@ export const DEFAULT_SETTINGS = {
   hoverTranslateBlur: 16, // 0 - 30px — matches toolbarBlur's default, same reasoning
   hoverTranslateFontSize: 13, // 11 - 16px
   hoverTranslateMaxWidth: 300, // 220 - 420px
-  hoverTranslateTheme: "glass-light", // 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple' | 'rose' | 'amber' | 'indigo'
+  hoverTranslateTheme: "auto", // 'auto' (follows OS light/dark) | 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple' | 'rose' | 'amber' | 'indigo'
   hoverTranslateHighlight: true, // marker-style background tint over the word/sentence/paragraph being translated
   hoverTranslateHighlightColor: "#fef08a", // one of HOVER_HIGHLIGHT_COLORS (shared/hover-highlight-colors.js) — not a free color picker, a curated pastel swatch
   hoverTranslateHighlightOpacity: 40, // 20 - 80% — tint strength for hoverTranslateHighlight + the 'draw'/'pulse' animations (see content/styles/tooltip.css's --hl-alpha)
@@ -333,6 +334,26 @@ function translateHistoryKey(sourceText, targetLang) {
 // Plenty for a text-only list (no images, unlike chatHistory's 50-message
 // cap) while still keeping chrome.storage.local's per-item write cheap.
 const TRANSLATE_HISTORY_LIMIT = 300;
+
+// The conversation methods below (addChatMessage, createNewConversation, ...)
+// are all read-the-whole-array -> mutate -> write-the-whole-array against the
+// same `conversations` key, with no locking of their own. Two calls that
+// overlap (e.g. floating-card.js writes the user's captured-image turn, then
+// the AI's answer finishes and drawer.js writes the assistant turn a moment
+// later, neither call awaited by its caller) can both read the *same* stale
+// array before either write lands — whichever write finishes last then wins
+// outright, silently discarding the other call's message. This queue forces
+// every conversation read-modify-write in this module to run one at a time,
+// so a later call always sees the previous call's result. `_conversationQueue`
+// itself must never reject (a broken chain would wedge every future call), so
+// failures are absorbed by the `.then(noop, noop)` before being handed to the
+// next waiter.
+let _conversationQueue = Promise.resolve();
+function withConversationLock(fn) {
+  const run = _conversationQueue.then(fn, fn);
+  _conversationQueue = run.then(() => {}, () => {});
+  return run;
+}
 
 export const Storage = {
   async get(keys = null) {
@@ -427,7 +448,12 @@ export const Storage = {
   // =======================================================
   // Multi-Session Conversation Management
   // =======================================================
-  async getConversations() {
+  // Internal — no locking of its own. Only call this from within a function
+  // already running inside withConversationLock() (or accept the race); the
+  // public getConversations() below is the locked entry point for everyone
+  // else. Calling the public, locked method from in here would deadlock —
+  // see withConversationLock()'s comment.
+  async _getConversationsRaw() {
     const { conversations = [], chatHistory = [] } = await this.get([
       "conversations",
       "chatHistory",
@@ -451,6 +477,10 @@ export const Storage = {
     return conversations;
   },
 
+  async getConversations() {
+    return withConversationLock(() => this._getConversationsRaw());
+  },
+
   async getActiveConversation() {
     const conversations = await this.getConversations();
     const { activeConversationId } = await this.get(["activeConversationId"]);
@@ -465,51 +495,58 @@ export const Storage = {
   },
 
   async createNewConversation(title = "Đoạn chat mới") {
-    const conversations = await this.getConversations();
-    const { activeConversationId } = await this.get(["activeConversationId"]);
-    const active = conversations.find((c) => c.id === activeConversationId);
+    return withConversationLock(async () => {
+      const conversations = await this._getConversationsRaw();
+      const { activeConversationId } = await this.get(["activeConversationId"]);
+      const active = conversations.find((c) => c.id === activeConversationId);
 
-    // If current active conversation is already empty, reuse it
-    if (active && (!active.messages || active.messages.length === 0)) {
-      active.title = title;
-      active.updatedAt = Date.now();
+      // If current active conversation is already empty, reuse it
+      if (active && (!active.messages || active.messages.length === 0)) {
+        active.title = title;
+        active.updatedAt = Date.now();
+        await this.set({
+          conversations: [...conversations],
+          activeConversationId: active.id,
+          chatHistory: [],
+        });
+        return active;
+      }
+
+      const newConv = {
+        id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        title: title,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        thumbnail: null,
+        messages: [],
+      };
+      const updated = [...conversations, newConv];
       await this.set({
-        conversations: [...conversations],
-        activeConversationId: active.id,
+        conversations: updated,
+        activeConversationId: newConv.id,
         chatHistory: [],
       });
-      return active;
-    }
-
-    const newConv = {
-      id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-      title: title,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      thumbnail: null,
-      messages: [],
-    };
-    const updated = [...conversations, newConv];
-    await this.set({
-      conversations: updated,
-      activeConversationId: newConv.id,
-      chatHistory: [],
+      return newConv;
     });
-    return newConv;
   },
 
   async switchConversation(convId) {
-    const conversations = await this.getConversations();
-    const active = conversations.find((c) => c.id === convId) || null;
-    await this.set({
-      activeConversationId: convId,
-      chatHistory: active ? active.messages || [] : [],
+    return withConversationLock(async () => {
+      const conversations = await this._getConversationsRaw();
+      const active = conversations.find((c) => c.id === convId) || null;
+      await this.set({
+        activeConversationId: convId,
+        chatHistory: active ? active.messages || [] : [],
+      });
+      return active;
     });
-    return active;
   },
 
-  async deleteConversation(convId) {
-    const conversations = await this.getConversations();
+  // Internal counterpart to deleteConversation() — see _getConversationsRaw()'s
+  // comment on why clearChatHistory() below must call this instead of the
+  // public, locked deleteConversation().
+  async _deleteConversationRaw(convId) {
+    const conversations = await this._getConversationsRaw();
     const updated = conversations.filter((c) => c.id !== convId);
     const { activeConversationId } = await this.get(["activeConversationId"]);
     let nextActiveId = activeConversationId;
@@ -536,67 +573,75 @@ export const Storage = {
     return updated;
   },
 
+  async deleteConversation(convId) {
+    return withConversationLock(() => this._deleteConversationRaw(convId));
+  },
+
   async getChatHistory() {
     const activeConv = await this.getActiveConversation();
     return activeConv ? activeConv.messages : [];
   },
 
   async addChatMessage(msg) {
-    const conversations = await this.getConversations();
-    const { activeConversationId } = await this.get(["activeConversationId"]);
-    let activeConv = conversations.find((c) => c.id === activeConversationId);
+    return withConversationLock(async () => {
+      const conversations = await this._getConversationsRaw();
+      const { activeConversationId } = await this.get(["activeConversationId"]);
+      let activeConv = conversations.find((c) => c.id === activeConversationId);
 
-    const messageWithTime = { ...msg, timestamp: Date.now() };
+      const messageWithTime = { ...msg, timestamp: Date.now() };
 
-    if (!activeConv) {
-      activeConv = {
-        id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-        title: msg.content
-          ? msg.content.slice(0, 50)
-          : msg.image
-            ? "Giải bài tập qua ảnh"
-            : "Bài tập mới",
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        thumbnail: msg.image || null,
-        messages: [messageWithTime],
-      };
-      conversations.push(activeConv);
-    } else {
-      activeConv.messages = [...activeConv.messages, messageWithTime].slice(
-        -50,
-      );
-      activeConv.updatedAt = Date.now();
-      if (activeConv.messages.length <= 2 && msg.role === "user") {
-        activeConv.title = msg.content
-          ? msg.content.slice(0, 50)
-          : msg.image
-            ? "Giải bài tập qua ảnh"
-            : activeConv.title;
+      if (!activeConv) {
+        activeConv = {
+          id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+          title: msg.content
+            ? msg.content.slice(0, 50)
+            : msg.image
+              ? "Giải bài tập qua ảnh"
+              : "Bài tập mới",
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          thumbnail: msg.image || null,
+          messages: [messageWithTime],
+        };
+        conversations.push(activeConv);
+      } else {
+        activeConv.messages = [...activeConv.messages, messageWithTime].slice(
+          -50,
+        );
+        activeConv.updatedAt = Date.now();
+        if (activeConv.messages.length <= 2 && msg.role === "user") {
+          activeConv.title = msg.content
+            ? msg.content.slice(0, 50)
+            : msg.image
+              ? "Giải bài tập qua ảnh"
+              : activeConv.title;
+        }
+        if (msg.image && !activeConv.thumbnail) {
+          activeConv.thumbnail = msg.image;
+        }
       }
-      if (msg.image && !activeConv.thumbnail) {
-        activeConv.thumbnail = msg.image;
-      }
-    }
 
-    // Keep max 50 recent conversations to maintain high performance
-    const finalConversations = conversations.slice(-50);
+      // Keep max 50 recent conversations to maintain high performance
+      const finalConversations = conversations.slice(-50);
 
-    await this.set({
-      conversations: finalConversations,
-      activeConversationId: activeConv.id,
-      chatHistory: activeConv.messages,
+      await this.set({
+        conversations: finalConversations,
+        activeConversationId: activeConv.id,
+        chatHistory: activeConv.messages,
+      });
+      return activeConv.messages;
     });
-    return activeConv.messages;
   },
 
   async clearChatHistory() {
-    const { activeConversationId } = await this.get(["activeConversationId"]);
-    if (activeConversationId) {
-      await this.deleteConversation(activeConversationId);
-    } else {
-      await this.set({ chatHistory: [], conversations: [] });
-    }
+    return withConversationLock(async () => {
+      const { activeConversationId } = await this.get(["activeConversationId"]);
+      if (activeConversationId) {
+        await this._deleteConversationRaw(activeConversationId);
+      } else {
+        await this.set({ chatHistory: [], conversations: [] });
+      }
+    });
   },
 
   // =======================================================

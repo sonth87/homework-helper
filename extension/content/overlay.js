@@ -6,11 +6,13 @@
 import { Icons } from '../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
 import { getI18n, getFloatingPopupI18n, getOptionsI18n } from '../shared/i18n.js';
+import { renderAnswer } from '../shared/markdown-katex.js';
 import { getOverlayThemeAttr } from '../shared/theme.js';
 import { OverlayFabs } from './overlay/fabs.js';
 import { OverlayDrawer } from './overlay/drawer.js';
 import { OverlayDrawerHistory } from './overlay/drawer-history.js';
 import { OverlayFloatingCard } from './overlay/floating-card.js';
+import { MinimizedCard } from './overlay/minimized-card.js';
 import { OverlayConfigModal } from './overlay/config-modal.js';
 import { OverlayRichTooltips } from './overlay/rich-tooltips.js';
 import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
@@ -150,6 +152,21 @@ class InPageOverlay {
             <span id="hwBtnPrimaryLabel">Next Question</span>
           </button>
         </div>
+      </div>
+
+      <!-- Quick display-mode switcher (Normal/Compact/Minimize) — sibling
+           of .hw-solution-card (not a descendant), straddling the card's
+           own bottom edge (half in, half out) same as the minimized
+           circle's own popup switcher and hover-translate.js's granularity
+           switcher. Can't live inside the card itself: .hw-solution-card
+           has overflow:hidden (needed for its native resize handle), which
+           would clip a poke past its true boundary — see
+           setupModeSwitchFloat() in floating-card.js for the position
+           tracking this needs instead (the card can be dragged/resized). -->
+      <div class="hw-mode-switch" id="hwCardModeSwitch" style="display: none;">
+        <button class="hw-mode-dot" data-mode="normal" title="Normal">${Icons.layoutNormal(13)}</button>
+        <button class="hw-mode-dot" data-mode="compact" title="Compact">${Icons.layoutCompact(13)}</button>
+        <button class="hw-mode-dot" data-mode="minimize" title="Minimize">${Icons.layoutMinimize(13)}</button>
       </div>
 
       <!-- Compact-mode floating title chip — sibling of .hw-solution-card
@@ -339,6 +356,7 @@ class InPageOverlay {
     this.drawer = new OverlayDrawer(this);
     this.drawerHistory = new OverlayDrawerHistory(this);
     this.floatingCard = new OverlayFloatingCard(this);
+    this.minimizedCard = new MinimizedCard(this);
     this.configModal = new OverlayConfigModal(this);
     this.fabs = new OverlayFabs(this);
   }
@@ -436,7 +454,7 @@ class InPageOverlay {
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local') {
-          if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.popupOpacity || changes.popupBlur || changes.popupCardSize || changes.overlayTheme) {
+          if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.popupOpacity || changes.popupBlur || changes.popupCardSize || changes.popupCardTheme || changes.overlayTheme) {
             this.applyAppearanceSettings();
           }
           if (changes.uiLanguage) {
@@ -549,6 +567,7 @@ class InPageOverlay {
       popupOpacity = 92,
       popupBlur = 16,
       popupCardSize = 'normal',
+      popupCardTheme = 'auto',
     } = await Storage.get();
 
     this.fabs.applyAppearance(enableFloatingButton, fabSize, fabOpacity);
@@ -565,6 +584,74 @@ class InPageOverlay {
       card.style.backdropFilter = `blur(${popupBlur}px) saturate(180%)`;
       card.style.webkitBackdropFilter = `blur(${popupBlur}px) saturate(180%)`;
       card.classList.toggle('hw-card-compact', popupCardSize === 'compact');
+      card.classList.remove('theme-cyber-blue', 'theme-emerald', 'theme-purple', 'theme-rose', 'theme-amber', 'theme-indigo');
+      if (popupCardTheme !== 'auto') card.classList.add(`theme-${popupCardTheme}`);
+    }
+
+    // Both the card footer's own switcher (#hwCardModeSwitch) and the
+    // minimized circle's popup switcher (#hwMiniModeSwitch) share the exact
+    // same .hw-mode-dot markup in this one shared shadow root, so a single
+    // query covers whichever of the two is actually in the DOM right now.
+    this.shadow.querySelectorAll('.hw-mode-dot').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.mode === popupCardSize);
+    });
+
+    this.syncDisplayModeLive(popupCardSize);
+  }
+
+  // Live-transitions whatever's actively showing right now — mid-solve/
+  // translate, or already finished/errored — between the real card and the
+  // minimized circle the instant the mode switcher (or the Options page's
+  // own dropdown) changes popupCardSize, instead of only taking effect the
+  // next time something is solved/translated. No-ops when nothing is
+  // currently up, or the display already matches the requested mode.
+  syncDisplayModeLive(popupCardSize) {
+    const fc = this.floatingCard;
+    const mini = this.minimizedCard;
+    const card = fc?.popupCard;
+    if (!fc || !card || !mini) return;
+
+    const cardShown = card.style.display === 'flex';
+    const miniShown = mini.isActive();
+    const wantMinimize = popupCardSize === 'minimize';
+
+    if (wantMinimize && cardShown) {
+      const content = this.shadow.getElementById('hwCardAnswerContent');
+      // The error banners (OCR failure, free-engine translate failure, chat
+      // stream error) are written straight into this element's HTML rather
+      // than kept in activeCardResponseText, so its own text is the one
+      // reliable way to carry the exact message shown onto the circle.
+      const text = fc.cardStatus === 'error'
+        ? (content?.textContent || '').trim()
+        : fc.activeCardResponseText;
+      mini.adopt(fc.cardStatus, text);
+      card.style.display = 'none';
+      return;
+    }
+
+    if (!wantMinimize && miniShown) {
+      const { status, responseText } = mini.handoff();
+      fc.cardStatus = status;
+      fc.activeCardResponseText = responseText;
+      card.style.display = 'flex';
+      const content = this.shadow.getElementById('hwCardAnswerContent');
+      if (content) {
+        if (status === 'error') {
+          fc.stopLoadingSteps();
+          content.innerHTML = `<span style="color:var(--hw-danger);">${responseText}</span>`;
+        } else if (responseText) {
+          fc.stopLoadingSteps();
+          content.innerHTML = renderAnswer(responseText, {
+            allowMarkdownDict: content.classList.contains('hw-dict-mode'),
+            speakLabel: fc.speakLabel,
+            targetLang: fc.targetLang,
+          });
+        }
+        // else: still loading with nothing streamed yet — the loading-steps
+        // animation has been running in this (until now hidden) card the
+        // whole time, so there's nothing to (re)start here.
+      }
+      fc.syncSpeakButton();
     }
   }
 
@@ -611,6 +698,10 @@ class InPageOverlay {
     if (btnCardRetryLabel) btnCardRetryLabel.textContent = cardDict.retry || 'Retry';
     if (btnCardFavoriteLabel) btnCardFavoriteLabel.textContent = cardDict.favorite || 'Favorite';
     if (translateToLabel) translateToLabel.textContent = cardDict.translateToLabel || 'Translate to:';
+    s.querySelectorAll('#hwCardModeSwitch .hw-mode-dot, #hwMiniModeSwitch .hw-mode-dot').forEach((btn) => {
+      const key = { normal: 'modeNormalLabel', compact: 'modeCompactLabel', minimize: 'modeMinimizeLabel' }[btn.dataset.mode];
+      if (key && cardDict[key]) btn.title = cardDict[key];
+    });
     this.floatingCard?.applyEnginePickerLabels(cardDict);
     this.floatingCard?.applyHistorySheetLabels(cardDict);
 

@@ -1,6 +1,7 @@
 export default {
   general: {
     brandTitle: "Homework Helper",
+    miniCloseLabel: "Fermer",
     placeholder: "Saisissez votre devoir ou question ici...",
     shiftEnterHint: "Entrée pour envoyer, Shift+Entrée pour saut de ligne",
     listen: "Écouter",
@@ -224,6 +225,7 @@ export default {
     granularitySentence: "Traduire par phrase",
     granularityParagraph: "Traduire par paragraphe",
     listenSource: "Écouter l'original",
+    outputLanguageLabel: "Langue de sortie",
   },
   cropper: {
     tip: "Cliquez et glissez pour sélectionner le problème ou la formule (ÉCHAP pour annuler)",
@@ -232,6 +234,9 @@ export default {
   },
   floatingPopup: {
     helperTitle: "Assistant Homework Helper",
+    modeNormalLabel: "Normal",
+    modeCompactLabel: "Compact",
+    modeMinimizeLabel: "Réduire",
     translateTitle: "Traduction",
     translateHeading: "Résultat de la traduction",
     searchTitle: "Recherche & Aide aux devoirs",
@@ -493,6 +498,8 @@ export default {
     hlStyleNaturalUnderlineDesc: "Un soulignement irrégulier fait à la main, différent de l'ondulation régulière.",
     hlStylePencil: "Ombrage crayon naturel",
     hlStylePencilDesc: "Des hachures croisées sur le texte, comme un ombrage au crayon de couleur, avec une texture granuleuse.",
+    hlStyleScribble: "Griffonnage",
+    hlStyleScribbleDesc: "Remplit le texte d'un seul trait en zigzag, comme un griffonnage impatient, contrairement à la bande lisse du surligneur.",
     labelHoverAnimation: "Effet en maintenant la touche + survol",
     labelHoverAnimationDesc: "Effet joué sur le texte pendant que vous maintenez la touche de déclenchement et survolez le texte.",
     hoverAnimOptNone: "Aucun",
@@ -506,9 +513,12 @@ export default {
     toolbarLayoutResetBtn: "Restaurer les valeurs par défaut",
     cardPopupTitle: "Fenêtre contextuelle de solution et traduction",
     labelPopupCardSize: "Style d'affichage du popup",
-    labelPopupCardSizeDesc: "Le mode compact masque les boutons secondaires, affichés uniquement au survol du popup, pour augmenter la densité du contenu.",
+    labelPopupCardSizeDesc: "Le mode compact masque les boutons secondaires, affichés uniquement au survol du popup, pour augmenter la densité du contenu. Le mode Réduire affiche seulement un petit bouton circulaire dans le coin de l'écran ; survolez-le pour voir le résultat.",
+    labelPopupTheme: "Thème de couleur du popup",
+    labelPopupThemeDesc: "Couleur d'accent (boutons, bordures, titres) du popup de solution/traduction.",
     popupCardSizeOptNormal: "Normal",
     popupCardSizeOptCompact: "Compact",
+    popupCardSizeOptMinimize: "Réduire",
     labelPopupOpacity: "Transparence de la fenêtre",
     labelPopupBlur: "Flou d’arrière-plan (Blur)",
     livePreviewBadge: "Aperçu en direct",

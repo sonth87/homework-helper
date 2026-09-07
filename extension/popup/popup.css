@@ -236,7 +236,7 @@ body.hw-th-sheet-open {
 }
 
 .pop-footer {
-  padding: 10px 16px 14px 16px;
+  padding: 10px 10px 8px 10px;
   border-top: 1px solid var(--hw-bg-hover);
 }
 
@@ -632,7 +632,7 @@ body.hw-th-sheet-open {
   min-width: 30px;
   max-width: 88px;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 200;
   color: var(--hw-text-muted);
   padding-top: 2px;
 }
@@ -645,7 +645,7 @@ body.hw-th-sheet-open {
 
 .pop-result-body .hw-dict-gloss,
 .hw-th-detail-body .hw-dict-gloss {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--hw-text-main);
   margin-bottom: 3px;
 }
@@ -655,6 +655,7 @@ body.hw-th-sheet-open {
   font-size: 11px;
   color: var(--hw-text-muted);
   line-height: 1.5;
+  font-weight: 200;
 }
 
 .pop-result-body .hw-dict-example code.inline-code,

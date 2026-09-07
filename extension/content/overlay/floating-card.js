@@ -43,6 +43,11 @@ export class OverlayFloatingCard {
     // has moved on cannot overwrite a newer one.
     this.freeTranslateEpoch = 0;
     this.activeCardResponseText = '';
+    // Mirrors this.overlay.minimizedCard's own status field, but for whatever
+    // the real card is showing — read by overlay.js's syncDisplayModeLive()
+    // to hand off state correctly when the mode switcher flips to/from
+    // Minimize mid-session. 'idle' | 'loading' | 'done' | 'error'.
+    this.cardStatus = 'idle';
     this.activeCardNotices = [];
     this.loadingStepsInterval = null;
     // Pixel size of the collapsed FAB, kept in sync with the shared `fabSize`
@@ -59,6 +64,7 @@ export class OverlayFloatingCard {
     this.makeCollapsedFabDraggable();
     this.setupListeners();
     this.setupFloatTab();
+    this.setupModeSwitchFloat();
     this.setupEnginePicker();
     this.setupHistorySheet();
     // One delegated listener for every listen button a rendered reply draws
@@ -284,6 +290,76 @@ export class OverlayFloatingCard {
     window.addEventListener('resize', syncPosition);
 
     syncPosition();
+  }
+
+  // #hwCardModeSwitch (Normal/Compact/Minimize) is a sibling of the card —
+  // see its own comment in overlay.js for why — so it needs the same kind
+  // of position tracking setupFloatTab() above already does, straddling
+  // the card's bottom edge instead of floating above its top one. Unlike
+  // the title/actions above, it applies to Normal too, not just Compact:
+  // Normal keeps it always visible (no hover-gating, matching the rest of
+  // Normal's always-shown footer), while Compact reuses the same
+  // hover-to-reveal grace period as everything else there.
+  setupModeSwitchFloat() {
+    const sw = this.shadow.getElementById('hwCardModeSwitch');
+    const card = this.popupCard;
+    if (!sw || !card) return;
+
+    // Just writes the setting — the reactive chrome.storage.onChanged ->
+    // applyAppearanceSettings() path already wired in overlay.js picks it
+    // up (including live handoff to/from the minimized circle if
+    // something's actively showing).
+    sw.querySelectorAll('.hw-mode-dot').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        Storage.set({ popupCardSize: btn.dataset.mode });
+      });
+    });
+
+    const syncPosition = () => {
+      const isOpen = getComputedStyle(card).display !== 'none';
+      if (!isOpen) {
+        sw.style.display = 'none';
+        return;
+      }
+      sw.style.display = 'flex';
+      const cardRect = card.getBoundingClientRect();
+      const swRect = sw.getBoundingClientRect();
+      sw.style.left = `${Math.round(cardRect.left + cardRect.width / 2 - swRect.width / 2)}px`;
+      sw.style.top = `${Math.round(cardRect.bottom - swRect.height / 2)}px`;
+    };
+
+    const syncVisibility = () => {
+      sw.classList.toggle('hw-mode-switch-always-visible', !card.classList.contains('hw-card-compact'));
+    };
+
+    let hideTimer = null;
+    const reveal = () => {
+      clearTimeout(hideTimer);
+      sw.classList.add('hw-visible');
+    };
+    const scheduleHide = () => {
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => sw.classList.remove('hw-visible'), 120);
+    };
+
+    card.addEventListener('mouseenter', reveal);
+    card.addEventListener('mouseleave', scheduleHide);
+    card.addEventListener('focusin', reveal);
+    card.addEventListener('focusout', scheduleHide);
+    sw.addEventListener('mouseenter', reveal);
+    sw.addEventListener('mouseleave', scheduleHide);
+
+    const syncBoth = () => {
+      syncPosition();
+      syncVisibility();
+    };
+
+    new ResizeObserver(syncBoth).observe(card);
+    new ResizeObserver(syncPosition).observe(sw);
+    new MutationObserver(syncBoth).observe(card, { attributes: true, attributeFilter: ['style', 'class'] });
+    window.addEventListener('resize', syncPosition);
+
+    syncBoth();
   }
 
   hideCollapsedFab() {
@@ -675,6 +751,7 @@ export class OverlayFloatingCard {
       systemPrompt,
       nanoSystemPrompt,
       routingStrategy = 'prefer_config',
+      popupCardSize = 'normal',
     } = await Storage.get([
       'uiLanguage',
       'outputLanguage',
@@ -683,7 +760,14 @@ export class OverlayFloatingCard {
       'systemPrompt',
       'nanoSystemPrompt',
       'routingStrategy',
+      'popupCardSize',
     ]);
+    // 'minimize' skips the full card entirely — see content/overlay/minimized-card.js.
+    // Every DOM write below into the (real, static) card elements still runs
+    // as normal even when minimized; they simply land in a card that stays
+    // display:none the whole time, which costs nothing and keeps this
+    // already-long method from needing an if-branch around each one.
+    const isMinimize = popupCardSize === 'minimize';
     const cardDict = getFloatingPopupI18n(uiLanguage);
     this.speakLabel = cardDict.listen || this.speakLabel;
     const genDict = getI18n(uiLanguage);
@@ -720,9 +804,19 @@ export class OverlayFloatingCard {
     const content = s.getElementById('hwCardAnswerContent');
     this.startLoadingSteps(content, genDict.loadingSteps);
 
-    this.hideCollapsedFab();
-    this.popupCard.style.display = 'flex';
+    if (isMinimize) {
+      this.overlay.minimizedCard.start(mode);
+    } else {
+      this.hideCollapsedFab();
+      this.popupCard.style.display = 'flex';
+      // In case a previous run left the minimized circle showing (the user
+      // switched the setting away from Minimize since then) — otherwise
+      // drawer.js's isActive() check would keep routing this new, real-card
+      // stream into the stale circle instead.
+      this.overlay.minimizedCard.reset();
+    }
     this.activeCardResponseText = '';
+    this.cardStatus = 'loading';
     this.syncSpeakButton();
     this.activeCardNotices = [];
     this.resetNoticeIcon();
@@ -759,6 +853,7 @@ export class OverlayFloatingCard {
       const logLines = [`[${new Date().toLocaleTimeString()}] Bắt đầu gửi yêu cầu OCR...`];
 
       const renderOcrProgress = (stepText = 'Khởi động bộ máy OCR...', pct = 15) => {
+        if (isMinimize) return; // no progress log/bar in the stripped-down popup — the circle just keeps spinning
         const logId = `hw-ocr-log-${reqId}`;
         const isOpen = content.querySelector(`#${logId}`)?.open;
         content.innerHTML = `
@@ -810,6 +905,14 @@ export class OverlayFloatingCard {
           if (!res || !res.success) {
             console.warn('[FloatingCard] OCR Error:', res?.error);
             logLines.push(`[${new Date().toLocaleTimeString()}] LỖI: ${res?.error || 'Không phản hồi'}`);
+            this.cardStatus = 'error';
+            // The minimized popup has no room (nor the log/settings-link
+            // chrome) for the full OCR failure banner below — a short error
+            // on the circle itself is enough to stop it spinning forever.
+            if (isMinimize) {
+              this.overlay.minimizedCard.showError('Không trích xuất được văn bản từ ảnh.');
+              return;
+            }
             content.innerHTML = `
               <div style="padding:12px; background:rgba(var(--hw-warning-rgb), 0.1); border:1px solid rgba(var(--hw-warning-rgb), 0.35); border-radius:8px; font-size:12px; color:var(--hw-warning); line-height:1.5;">
                 <div style="font-weight:700; display:flex; align-items:center; gap:6px; font-size:12.5px;">
@@ -828,6 +931,11 @@ export class OverlayFloatingCard {
 
           const ocrText = res.text || '';
           if (!ocrText.trim()) {
+            this.cardStatus = 'error';
+            if (isMinimize) {
+              this.overlay.minimizedCard.showError('Không trích xuất được văn bản từ ảnh.');
+              return;
+            }
             content.innerHTML = `
               <div style="padding:12px; background:rgba(var(--hw-warning-rgb), 0.1); border:1px solid rgba(var(--hw-warning-rgb), 0.35); border-radius:8px; font-size:12px; color:var(--hw-warning); line-height:1.5;">
                 <div style="font-weight:700; display:flex; align-items:center; gap:6px; font-size:12.5px;">
@@ -886,7 +994,8 @@ export class OverlayFloatingCard {
     this.popupSourceText = text;
     this.popupImageBase64 = null;
 
-    const { uiLanguage = 'en', outputLanguage = 'en' } = await Storage.get(['uiLanguage', 'outputLanguage']);
+    const { uiLanguage = 'en', outputLanguage = 'en', popupCardSize = 'normal' } = await Storage.get(['uiLanguage', 'outputLanguage', 'popupCardSize']);
+    const isMinimize = popupCardSize === 'minimize';
     const cardDict = getFloatingPopupI18n(uiLanguage);
     this.speakLabel = cardDict.listen || this.speakLabel;
 
@@ -902,9 +1011,19 @@ export class OverlayFloatingCard {
     const primaryBtn = s.getElementById('hwBtnCardPrimary');
     const primaryLabel = s.getElementById('hwBtnPrimaryLabel');
 
-    primaryLabel.textContent = cardDict.continueInChat;
-    primaryBtn.querySelector('.lucide-icon')?.remove();
-    primaryBtn.insertAdjacentHTML('afterbegin', Icons.messageCircle(14));
+    // "Continue in chat" doesn't make sense for a plain text translation/
+    // dictionary lookup (there's no ongoing solve to hand off) — hidden
+    // here entirely. Screenshot-mode translate is a different path
+    // (showSolutionCard, mode 'translate') that already shows its own
+    // "capture again" primary button, unaffected by this.
+    if (type === 'translate') {
+      primaryBtn.style.display = 'none';
+    } else {
+      primaryBtn.style.display = '';
+      primaryLabel.textContent = cardDict.continueInChat;
+      primaryBtn.querySelector('.lucide-icon')?.remove();
+      primaryBtn.insertAdjacentHTML('afterbegin', Icons.messageCircle(14));
+    }
 
     // Dictionary-style markdown (POS tags, highlighted example words) only
     // applies to translate mode's single-word lookups — see hw-dict-mode in overlay.css.
@@ -951,8 +1070,13 @@ export class OverlayFloatingCard {
       this.popupCard.style.right = 'auto';
     }
 
-    this.hideCollapsedFab();
-    this.popupCard.style.display = 'flex';
+    if (isMinimize) {
+      this.overlay.minimizedCard.start(type);
+    } else {
+      this.hideCollapsedFab();
+      this.popupCard.style.display = 'flex';
+      this.overlay.minimizedCard.reset();
+    }
     this.executePopupAction(type, text);
   }
 
@@ -977,12 +1101,14 @@ export class OverlayFloatingCard {
       this.overlay.drawer.stopStream();
     }
 
-    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    const { uiLanguage = 'en', popupCardSize = 'normal' } = await Storage.get(['uiLanguage', 'popupCardSize']);
+    const isMinimize = popupCardSize === 'minimize';
     const cardDict = getFloatingPopupI18n(uiLanguage);
     this.speakLabel = cardDict.listen || this.speakLabel;
 
     this.stopLoadingSteps();
     this.activeCardResponseText = '';
+    this.cardStatus = 'loading';
     this.activeCardNotices = [];
     this.resetNoticeIcon();
     this.currentHistoryEntryId = null;
@@ -1003,12 +1129,24 @@ export class OverlayFloatingCard {
     if (epoch !== this.freeTranslateEpoch) return;
 
     if (!res?.success) {
+      this.cardStatus = 'error';
+      if (isMinimize) {
+        this.overlay.minimizedCard.showError(cardDict.translateFailed || 'Could not translate');
+        return;
+      }
       content.innerHTML = `<span style="color:var(--hw-danger);">${cardDict.translateFailed || 'Could not translate'}</span>`;
       this.syncSpeakButton();
       return;
     }
 
     this.activeCardResponseText = res.translation;
+    this.cardStatus = 'done';
+    if (isMinimize) {
+      this.overlay.minimizedCard.updateContent(res.translation);
+      this.overlay.minimizedCard.finalize();
+      this.recordTranslateHistory(text, res.translation);
+      return;
+    }
     content.innerHTML = renderAnswer(res.translation, {
       speakLabel: cardDict.listen,
       targetLang: this.targetLang,
@@ -1037,6 +1175,7 @@ export class OverlayFloatingCard {
     this.startLoadingSteps(content, genDict.loadingSteps);
 
     this.activeCardResponseText = '';
+    this.cardStatus = 'loading';
     this.syncSpeakButton();
     this.activeCardNotices = [];
     this.resetNoticeIcon();
@@ -1231,6 +1370,7 @@ export class OverlayFloatingCard {
           targetLang: this.targetLang,
         });
         this.activeCardResponseText = replyText;
+        this.cardStatus = 'done';
         this.syncSpeakButton();
       });
 

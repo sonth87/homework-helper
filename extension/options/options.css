@@ -297,6 +297,13 @@ body {
   stroke-width: 1.1;
 }
 
+.hw-hl-scribble {
+  stroke: rgba(var(--hl-rgb), var(--hl-alpha-strong));
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .hw-hlbox.hw-anim-pulse {
   animation: hwHlPulse 1.1s ease-in-out infinite;
 }
