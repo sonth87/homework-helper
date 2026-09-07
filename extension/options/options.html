@@ -743,6 +743,8 @@
                   </div>
                   <select id="optPopupThemeSelect" class="opt-select">
                     <option value="auto" id="optPopupThemeOptAuto" selected>Tự động (theo giao diện sáng/tối)</option>
+                    <option value="glass-light" id="optPopupThemeOptLight">Liquid Glass Light (Trắng trong suốt)</option>
+                    <option value="glass-dark" id="optPopupThemeOptDark">Liquid Glass Dark (Đen khói / Midnight)</option>
                     <option value="cyber-blue" id="optPopupThemeOptBlue">Cyber Blue</option>
                     <option value="emerald" id="optPopupThemeOptGreen">Emerald Green</option>
                     <option value="purple" id="optPopupThemeOptPurple">Purple Glass</option>
@@ -833,6 +835,20 @@
                       <div class="prev-btn-sub"><span id="prevIconCardCopy"></span> <span id="prevPopupCopy">Copy</span></div>
                     </div>
                   </div>
+                </div>
+
+                <!-- Preview "Thu nhỏ" (Minimize) mode: swapped in for #prevPopup
+                     above when that size is selected — the real Minimize mode has
+                     no card, just a small circle that reveals a popup above it on
+                     hover, so it needs its own mockup instead of the compact/
+                     normal card toggle. See the 'isMinimize' branch in
+                     updatePreview() in tabs/appearance-tab.js. -->
+                <div class="opt-preview-mini-wrap" id="prevMiniWrap" style="display:none;">
+                  <div class="opt-preview-mini-popup" id="prevMiniPopup">
+                    <div class="prev-mini-popup-heading" id="prevMiniAnswerHeading">Answer</div>
+                    <div class="prev-mini-popup-content">$f'(x) = 2x \sin(x^4)$</div>
+                  </div>
+                  <div class="opt-preview-mini-circle" id="prevMiniCircle"></div>
                 </div>
 
                 <!-- Preview Floating Action Buttons -->

@@ -581,7 +581,13 @@ class InPageOverlay {
     if (card) {
       const popAlpha = (popupOpacity / 100).toFixed(2);
       card.style.background = `rgba(var(--hw-glass-rgb), ${popAlpha})`;
-      card.style.backdropFilter = `blur(${popupBlur}px) saturate(180%)`;
+      // The url(#hw-liquid-glass-filter) reference (see shared/liquid-glass.js)
+      // has to be repeated here: this inline style write completely replaces
+      // whatever overlay.css's own .hw-solution-card rule declared for
+      // backdrop-filter — inline style always wins over a stylesheet rule
+      // regardless of selector specificity — so without it, every popupOpacity/
+      // popupBlur change silently strips the refraction filter back out.
+      card.style.backdropFilter = `blur(${popupBlur}px) saturate(180%) url(#hw-liquid-glass-filter)`;
       card.style.webkitBackdropFilter = `blur(${popupBlur}px) saturate(180%)`;
       card.classList.toggle('hw-card-compact', popupCardSize === 'compact');
       card.classList.remove('theme-cyber-blue', 'theme-emerald', 'theme-purple', 'theme-rose', 'theme-amber', 'theme-indigo');

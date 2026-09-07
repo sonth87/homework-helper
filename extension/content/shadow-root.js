@@ -10,6 +10,8 @@
  * neither side's fonts, colors, or resets bleed into the other.
  */
 
+import { ensureLiquidGlassFilter } from '../shared/liquid-glass.js';
+
 let shadowRoot = null;
 
 export function getSharedShadowRoot() {
@@ -45,6 +47,7 @@ export function getSharedShadowRoot() {
   document.documentElement.appendChild(host);
 
   shadowRoot = host.attachShadow({ mode: 'open' });
+  ensureLiquidGlassFilter(shadowRoot);
   return shadowRoot;
 }
 

@@ -26,7 +26,7 @@
   --hw-mini-rgb: 2, 132, 199;
   --hw-mini-alpha: 0.9;
   --hw-mini-blur: 14px;
-  backdrop-filter: blur(var(--hw-mini-blur)) saturate(180%);
+  backdrop-filter: blur(var(--hw-mini-blur)) saturate(180%) url(#hw-liquid-glass-filter);
   -webkit-backdrop-filter: blur(var(--hw-mini-blur)) saturate(180%);
   border: 3px solid rgba(var(--hw-mini-rgb), calc(var(--hw-mini-alpha) * 0.35));
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
@@ -84,9 +84,24 @@
   animation-play-state: running;
 }
 
-/* Done: a plain, fully solid-colour ring — no spin, reads as "ready". */
+/* Done: a plain, fully solid-colour ring — no spin, reads as "ready". Once
+   settled there with nothing else moving, it's easy to forget the circle is
+   even interactive — so every 15s (one loop of hwMiniIdlePulse) a single
+   ring flashes outward from it as a "still here, still working" nudge.
+   :not(:hover) so hovering swaps this out for the richer, faster two-ring
+   hwMiniRipple above instead of the two competing for the same ::before. */
 .hw-mini-circle.hw-mini-done {
   border-color: rgba(var(--hw-mini-rgb), var(--hw-mini-alpha));
+}
+
+.hw-mini-circle.hw-mini-done:not(:hover)::before {
+  animation: hwMiniIdlePulse 15s ease-out infinite;
+}
+
+@keyframes hwMiniIdlePulse {
+  0%, 100% { transform: scale(1); opacity: 0; }
+  2% { opacity: 0.8; }
+  12% { transform: scale(2.6); opacity: 0; }
 }
 
 .hw-mini-circle.hw-mini-error {
@@ -144,22 +159,34 @@
   border-radius: 12px;
   /* Fallbacks for before _applyGlassTheme() has read the real Homework
      Helper Popup opacity/blur settings (popupOpacity/popupBlur) and set
-     these — the color itself stays fixed white regardless of that
-     setting or the page's dark/light theme (see the file header comment
-     for why this popup stays fully light on purpose); only how opaque/
-     blurred that white glass is follows the same config the real
-     Normal/Compact card's own background does. */
+     these. --hw-glass-rgb/--hw-text-main are the same :host-level tokens
+     overlay.css's .hw-solution-card uses — inherited automatically since
+     this popup lives in the same shared shadow root — so this now follows
+     the page's dark/light overlayTheme exactly like the real Normal/Compact
+     card's background does, instead of staying fixed white against a dark
+     page (which used to read as a flat, non-glassy grey box: a near-opaque
+     light fill over a dark backdrop barely lets any of it refract through). */
   --hw-mini-popup-alpha: 0.96;
   --hw-mini-popup-blur: 6px;
-  background: rgba(255, 255, 255, var(--hw-mini-popup-alpha));
-  backdrop-filter: blur(var(--hw-mini-popup-blur)) saturate(180%);
+  background: rgba(var(--hw-glass-rgb), var(--hw-mini-popup-alpha));
+  backdrop-filter: blur(var(--hw-mini-popup-blur)) saturate(180%) url(#hw-liquid-glass-filter);
   -webkit-backdrop-filter: blur(var(--hw-mini-popup-blur)) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 10px;
   line-height: 1.3;
-  color: #1e293b;
+  color: var(--hw-text-main);
+}
+
+.hw-mini-popup::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
 }
 
 /* Deliberately the thing that scrolls (long answers), separate from the
@@ -183,18 +210,16 @@
 }
 
 .hw-mini-loading-text {
-  color: #94a3b8;
+  color: var(--hw-text-muted);
   font-style: italic;
 }
 
 /* Structured dictionary layout (single-word translate results) — the same
    classes overlay.css's .hw-card-answer-content styles for the real card
-   (built by formatDictionaryEntry() in shared/markdown-katex.js), but with
-   this popup's own FIXED colors rather than overlay.css's theme-aware
-   --hw-accent/--hw-text-muted: this popup stays fully light regardless of
-   the page's dark/light overlayTheme setting (see .hw-mini-popup above),
-   and those variables would otherwise pick up the page's dark-mode values
-   and render illegibly on this popup's own white background. */
+   (built by formatDictionaryEntry() in shared/markdown-katex.js), and now
+   the same theme-aware --hw-accent/--hw-text-muted tokens too, since
+   .hw-mini-popup's own background above follows the page's dark/light
+   overlayTheme the same way the real card's does. */
 .hw-mini-popup-content .hw-dict-headword {
   font-size: 14px;
   font-weight: 500;
@@ -204,7 +229,7 @@
 .hw-mini-popup-content .hw-dict-phonetic {
   font-size: 11px;
   font-weight: 200;
-  color: #64748b;
+  color: var(--hw-text-muted);
   margin-left: 2px;
 }
 
@@ -220,14 +245,14 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #64748b;
+  color: var(--hw-text-muted);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
 .hw-mini-popup-content .hw-dict-speak:hover {
-  background: rgba(2, 132, 199, 0.12);
-  color: #0284c7;
+  background: rgba(var(--hw-accent-rgb), 0.12);
+  color: var(--hw-accent);
 }
 
 .hw-mini-popup-content .hw-dict-sense {
@@ -246,7 +271,7 @@
   max-width: 90px;
   font-size: 9px;
   font-weight: 200;
-  color: #64748b;
+  color: var(--hw-text-muted);
   padding-top: 2px;
 }
 
@@ -262,7 +287,7 @@
 
 .hw-mini-popup-content .hw-dict-example {
   font-size: 12px;
-  color: #64748b;
+  color: var(--hw-text-muted);
   line-height: 1.5;
 }
 
@@ -273,29 +298,29 @@
   font-style: normal;
   background: none;
   padding: 0;
-  color: #0284c7;
+  color: var(--hw-accent);
   font-weight: 600;
 }
 
 .hw-mini-popup-content .hw-dict-desc {
   margin-top: 4px;
   padding: 4px 8px;
-  background: rgba(15, 23, 42, 0.04);
+  background: var(--hw-bg-hover);
   border-radius: 6px;
   font-size: 11px;
-  color: #64748b;
+  color: var(--hw-text-muted);
   line-height: 1.5;
 }
 
 .hw-mini-popup-content .hw-dict-desc-term {
   font-size: 12px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--hw-text-main);
   margin-bottom: 4px;
 }
 
 .hw-mini-popup-content .hw-dict-desc-text {
-  color: #64748b;
+  color: var(--hw-text-muted);
 }
 
 .hw-mini-popup-content .md-h2 {
@@ -317,7 +342,7 @@
   gap: 10px;
   margin-top: 4px;
   padding-top: 4px;
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  border-top: 1px solid var(--hw-border-color);
 }
 
 .hw-mini-icon-btn {
@@ -327,18 +352,18 @@
   padding: 0;
   border: none;
   background: none;
-  color: #64748b;
+  color: var(--hw-text-muted);
   cursor: pointer;
   transition: color 0.12s ease, transform 0.12s ease;
 }
 
 .hw-mini-icon-btn:hover {
-  color: #0284c7;
+  color: var(--hw-accent);
   transform: scale(1.1);
 }
 
 .hw-mini-icon-btn.hw-mini-copied {
-  color: #16a34a;
+  color: var(--hw-success);
 }
 
 /* Reuses overlay.css's .hw-mode-switch/.hw-mode-dot (same shared shadow
@@ -355,12 +380,4 @@
   left: 50%;
   transform: translate(-50%, 50%);
   justify-content: center;
-}
-
-/* This popup's own background stays fixed light regardless of the page's
-   dark/light overlayTheme setting (see .hw-mini-popup above) — the shared
-   .hw-mode-switch:hover rule's --hw-glass-rgb would otherwise pick up the
-   page's dark variant here and paint a mismatched dark pill. */
-.hw-mini-mode-switch:hover {
-  background: rgba(255, 255, 255, 0.95);
 }

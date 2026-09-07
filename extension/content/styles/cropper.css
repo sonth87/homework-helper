@@ -63,7 +63,7 @@
   left: 50%;
   transform: translateX(-50%);
   background: rgba(15, 23, 42, 0.72);
-  backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%) url(#hw-liquid-glass-filter);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: #f8fafc;

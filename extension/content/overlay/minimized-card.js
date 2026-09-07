@@ -128,18 +128,18 @@ export class MinimizedCard {
 
   // Fire-and-forget: both the ring and the popup already have sensible glass
   // defaults (see minimized-card.css) and don't need to block on this — they
-  // just repaint a moment later. The ring matches the Selection Toolbar's own
-  // accent color *and* its glass opacity/blur (toolbarTheme/toolbarOpacity/
-  // toolbarBlur); the hover-revealed popup instead follows the same
-  // Homework Helper Popup opacity/blur settings (popupOpacity/popupBlur) the
-  // real card's own glass background does — same as everything else in this
+  // just repaint a moment later. The ring and its hover-revealed popup are
+  // one and the same widget visually, so both follow the Homework Helper
+  // Popup's own settings (popupCardTheme/popupOpacity/popupBlur) — the ring's
+  // accent colour matches whatever the popup above it will show instead of
+  // the unrelated Selection Toolbar theme — same as everything else in this
   // file re-reading its settings fresh rather than caching them.
   _applyGlassTheme() {
-    Storage.get(['toolbarTheme', 'toolbarOpacity', 'toolbarBlur', 'popupOpacity', 'popupBlur']).then(
-      ({ toolbarTheme, toolbarOpacity = 90, toolbarBlur = 14, popupOpacity = 92, popupBlur = 16 }) => {
-        this.circleEl.style.setProperty('--hw-mini-rgb', resolveThemeColorRgb(toolbarTheme));
+    Storage.get(['popupCardTheme', 'popupOpacity', 'popupBlur']).then(
+      ({ popupCardTheme, popupOpacity = 92, popupBlur = 16 }) => {
+        this.circleEl.style.setProperty('--hw-mini-rgb', resolveThemeColorRgb(popupCardTheme));
         this.circleEl.style.setProperty('--hw-mini-alpha', (popupOpacity / 100).toFixed(2));
-        this.circleEl.style.setProperty('--hw-mini-blur', `${toolbarBlur}px`);
+        this.circleEl.style.setProperty('--hw-mini-blur', `${popupBlur}px`);
         this.popupEl.style.setProperty('--hw-mini-popup-alpha', (popupOpacity / 100).toFixed(2));
         this.popupEl.style.setProperty('--hw-mini-popup-blur', `${popupBlur}px`);
       }

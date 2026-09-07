@@ -761,7 +761,7 @@ body.hw-th-sheet-open {
   z-index: 2147483647;
   max-width: 240px;
   background: rgba(var(--hw-glass-rgb), 0.3);
-  backdrop-filter: blur(6px) saturate(180%);
+  backdrop-filter: blur(6px) saturate(180%) url(#hw-liquid-glass-filter);
   -webkit-backdrop-filter: blur(6px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
@@ -773,6 +773,15 @@ body.hw-th-sheet-open {
   transform: translateY(4px);
   transition: opacity 0.15s ease, transform 0.15s ease;
   color: var(--hw-text-main);
+}
+
+.pop-tooltip-popup::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
 }
 
 .pop-tooltip-popup.visible {

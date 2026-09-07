@@ -138,6 +138,13 @@ export class AppearanceTab {
     const prevToolbar = document.getElementById('prevToolbar');
     const prevPopup = document.getElementById('prevPopup');
     const prevFab = document.getElementById('prevFab');
+    // Minimize mode has no card mockup of its own in the markup — it swaps
+    // prevPopup out for this circle+popup pair (see the 'isMinimize' branch
+    // in updatePreview() below).
+    const prevMiniWrap = document.getElementById('prevMiniWrap');
+    const prevMiniPopup = document.getElementById('prevMiniPopup');
+    const prevMiniAnswerHeading = document.getElementById('prevMiniAnswerHeading');
+    const prevMiniCircle = document.getElementById('prevMiniCircle');
 
     if (!checkFab) return;
 
@@ -354,7 +361,10 @@ export class AppearanceTab {
           lbl.style.display = showText ? 'inline' : 'none';
         });
 
-        prevToolbar.style.backdropFilter = `blur(${tbBlurVal}px) saturate(180%)`;
+        // url(#hw-liquid-glass-filter): see shared/liquid-glass.js — has to be
+        // repeated on every inline backdropFilter write, since inline style
+        // always wins over whatever overlay.css's own rule declares.
+        prevToolbar.style.backdropFilter = `blur(${tbBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
         prevToolbar.style.webkitBackdropFilter = `blur(${tbBlurVal}px) saturate(180%)`;
 
         const tbSolidRgb = TOOLBAR_THEME_COLORS[tbTheme];
@@ -431,7 +441,7 @@ export class AppearanceTab {
 
         prevHoverTip.style.setProperty('--ht-max-width', `${htMaxWidth}px`);
         prevHoverTip.style.fontSize = `${htFontSize}px`;
-        prevHoverTip.style.backdropFilter = `blur(${htBlurVal}px) saturate(180%)`;
+        prevHoverTip.style.backdropFilter = `blur(${htBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
         prevHoverTip.style.webkitBackdropFilter = `blur(${htBlurVal}px) saturate(180%)`;
 
         const htSolidRgb = TOOLBAR_THEME_COLORS[htTheme];
@@ -451,19 +461,52 @@ export class AppearanceTab {
       if (prevPopup && rangePopupOpacity && rangePopupBlur) {
         const popAlpha = (parseInt(rangePopupOpacity.value, 10) / 100).toFixed(2);
         const popBlurVal = parseInt(rangePopupBlur.value, 10);
-        prevPopup.style.background = `rgba(255, 255, 255, ${popAlpha})`;
-        prevPopup.style.backdropFilter = `blur(${popBlurVal}px) saturate(180%)`;
-        prevPopup.style.webkitBackdropFilter = `blur(${popBlurVal}px) saturate(180%)`;
-        prevPopup.classList.toggle('compact', (popupCardSizeSelect?.value || 'normal') === 'compact');
+        const popSizeVal = popupCardSizeSelect?.value || 'normal';
+        prevPopup.classList.toggle('compact', popSizeVal === 'compact');
 
-        // 'auto' keeps the preview's own long-standing default blue —
-        // matches the real card leaving --hw-accent untouched for 'auto'.
+        // 'auto' and the accent colours (cyber-blue/emerald/...) keep the
+        // popup's own glass background exactly as before — only the explicit
+        // glass-light/glass-dark choices force it, same split as the real
+        // .hw-solution-card.theme-glass-light/dark rules in overlay.css
+        // (auto/accent leave the card's background following the separate,
+        // global "Chế độ màu (Sáng/Tối)" setting; the accent only tints the
+        // primary button and ANSWER heading, never the popup surface itself).
         const popThemeSetting = popupThemeSelect?.value || 'auto';
         const popRgb = TOOLBAR_THEME_COLORS[popThemeSetting] || '2, 132, 199';
+        const popIsDark = popThemeSetting === 'glass-dark';
+        const popBg = popIsDark ? 'rgba(15, 23, 42, ' + popAlpha + ')' : `rgba(255, 255, 255, ${popAlpha})`;
+        const popColor = popIsDark ? '#f8fafc' : '#1e293b';
+
+        const applyPopupGlass = (el) => {
+          if (!el) return;
+          el.style.background = popBg;
+          el.style.color = popColor;
+          el.style.backdropFilter = `blur(${popBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
+          el.style.webkitBackdropFilter = `blur(${popBlurVal}px) saturate(180%)`;
+        };
+        applyPopupGlass(prevPopup);
+
         const primaryBtn = prevPopup.querySelector('.prev-btn-blue');
         const answerHeading = document.getElementById('prevPopupAnswerHeading');
         if (primaryBtn) primaryBtn.style.background = `rgba(${popRgb}, 0.88)`;
         if (answerHeading) answerHeading.style.color = `rgb(${popRgb})`;
+
+        // Minimize mode has no card at all in real usage — a small circle that
+        // reveals a popup above it on hover — so swap in a dedicated mockup
+        // instead of trying to squeeze that behavior out of the card preview.
+        const isMinimize = popSizeVal === 'minimize';
+        prevPopup.style.display = isMinimize ? 'none' : '';
+        if (prevMiniWrap) {
+          prevMiniWrap.style.display = isMinimize ? '' : 'none';
+          if (isMinimize) {
+            applyPopupGlass(prevMiniPopup);
+            if (prevMiniAnswerHeading) prevMiniAnswerHeading.style.color = `rgb(${popRgb})`;
+            if (prevMiniCircle) {
+              prevMiniCircle.style.borderColor = `rgba(${popRgb}, 0.35)`;
+              prevMiniCircle.style.setProperty('--prev-mini-rgb', popRgb);
+            }
+          }
+        }
       }
     };
 

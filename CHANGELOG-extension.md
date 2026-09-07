@@ -17,6 +17,40 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.9.2] — 2026-09-07
+
+### Thay đổi
+- Hiệu ứng "Liquid Glass" trên toàn bộ giao diện (Thanh Công Cụ Bôi Đen, tooltip
+  Dịch nhanh khi di chuột, popup Giải bài/Dịch, nút tròn Minimize, Chat Drawer,
+  các tooltip/toast ở Cài đặt/Popup/Side Panel...) trước đây chỉ làm mờ nền
+  (backdrop blur) phía sau, nay thêm hiệu ứng khúc xạ ánh sáng thật sự — nội
+  dung trang phía sau bị bẻ cong nhẹ khi nhìn qua lớp kính thay vì chỉ mờ đi —
+  cùng một vệt sáng phản chiếu chéo trên mỗi bề mặt, giống chất liệu kính lỏng
+  thật hơn thay vì chỉ như nhựa mờ.
+- Nút Copy trên mỗi khối code trong lời giải nay hiện icon thay vì chữ "Copy",
+  gọn hơn và đồng bộ với các nút icon khác trong thẻ popup.
+
+### Sửa lỗi
+- Phần Xem trước (Live Preview) ở trang Cài đặt > Giao diện chưa áp dụng hiệu
+  ứng Liquid Glass mới cho 3 khối mô phỏng (Thanh Công Cụ, tooltip Dịch nhanh,
+  popup Giải bài) — vẫn chỉ mờ nền như kiểu cũ. Riêng khi chọn kiểu hiển thị
+  "Minimize", khung xem trước không hiện gì hữu ích vì vẫn cố hiện mô phỏng
+  thẻ popup thông thường. Nay cả 3 khối xem trước đã theo đúng hiệu ứng Liquid
+  Glass, và chọn "Minimize" sẽ hiện đúng mô phỏng nút tròn ở dưới kèm popup
+  đáp án phía trên, giống hệt lúc rê chuột vào nút tròn thật ngoài trang.
+- Popup hiện ra khi rê chuột vào nút tròn Minimize luôn cố định nền sáng bất
+  kể trang đang ở chế độ tối, nên trên các trang nền tối trông phẳng/xám thay
+  vì kính lỏng như thẻ popup Normal/Compact (vốn tự đổi kính tối theo đúng
+  giao diện). Nay popup này cũng tự đổi kính sáng/tối theo đúng cấu hình
+  Giao diện, đồng bộ hoàn toàn với thẻ popup thường.
+- Màu viền nút tròn Minimize trước đây lấy theo Chủ đề màu Thanh Công Cụ Bôi
+  Đen thay vì Chủ đề màu Popup, nên có thể khác màu với chính popup hiện ra
+  khi rê chuột vào nó (và khác với xem trước ở trang Cài đặt). Nay nút tròn
+  lấy màu, độ trong suốt, độ mờ nền đều theo đúng cấu hình Homework Helper
+  Popup, luôn đồng màu với popup của chính nó.
+
+---
+
 ## [1.9.1] — 2026-09-07
 
 ### Thêm mới

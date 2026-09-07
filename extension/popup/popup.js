@@ -15,9 +15,11 @@ import { AI_PROVIDER_ID, PICKABLE_PROVIDER_IDS, providerName } from '../shared/t
 import { TranslateHistorySheet } from '../shared/translate-history-sheet.js';
 import { renderAnswer } from '../shared/markdown-katex.js';
 import { speak, isSpeechAvailable, bindSpeakButtons } from '../shared/tts.js';
+import { ensureLiquidGlassFilter } from '../shared/liquid-glass.js';
 import { PopupTooltips } from './popup-tooltips.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  ensureLiquidGlassFilter(document);
   // navigator.clipboard.readText() (see pickUpClipboard() near the bottom)
   // throws "Document is not focused" unless this window actually holds OS
   // focus, not just DOM element focus. A toolbar-icon click normally grants

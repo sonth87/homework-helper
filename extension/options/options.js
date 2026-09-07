@@ -5,6 +5,7 @@
 
 import { Icons } from '../shared/icons.js';
 import { Storage } from '../shared/storage.js';
+import { ensureLiquidGlassFilter } from '../shared/liquid-glass.js';
 import { getOptionsI18n, getSelectionTooltipI18n, getFloatingPopupI18n } from '../shared/i18n.js';
 import { OptionsTooltips } from './options-tooltips.js';
 import { KeysTab } from './tabs/keys-tab.js';
@@ -476,6 +477,7 @@ export class OptionsController {
     setText('prevPopupAnswerHeading', tooltipDict.answer);
     setText('prevPopupNextQuestion', popupDict.nextQuestion);
     setText('prevPopupCopy', popupDict.copy);
+    setText('prevMiniAnswerHeading', tooltipDict.answer);
 
     // Guide Tab
     setText('optHeadingGuide', dict.headingGuide);
@@ -550,5 +552,6 @@ export class OptionsController {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  ensureLiquidGlassFilter(document);
   new OptionsController();
 });

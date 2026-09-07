@@ -358,6 +358,17 @@ body {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
   font-weight: 600;
   transition: all 0.15s ease;
+  overflow: hidden;
+}
+
+.opt-preview-hover-tip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
 }
 
 /* Preview Toolbar */
@@ -377,6 +388,17 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.45);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
   transition: all 0.15s ease;
+  overflow: hidden;
+}
+
+.opt-preview-toolbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
 }
 
 .prev-tb-logo {
@@ -435,6 +457,16 @@ body {
   transition: all 0.15s ease;
 }
 
+.opt-preview-popup::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
+}
+
 .prev-popup-header {
   position: relative;
   display: flex;
@@ -489,6 +521,101 @@ body {
   border-radius: 8px;
   font-size: 11px;
   color: #475569;
+}
+
+/* Preview "Thu nhỏ" (Minimize) mode — mirrors content/styles/minimized-card.css's
+   .hw-mini-circle/.hw-mini-popup: shown together (popup right-aligned above its
+   circle) instead of requiring an actual hover, since this is a static settings
+   preview. Pinned near the bottom-right of .opt-mock-page, matching the real
+   circle's fixed bottom-corner placement — anchored via `right` (not `left`)
+   with enough clearance to stay left of .opt-preview-fab's own bottom-right
+   column so the two previews don't overlap. Hidden by default; toggled on by
+   updatePreview() in tabs/appearance-tab.js when popupCardSizeSelect.value
+   === 'minimize'. */
+.opt-preview-mini-wrap {
+  position: absolute;
+  right: 64px;
+  bottom: 16px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.opt-preview-mini-popup {
+  position: relative;
+  z-index: 5;
+  max-width: 260px;
+  min-width: 160px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+  font-size: 11px;
+  line-height: 1.3;
+  color: #1e293b;
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+
+.opt-preview-mini-popup::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
+}
+
+.prev-mini-popup-heading,
+.prev-mini-popup-content {
+  position: relative;
+  z-index: 1;
+}
+
+.prev-mini-popup-heading {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 3px;
+}
+
+.opt-preview-mini-circle {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid rgba(2, 132, 199, 0.35);
+  --prev-mini-rgb: 2, 132, 199;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+  transition: all 0.15s ease;
+}
+
+/* Two staggered rings expand outward and fade, played continuously — mirrors
+   .hw-mini-circle:hover::before/::after in minimized-card.css, but always-on
+   here (not gated on :hover) since this is a static preview meant to be seen
+   without the viewer having to hover it themselves. */
+.opt-preview-mini-circle::before,
+.opt-preview-mini-circle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--prev-mini-rgb), 0.7);
+  opacity: 0;
+  pointer-events: none;
+  animation: hwPrevMiniRipple 2s ease-out infinite;
+}
+
+.opt-preview-mini-circle::after {
+  animation-delay: 0.85s;
+}
+
+@keyframes hwPrevMiniRipple {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(3.2); opacity: 0; }
 }
 
 /* Preview mirror of the compact solution-popup mode — the header bar
@@ -1208,7 +1335,7 @@ body {
   z-index: 2147483647;
   max-width: 280px;
   background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(6px) saturate(180%);
+  backdrop-filter: blur(6px) saturate(180%) url(#hw-liquid-glass-filter);
   -webkit-backdrop-filter: blur(6px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
@@ -1220,6 +1347,15 @@ body {
   transform: translateY(4px);
   transition: opacity 0.15s ease, transform 0.15s ease;
   color: #1e293b;
+}
+
+.opt-tooltip-popup::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
 }
 
 .opt-tooltip-popup.visible {
@@ -1680,7 +1816,7 @@ body {
   right: 28px;
   background: rgba(15, 23, 42, 0.94);
   color: #ffffff;
-  backdrop-filter: blur(14px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(180%) url(#hw-liquid-glass-filter);
   -webkit-backdrop-filter: blur(14px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
