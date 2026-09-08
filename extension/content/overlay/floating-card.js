@@ -12,6 +12,7 @@ import { parseDictionaryEntry } from '../../shared/dictionary.js';
 import { EnginePicker } from '../../shared/engine-picker.js';
 import { AI_PROVIDER_ID, PICKABLE_PROVIDER_IDS } from '../../shared/translate-providers.js';
 import { TranslateHistorySheet } from '../../shared/translate-history-sheet.js';
+import { ConversationHistoryPanel } from '../../shared/conversation-history-panel.js';
 import { ensureStylesheet } from '../shadow-root.js';
 
 export class OverlayFloatingCard {
@@ -55,6 +56,16 @@ export class OverlayFloatingCard {
     // in overlay.css. Used for drag-bounds clamping and edge-snapping math.
     this.fabSize = 36;
     this.fabEdgeMargin = 10;
+    this._historyDict = {};
+    this.historyPanel = new ConversationHistoryPanel({
+      root: this.shadow,
+      listElId: 'hwCardHistoryList',
+      searchElId: 'hwCardHistorySearch',
+      loadMoreElId: 'hwCardHistoryLoadMore',
+      getDict: () => this._historyDict,
+      onSelect: (convId, conv) => this._selectCardHistoryConv(convId, conv),
+      onMutate: () => this.overlay.drawer.loadInitialHistory(),
+    });
 
     this.init();
   }
@@ -734,9 +745,10 @@ export class OverlayFloatingCard {
   }
 
   async showSolutionCard(imageBase64, mode = 'solve') {
-    // PHẢI lấy TRƯỚC Storage.addChatMessage() ở dưới (dòng ghi tin nhắn "đã
-    // chụp ảnh" của chính lượt này) — lấy sau sẽ dính đua tranh.
-    const priorMessages = await Storage.getChatHistory();
+    // A screenshot solve is always an independent, one-shot request — never
+    // sends the conversation's prior turns as context (see askAi()'s isChat
+    // doc in drawer.js for the reasoning: a captured question is unrelated
+    // to whatever was chatted about before).
     const s = this.shadow;
     this.popupMode = 'screenshot';
     this.popupSourceText = '';
@@ -829,13 +841,17 @@ export class OverlayFloatingCard {
       ? (genDict.imageTranslatePromptHeader || 'Please translate all text shown in this image accurately:')
       : (genDict.imagePromptHeader || 'Please solve the homework question shown in this image:');
 
-    Storage.addChatMessage({
+    const userConv = await Storage.addChatMessage({
       role: 'user',
       content: mode === 'translate'
         ? (genDict.captureTranslateText || 'Translate text from captured image')
         : (genDict.captureSolveText || 'Solve homework problem from captured image'),
       image: imageBase64,
     });
+    // So the assistant reply lands in the right conversation even if the
+    // user switches away while this streams — see drawer.js's
+    // activeRequestConversationId doc comment.
+    this.overlay.drawer.activeRequestConversationId = userConv?.id || null;
 
     const enabledKeys = (apiConfigs || []).filter(
       (c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin')
@@ -983,7 +999,6 @@ export class OverlayFloatingCard {
         studyMode,
         outputLanguage,
         requestId: this.overlay.drawer.activeRequestId,
-        history: priorMessages.map((m) => ({ role: m.role, content: m.content })),
       },
     });
   }
@@ -1163,8 +1178,9 @@ export class OverlayFloatingCard {
       return this.runFreeEngineTranslate(text);
     }
 
-    // PHẢI lấy TRƯỚC Storage.addChatMessage() ở dưới — lấy sau sẽ dính đua tranh.
-    const priorMessages = await Storage.getChatHistory();
+    // A selection-toolbar solve/translate is always an independent, one-shot
+    // request — never sends the conversation's prior turns as context (same
+    // reasoning as showSolutionCard()).
     const s = this.shadow;
     const { uiLanguage = 'en', studyMode: savedStudyMode = 'step-by-step' } = await Storage.get(['uiLanguage', 'studyMode']);
     const cardDict = getFloatingPopupI18n(uiLanguage);
@@ -1216,10 +1232,11 @@ export class OverlayFloatingCard {
       userLabel = `${{ explain: '[Deep Explanation]', summarize: '[Summarize]', grammar: '[Grammar Checker]' }[type]}: ${text}`;
     }
 
-    Storage.addChatMessage({
+    const userConv = await Storage.addChatMessage({
       role: 'user',
       content: userLabel,
     });
+    this.overlay.drawer.activeRequestConversationId = userConv?.id || null;
 
     const { apiConfigs = [], systemPrompt, nanoSystemPrompt, outputLanguage = 'en' } = await Storage.get(['apiConfigs', 'systemPrompt', 'nanoSystemPrompt', 'outputLanguage']);
     const enabledKeys = (apiConfigs || []).filter((c) => c.isEnabled && (c.apiKey || c.provider === 'ollama' || c.provider === 'lmstudio' || c.provider === 'chrome-builtin'));
@@ -1272,109 +1289,67 @@ export class OverlayFloatingCard {
         studyMode,
         outputLanguage: effectiveOutputLanguage,
         requestId: this.overlay.drawer.activeRequestId,
-        history: priorMessages.map((m) => ({ role: m.role, content: m.content })),
       },
     });
   }
 
   async renderCardHistory() {
-    const conversations = await Storage.getConversations();
-    const { activeConversationId } = await Storage.get(['activeConversationId']);
-    const listEl = this.shadow.getElementById('hwCardHistoryList');
-    if (!listEl) return;
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    this._historyDict = getI18n(uiLanguage);
+    await this.historyPanel.open();
+  }
 
-    listEl.innerHTML = '';
+  // Unlike the drawer/side panel (a scrolling thread), this card shows one
+  // Q&A at a time — picking a conversation from history means showing its
+  // LAST turn here, not replaying the whole thread.
+  async _selectCardHistoryConv(convId, conv) {
+    this.stopLoadingSteps();
+    const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+    await Storage.switchConversation(convId);
+    this.shadow.getElementById('hwCardHistoryPanel').style.display = 'none';
 
-    if (conversations.length === 0) {
-      listEl.innerHTML = `
-        <div style="text-align:center; padding:32px 10px; color:var(--hw-text-muted); font-size:13px;">
-          Chưa có hội thoại nào được lưu.<br>Hãy tạo đoạn chat mới để bắt đầu!
-        </div>
-      `;
-      return;
+    const lastUser = (conv.messages || []).filter((m) => m.role === 'user').pop();
+    const lastAssistant = (conv.messages || []).filter((m) => m.role === 'assistant').pop();
+
+    if (lastUser?.image) {
+      this.popupMode = 'screenshot';
+      this.popupImageBase64 = lastUser.image;
+      this.popupImageMode = 'solve';
+      this.popupSourceText = '';
+      const thumb = this.shadow.getElementById('hwCardThumb');
+      thumb.src = lastUser.image;
+      thumb.style.display = 'block';
+      this.shadow.getElementById('hwCardSourceText').style.display = 'none';
+    } else if (lastUser?.content) {
+      this.popupMode = 'text';
+      this.popupImageBase64 = null;
+      this.popupSourceText = lastUser.content;
+      this.shadow.getElementById('hwCardThumb').style.display = 'none';
+      const srcEl = this.shadow.getElementById('hwCardSourceText');
+      srcEl.textContent = lastUser.content;
+      srcEl.style.display = 'block';
+    } else {
+      this.popupMode = 'text';
+      this.popupImageBase64 = null;
+      this.popupSourceText = '';
+      this.shadow.getElementById('hwCardThumb').style.display = 'none';
+      this.shadow.getElementById('hwCardSourceText').style.display = 'none';
     }
 
-    [...conversations].reverse().forEach((conv) => {
-      const el = document.createElement('div');
-      el.className = `hw-card-history-item ${conv.id === activeConversationId ? 'active' : ''}`;
-
-      let thumbHtml = conv.thumbnail
-        ? `<img src="${conv.thumbnail}" class="hw-card-history-thumb" alt="thumb">`
-        : `<div class="hw-card-history-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--hw-accent);background:var(--hw-accent-tint);">${Icons.fileText(18)}</div>`;
-
-      const dateStr = conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-      const msgCount = conv.messages?.length || 0;
-
-      el.innerHTML = `
-        ${thumbHtml}
-        <div class="hw-card-history-info">
-          <div class="hw-card-history-title">${conv.title || 'Hội thoại không tên'}</div>
-          <div class="hw-card-history-time">${Icons.clock(11)} ${dateStr} &bull; ${msgCount} tin nhắn</div>
-        </div>
-        <button class="hw-icon-btn hw-btn-del-conv" title="Xóa hội thoại này" style="width:24px;height:24px;color:var(--hw-text-muted);flex-shrink:0;">
-          ${Icons.trash(13)}
-        </button>
-      `;
-
-      el.querySelector('.hw-btn-del-conv').addEventListener('click', async (e) => {
-        e.stopPropagation();
-        await Storage.deleteConversation(conv.id);
-        this.renderCardHistory();
-        this.overlay.drawer.loadInitialHistory();
-      });
-
-      el.addEventListener('click', async () => {
-        this.stopLoadingSteps();
-        const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
-        await Storage.switchConversation(conv.id);
-        this.shadow.getElementById('hwCardHistoryPanel').style.display = 'none';
-
-        const lastUser = (conv.messages || []).filter((m) => m.role === 'user').pop();
-        const lastAssistant = (conv.messages || []).filter((m) => m.role === 'assistant').pop();
-
-        if (lastUser?.image) {
-          this.popupMode = 'screenshot';
-          this.popupImageBase64 = lastUser.image;
-          this.popupImageMode = 'solve';
-          this.popupSourceText = '';
-          const thumb = this.shadow.getElementById('hwCardThumb');
-          thumb.src = lastUser.image;
-          thumb.style.display = 'block';
-          this.shadow.getElementById('hwCardSourceText').style.display = 'none';
-        } else if (lastUser?.content) {
-          this.popupMode = 'text';
-          this.popupImageBase64 = null;
-          this.popupSourceText = lastUser.content;
-          this.shadow.getElementById('hwCardThumb').style.display = 'none';
-          const srcEl = this.shadow.getElementById('hwCardSourceText');
-          srcEl.textContent = lastUser.content;
-          srcEl.style.display = 'block';
-        } else {
-          this.popupMode = 'text';
-          this.popupImageBase64 = null;
-          this.popupSourceText = '';
-          this.shadow.getElementById('hwCardThumb').style.display = 'none';
-          this.shadow.getElementById('hwCardSourceText').style.display = 'none';
-        }
-
-        const ansContent = this.shadow.getElementById('hwCardAnswerContent');
-        const replyText = lastAssistant?.content || lastUser?.content || 'Hội thoại rỗng';
-        // History doesn't record which studyMode produced a message. The
-        // dict-mode class only scopes the styling for the older markdown-shaped
-        // replies still sitting in saved conversations — structured JSON
-        // entries carry their own layout classes and need no such hint.
-        ansContent.classList.toggle('hw-dict-mode', /^\*\*.+?\*\*\s*\/[^/\n]+\//.test(replyText.trim()));
-        ansContent.innerHTML = renderAnswer(replyText, {
-          allowMarkdownDict: true,
-          speakLabel: getFloatingPopupI18n(uiLanguage).listen,
-          targetLang: this.targetLang,
-        });
-        this.activeCardResponseText = replyText;
-        this.cardStatus = 'done';
-        this.syncSpeakButton();
-      });
-
-      listEl.appendChild(el);
+    const ansContent = this.shadow.getElementById('hwCardAnswerContent');
+    const replyText = lastAssistant?.content || lastUser?.content || 'Hội thoại rỗng';
+    // History doesn't record which studyMode produced a message. The
+    // dict-mode class only scopes the styling for the older markdown-shaped
+    // replies still sitting in saved conversations — structured JSON
+    // entries carry their own layout classes and need no such hint.
+    ansContent.classList.toggle('hw-dict-mode', /^\*\*.+?\*\*\s*\/[^/\n]+\//.test(replyText.trim()));
+    ansContent.innerHTML = renderAnswer(replyText, {
+      allowMarkdownDict: true,
+      speakLabel: getFloatingPopupI18n(uiLanguage).listen,
+      targetLang: this.targetLang,
     });
+    this.activeCardResponseText = replyText;
+    this.cardStatus = 'done';
+    this.syncSpeakButton();
   }
 }

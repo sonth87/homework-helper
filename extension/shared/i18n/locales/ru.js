@@ -60,6 +60,13 @@ export default {
     emptyHistory:
       "Нет сохраненных диалогов.<br>Начните новый чат для решения задач!",
     loadingHistory: "Загрузка истории...",
+    historySearchPlaceholder: "Поиск бесед...",
+    historyLoadMore: "Загрузить ещё",
+    historyNoResults: "Совпадающих бесед не найдено.",
+    historyRenameTooltip: "Переименовать беседу",
+    historyDeleteTooltip: "Удалить беседу",
+    historyDeleteConfirm: "Удалить эту беседу? Это действие нельзя отменить.",
+    historyMsgsLabel: "сообщ.",
     chips: [
       {
         label: "Квадратное уравнение",

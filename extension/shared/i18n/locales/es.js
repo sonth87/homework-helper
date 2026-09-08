@@ -59,6 +59,13 @@ export default {
     emptyHistory:
       "No hay conversaciones guardadas.<br>¡Inicia un nuevo chat para comenzar!",
     loadingHistory: "Cargando historial...",
+    historySearchPlaceholder: "Buscar conversaciones...",
+    historyLoadMore: "Cargar más",
+    historyNoResults: "No se encontraron conversaciones.",
+    historyRenameTooltip: "Renombrar conversación",
+    historyDeleteTooltip: "Eliminar conversación",
+    historyDeleteConfirm: "¿Eliminar esta conversación? No se puede deshacer.",
+    historyMsgsLabel: "mensajes",
     chips: [
       {
         label: "Ecuación cuadrática",

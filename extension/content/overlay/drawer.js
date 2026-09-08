@@ -8,6 +8,7 @@ import { formatMarkdownAndMath, renderAnswer } from '../../shared/markdown-katex
 import { getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
 import { NANO_STATUS } from '../../shared/nano-status.js';
+import { truncateHistory } from '../../shared/history-budget.js';
 
 export class OverlayDrawer {
   constructor(overlay) {
@@ -20,10 +21,18 @@ export class OverlayDrawer {
     this.attachedImageBase64 = null;
     this.isStreaming = false;
     this.activeRequestId = null;
+    // Which conversation the in-flight request's user turn was appended to —
+    // captured at send time so the assistant reply lands there even if the
+    // user has since switched to viewing a different conversation (see
+    // askAi()/finalizeStream()). Storage.addChatMessage() otherwise always
+    // targets "whichever conversation is active right now", which is wrong
+    // once that's no longer true.
+    this.activeRequestConversationId = null;
     this.activeAiBubble = null;
     this.activeTarget = 'drawer';
     this.currentDrawerResponseText = '';
     this.loadingStepsInterval = null;
+    this._historyRenderToken = 0;
 
     this.init();
   }
@@ -162,7 +171,7 @@ export class OverlayDrawer {
         this.overlay.floatingCard.stopLoadingSteps();
       }
       if (this.overlay.floatingCard.activeCardResponseText) {
-        Storage.addChatMessage({ role: 'assistant', content: this.overlay.floatingCard.activeCardResponseText });
+        Storage.addChatMessage({ role: 'assistant', content: this.overlay.floatingCard.activeCardResponseText }, this.activeRequestConversationId);
       }
       return;
     }
@@ -173,7 +182,7 @@ export class OverlayDrawer {
       if (footer) footer.style.display = 'flex';
     }
     if (this.currentDrawerResponseText) {
-      Storage.addChatMessage({ role: 'assistant', content: this.currentDrawerResponseText });
+      Storage.addChatMessage({ role: 'assistant', content: this.currentDrawerResponseText }, this.activeRequestConversationId);
     }
   }
 
@@ -422,11 +431,20 @@ export class OverlayDrawer {
     this.askAi({ prompt: text || 'Please solve this attached question:', imageBase64: img });
   }
 
-  async askAi({ prompt, imageBase64 = null }) {
+  /**
+   * @param {boolean} [isChat] - true for a message the user typed directly
+   *   into this drawer's textbox (or a welcome-screen chip) — these send
+   *   the conversation's prior turns as context. false for a solve request
+   *   triggered from elsewhere (currently: the Google Forms adapter's
+   *   HOMEWORK_AI_ASK) — those are independent, one-shot solves and must
+   *   NOT inherit whatever the user was chatting about before.
+   */
+  async askAi({ prompt, imageBase64 = null, isChat = true }) {
     // PHẢI lấy TRƯỚC appendUserMessage() — hàm đó ghi luôn tin nhắn hiện tại
     // vào Storage (không đợi xong), lấy sau sẽ dính đua tranh.
-    const priorMessages = await Storage.getChatHistory();
-    this.appendUserMessage(prompt, imageBase64);
+    const priorMessages = isChat ? await Storage.getChatHistory() : [];
+    const conv = await this.appendUserMessage(prompt, imageBase64);
+    this.activeRequestConversationId = conv?.id || null;
 
     this.activeAiBubble = this.createAiBubble();
     this.currentDrawerResponseText = '';
@@ -485,6 +503,7 @@ export class OverlayDrawer {
             requestId: this.activeRequestId,
             systemPrompt: nanoSysPrompt,
             responseConstraint: nanoConstraint,
+            history: truncateHistory(priorMessages.map((m) => ({ role: m.role, content: m.content })), 'nano'),
           },
         })
       );
@@ -506,9 +525,9 @@ export class OverlayDrawer {
     });
   }
 
-  appendUserMessage(text, imageBase64) {
+  async appendUserMessage(text, imageBase64) {
     const body = this.shadow.getElementById('hwChatBody');
-    if (!body) return;
+    if (!body) return null;
     const msgEl = document.createElement('div');
     msgEl.className = 'hw-msg hw-msg-user';
 
@@ -523,7 +542,7 @@ export class OverlayDrawer {
     body.appendChild(msgEl);
     body.scrollTop = body.scrollHeight;
 
-    Storage.addChatMessage({ role: 'user', content: text, image: imageBase64 });
+    return Storage.addChatMessage({ role: 'user', content: text, image: imageBase64 });
   }
 
   createAiBubble() {
@@ -657,7 +676,11 @@ export class OverlayDrawer {
       // Chat history is saved the same way regardless of which display mode
       // rendered the answer — Minimize only changes what's shown on the
       // page, never what ends up in the chat the user can review later.
-      Storage.addChatMessage({ role: 'assistant', content: this.overlay.floatingCard.activeCardResponseText });
+      // Explicit target id: the conversation the user's turn actually went
+      // into at send time, not "whichever conversation happens to be active
+      // now" — those can differ if the user switched conversations while
+      // this was still streaming.
+      Storage.addChatMessage({ role: 'assistant', content: this.overlay.floatingCard.activeCardResponseText }, this.activeRequestConversationId);
       if (this.overlay.floatingCard.popupMode === 'translate') {
         this.overlay.floatingCard.recordTranslateHistory(
           this.overlay.floatingCard.popupSourceText,
@@ -669,24 +692,32 @@ export class OverlayDrawer {
 
     if (this.activeAiBubble) {
       this.stopLoadingSteps();
-      const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
-      const dict = getI18n(uiLanguage);
-      const footer = this.activeAiBubble.querySelector('.hw-msg-footer');
-      if (footer) footer.style.display = 'flex';
+      // The bubble may already be detached — loadInitialHistory() rebuilds
+      // #hwChatBody from scratch if the user switched to a different
+      // conversation while this was still streaming. Only touch it (footer,
+      // copy button) while it's still live; the storage write below (with
+      // the conversation this request actually started in, not whichever
+      // one is active now) is what actually matters for correctness.
+      if (this.shadow.contains(this.activeAiBubble)) {
+        const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+        const dict = getI18n(uiLanguage);
+        const footer = this.activeAiBubble.querySelector('.hw-msg-footer');
+        if (footer) footer.style.display = 'flex';
 
-      const copyBtn = this.activeAiBubble.querySelector('.hw-copy-btn');
-      if (copyBtn) {
-        copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
-        copyBtn.onclick = () => {
-          navigator.clipboard.writeText(this.currentDrawerResponseText);
-          copyBtn.innerHTML = `${Icons.check(12)} <span>${dict.copiedBtn || 'Đã sao chép!'}</span>`;
-          setTimeout(() => {
-            copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
-          }, 2000);
-        };
+        const copyBtn = this.activeAiBubble.querySelector('.hw-copy-btn');
+        if (copyBtn) {
+          copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
+          copyBtn.onclick = () => {
+            navigator.clipboard.writeText(this.currentDrawerResponseText);
+            copyBtn.innerHTML = `${Icons.check(12)} <span>${dict.copiedBtn || 'Đã sao chép!'}</span>`;
+            setTimeout(() => {
+              copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
+            }, 2000);
+          };
+        }
       }
 
-      Storage.addChatMessage({ role: 'assistant', content: this.currentDrawerResponseText });
+      Storage.addChatMessage({ role: 'assistant', content: this.currentDrawerResponseText }, this.activeRequestConversationId);
     }
   }
 
@@ -747,30 +778,46 @@ export class OverlayDrawer {
   }
 
   async loadInitialHistory() {
-    const history = await Storage.getChatHistory();
+    // A render-generation guard: this method has multiple concurrent
+    // callers (the explicit call after switchConversation()/deleteConversation(),
+    // and the chrome.storage.onChanged listener firing for that same write)
+    // that used to race — both would independently clear + repopulate
+    // #hwChatBody, and whichever resolved its awaits last would append a
+    // second copy of every message on top instead of replacing them. Doing
+    // all the reads up front and checking the token exactly once, before any
+    // synchronous DOM work, means a superseded call bails out cleanly
+    // instead of writing anything.
+    const myToken = ++this._historyRenderToken;
     const body = this.shadow.getElementById('hwChatBody');
     if (!body) return;
 
-    // toggle(true) fires this without awaiting it. If a message gets sent
-    // while this storage fetch is still in flight, askAi() has already
-    // appended a live user+AI bubble (and set isStreaming) by the time we
-    // get here — wiping the body now would destroy that bubble and orphan
-    // whatever appendStreamChunk is still writing into it.
-    if (this.isStreaming) return;
+    const [history, { activeConversationId }, convs, { uiLanguage = 'vi' }] = await Promise.all([
+      Storage.getChatHistory(),
+      Storage.get(['activeConversationId']),
+      Storage.getConversations(),
+      Storage.get(['uiLanguage']),
+    ]);
+
+    if (myToken !== this._historyRenderToken) return;
+
+    // toggle(true) fires this without awaiting it, and askAi() can append a
+    // live user+AI bubble directly to the DOM while this fetch is still in
+    // flight — wiping the body now would destroy that bubble and orphan
+    // whatever appendStreamChunk is still writing into it. Only bail for
+    // that case though: if the user has switched to viewing a DIFFERENT
+    // conversation than the one currently streaming, that live bubble isn't
+    // on screen any more, so rebuilding here is safe and correct.
+    if (this.isStreaming && this.activeRequestConversationId === activeConversationId) return;
+
+    const activeConv = convs.find((c) => c.id === activeConversationId);
+    const dict = getI18n(uiLanguage);
 
     body.innerHTML = '';
-
-    const { activeConversationId } = await Storage.get(['activeConversationId']);
-    const convs = await Storage.getConversations();
-    const activeConv = convs.find((c) => c.id === activeConversationId);
 
     const titleEl = this.shadow.getElementById('hwActiveConvTitle');
     if (titleEl) {
       titleEl.textContent = activeConv?.title || 'New Chat';
     }
-
-    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
-    const dict = getI18n(uiLanguage);
 
     if (history.length > 0) {
       history.forEach((msg) => {

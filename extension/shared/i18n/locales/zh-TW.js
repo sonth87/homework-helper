@@ -58,6 +58,13 @@ export default {
     },
     emptyHistory: "暫無儲存的歷史對話。<br>開始新對話以記錄解題過程！",
     loadingHistory: "正在載入歷史對話列表...",
+    historySearchPlaceholder: "搜尋對話...",
+    historyLoadMore: "載入更多",
+    historyNoResults: "找不到符合的對話。",
+    historyRenameTooltip: "重新命名對話",
+    historyDeleteTooltip: "刪除對話",
+    historyDeleteConfirm: "刪除此對話？此操作無法復原。",
+    historyMsgsLabel: "則訊息",
     chips: [
       {
         label: "一元二次方程式",

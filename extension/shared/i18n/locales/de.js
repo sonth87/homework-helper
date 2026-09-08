@@ -58,6 +58,13 @@ export default {
     },
     emptyHistory: "Keine gespeicherten Verläufe.<br>Starte einen neuen Chat!",
     loadingHistory: "Lade Chatverlauf...",
+    historySearchPlaceholder: "Unterhaltungen durchsuchen...",
+    historyLoadMore: "Mehr laden",
+    historyNoResults: "Keine passenden Unterhaltungen gefunden.",
+    historyRenameTooltip: "Unterhaltung umbenennen",
+    historyDeleteTooltip: "Unterhaltung löschen",
+    historyDeleteConfirm: "Diese Unterhaltung löschen? Kann nicht rückgängig gemacht werden.",
+    historyMsgsLabel: "Nachrichten",
     chips: [
       {
         label: "Quadratische Gleichung",

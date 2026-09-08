@@ -17,6 +17,42 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.10.0] — 2026-09-08
+
+### Thêm mới
+- Mỗi lần khởi động trình duyệt sẽ bắt đầu một hội thoại mới trong khung chat,
+  thay vì tiếp tục nối vào hội thoại cũ vô thời hạn — nếu vẫn đang trong cùng
+  một phiên làm việc và có hoạt động trong 24 giờ gần nhất thì hội thoại đang
+  dùng vẫn được giữ nguyên như trước.
+- Khi chat trực tiếp trong khung chat (Side Panel, Chat Drawer, hay popup thẻ
+  nổi), AI giờ được gửi kèm các lượt hỏi/đáp trước đó trong cùng hội thoại để
+  hiểu ngữ cảnh khi hỏi tiếp — kể cả khi đang dùng Gemini Nano chạy trên máy mà
+  chưa cấu hình API Key nào (trước đây trường hợp này hoàn toàn không có ngữ
+  cảnh). Riêng chụp ảnh giải bài hoặc bôi đen văn bản để giải/dịch luôn được
+  xử lý như một yêu cầu độc lập, không kèm ngữ cảnh cũ, để AI không bị nhiễu
+  bởi nội dung không liên quan và không tăng thời gian chờ với model cục bộ.
+- Bảng "Lịch sử các hội thoại" (cả Side Panel, Chat Drawer, và popup thẻ nổi)
+  nay có thêm: ô tìm kiếm theo tên hội thoại, nút "Tải thêm" khi danh sách dài,
+  nút đổi tên hội thoại ngay tại chỗ, và xoá hội thoại sẽ hỏi xác nhận trước
+  khi xoá thật.
+
+### Sửa lỗi
+- Gõ một câu chào đơn giản như "hello" trong khung chat không còn khiến AI trả
+  lời lạc đề bằng một đoạn phân tích dài kèm 4 đáp án trắc nghiệm bịa ra, hay
+  tường thuật lại việc nó đang xử lý câu hỏi kiểu gì — AI giờ tự nhận biết đâu
+  là câu hỏi bài tập thật sự cần lời giải và đâu chỉ là trò chuyện thông
+  thường, rồi trả lời thẳng như một tin nhắn chat bình thường.
+- Xoá hội thoại đang mở trong bảng Lịch sử trước đây sẽ âm thầm nhảy sang một
+  hội thoại CŨ khác còn sót lại, khiến việc xoá trông như không có tác dụng —
+  nay xoá hội thoại đang mở luôn chuyển sang một đoạn chat mới, trống.
+- Sửa lỗi khung chat hiển thị trùng lặp cả câu hỏi lẫn câu trả lời khi chuyển
+  qua hội thoại khác trong lúc AI đang trả lời rồi quay lại hội thoại ban đầu.
+- Câu trả lời của AI không còn bị ghi nhầm vào hội thoại đang xem nếu người
+  dùng chuyển sang hội thoại khác trong lúc AI vẫn đang trả lời — câu trả lời
+  luôn được lưu đúng vào hội thoại đã đặt câu hỏi.
+
+---
+
 ## [1.9.2] — 2026-09-07
 
 ### Thay đổi

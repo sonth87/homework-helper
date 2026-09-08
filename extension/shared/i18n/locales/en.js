@@ -58,6 +58,13 @@ export default {
     },
     emptyHistory: "No conversations saved yet.<br>Start a new chat to begin!",
     loadingHistory: "Loading conversations...",
+    historySearchPlaceholder: "Search conversations...",
+    historyLoadMore: "Load more",
+    historyNoResults: "No matching conversations.",
+    historyRenameTooltip: "Rename conversation",
+    historyDeleteTooltip: "Delete conversation",
+    historyDeleteConfirm: "Delete this conversation? This can't be undone.",
+    historyMsgsLabel: "msgs",
     chips: [
       {
         label: "Quadratic Equation",

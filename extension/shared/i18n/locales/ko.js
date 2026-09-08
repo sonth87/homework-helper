@@ -59,6 +59,13 @@ export default {
     emptyHistory:
       "저장된 대화 기록이 없습니다.<br>새 대화를 시작하여 문제 풀이를 기록하세요!",
     loadingHistory: "대화 기록을 불러오는 중...",
+    historySearchPlaceholder: "대화 검색...",
+    historyLoadMore: "더 보기",
+    historyNoResults: "일치하는 대화를 찾을 수 없습니다.",
+    historyRenameTooltip: "대화 이름 변경",
+    historyDeleteTooltip: "대화 삭제",
+    historyDeleteConfirm: "이 대화를 삭제하시겠습니까? 되돌릴 수 없습니다.",
+    historyMsgsLabel: "개 메시지",
     chips: [
       {
         label: "이차방정식",

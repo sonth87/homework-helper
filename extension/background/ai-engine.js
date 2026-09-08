@@ -10,26 +10,7 @@ import { formatStudyPrompt } from '../shared/study-prompt.js';
 import { streamViaOffscreen } from './offscreen-ai-bridge.js';
 import { isSingleWord, DICTIONARY_SCHEMA } from '../shared/dictionary.js';
 import { checkNanoAvailability, NANO_STATUS } from '../shared/nano-status.js';
-
-// Cắt nông lịch sử hội thoại trước khi gửi cho model — không tóm tắt (tóm tắt
-// tốn thêm 1 lần gọi model, có thể phản tác dụng vì local model vốn đã chậm).
-// Local model giữ ít lượt hơn vì ngữ cảnh cộng thẳng vào thời gian chờ prefill
-// mà người dùng cảm nhận được. Hai con số này CHƯA đo thực tế (máy dev không
-// cài Ollama) — là ước lượng có lý do, không phải số đo — xem
-// roadmap/known-issues.md mục 1. Desktop áp cùng logic, cùng ước lượng, ở
-// desktop/config/limits.config.ts (LIMITS.llmLane.historyTurnsLocal/Cloud).
-const HISTORY_TURNS_LOCAL = 6;
-const HISTORY_TURNS_CLOUD = 20;
-
-/**
- * @param {Array<{role: 'user'|'assistant', content: string}>} history
- * @param {boolean} isLocal
- */
-function truncateHistory(history, isLocal) {
-  if (!history || !history.length) return [];
-  const max = isLocal ? HISTORY_TURNS_LOCAL : HISTORY_TURNS_CLOUD;
-  return history.slice(-max);
-}
+import { truncateHistory } from '../shared/history-budget.js';
 
 export class AiEngine {
   /**
@@ -82,7 +63,7 @@ export class AiEngine {
     // 1. nano_only Strategy: 100% On-Device execution
     if (routingStrategy === 'nano_only') {
       onChunk('', { status: 'connecting', model: 'Gemini Nano (On-Device)', provider: 'chrome-builtin' });
-      await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt, history: truncateHistory(history, true) }, onChunk, signal);
+      await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt, history: truncateHistory(history, 'nano') }, onChunk, signal);
       return;
     }
 
@@ -90,7 +71,7 @@ export class AiEngine {
     if (routingStrategy === 'prefer_nano' && !imageBase64 && !preferredConfigId) {
       try {
         onChunk('', { status: 'connecting', model: 'Gemini Nano (On-Device)', provider: 'chrome-builtin' });
-        await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt, history: truncateHistory(history, true) }, onChunk, signal);
+        await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt, history: truncateHistory(history, 'nano') }, onChunk, signal);
         return;
       } catch (nanoErr) {
         if (enabledKeys.length === 0) throw nanoErr;
@@ -117,7 +98,7 @@ export class AiEngine {
             status: 'switching',
             notice: 'Không có API Key khả dụng, tự động chuyển về Gemini Nano On-Device...',
           });
-          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt, history: truncateHistory(history, true) }, onChunk, signal);
+          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt, history: truncateHistory(history, 'nano') }, onChunk, signal);
           return;
         }
         throw new Error('Chưa có API Key nào được kích hoạt trong Cài đặt.');
@@ -127,7 +108,7 @@ export class AiEngine {
         onChunk('', { status: 'connecting', model: config.model, provider: config.provider, attempt: attempts });
 
         if (config.provider === 'chrome-builtin') {
-          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt, history: truncateHistory(history, true) }, onChunk, signal);
+          await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: nanoFinalSystemPrompt, history: truncateHistory(history, 'nano') }, onChunk, signal);
         } else {
           // Gemini / Claude / OpenAI-compatible (OpenAI, DeepSeek, Groq, OpenRouter, Custom).
           // The actual fetch() runs in the offscreen document, not here — MV3 kills the
@@ -137,7 +118,7 @@ export class AiEngine {
           // OpenAI-compatible offscreen path — cắt lịch sử ngắn hơn cho chúng,
           // giống hệt cách streamChromeBuiltin được xử lý ở nhánh kia.
           const isLocalConfig = config.provider === 'ollama' || config.provider === 'lmstudio';
-          await streamViaOffscreen(config.provider, config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt, thinkingEnabled, history: truncateHistory(history, isLocalConfig) }, onChunk, signal);
+          await streamViaOffscreen(config.provider, config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt, thinkingEnabled, history: truncateHistory(history, isLocalConfig ? 'local' : 'cloud') }, onChunk, signal);
         }
 
         // Successfully completed
@@ -159,7 +140,7 @@ export class AiEngine {
               status: 'switching',
               notice: 'Tất cả API Key đều bận hoặc không kết nối được, tự động chuyển về Gemini Nano On-Device...',
             });
-            await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt, history: truncateHistory(history, true) }, onChunk, signal);
+            await this.streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt: finalSystemPrompt, history: truncateHistory(history, 'nano') }, onChunk, signal);
             return;
           }
           throw err;

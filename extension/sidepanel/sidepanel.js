@@ -20,9 +20,14 @@ export class SidePanelController {
     this.currentStudyMode = 'step-by-step';
     this.isStreaming = false;
     this.activeRequestId = null;
+    // Which conversation the in-flight request's user turn was appended to —
+    // see drawer.js's identical field for the full reasoning (this side
+    // panel has the same switch-conversation-mid-stream hazard).
+    this.activeRequestConversationId = null;
     this.activeAiBubble = null;
     this.currentResponseText = '';
     this.loadingStepsInterval = null;
+    this._historyRenderToken = 0;
 
     // One delegated listener for the listen buttons a dictionary reply draws
     // inline — the bubbles are re-rendered on every streamed chunk, so nothing
@@ -91,7 +96,7 @@ export class SidePanelController {
       if (footer) footer.style.display = 'flex';
     }
     if (this.currentResponseText) {
-      Storage.addChatMessage({ role: 'assistant', content: this.currentResponseText });
+      Storage.addChatMessage({ role: 'assistant', content: this.currentResponseText }, this.activeRequestConversationId);
     }
   }
 
@@ -331,12 +336,13 @@ export class SidePanelController {
           // own "New Chat" click — so a result that lands in the shared
           // conversation store from elsewhere (Capture & Solve's on-page
           // floating card, the in-page drawer's own chat) never appears here
-          // until the panel is fully closed and reopened. Skip the refresh
-          // while this panel is mid-stream itself: loadChatHistory() rebuilds
-          // #spChatBody from storage, and the in-progress assistant turn
-          // isn't written until finalizeStream() — refreshing earlier would
-          // wipe the live bubble it's still appending chunks into.
-          if ((changes.conversations || changes.chatHistory || changes.activeConversationId) && !this.isStreaming) {
+          // until the panel is fully closed and reopened. loadChatHistory()
+          // itself decides whether it's safe to rebuild — it only skips the
+          // refresh while the panel is mid-stream AND still viewing the
+          // conversation that's streaming (rebuilding then would wipe the
+          // live bubble appendChunk is still writing into); if the user has
+          // switched to a different conversation, refreshing is correct.
+          if (changes.conversations || changes.chatHistory || changes.activeConversationId) {
             this.loadChatHistory();
           }
         }
@@ -464,7 +470,8 @@ export class SidePanelController {
     // vào Storage (không đợi xong), nên lấy lịch sử sau đó là dính đua tranh:
     // có thể dính luôn chính câu vừa gửi vào danh sách "lượt trước" của nó.
     const priorMessages = await Storage.getChatHistory();
-    this.appendUserMessage(prompt, imageBase64);
+    const conv = await this.appendUserMessage(prompt, imageBase64);
+    this.activeRequestConversationId = conv?.id || null;
 
     this.activeAiBubble = this.createAiBubble();
     this.currentResponseText = '';
@@ -505,9 +512,9 @@ export class SidePanelController {
     });
   }
 
-  appendUserMessage(text, imageBase64) {
+  async appendUserMessage(text, imageBase64) {
     const body = document.getElementById('spChatBody');
-    if (!body) return;
+    if (!body) return null;
     const msgEl = document.createElement('div');
     msgEl.className = 'sp-msg sp-msg-user';
 
@@ -522,7 +529,7 @@ export class SidePanelController {
     body.appendChild(msgEl);
     body.scrollTop = body.scrollHeight;
 
-    Storage.addChatMessage({ role: 'user', content: text, image: imageBase64 });
+    return Storage.addChatMessage({ role: 'user', content: text, image: imageBase64 });
   }
 
   createAiBubble() {
@@ -617,24 +624,32 @@ export class SidePanelController {
 
     if (this.activeAiBubble) {
       this.stopLoadingSteps();
-      const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
-      const dict = getI18n(uiLanguage);
-      const footer = this.activeAiBubble.querySelector('.sp-msg-footer');
-      if (footer) footer.style.display = 'flex';
+      // The bubble may already be detached — loadChatHistory() rebuilds
+      // #spChatBody from scratch if the user switched to a different
+      // conversation while this was still streaming. Only touch it (footer,
+      // copy button) while it's still live; the storage write below (with
+      // the conversation this request actually started in, not whichever
+      // one is active now) is what actually matters for correctness.
+      if (document.contains(this.activeAiBubble)) {
+        const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
+        const dict = getI18n(uiLanguage);
+        const footer = this.activeAiBubble.querySelector('.sp-msg-footer');
+        if (footer) footer.style.display = 'flex';
 
-      const copyBtn = this.activeAiBubble.querySelector('.sp-copy-btn');
-      if (copyBtn) {
-        copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
-        copyBtn.onclick = () => {
-          navigator.clipboard.writeText(this.currentResponseText);
-          copyBtn.innerHTML = `${Icons.check(12)} <span>${dict.copiedBtn || 'Đã sao chép!'}</span>`;
-          setTimeout(() => {
-            copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
-          }, 2000);
-        };
+        const copyBtn = this.activeAiBubble.querySelector('.sp-copy-btn');
+        if (copyBtn) {
+          copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
+          copyBtn.onclick = () => {
+            navigator.clipboard.writeText(this.currentResponseText);
+            copyBtn.innerHTML = `${Icons.check(12)} <span>${dict.copiedBtn || 'Đã sao chép!'}</span>`;
+            setTimeout(() => {
+              copyBtn.innerHTML = `${Icons.copy(12)} <span>${dict.copyBtn || 'Sao chép'}</span>`;
+            }, 2000);
+          };
+        }
       }
 
-      Storage.addChatMessage({ role: 'assistant', content: this.currentResponseText });
+      Storage.addChatMessage({ role: 'assistant', content: this.currentResponseText }, this.activeRequestConversationId);
     }
   }
 
@@ -763,17 +778,39 @@ export class SidePanelController {
   }
 
   async loadChatHistory() {
-    const history = await Storage.getChatHistory();
+    // A render-generation guard: this method has multiple concurrent
+    // callers (the explicit call after switching/deleting a conversation,
+    // and the chrome.storage.onChanged listener firing for that same write)
+    // that used to race — both would independently clear + repopulate
+    // #spChatBody, and whichever resolved its awaits last would append a
+    // second copy of every message on top instead of replacing them. Doing
+    // all the reads up front and checking the token exactly once, before any
+    // synchronous DOM work, means a superseded call bails out cleanly.
+    const myToken = ++this._historyRenderToken;
     const body = document.getElementById('spChatBody');
     if (!body) return;
 
-    body.innerHTML = '';
+    const [history, { activeConversationId }, convs, { uiLanguage = 'vi' }] = await Promise.all([
+      Storage.getChatHistory(),
+      Storage.get(['activeConversationId']),
+      Storage.getConversations(),
+      Storage.get(['uiLanguage']),
+    ]);
 
-    const { activeConversationId } = await Storage.get(['activeConversationId']);
-    const convs = await Storage.getConversations();
+    if (myToken !== this._historyRenderToken) return;
+
+    // Only skip the rebuild while the CURRENTLY VIEWED conversation is the
+    // one actively streaming — askAi() is writing directly into its own
+    // bubble for that case, and a storage-driven rebuild here would destroy
+    // it. If the user has switched to a different conversation, that
+    // streaming conversation isn't the one on screen any more, so it's safe
+    // (and correct) to rebuild.
+    if (this.isStreaming && this.activeRequestConversationId === activeConversationId) return;
+
     const activeConv = convs.find((c) => c.id === activeConversationId);
-    const { uiLanguage = 'vi' } = await Storage.get(['uiLanguage']);
     const dict = getI18n(uiLanguage);
+
+    body.innerHTML = '';
 
     const titleEl = document.getElementById('spActiveConvTitle');
     if (titleEl) {

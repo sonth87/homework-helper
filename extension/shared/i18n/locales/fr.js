@@ -59,6 +59,13 @@ export default {
     emptyHistory:
       "Aucune discussion enregistrée.<br>Commencez un nouveau chat !",
     loadingHistory: "Chargement de l’historique...",
+    historySearchPlaceholder: "Rechercher des conversations...",
+    historyLoadMore: "Charger plus",
+    historyNoResults: "Aucune conversation correspondante.",
+    historyRenameTooltip: "Renommer la conversation",
+    historyDeleteTooltip: "Supprimer la conversation",
+    historyDeleteConfirm: "Supprimer cette conversation ? Cette action est irréversible.",
+    historyMsgsLabel: "messages",
     chips: [
       {
         label: "Équation du second degré",

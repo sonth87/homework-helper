@@ -59,6 +59,13 @@ export default {
     emptyHistory:
       "保存された履歴はありません。<br>新規チャットを開始してください！",
     loadingHistory: "履歴を読み込み中...",
+    historySearchPlaceholder: "会話を検索...",
+    historyLoadMore: "さらに読み込む",
+    historyNoResults: "一致する会話が見つかりません。",
+    historyRenameTooltip: "会話の名前を変更",
+    historyDeleteTooltip: "会話を削除",
+    historyDeleteConfirm: "この会話を削除しますか？元に戻せません。",
+    historyMsgsLabel: "件のメッセージ",
     chips: [
       {
         label: "二次方程式",

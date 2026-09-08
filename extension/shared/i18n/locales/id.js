@@ -60,6 +60,13 @@ export default {
     emptyHistory:
       "Belum ada riwayat percakapan tersimpan.<br>Mulai obrolan baru untuk memulai!",
     loadingHistory: "Memuat riwayat obrolan...",
+    historySearchPlaceholder: "Cari percakapan...",
+    historyLoadMore: "Muat lagi",
+    historyNoResults: "Tidak ada percakapan yang cocok.",
+    historyRenameTooltip: "Ganti nama percakapan",
+    historyDeleteTooltip: "Hapus percakapan",
+    historyDeleteConfirm: "Hapus percakapan ini? Tindakan ini tidak dapat dibatalkan.",
+    historyMsgsLabel: "pesan",
     chips: [
       {
         label: "Persamaan Kuadrat",

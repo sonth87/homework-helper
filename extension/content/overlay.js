@@ -98,9 +98,13 @@ class InPageOverlay {
               <button class="hw-icon-btn" id="hwBtnCloseCardHistory">${Icons.x(13)}</button>
             </div>
           </div>
+          <div style="padding: 8px 10px 0;">
+            <input type="text" id="hwCardHistorySearch" style="width:100%; box-sizing:border-box; padding:6px 9px; border-radius:7px; border:1px solid var(--hw-border-color); font-size:12px; background:transparent; color:inherit; font-family:inherit;">
+          </div>
           <div class="hw-card-history-list" id="hwCardHistoryList">
             <!-- Rendered dynamically -->
           </div>
+          <button id="hwCardHistoryLoadMore" style="display:none; margin: 0 10px 8px; padding:6px; border-radius:7px; border:1px solid var(--hw-border-color); background:transparent; color:var(--hw-accent); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"></button>
           <div style="padding: 8px 10px; border-top: 1px solid var(--hw-border-color); background: var(--hw-bg-secondary); text-align: center;">
             <button class="hw-btn-open-drawer" id="hwBtnCardOpenDrawer" style="font-size: 11.5px; padding: 4px 10px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer;">
               ${Icons.messageCircle(12)} Mở toàn bộ trong Khung Chat
@@ -232,9 +236,13 @@ class InPageOverlay {
               <button class="hw-icon-btn" id="hwBtnCloseDrawerHistory">${Icons.x(14)}</button>
             </div>
           </div>
+          <div style="padding: 8px 12px 0;">
+            <input type="text" id="hwDrawerHistorySearch" style="width:100%; box-sizing:border-box; padding:7px 10px; border-radius:8px; border:1px solid var(--hw-border-color); font-size:12.5px; background:transparent; color:inherit; font-family:inherit;">
+          </div>
           <div class="hw-drawer-history-list" id="hwDrawerHistoryList">
             <!-- Populated dynamically -->
           </div>
+          <button id="hwDrawerHistoryLoadMore" style="display:none; margin: 0 12px 10px; padding:7px; border-radius:8px; border:1px solid var(--hw-border-color); background:transparent; color:var(--hw-accent); font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit;"></button>
         </div>
 
         <!-- Active Model Rotation Bar (Matching Sidepanel) -->
@@ -392,7 +400,10 @@ class InPageOverlay {
           this.floatingCard.openActionPopup('answer', query, rect);
         } else {
           this.drawer.toggle(true);
-          this.drawer.askAi({ prompt: query });
+          // A Google Forms question, not something the user typed in chat —
+          // treat it as an independent solve, not a follow-up in whatever
+          // conversation happens to be open (see askAi()'s isChat doc).
+          this.drawer.askAi({ prompt: query, isChat: false });
         }
       }
     });
@@ -470,7 +481,10 @@ class InPageOverlay {
             this.drawer.updateActiveModelBadge();
             this.fabs.updateGatingVisual?.();
           }
-          if ((changes.chatHistory || changes.activeConversationId || changes.conversations) && this.drawer.isOpen && !this.drawer.isStreaming) {
+          // loadInitialHistory() itself decides whether it's safe to rebuild
+          // — see its own doc comment — so this only needs to gate on the
+          // drawer actually being open.
+          if ((changes.chatHistory || changes.activeConversationId || changes.conversations) && this.drawer.isOpen) {
             this.drawer.loadInitialHistory();
           }
         }

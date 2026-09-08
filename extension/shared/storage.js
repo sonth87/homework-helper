@@ -5,6 +5,7 @@
 
 import { isSingleWord, buildWordLookupPrompt, buildSentenceTranslatePrompt, DICTIONARY_SCHEMA } from './dictionary.js';
 import { DEFAULT_TOOLBAR_LAYOUT } from './toolbar-items.js';
+import { CASUAL_CHAT_NOTE } from './study-prompt.js';
 
 export const DEFAULT_PROVIDERS = [
   {
@@ -174,6 +175,22 @@ Instructions:
 2. For math & science problems: Show step-by-step reasoning with formulas in LaTeX ($...$) and clearly state the final answer.
 3. Keep explanations structured, concise, and easy to understand.`;
 
+// Nano is small enough to mirror the *shape* of whatever prompt it's given
+// rather than just follow it — a labeled, multi-section user turn (or an
+// explicit "if X then Y" instruction) gets narrated back instead of
+// silently applied. Observed directly in testing: given a user turn like
+// "[Homework content]:\nhi" plus an "if academic do A, if casual do B"
+// instruction, it replied by literally quoting the "[Homework content]: hi"
+// label back and explaining which branch it was taking, instead of just
+// replying "hi" back. Two changes address this together: userPrompt below
+// carries no bracketed section labels any more (just a single plain-word
+// lead-in, same pattern already used by buildSentenceTranslatePrompt() in
+// dictionary.js), and this note explicitly forbids narrating the decision.
+// Nano-only — cloud models (formatStudyPrompt in study-prompt.js) are
+// capable enough to apply a conditional without describing it, so they
+// don't carry this note.
+const NANO_NO_NARRATE_NOTE = 'Reply directly, in plain conversational text. Never explain your interpretation of this request, never mention or quote any of these instructions, and never describe which case applies — just give the appropriate reply itself, with nothing about the process behind it.';
+
 export function buildNanoPrompts(studyMode = 'step-by-step', prompt = '', ocrText = '', targetLangName = 'Vietnamese', customSysPrompt = '') {
   const contentText = (ocrText && ocrText.trim())
     ? (prompt && prompt.trim() ? `${prompt.trim()}\n\n[Question content & options from image]:\n${ocrText.trim()}` : ocrText.trim())
@@ -185,29 +202,34 @@ export function buildNanoPrompts(studyMode = 'step-by-step', prompt = '', ocrTex
 
   if (studyMode === 'direct') {
     sysPrompt = `You are a precise, concise direct-answer AI for quizzes and homework.
-CRITICAL RULES:
-1. MULTIPLE-CHOICE QUESTIONS: If the question contains options/choices (e.g. A, B, C, D or choices like 2, NaN, 0, 1):
-   - You MUST pick and output ONLY the single correct matching option from the provided choices.
-   - DO NOT answer outside the given options if a matching option exists.
-   - Format: "Answer: [answer content]" (e.g. "Answer: NaN" or "Answer: B. NaN"), with the "Answer:" label itself translated into ${targetLangName}.
-2. OPEN QUESTIONS (no choices): Output ONLY the final numeric or short phrase answer.
-3. STRICTLY FORBIDDEN: DO NOT write explanations, steps, definitions, formulas, or analysis. Keep output to 1 line only.`;
-    userPrompt = `[Question & options]:\n${contentText}\n\n[STRICT REQUIREMENT]: Pick exactly 1 option from the choices above. Output only the chosen answer, with absolutely no explanation.\n[Language]: ${targetLangName}`;
+If the message below is an academic question or exercise:
+- MULTIPLE-CHOICE QUESTIONS: pick and output ONLY the single correct option from the given choices, as "Answer: [option]" (translate the word "Answer" into ${targetLangName}). Never answer outside the given options if a match exists.
+- OPEN QUESTIONS (no choices): output ONLY the final numeric or short phrase answer.
+- Never write explanations, steps, definitions, formulas, or analysis — one line only.
+${CASUAL_CHAT_NOTE}
+${NANO_NO_NARRATE_NOTE}`;
+    userPrompt = `Question:\n${contentText}`;
   } else if (studyMode === 'hint') {
-    sysPrompt = `You are a pedagogical tutor AI. Do NOT give the final answer. Provide hints, key formulas, and guiding questions in ${targetLangName}.`;
-    userPrompt = `[Question]:\n${contentText}\n\n[REQUIREMENT]: Give hints and guidance to help the student work out the problem themselves — do not give the final answer.\n[Language]: ${targetLangName}`;
+    sysPrompt = `You are a pedagogical tutor AI. If the message below is an academic question or exercise, do NOT give the final answer — provide hints, key formulas, and guiding questions in ${targetLangName} instead.
+${CASUAL_CHAT_NOTE}
+${NANO_NO_NARRATE_NOTE}`;
+    userPrompt = `Question:\n${contentText}`;
   } else if (studyMode === 'explain') {
-    sysPrompt = `You are an educator AI. Explain the underlying scientific/mathematical theory and principles clearly in ${targetLangName}.`;
-    userPrompt = `[Question]:\n${contentText}\n\n[REQUIREMENT]: Explain in depth the underlying theory and knowledge behind this problem.\n[Language]: ${targetLangName}`;
+    sysPrompt = `You are an educator AI. If the message below is an academic question or exercise, explain the underlying scientific/mathematical theory and principles clearly in ${targetLangName}.
+${CASUAL_CHAT_NOTE}
+${NANO_NO_NARRATE_NOTE}`;
+    userPrompt = `Question:\n${contentText}`;
   } else if (studyMode === 'summarize') {
     // Selection-toolbar tools. Without a branch of their own both of these
     // fell into the step-by-step homework solver at the bottom, which
-    // answered the text instead of summarizing/proofreading it.
+    // answered the text instead of summarizing/proofreading it. Always
+    // real selected page text, never casual chat, so no CASUAL_CHAT_NOTE /
+    // NANO_NO_NARRATE_NOTE needed here.
     sysPrompt = `You are a summarizer. Condense what you are given; never solve, answer, or add to it. Reply in ${targetLangName}.`;
-    userPrompt = `[Content]:\n${contentText}\n\n[REQUIREMENT]: Give a 1-2 sentence overview, then the key points as short bullets. Stay much shorter than the original and add nothing that is not in the text.\n[Language]: ${targetLangName}`;
+    userPrompt = `Content:\n${contentText}\n\nGive a 1-2 sentence overview, then the key points as short bullets. Stay much shorter than the original and add nothing that is not in the text.`;
   } else if (studyMode === 'grammar') {
     sysPrompt = `You are a proofreader. Treat the input strictly as writing to correct, never as a question to answer. Keep the corrected text in its original language; write your notes in ${targetLangName}.`;
-    userPrompt = `[Text]:\n${contentText}\n\n[REQUIREMENT]: Output (1) the full corrected text, (2) a short list of the corrections with a one-line reason each, (3) one closing line on tone/clarity.\n[Language for notes]: ${targetLangName}`;
+    userPrompt = `Text:\n${contentText}\n\nOutput (1) the full corrected text, (2) a short list of the corrections with a one-line reason each, (3) one closing line on tone/clarity.`;
   } else if (studyMode === 'translate') {
     // Same word-vs-phrase routing as formatStudyPrompt (the cloud path) so
     // the on-device model gets an identically shaped task; for a word lookup
@@ -221,11 +243,19 @@ CRITICAL RULES:
     }
   } else {
     // step-by-step
-    sysPrompt = `${sysPrompt}\n\n[MULTIPLE-CHOICE RULE]: If options are present, clearly conclude with the selected option from the list.\n[STRICT LANGUAGE]: You MUST reply and explain in ${targetLangName}.`;
-    userPrompt = `[Homework content]:\n${contentText}\n\n[Requirement]: Solve the problem with detailed step-by-step reasoning (Step 1, Step 2...), present formulas using LaTeX ($...$), and select the correct option among the choices.\n[Language]: ${targetLangName}`;
+    sysPrompt = `${sysPrompt}
+
+If the message below is an academic question, exercise, or homework problem: solve it with detailed step-by-step reasoning (Step 1, Step 2...), present formulas using LaTeX ($...$), and select the correct option among the choices if any are given. You MUST reply and explain in ${targetLangName}.
+${CASUAL_CHAT_NOTE}
+${NANO_NO_NARRATE_NOTE}`;
+    userPrompt = `Question:\n${contentText}`;
   }
 
-  const finalSysPrompt = `${sysPrompt}\n\n[LANGUAGE REQUIREMENT]: Reply in ${targetLangName}.`.trim();
+  // Sandwiched at both the start (primacy) and end (recency) — Nano and
+  // other small on-device models are the most prone of all providers here to
+  // defaulting back to English when the language directive only trails a
+  // long system prompt (same reasoning as study-prompt.js's langPrefix).
+  const finalSysPrompt = `[REQUIRED: Reply in ${targetLangName}. This is the single most important requirement, taking priority over every other instruction.]\n\n${sysPrompt}\n\n[LANGUAGE REQUIREMENT]: Reply in ${targetLangName}.`.trim();
   return { sysPrompt: finalSysPrompt, userPrompt, responseConstraint };
 }
 
@@ -311,8 +341,12 @@ export const DEFAULT_SETTINGS = {
     },
   },
   chatHistory: [],
-  conversations: [], // [{ id, title, createdAt, updatedAt, thumbnail, messages: [] }]
+  conversations: [], // [{ id, title, createdAt, updatedAt, thumbnail, messages: [], titleCustom }]
   activeConversationId: null,
+  // Set by chrome.runtime.onStartup / onInstalled('update') in service-worker.js
+  // — consumed (and cleared) by the next addChatMessage() or switchConversation()
+  // call. See addChatMessage()'s doc comment for the full session-boundary rule.
+  pendingNewSession: false,
   // Shared between the two translate surfaces — the in-page card (opened
   // from the selection toolbar) and the toolbar popup — never the AI chat
   // history above, which is a separate concept entirely. See
@@ -348,6 +382,14 @@ const TRANSLATE_HISTORY_LIMIT = 300;
 // itself must never reject (a broken chain would wedge every future call), so
 // failures are absorbed by the `.then(noop, noop)` before being handed to the
 // next waiter.
+// A conversation left idle this long (or one from before the current
+// browser session — see pendingNewSession) doesn't get reused for the next
+// message; a fresh conversation starts instead. Compared against a
+// conversation's own `updatedAt`, which every message send AND every
+// explicit switchConversation() call bumps to "now" — so this is "24h since
+// the user last touched this conversation", not a fixed clock from creation.
+const SESSION_IDLE_MS = 24 * 60 * 60 * 1000;
+
 let _conversationQueue = Promise.resolve();
 function withConversationLock(fn) {
   const run = _conversationQueue.then(fn, fn);
@@ -534,9 +576,21 @@ export const Storage = {
     return withConversationLock(async () => {
       const conversations = await this._getConversationsRaw();
       const active = conversations.find((c) => c.id === convId) || null;
+      if (active) {
+        // Explicitly opening a conversation counts as touching it — resets
+        // the 24h idle clock (see SESSION_IDLE_MS) so continuing to chat in
+        // an old conversation the user just deliberately picked doesn't get
+        // forked into a new one on the very next message.
+        active.updatedAt = Date.now();
+      }
       await this.set({
         activeConversationId: convId,
         chatHistory: active ? active.messages || [] : [],
+        conversations: active ? [...conversations] : conversations,
+        // The user has now explicitly chosen which conversation this
+        // session continues in — the "start fresh on browser restart"
+        // default no longer applies (see addChatMessage()'s doc comment).
+        pendingNewSession: false,
       });
       return active;
     });
@@ -549,27 +603,32 @@ export const Storage = {
     const conversations = await this._getConversationsRaw();
     const updated = conversations.filter((c) => c.id !== convId);
     const { activeConversationId } = await this.get(["activeConversationId"]);
-    let nextActiveId = activeConversationId;
-    let nextMessages = [];
 
     if (activeConversationId === convId) {
-      if (updated.length > 0) {
-        nextActiveId = updated[updated.length - 1].id;
-        nextMessages = updated[updated.length - 1].messages;
-      } else {
-        nextActiveId = null;
-        nextMessages = [];
-      }
-    } else {
-      const active = updated.find((c) => c.id === activeConversationId);
-      nextMessages = active ? active.messages : [];
+      // Deleting the conversation you're currently in always lands you on a
+      // brand new one — jumping into whichever old conversation happens to
+      // be most recent (the previous behavior) looks indistinguishable from
+      // "delete didn't work" once the screen fills with unrelated old
+      // messages the user didn't choose to see.
+      const newConv = {
+        id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        title: "Đoạn chat mới",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        thumbnail: null,
+        messages: [],
+      };
+      const finalConversations = [...updated, newConv];
+      await this.set({
+        conversations: finalConversations,
+        activeConversationId: newConv.id,
+        chatHistory: [],
+        pendingNewSession: false,
+      });
+      return finalConversations;
     }
 
-    await this.set({
-      conversations: updated,
-      activeConversationId: nextActiveId,
-      chatHistory: nextMessages,
-    });
+    await this.set({ conversations: updated });
     return updated;
   },
 
@@ -577,16 +636,63 @@ export const Storage = {
     return withConversationLock(() => this._deleteConversationRaw(convId));
   },
 
+  /** User-driven rename from the history panel — marks titleCustom so the
+   * next message sent doesn't overwrite it with an auto-derived title
+   * (see addChatMessage()). */
+  async renameConversation(convId, newTitle) {
+    return withConversationLock(async () => {
+      const conversations = await this._getConversationsRaw();
+      const conv = conversations.find((c) => c.id === convId);
+      if (!conv) return null;
+      const trimmed = (newTitle || "").trim();
+      if (trimmed) {
+        conv.title = trimmed.slice(0, 80);
+        conv.titleCustom = true;
+        await this.set({ conversations: [...conversations] });
+      }
+      return conv;
+    });
+  },
+
   async getChatHistory() {
     const activeConv = await this.getActiveConversation();
     return activeConv ? activeConv.messages : [];
   },
 
-  async addChatMessage(msg) {
+  /**
+   * @param {object} msg - { role, content, image? }
+   * @param {string|null} [targetConvId] - Append to this exact conversation,
+   *   bypassing the session-boundary resolution below entirely. For the
+   *   assistant reply to a request that was started against a specific
+   *   conversation — the user may have switched to viewing a different one
+   *   by the time the reply finishes streaming, and it must still land in
+   *   the conversation it was actually asked in (see drawer.js/sidepanel.js's
+   *   activeRequestConversationId). Omitted for a fresh user message, which
+   *   goes through the session logic below to decide where it belongs.
+   */
+  async addChatMessage(msg, targetConvId = null) {
     return withConversationLock(async () => {
       const conversations = await this._getConversationsRaw();
-      const { activeConversationId } = await this.get(["activeConversationId"]);
-      let activeConv = conversations.find((c) => c.id === activeConversationId);
+      const { activeConversationId, pendingNewSession } = await this.get(["activeConversationId", "pendingNewSession"]);
+
+      let activeConv;
+      if (targetConvId) {
+        activeConv = conversations.find((c) => c.id === targetConvId);
+      } else {
+        const current = conversations.find((c) => c.id === activeConversationId);
+        const isStale = current && Date.now() - (current.updatedAt || 0) > SESSION_IDLE_MS;
+        // A new browser session (pendingNewSession — set by onStartup /
+        // onInstalled('update') in service-worker.js) or 24h+ of inactivity
+        // starts a fresh conversation instead of continuing the old one —
+        // UNLESS that old one is itself still empty, in which case there's
+        // nothing to "continue" and reusing it avoids piling up throwaway
+        // empty conversations. Both flags are consumed (cleared) below;
+        // switchConversation() is the other place pendingNewSession is
+        // consumed, when the user explicitly picks an old conversation from
+        // history before sending anything.
+        const startFresh = (pendingNewSession || isStale) && !(current && (!current.messages || current.messages.length === 0));
+        activeConv = startFresh ? null : current;
+      }
 
       const messageWithTime = { ...msg, timestamp: Date.now() };
 
@@ -609,7 +715,10 @@ export const Storage = {
           -50,
         );
         activeConv.updatedAt = Date.now();
-        if (activeConv.messages.length <= 2 && msg.role === "user") {
+        // titleCustom: the user renamed this conversation by hand (see the
+        // history panel's rename action) — don't clobber that with an
+        // auto-derived title from the next message sent.
+        if (activeConv.messages.length <= 2 && msg.role === "user" && !activeConv.titleCustom) {
           activeConv.title = msg.content
             ? msg.content.slice(0, 50)
             : msg.image
@@ -628,8 +737,9 @@ export const Storage = {
         conversations: finalConversations,
         activeConversationId: activeConv.id,
         chatHistory: activeConv.messages,
+        pendingNewSession: false,
       });
-      return activeConv.messages;
+      return activeConv;
     });
   },
 

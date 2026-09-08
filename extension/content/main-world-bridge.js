@@ -63,7 +63,7 @@
 
   // Handle Prompt Execution & Streaming
   window.addEventListener('HOMEWORK_AI_NANO_EXEC', async (e) => {
-    const { prompt, requestId, systemPrompt, responseConstraint } = e.detail || {};
+    const { prompt, requestId, systemPrompt, responseConstraint, history } = e.detail || {};
     const aiModel = getAiModel();
 
     if (!aiModel) {
@@ -90,6 +90,12 @@
         systemPrompt: systemPrompt || undefined,
         temperature: 0.1,
         topK: 1,
+        // Prior turns of the conversation, already truncated to Nano's
+        // budget by the caller (drawer.js / floating-card.js, via
+        // shared/history-budget.js) before this event was dispatched — this
+        // page-world script has no access to that shared module. Role names
+        // ('user'/'assistant') already match the Prompt API's own convention.
+        ...(history && history.length ? { initialPrompts: history.map((h) => ({ role: h.role, content: h.content })) } : {}),
         monitor(m) {
           // Chrome fires a trivial 0%→100% downloadprogress pair on every single
           // create() call, even when the model is already fully available and

@@ -50,6 +50,23 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
     chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html#builtin-nano') });
   }
+
+  // A reload/update doesn't fire onStartup below (Chrome only fires that on
+  // an actual browser launch) — an updated extension mid-session should
+  // still start the next chat message in a fresh conversation rather than
+  // silently continuing whatever was active before. Consumed by
+  // Storage.addChatMessage()/switchConversation() — see storage.js.
+  if (details.reason === 'update') {
+    chrome.storage.local.set({ pendingNewSession: true });
+  }
+});
+
+// Fires once per actual browser launch (not on extension reload/update,
+// hence the onInstalled('update') branch above too) — the start of a new
+// "session" for conversation-continuity purposes. See storage.js's
+// SESSION_IDLE_MS doc comment for the full session-boundary rule.
+chrome.runtime.onStartup.addListener(() => {
+  chrome.storage.local.set({ pendingNewSession: true });
 });
 
 // 2. Context Menu Click Listener

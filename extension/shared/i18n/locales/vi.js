@@ -59,6 +59,13 @@ export default {
     emptyHistory:
       "Chưa có hội thoại nào được lưu.<br>Hãy tạo đoạn chat mới để bắt đầu!",
     loadingHistory: "Đang tải danh sách hội thoại...",
+    historySearchPlaceholder: "Tìm kiếm hội thoại...",
+    historyLoadMore: "Tải thêm",
+    historyNoResults: "Không tìm thấy hội thoại phù hợp.",
+    historyRenameTooltip: "Đổi tên hội thoại",
+    historyDeleteTooltip: "Xóa hội thoại",
+    historyDeleteConfirm: "Xóa hội thoại này? Không thể hoàn tác.",
+    historyMsgsLabel: "tin nhắn",
     chips: [
       {
         label: "Phương trình bậc 2",

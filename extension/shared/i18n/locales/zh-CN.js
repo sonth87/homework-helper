@@ -58,6 +58,13 @@ export default {
     },
     emptyHistory: "暂无保存的历史对话。<br>开始新对话以记录解题过程！",
     loadingHistory: "正在加载历史对话列表...",
+    historySearchPlaceholder: "搜索对话...",
+    historyLoadMore: "加载更多",
+    historyNoResults: "未找到匹配的对话。",
+    historyRenameTooltip: "重命名对话",
+    historyDeleteTooltip: "删除对话",
+    historyDeleteConfirm: "删除此对话？此操作无法撤销。",
+    historyMsgsLabel: "条消息",
     chips: [
       {
         label: "一元二次方程",

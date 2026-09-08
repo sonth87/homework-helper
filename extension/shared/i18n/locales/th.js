@@ -59,6 +59,13 @@ export default {
     emptyHistory:
       "ยังไม่มีประวัติการสนทนาที่บันทึกไว้<br>เริ่มบทสนทนาใหม่เพื่อเริ่มต้น!",
     loadingHistory: "กำลังโหลดรายการบทสนทนา...",
+    historySearchPlaceholder: "ค้นหาบทสนทนา...",
+    historyLoadMore: "โหลดเพิ่มเติม",
+    historyNoResults: "ไม่พบบทสนทนาที่ตรงกัน",
+    historyRenameTooltip: "เปลี่ยนชื่อบทสนทนา",
+    historyDeleteTooltip: "ลบบทสนทนา",
+    historyDeleteConfirm: "ลบบทสนทนานี้หรือไม่? ไม่สามารถย้อนกลับได้",
+    historyMsgsLabel: "ข้อความ",
     chips: [
       {
         label: "สมการกำลังสอง",

@@ -59,6 +59,13 @@ export default {
     emptyHistory:
       "Nenhum histórico salvo.<br>Inicie um novo chat para começar!",
     loadingHistory: "Carregando histórico...",
+    historySearchPlaceholder: "Pesquisar conversas...",
+    historyLoadMore: "Carregar mais",
+    historyNoResults: "Nenhuma conversa encontrada.",
+    historyRenameTooltip: "Renomear conversa",
+    historyDeleteTooltip: "Excluir conversa",
+    historyDeleteConfirm: "Excluir esta conversa? Isso não pode ser desfeito.",
+    historyMsgsLabel: "mensagens",
     chips: [
       {
         label: "Equação quadrática",
