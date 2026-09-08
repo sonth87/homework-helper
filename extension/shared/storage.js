@@ -175,6 +175,24 @@ Instructions:
 2. For math & science problems: Show step-by-step reasoning with formulas in LaTeX ($...$) and clearly state the final answer.
 3. Keep explanations structured, concise, and easy to understand.`;
 
+/**
+ * Replaces the base system prompt entirely when Direct Answer mode is on,
+ * rather than being appended after it. DEFAULT_SYSTEM_PROMPT and
+ * DEFAULT_NANO_SYSTEM_PROMPT both *mandate* step-by-step explanations, so
+ * bolting a "do not write steps" note onto the end of them handed the model
+ * two contradictory orders — with the longer, more detailed "explain step by
+ * step" half arriving first. Weaker models resolved that by ignoring the
+ * later, shorter instruction, which is exactly the symptom: Direct Answer
+ * still returning a full worked solution. buildNanoPrompts() already swaps
+ * the base prompt this way for its own path; this is the same idea for
+ * everything that goes through ai-engine.js.
+ */
+export const DIRECT_ANSWER_SYSTEM_PROMPT = `You are a precise, direct-answer AI for quizzes and homework.
+Output ONLY the final answer. Never write steps, reasoning, breakdowns, analysis, or explanations of any kind.
+For multiple-choice questions, output only the correct option (e.g. "B. NaN").
+For math problems, output only the result.
+Keep the entire reply to one short line.`;
+
 // Nano is small enough to mirror the *shape* of whatever prompt it's given
 // rather than just follow it — a labeled, multi-section user turn (or an
 // explicit "if X then Y" instruction) gets narrated back instead of
@@ -208,17 +226,28 @@ If the message below is an academic question or exercise:
 - Never write explanations, steps, definitions, formulas, or analysis — one line only.
 ${CASUAL_CHAT_NOTE}
 ${NANO_NO_NARRATE_NOTE}`;
-    userPrompt = `Question:\n${contentText}`;
+    // The behavioral instruction (not just the language one) is repeated
+    // here, right next to the content — this is the part that regressed:
+    // an earlier rewrite dropped this per-turn reinforcement entirely for
+    // direct/hint/explain, leaving only the system prompt's copy of it.
+    // With chat history now sitting between the system prompt and this
+    // turn (see history-budget.js), that system-prompt-only copy sits
+    // further from the actual generation point than it used to, and Nano
+    // reverted to its default step-by-step habit despite Direct mode being
+    // selected. summarize/grammar below never lost this — their userPrompt
+    // always restated the instruction, only the surrounding brackets were
+    // dropped.
+    userPrompt = `Question:\n${contentText}\n\n(Give ONLY the final answer — no explanation, no steps, one line. Reply in ${targetLangName}.)`;
   } else if (studyMode === 'hint') {
     sysPrompt = `You are a pedagogical tutor AI. If the message below is an academic question or exercise, do NOT give the final answer — provide hints, key formulas, and guiding questions in ${targetLangName} instead.
 ${CASUAL_CHAT_NOTE}
 ${NANO_NO_NARRATE_NOTE}`;
-    userPrompt = `Question:\n${contentText}`;
+    userPrompt = `Question:\n${contentText}\n\n(Give hints and guidance only — do NOT give the final answer. Reply in ${targetLangName}.)`;
   } else if (studyMode === 'explain') {
     sysPrompt = `You are an educator AI. If the message below is an academic question or exercise, explain the underlying scientific/mathematical theory and principles clearly in ${targetLangName}.
 ${CASUAL_CHAT_NOTE}
 ${NANO_NO_NARRATE_NOTE}`;
-    userPrompt = `Question:\n${contentText}`;
+    userPrompt = `Question:\n${contentText}\n\n(Explain the underlying theory and knowledge in depth. Reply in ${targetLangName}.)`;
   } else if (studyMode === 'summarize') {
     // Selection-toolbar tools. Without a branch of their own both of these
     // fell into the step-by-step homework solver at the bottom, which
@@ -226,10 +255,10 @@ ${NANO_NO_NARRATE_NOTE}`;
     // real selected page text, never casual chat, so no CASUAL_CHAT_NOTE /
     // NANO_NO_NARRATE_NOTE needed here.
     sysPrompt = `You are a summarizer. Condense what you are given; never solve, answer, or add to it. Reply in ${targetLangName}.`;
-    userPrompt = `Content:\n${contentText}\n\nGive a 1-2 sentence overview, then the key points as short bullets. Stay much shorter than the original and add nothing that is not in the text.`;
+    userPrompt = `Content:\n${contentText}\n\nGive a 1-2 sentence overview, then the key points as short bullets. Stay much shorter than the original and add nothing that is not in the text.\n\n(Reply in ${targetLangName}.)`;
   } else if (studyMode === 'grammar') {
     sysPrompt = `You are a proofreader. Treat the input strictly as writing to correct, never as a question to answer. Keep the corrected text in its original language; write your notes in ${targetLangName}.`;
-    userPrompt = `Text:\n${contentText}\n\nOutput (1) the full corrected text, (2) a short list of the corrections with a one-line reason each, (3) one closing line on tone/clarity.`;
+    userPrompt = `Text:\n${contentText}\n\nOutput (1) the full corrected text, (2) a short list of the corrections with a one-line reason each, (3) one closing line on tone/clarity.\n\n(Write your notes — parts 2 and 3 — in ${targetLangName}; keep part 1, the corrected text, in the text's own original language.)`;
   } else if (studyMode === 'translate') {
     // Same word-vs-phrase routing as formatStudyPrompt (the cloud path) so
     // the on-device model gets an identically shaped task; for a word lookup
@@ -248,7 +277,7 @@ ${NANO_NO_NARRATE_NOTE}`;
 If the message below is an academic question, exercise, or homework problem: solve it with detailed step-by-step reasoning (Step 1, Step 2...), present formulas using LaTeX ($...$), and select the correct option among the choices if any are given. You MUST reply and explain in ${targetLangName}.
 ${CASUAL_CHAT_NOTE}
 ${NANO_NO_NARRATE_NOTE}`;
-    userPrompt = `Question:\n${contentText}`;
+    userPrompt = `Question:\n${contentText}\n\n(Reply in ${targetLangName}.)`;
   }
 
   // Sandwiched at both the start (primacy) and end (recency) — Nano and

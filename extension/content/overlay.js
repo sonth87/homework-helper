@@ -57,6 +57,7 @@ class InPageOverlay {
 
     const link = ensureStylesheet('content/styles/overlay.css');
     ensureStylesheet('shared/katex/katex.min.css');
+    ensureStylesheet('shared/highlight/atom-one-dark.min.css');
 
     const container = document.createElement('div');
     container.className = 'hw-overlay-wrapper';
@@ -500,8 +501,22 @@ class InPageOverlay {
     });
   }
 
-  clearNanoDownloadState() {
-    Storage.set({ nanoDownloadState: { inProgress: false, percent: null, updatedAt: Date.now() } });
+  // Called on every single streamed chunk (see HOMEWORK_AI_NANO_CHUNK below)
+  // to make sure a stale "still downloading" badge clears the moment real
+  // text starts arriving. Writing unconditionally here was the actual bug:
+  // unlike a flag that's simply re-set to the same value, this object's
+  // updatedAt is a fresh Date.now() on every call, so it's a genuine change
+  // every time — storage.onChanged fires on every chunk for as long as the
+  // stream runs, and selection-tooltip.js reacts to that same key,
+  // re-rendering the toolbar continuously. Only actually write when there's
+  // something to clear; once inProgress is already false (true for nearly
+  // every request after the model's first-ever download), later chunks in
+  // the same stream see that and skip the write entirely.
+  async clearNanoDownloadState() {
+    const { nanoDownloadState } = await Storage.get(['nanoDownloadState']);
+    if (nanoDownloadState?.inProgress) {
+      Storage.set({ nanoDownloadState: { inProgress: false, percent: null, updatedAt: Date.now() } });
+    }
   }
 
   // topic: 'features' (Model row "?") | 'providers' (Config modal "?")

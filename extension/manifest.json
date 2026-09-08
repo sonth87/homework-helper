@@ -72,7 +72,27 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["assets/ocr/tesseract.min.js", "shared/katex/katex.min.js", "content/loader.js"],
+      "js": [
+        "assets/ocr/tesseract.min.js",
+        "shared/katex/katex.min.js",
+        "shared/highlight/highlight.min.js",
+        "shared/highlight/languages/javascript.min.js",
+        "shared/highlight/languages/typescript.min.js",
+        "shared/highlight/languages/python.min.js",
+        "shared/highlight/languages/java.min.js",
+        "shared/highlight/languages/c.min.js",
+        "shared/highlight/languages/cpp.min.js",
+        "shared/highlight/languages/csharp.min.js",
+        "shared/highlight/languages/css.min.js",
+        "shared/highlight/languages/xml.min.js",
+        "shared/highlight/languages/json.min.js",
+        "shared/highlight/languages/bash.min.js",
+        "shared/highlight/languages/sql.min.js",
+        "shared/highlight/languages/php.min.js",
+        "shared/highlight/languages/go.min.js",
+        "shared/highlight/languages/markdown.min.js",
+        "content/loader.js"
+      ],
       "all_frames": false,
       "run_at": "document_end"
     }
@@ -88,6 +108,8 @@
         "shared/i18n/locales/*",
         "shared/katex/*",
         "shared/katex/fonts/*",
+        "shared/highlight/*",
+        "shared/highlight/languages/*",
         "assets/icons/*",
         "assets/ocr/*"
       ],

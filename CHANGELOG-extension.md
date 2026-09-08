@@ -17,6 +17,45 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.11.0] — 2026-09-08
+
+### Thêm mới
+- Khối code trong lời giải (Python, JavaScript, Java, C/C++/C#, CSS, HTML,
+  JSON, Bash, SQL, PHP, Go, Markdown...) giờ được tô màu cú pháp thật (từ
+  khoá, chuỗi, chú thích... mỗi loại một màu) thay vì chỉ hiện chữ trơn một
+  màu như trước.
+
+### Thay đổi
+- Popup Giải bài khi tự bật lên (chụp ảnh, bôi đen giải bài...) không còn mặc
+  định cao gần kín màn hình (80vh) mỗi khi lời giải dài — giờ có chiều cao mặc
+  định vừa phải hơn, vẫn kéo giãn tay được tới 80vh như trước nếu cần xem
+  nhiều hơn.
+
+### Sửa lỗi
+- Thanh Công Cụ Bôi Đen (và badge tên Model) vẫn còn nhấp nháy liên tục khi
+  đang dùng Gemini Nano dù đã sửa ở bản 1.10.0 — hoá ra còn một nguyên nhân
+  thứ hai: một bước dọn trạng thái tải model bị ghi lại liên tục trên từng
+  đoạn chữ nhận về trong lúc AI đang trả lời, thay vì chỉ ghi khi thật sự
+  cần dọn.
+- Nút Copy trên từng khối code trong lời giải trước đây bấm không có tác dụng
+  gì — nay bấm sẽ chép đúng nội dung code vào clipboard.
+- Chụp ảnh/bôi đen giải bài bằng Gemini Nano: hỏi lại đúng một câu giống hệt
+  hai lần trong cùng một hội thoại mới có thể ra hai ngôn ngữ trả lời khác
+  nhau (ví dụ lần 1 đúng ngôn ngữ đã chọn, lần 2 lại ra tiếng Anh) — nay luôn
+  trả lời đúng ngôn ngữ đã chọn.
+- Chọn chế độ "Đáp án trực tiếp" nhưng AI vẫn trả về cả bài phân tích và lời
+  giải từng bước dài dòng. Nguyên nhân: prompt nền gửi cho AI vốn luôn yêu cầu
+  "giải thích từng bước", rồi mới nối thêm một câu "đừng viết các bước" ở
+  cuối — tức là ra hai lệnh trái ngược nhau trong cùng một prompt, và phần
+  bắt giải từng bước lại dài hơn, đứng trước. Nay chọn "Đáp án trực tiếp" sẽ
+  thay hẳn prompt nền bằng bản chuyên trả lời ngắn gọn, không còn câu nào yêu
+  cầu giải từng bước. Áp dụng cho mọi loại AI (Cloud API, model cục bộ,
+  Gemini Nano).
+- Chế độ "Gợi ý" và "Giải thích sâu" khi dùng Gemini Nano cũng có thể ra lời
+  giải từng bước thay vì đúng chế độ đã chọn — nay luôn tuân theo đúng chế độ.
+
+---
+
 ## [1.10.0] — 2026-09-08
 
 ### Thêm mới
@@ -50,6 +89,9 @@ _Chưa có thay đổi nào chờ phát hành._
 - Câu trả lời của AI không còn bị ghi nhầm vào hội thoại đang xem nếu người
   dùng chuyển sang hội thoại khác trong lúc AI vẫn đang trả lời — câu trả lời
   luôn được lưu đúng vào hội thoại đã đặt câu hỏi.
+- Sửa lỗi Thanh Công Cụ Bôi Đen (và badge tên Model) bị nhấp nháy liên tục khi
+  đang dùng Gemini Nano (không cấu hình API Key nào) — do một vòng lặp cập
+  nhật trạng thái tự kích hoạt lại chính nó không có điểm dừng.
 
 ---
 

@@ -13,7 +13,7 @@ import { getPopupI18n, getOptionsI18n } from '../shared/i18n.js';
 import { EnginePicker } from '../shared/engine-picker.js';
 import { AI_PROVIDER_ID, PICKABLE_PROVIDER_IDS, providerName } from '../shared/translate-providers.js';
 import { TranslateHistorySheet } from '../shared/translate-history-sheet.js';
-import { renderAnswer } from '../shared/markdown-katex.js';
+import { renderAnswer, bindCopyCodeButtons } from '../shared/markdown-katex.js';
 import { speak, isSpeechAvailable, bindSpeakButtons } from '../shared/tts.js';
 import { ensureLiquidGlassFilter } from '../shared/liquid-glass.js';
 import { PopupTooltips } from './popup-tooltips.js';
@@ -340,6 +340,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   buildLangSelects();
   buildEnginePicker();
   bindSpeakButtons(document);
+  bindCopyCodeButtons(document);
 
   // ---------- Toggles ----------
   const toggleForms = $('popToggleForms');

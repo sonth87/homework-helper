@@ -17,6 +17,65 @@ export function escapeHtml(str) {
 }
 
 /**
+ * highlight.js (vendored — see shared/highlight/) is loaded as a classic
+ * global-scope script, not an ES import: this file runs in the content
+ * script's isolated world (drawer.js/floating-card.js) as well as plain
+ * extension pages (sidepanel.js), and only a script declared alongside it
+ * in manifest.json's content_scripts (or a <script> tag in the page, for
+ * sidepanel.html) ends up in the SAME world as this module — a dynamic
+ * `import()` of a UMD build wouldn't. Same reasoning as the `window.katex`
+ * check a few lines up in the math renderer. Falls back to plain escaped
+ * text if hljs isn't present (e.g. mid-load) or the fenced language wasn't
+ * one of the ones vendored in shared/highlight/languages/.
+ */
+function highlightCode(raw, lang) {
+  const hljs = typeof window !== 'undefined' ? window.hljs : undefined;
+  if (hljs && lang && lang !== 'text' && hljs.getLanguage(lang)) {
+    try {
+      return hljs.highlight(raw, { language: lang, ignoreIllegals: true }).value;
+    } catch {
+      // Fall through to the plain-text path below.
+    }
+  }
+  return escapeHtml(raw);
+}
+
+const BOUND_COPY_CODE_ROOTS = new WeakSet();
+
+/**
+ * Wires up every code block's copy button under `root` — delegated on
+ * `root` itself (not the buttons), the same reasoning as tts.js's
+ * bindSpeakButtons(): a streamed answer's HTML gets replaced wholesale on
+ * every chunk, so a listener bound to an individual button would be gone
+ * the instant the next chunk redraws it. `root` is typically `document` for
+ * an extension page or the shared shadow root for content-script surfaces
+ * — see this function's call sites.
+ */
+export function bindCopyCodeButtons(root) {
+  if (!root || BOUND_COPY_CODE_ROOTS.has(root)) return;
+  BOUND_COPY_CODE_ROOTS.add(root);
+
+  root.addEventListener('click', (event) => {
+    const path = event.composedPath ? event.composedPath() : [event.target];
+    const btn = path.find((node) => node?.classList && node.classList.contains('copy-code-btn'));
+    if (!btn) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const code = decodeURIComponent(btn.getAttribute('data-code') || '');
+    navigator.clipboard.writeText(code);
+
+    const original = btn.innerHTML;
+    btn.innerHTML = Icons.check(14);
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.innerHTML = original;
+      btn.disabled = false;
+    }, 1500);
+  });
+}
+
+/**
  * A listen button rendered inline in a dictionary card — beside the headword,
  * and beside the translation of it.
  *
@@ -105,7 +164,10 @@ export function formatMarkdownAndMath(text) {
   const codeBlocks = [];
   html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]+?)```/g, (match, lang, code) => {
     const placeholder = `___CODE_BLOCK_${codeBlocks.length}___`;
-    codeBlocks.push({ lang: lang || 'text', code: escapeHtml(code.trim()) });
+    // Raw (unescaped) text kept for both hljs.highlight() (below, step 6 —
+    // it does its own escaping) and the copy button's data-code — that
+    // button must copy back the original characters, not '&lt;'/'&gt;'.
+    codeBlocks.push({ lang: (lang || 'text').toLowerCase(), raw: code.trim() });
     return placeholder;
   });
 
@@ -186,12 +248,13 @@ export function formatMarkdownAndMath(text) {
 
   // 6. Restore Code Blocks
   codeBlocks.forEach((cb, idx) => {
+    const highlighted = highlightCode(cb.raw, cb.lang);
     const rendered = `<div class="code-block-wrapper">
       <div class="code-header">
-        <span class="code-lang">${cb.lang}</span>
-        <button class="copy-code-btn" data-code="${encodeURIComponent(cb.code)}" title="Copy" aria-label="Copy">${Icons.copy(14)}</button>
+        <span class="code-lang">${escapeHtml(cb.lang)}</span>
+        <button class="copy-code-btn" data-code="${encodeURIComponent(cb.raw)}" title="Copy" aria-label="Copy">${Icons.copy(14)}</button>
       </div>
-      <pre><code class="language-${cb.lang}">${cb.code}</code></pre>
+      <pre><code class="language-${escapeHtml(cb.lang)} hljs">${highlighted}</code></pre>
     </div>`;
     html = html.replace(`___CODE_BLOCK_${idx}___`, rendered);
   });

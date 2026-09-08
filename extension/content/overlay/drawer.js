@@ -352,7 +352,7 @@ export class OverlayDrawer {
 
   async updateActiveModelBadge() {
     const { apiConfigs = [] } = await Storage.getApiConfigs();
-    const { uiLanguage = 'en', nanoDownloadState } = await Storage.get(['uiLanguage', 'nanoDownloadState']);
+    const { uiLanguage = 'en', nanoDownloadState, isNanoReady } = await Storage.get(['uiLanguage', 'nanoDownloadState', 'isNanoReady']);
     const dict = getI18n(uiLanguage);
     const tag = this.shadow.getElementById('hwModelTag');
     if (!tag) return;
@@ -366,7 +366,14 @@ export class OverlayDrawer {
       if (nanoDownloadState?.inProgress) status = NANO_STATUS.DOWNLOADING;
 
       if (status === NANO_STATUS.AVAILABLE) {
-        Storage.set({ isNanoReady: true });
+        // Only write when this would actually flip the flag — writing the
+        // same true value every call still fires storage.onChanged, and
+        // overlay.js's own onChanged listener calls this method again on
+        // exactly that event: an unconditional write here becomes a
+        // self-sustaining loop (write → onChanged → re-check → write
+        // again...) with nothing to stop it, visible as the selection
+        // toolbar (and this badge) continuously flickering.
+        if (!isNanoReady) Storage.set({ isNanoReady: true });
         tag.innerHTML = `${Icons.cpu(12)} ${dict.modelNanoReady || 'Chrome Gemini Nano (Sẵn sàng On-Device)'}`;
         tag.style.background = 'rgba(var(--hw-success-rgb), 0.15)';
         tag.style.color = 'var(--hw-success)';

@@ -5,7 +5,7 @@
 
 import { Icons } from '../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
-import { formatMarkdownAndMath, renderAnswer } from '../shared/markdown-katex.js';
+import { formatMarkdownAndMath, renderAnswer, bindCopyCodeButtons } from '../shared/markdown-katex.js';
 import { getI18n } from '../shared/i18n.js';
 import { bindSpeakButtons } from '../shared/tts.js';
 import { ensureLiquidGlassFilter } from '../shared/liquid-glass.js';
@@ -33,6 +33,7 @@ export class SidePanelController {
     // inline — the bubbles are re-rendered on every streamed chunk, so nothing
     // can be wired per button. See bindSpeakButtons() in shared/tts.js.
     bindSpeakButtons(document);
+    bindCopyCodeButtons(document);
 
     this.keysModal = new SidePanelKeysModal(this);
     this.historyModal = new SidePanelHistory(this);
@@ -359,7 +360,7 @@ export class SidePanelController {
 
   async updateModelBadge() {
     const { apiConfigs = [], activeConfigId, rotationStrategy } = await Storage.getApiConfigs();
-    const { nanoDownloadState } = await Storage.get(['nanoDownloadState']);
+    const { nanoDownloadState, isNanoReady } = await Storage.get(['nanoDownloadState', 'isNanoReady']);
     const tag = document.getElementById('spModelTag');
     if (!tag) return;
 
@@ -374,7 +375,10 @@ export class SidePanelController {
       if (nanoDownloadState?.inProgress) status = NANO_STATUS.DOWNLOADING;
 
       if (status === NANO_STATUS.AVAILABLE) {
-        Storage.set({ isNanoReady: true });
+        // Only write when this would actually flip the flag — see
+        // drawer.js's updateActiveModelBadge() for why an unconditional
+        // write here becomes a self-sustaining onChanged loop.
+        if (!isNanoReady) Storage.set({ isNanoReady: true });
         tag.innerHTML = `${Icons.cpu(12)} ${dict.modelNanoReady || 'Chrome Gemini Nano (Ready On-Device)'}`;
         tag.style.background = 'rgba(34, 197, 94, 0.15)';
         tag.style.color = '#16a34a';

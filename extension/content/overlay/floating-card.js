@@ -4,7 +4,7 @@
 
 import { Icons } from '../../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES, buildNanoPrompts } from '../../shared/storage.js';
-import { renderAnswer } from '../../shared/markdown-katex.js';
+import { renderAnswer, bindCopyCodeButtons } from '../../shared/markdown-katex.js';
 import { getFloatingPopupI18n, getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
 import { speak, isSpeechAvailable, bindSpeakButtons } from '../../shared/tts.js';
@@ -82,6 +82,7 @@ export class OverlayFloatingCard {
     // inline — they are re-created on each streamed chunk, so nothing can be
     // wired per button. See bindSpeakButtons() in shared/tts.js.
     bindSpeakButtons(this.shadow);
+    bindCopyCodeButtons(this.shadow);
   }
 
   /**

@@ -5,7 +5,7 @@
  */
 
 import { keyRotator } from './key-rotator.js';
-import { Storage, DEFAULT_NANO_SYSTEM_PROMPT } from '../shared/storage.js';
+import { Storage, DEFAULT_NANO_SYSTEM_PROMPT, DIRECT_ANSWER_SYSTEM_PROMPT } from '../shared/storage.js';
 import { formatStudyPrompt } from '../shared/study-prompt.js';
 import { streamViaOffscreen } from './offscreen-ai-bridge.js';
 import { isSingleWord, DICTIONARY_SCHEMA } from '../shared/dictionary.js';
@@ -43,8 +43,9 @@ export class AiEngine {
       ru: 'Russian',
     };
     const targetLangName = (outputLanguage && outputLanguage !== 'auto') ? (langNames[outputLanguage] || outputLanguage) : 'Vietnamese';
+    const isDirect = studyMode === 'direct';
     let directSysInstruction = '';
-    if (studyMode === 'direct') {
+    if (isDirect) {
       directSysInstruction = `\n\n[STRICT DIRECT-ANSWER INSTRUCTION]: You MUST output ONLY the direct final answer. DO NOT write steps, reasoning, breakdown, analysis, or explanations. For multiple-choice questions, output ONLY the correct option letter and/or answer text (e.g. "Answer: 2" or "D. 2"). Keep the response under 1-2 lines.`;
     }
 
@@ -53,10 +54,22 @@ export class AiEngine {
     // small quantized checkpoints) frequently default back to English when
     // a language directive is buried after several paragraphs of other
     // instructions, since it competes with the dominant English signal.
-    const languageDirective = `[STRICT LANGUAGE REQUIREMENT — HIGHEST PRIORITY]: You MUST provide your entire response — solution, explanations, step-by-step reasoning, and final answer — in ${targetLangName}. Do NOT use any other language unless explicitly requested. This instruction overrides all other stylistic guidance below.`;
-    const finalSystemPrompt = `${languageDirective}\n\n${systemPrompt || ''}${directSysInstruction}`.trim();
+    //
+    // The response-parts list is dropped in Direct Answer mode: naming
+    // "explanations, step-by-step reasoning" here — in the highest-priority
+    // position, no less — described the very output shape that mode exists
+    // to suppress.
+    const languageScope = isDirect
+      ? 'your entire response'
+      : 'your entire response — solution, explanations, step-by-step reasoning, and final answer —';
+    const languageDirective = `[STRICT LANGUAGE REQUIREMENT — HIGHEST PRIORITY]: You MUST provide ${languageScope} in ${targetLangName}. Do NOT use any other language unless explicitly requested. This instruction overrides all other stylistic guidance below.`;
+    // Direct Answer swaps the base prompt out rather than appending a denial
+    // after it — see DIRECT_ANSWER_SYSTEM_PROMPT's comment for why appending
+    // left the model holding two contradictory orders.
+    const baseSystemPrompt = isDirect ? DIRECT_ANSWER_SYSTEM_PROMPT : (systemPrompt || '');
+    const finalSystemPrompt = `${languageDirective}\n\n${baseSystemPrompt}${directSysInstruction}`.trim();
 
-    const nanoPromptBase = nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT;
+    const nanoPromptBase = isDirect ? DIRECT_ANSWER_SYSTEM_PROMPT : (nanoSystemPrompt || DEFAULT_NANO_SYSTEM_PROMPT);
     const nanoLanguageDirective = `[STRICT LANGUAGE — HIGHEST PRIORITY]: You MUST reply in ${targetLangName}, overriding all other instructions below.`;
     const nanoFinalSystemPrompt = `${nanoLanguageDirective}\n\n${nanoPromptBase}${directSysInstruction}`.trim();
 

@@ -368,6 +368,12 @@
   width: 440px;
   min-width: 240px;
   min-height: 160px;
+  /* A default starting height, not just a floor — without it, nothing stops
+     .hw-card-body's flex:1 from growing the whole card with every long
+     answer, right up to max-height. 80vh is meant as the ceiling a user
+     drags up to via the resize handle (resize:both below), not what a
+     freshly auto-opened popup should default to. */
+  height: 250px;
   max-width: 90vw;
   max-height: 80vh;
   background: rgba(var(--hw-glass-rgb), var(--popup-alpha, 0.92));
@@ -850,15 +856,21 @@
 }
 
 .hw-card-answer-content pre {
-  background: #0f172a;
-  color: #f8fafc;
-  padding: 10px;
-  border-radius: 8px;
-  overflow-x: auto;
+  /* .code-block-wrapper now owns the outer frame (border-radius, clipping)
+     and the vendored highlight.js theme's code.hljs owns the code area's
+     own background/padding (shared/highlight/atom-one-dark.min.css) — this
+     used to duplicate both, which fought with the theme once real syntax
+     highlighting was added. */
   font-size: 12px;
 }
 
-.hw-card-answer-content code {
+/* Unscoped like .code-block-wrapper above: markdown-katex.js's `.inline-code`
+   class is unambiguous on its own (never shared with a fenced block's
+   `.hljs`-tagged <code>), so one rule covers inline code everywhere
+   renderAnswer() output shows up — this used to only exist inside
+   dictionary-mode results; a plain "`like this`" span in an ordinary answer
+   had no styling at all. */
+.inline-code {
   background: var(--hw-bg-hover);
   padding: 2px 4px;
   border-radius: 4px;
@@ -1540,19 +1552,63 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.hw-msg-ai .code-block-wrapper {
-    overflow: auto;
-    max-width: 100%;
-    position: relative;
+/* Not scoped to .hw-msg-ai — the same renderAnswer() markup shows up inside
+   .hw-card-answer-content (the floating solution card) too, which had no
+   styling for these at all before (only a plain-`pre` background fallback). */
+.code-block-wrapper {
+  max-width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 6px 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.hw-msg-ai .code-header {
-    position: sticky;
-    top: 0;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #21252b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.code-lang {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9aa1ac;
+}
+
+.copy-code-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #9aa1ac;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.copy-code-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e6e6e6;
+}
+
+.copy-code-btn:disabled {
+  color: var(--hw-success, #22c55e);
+  cursor: default;
+}
+
+.code-block-wrapper pre {
+  margin: 0;
 }
 
 .hw-msg-footer {

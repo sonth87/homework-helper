@@ -1018,6 +1018,77 @@ body {
 
 
 
+/* Fenced code blocks and inline code from renderAnswer() (shared/markdown-katex.js)
+   — same markup and same fixed dark palette as overlay.css's copy (code
+   blocks stay dark regardless of the panel's own light/dark theme, like a
+   code editor), kept in sync by hand since this page has no shared
+   stylesheet with the in-page overlay. Previously had no styling here at
+   all: a code block rendered as bare, unstyled browser-default <pre>/<code>. */
+.code-block-wrapper {
+  max-width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 6px 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #21252b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.code-lang {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9aa1ac;
+}
+
+.copy-code-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #9aa1ac;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.copy-code-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e6e6e6;
+}
+
+.copy-code-btn:disabled {
+  color: #22c55e;
+  cursor: default;
+}
+
+.code-block-wrapper pre {
+  margin: 0;
+  font-size: 12px;
+}
+
+.inline-code {
+  background: var(--bg-secondary);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
 /* Dictionary card for single-word translations. Same class names and layout
    as the in-page overlay (see overlay.css) so a lookup looks identical
    whether it was opened in the popup card or continued here in the panel. */
