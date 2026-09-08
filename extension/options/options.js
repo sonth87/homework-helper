@@ -428,10 +428,13 @@ export class OptionsController {
     setText('optPopupCardSizeOptMinimize', dict.popupCardSizeOptMinimize);
     setText('optLabelPopupTheme', dict.labelPopupTheme);
     setText('optLabelPopupThemeDesc', dict.labelPopupThemeDesc);
-    // Reuses the Selection Toolbar's own theme-option strings (no glass-light/
-    // glass-dark here — the card's own light/dark look already follows the
-    // separate, global overlayTheme setting; this only picks an accent color).
+    // Reuses the Selection Toolbar's own theme-option strings. glass-light/
+    // glass-dark here are a per-popup override, independent of the separate,
+    // global "Chế độ màu (Sáng/Tối)" (overlayTheme) setting — same relationship
+    // Toolbar's own glass-light/glass-dark options have to that global setting.
     setText('optPopupThemeOptAuto', dict.toolbarThemeOptAuto);
+    setText('optPopupThemeOptLight', dict.toolbarThemeOptLight);
+    setText('optPopupThemeOptDark', dict.toolbarThemeOptDark);
     setText('optPopupThemeOptBlue', dict.toolbarThemeOptBlue);
     setText('optPopupThemeOptGreen', dict.toolbarThemeOptGreen);
     setText('optPopupThemeOptPurple', dict.toolbarThemeOptPurple);

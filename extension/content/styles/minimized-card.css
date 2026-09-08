@@ -179,6 +179,34 @@
   color: var(--hw-text-main);
 }
 
+/* popupCardTheme = 'glass-light'/'glass-dark' pins this popup's own glass
+   independent of the global overlayTheme, mirroring .hw-solution-card's own
+   .theme-glass-light/.theme-glass-dark in overlay.css exactly (same token
+   set — this popup and the real card are, in effect, the same "Homework
+   Helper Popup" settings applied to two different display modes). Toggled
+   by _applyGlassTheme() in minimized-card.js. */
+.hw-mini-popup.theme-glass-light {
+  --hw-bg-hover: #f1f5f9;
+  --hw-border-color: #e2e8f0;
+  --hw-text-main: #0f172a;
+  --hw-text-muted: #64748b;
+  --hw-accent: #0284c7;
+  --hw-accent-rgb: 2, 132, 199;
+  --hw-success: #16a34a;
+  --hw-glass-rgb: 255, 255, 255;
+}
+
+.hw-mini-popup.theme-glass-dark {
+  --hw-bg-hover: #334155;
+  --hw-border-color: #334155;
+  --hw-text-main: #f8fafc;
+  --hw-text-muted: #94a3b8;
+  --hw-accent: #38bdf8;
+  --hw-accent-rgb: 56, 189, 248;
+  --hw-success: #22c55e;
+  --hw-glass-rgb: 15, 23, 42;
+}
+
 .hw-mini-popup::before {
   content: '';
   position: absolute;

@@ -29,8 +29,42 @@ _Chưa có thay đổi nào chờ phát hành._
   thật hơn thay vì chỉ như nhựa mờ.
 - Nút Copy trên mỗi khối code trong lời giải nay hiện icon thay vì chữ "Copy",
   gọn hơn và đồng bộ với các nút icon khác trong thẻ popup.
+- Nút tròn Minimize khi đang ở trạng thái "đã xong" (không còn xoay) giờ cứ
+  mỗi 15 giây lại phát ra một vòng sáng lan ra rồi mờ dần một lần, để nhắc
+  người dùng nó vẫn đang hoạt động — trước đây đứng yên hoàn toàn nên dễ bị
+  quên mất là có thể bấm vào.
+- "Chủ đề màu Popup" (Cài đặt > Giao diện > Homework Helper Popup) nay có
+  thêm 2 lựa chọn Liquid Glass Light/Dark bên cạnh Tự động và 6 màu nhấn có
+  sẵn — khoá cứng kính sáng hoặc tối riêng cho popup Giải bài/Dịch (và popup
+  của nút tròn Minimize), không phụ thuộc vào "Chế độ màu (Sáng/Tối)" chung
+  của toàn giao diện, giống hệt cách Thanh Công Cụ Bôi Đen đã làm từ trước.
+- Đổi một số giá trị mặc định cho dễ nhìn hơn ngay từ lần cài đầu (chỉ áp
+  dụng cho người dùng mới hoặc bấm "Khôi phục mặc định" — không ghi đè lên
+  cấu hình đã lưu của người đang dùng): popup Giải bài/Dịch còn 60% trong
+  suốt/10px blur (trước 92%/16px); Thanh Công Cụ Bôi Đen còn 25% trong
+  suốt/6px blur (trước 90%/16px); tooltip Dịch nhanh khi di chuột còn 60%
+  trong suốt/10px blur (trước 90%/16px) và đổi kiểu tô sáng mặc định sang
+  "Bút highlight tự nhiên" (trước là "Tô nền" đơn giản), độ đậm màu tô sáng
+  mặc định còn 30% (trước 40%).
+- Phím tắt mở Chat AI (⌘K trên macOS, Alt+K nơi khác) nay mở panel chat ngay
+  trong trang thay vì mở Side Panel gốc của Chrome — giống hệt bấm nút nổi
+  hình tia sáng, bấm lần nữa để đóng lại.
 
 ### Sửa lỗi
+- Phần Xem trước 2 nút nổi (FAB) ở trang Cài đặt tô màu ngược: nút "Chụp màn
+  hình" hiện màu xanh đậm còn nút "Mở chat panel" hiện kính trắng — ngược lại
+  hoàn toàn so với ngoài trang thật (nút mở chat mới là nút chính màu xanh
+  đậm). Vì vậy khi kéo thanh Độ trong suốt, chỉ thấy nút Chụp đổi rõ, nút mở
+  chat gần như không thấy gì khác — nay đã tô đúng, cả hai nút đều đổi rõ khi
+  chỉnh độ trong suốt.
+- Nút "Khôi phục mặc định" của Thanh Công Cụ Bôi Đen chỉ reset lại thứ tự
+  công cụ trên toolbar, không đụng đến Chủ đề màu, Vị trí hiển thị, Hiển thị
+  chữ, Kích cỡ, Độ trong suốt hay Độ mờ hậu cảnh — khiến người dùng tưởng nút
+  này không hoạt động. Nay bấm một lần là khôi phục toàn bộ cấu hình của
+  Thanh Công Cụ Bôi Đen, giống cách các thẻ Dịch nhanh/Popup/FAB đã làm.
+- Độ đậm chữ (font-weight) của tooltip Dịch nhanh khi di chuột trong phần Xem
+  trước ở trang Cài đặt bị đậm hơn (600) so với tooltip thật ngoài trang
+  (400) — nay cả hai đều dùng chung độ đậm 400.
 - Phần Xem trước (Live Preview) ở trang Cài đặt > Giao diện chưa áp dụng hiệu
   ứng Liquid Glass mới cho 3 khối mô phỏng (Thanh Công Cụ, tooltip Dịch nhanh,
   popup Giải bài) — vẫn chỉ mờ nền như kiểu cũ. Riêng khi chọn kiểu hiển thị

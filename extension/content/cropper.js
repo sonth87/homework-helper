@@ -232,8 +232,8 @@ class ScreenCropper {
       toolbarShowText = true,
       toolbarSize = 'normal',
       toolbarTheme = 'auto',
-      toolbarOpacity = 90,
-      toolbarBlur = 16,
+      toolbarOpacity = 25,
+      toolbarBlur = 6,
     } = await Storage.get(['uiLanguage', 'toolbarShowText', 'toolbarSize', 'toolbarTheme', 'toolbarOpacity', 'toolbarBlur']);
     const dict = getCropperI18n(uiLanguage);
     const genDict = getI18n(uiLanguage);

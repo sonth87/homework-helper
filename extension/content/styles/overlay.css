@@ -305,6 +305,59 @@
 .hw-solution-card.theme-amber { --hw-accent: #d97706; --hw-accent-hover: #b45309; --hw-accent-rgb: 217, 119, 6; }
 .hw-solution-card.theme-indigo { --hw-accent: #4f46e5; --hw-accent-hover: #4338ca; --hw-accent-rgb: 79, 70, 229; }
 
+/* .theme-glass-light/.theme-glass-dark are the one pair of popupCardTheme
+   values that are NOT an accent color — a per-popup override that pins this
+   card's own glass to light or dark regardless of the global overlayTheme
+   setting (or the OS preference 'auto' would otherwise resolve to), the same
+   independent-override relationship toolbarTheme's own glass-light/glass-dark
+   values have to their surface. Re-declares every :host token this card (and
+   its descendants — header/body/footer, dictionary content, drawer/rich-
+   tooltip children rendered inside it) reads, not just --hw-glass-rgb, so
+   text/dividers/hover states stay correctly paired with the forced
+   background instead of mismatching against whatever the *global* setting
+   happens to be. Deliberately doesn't touch --hw-accent/--hw-accent-hover/
+   --hw-accent-rgb, same as every color theme above — those are set only by
+   an explicit accent choice, never by the light/dark pair. */
+.hw-solution-card.theme-glass-light {
+  --hw-bg-primary: #ffffff;
+  --hw-bg-secondary: #f8fafc;
+  --hw-bg-hover: #f1f5f9;
+  --hw-border-color: #e2e8f0;
+  --hw-text-main: #0f172a;
+  --hw-text-muted: #64748b;
+  --hw-accent-tint: #e0f2fe;
+  --hw-glass-rgb: 255, 255, 255;
+  --hw-success-rgb: 22, 163, 74;
+  --hw-danger-rgb: 239, 68, 68;
+  --hw-warning-rgb: 245, 158, 11;
+  --hw-success: #16a34a;
+  --hw-danger: #ef4444;
+  --hw-warning: #f59e0b;
+  --hw-modal-backdrop: rgba(15, 23, 42, 0.5);
+  --hw-float-icon-shadow: rgba(255, 255, 255, 0.9);
+  color: #18181b;
+}
+
+.hw-solution-card.theme-glass-dark {
+  --hw-bg-primary: #0f172a;
+  --hw-bg-secondary: #1e293b;
+  --hw-bg-hover: #334155;
+  --hw-border-color: #334155;
+  --hw-text-main: #f8fafc;
+  --hw-text-muted: #94a3b8;
+  --hw-accent-tint: rgba(56, 189, 248, 0.18);
+  --hw-glass-rgb: 15, 23, 42;
+  --hw-success-rgb: 34, 197, 94;
+  --hw-danger-rgb: 248, 113, 113;
+  --hw-warning-rgb: 251, 191, 36;
+  --hw-success: #22c55e;
+  --hw-danger: #f87171;
+  --hw-warning: #fbbf24;
+  --hw-modal-backdrop: rgba(0, 0, 0, 0.65);
+  --hw-float-icon-shadow: rgba(0, 0, 0, 0.6);
+  color: #f8fafc;
+}
+
 /* ========================================================= */
 /* Homework Helper Floating Popup (Liquid Glass Resizable) */
 /* ========================================================= */

@@ -46,8 +46,8 @@ export class AppearanceTab {
       enableFloatingButton = true,
       fabSize = 'normal',
       fabOpacity = 90,
-      popupOpacity = 92,
-      popupBlur = 16,
+      popupOpacity = 60,
+      popupBlur = 10,
       popupCardSize = 'normal',
       popupCardTheme = 'auto',
       enableTextTooltip = true,
@@ -55,21 +55,21 @@ export class AppearanceTab {
       toolbarSize = 'normal',
       toolbarTheme = 'auto',
       toolbarPosition = 'above',
-      toolbarOpacity = 90,
-      toolbarBlur = 14,
+      toolbarOpacity = 25,
+      toolbarBlur = 6,
       toolbarLayout,
       enableHoverTranslate = true,
-      hoverTranslateModifiers = ['alt'],
-      hoverTranslateGranularity = 'word',
+      hoverTranslateModifiers = ['ctrl'],
+      hoverTranslateGranularity = 'sentence',
       hoverTranslateDelay = 350,
       hoverTranslateTheme = 'auto',
       hoverTranslateHighlight = true,
       hoverTranslateHighlightColor = '#fef08a',
-      hoverTranslateHighlightOpacity = 40,
-      hoverTranslateHighlightStyle = 'fill',
-      hoverTranslateAnimation = 'none',
-      hoverTranslateOpacity = 96,
-      hoverTranslateBlur = 18,
+      hoverTranslateHighlightOpacity = 30,
+      hoverTranslateHighlightStyle = 'marker',
+      hoverTranslateAnimation = 'draw',
+      hoverTranslateOpacity = 60,
+      hoverTranslateBlur = 10,
       hoverTranslateFontSize = 13,
       hoverTranslateMaxWidth = 300,
       uiLanguage = 'vi',
@@ -334,7 +334,7 @@ export class AppearanceTab {
             btn.style.width = '34px';
             btn.style.height = '34px';
           }
-          btn.style.background = btn.classList.contains('prev-fab-crop')
+          btn.style.background = btn.classList.contains('prev-fab-primary')
             ? `rgba(2, 132, 199, ${fabAlpha})`
             : `rgba(255, 255, 255, ${fabAlpha})`;
         });
@@ -937,9 +937,37 @@ export class AppearanceTab {
     render(layout);
     updateLivePreview(layout);
 
+    // Despite living right under the drag-and-drop layout editor, this is the
+    // ONLY reset control anywhere in the Selection Toolbar card — every other
+    // card (Hover Translate, Homework Helper Popup, FAB) resets its whole
+    // card from one button, so this one resets the card's theme/position/
+    // text/size/opacity/blur too, not just the tool ordering. Rather than
+    // duplicating each control's own Storage.set + live-preview logic here
+    // (out of reach anyway — updatePreview() is a closure local to
+    // loadAppearanceSettings(), a different method), this just sets each
+    // control's value/checked state and dispatches the same event type its
+    // own listener (wired in loadAppearanceSettings()) already reacts to —
+    // reusing that existing plumbing instead of re-implementing it.
     resetBtn?.addEventListener('click', () => {
       render(DEFAULT_TOOLBAR_LAYOUT.map((entry) => ({ ...entry })));
       persist();
+
+      const d = DEFAULT_SETTINGS;
+      const fire = (id, prop, value, eventName) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el[prop] = value;
+        el.dispatchEvent(new Event(eventName, { bubbles: true }));
+      };
+      fire('optToolbarThemeSelect', 'value', d.toolbarTheme, 'change');
+      // toolbarPosition has no DEFAULT_SETTINGS entry of its own — every
+      // reader (this file, selection-tooltip.js) falls back to 'above'
+      // inline instead, so that's hardcoded here to match.
+      fire('optToolbarPositionSelect', 'value', 'above', 'change');
+      fire('optCheckToolbarText', 'checked', d.toolbarShowText, 'change');
+      fire('optToolbarSizeSelect', 'value', d.toolbarSize, 'change');
+      fire('optRangeToolbarOpacity', 'value', d.toolbarOpacity, 'input');
+      fire('optRangeToolbarBlur', 'value', d.toolbarBlur, 'input');
     });
   }
 }

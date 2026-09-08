@@ -136,12 +136,19 @@ export class MinimizedCard {
   // file re-reading its settings fresh rather than caching them.
   _applyGlassTheme() {
     Storage.get(['popupCardTheme', 'popupOpacity', 'popupBlur']).then(
-      ({ popupCardTheme, popupOpacity = 92, popupBlur = 16 }) => {
+      ({ popupCardTheme, popupOpacity = 60, popupBlur = 10 }) => {
         this.circleEl.style.setProperty('--hw-mini-rgb', resolveThemeColorRgb(popupCardTheme));
         this.circleEl.style.setProperty('--hw-mini-alpha', (popupOpacity / 100).toFixed(2));
         this.circleEl.style.setProperty('--hw-mini-blur', `${popupBlur}px`);
         this.popupEl.style.setProperty('--hw-mini-popup-alpha', (popupOpacity / 100).toFixed(2));
         this.popupEl.style.setProperty('--hw-mini-popup-blur', `${popupBlur}px`);
+        // 'glass-light'/'glass-dark' pin this popup's own glass regardless of
+        // the global overlayTheme, same override .hw-solution-card gets from
+        // its own identical .theme-glass-light/.theme-glass-dark classes.
+        this.popupEl.classList.remove('theme-glass-light', 'theme-glass-dark');
+        if (popupCardTheme === 'glass-light' || popupCardTheme === 'glass-dark') {
+          this.popupEl.classList.add(`theme-${popupCardTheme}`);
+        }
       }
     );
   }

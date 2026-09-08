@@ -73,14 +73,10 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 // 3. Command Keybinding Listener (Alt+K, Alt+C, etc.)
 //
 // Deliberately NOT an async listener, and deliberately uses the `tab` this
-// callback is already handed instead of re-querying it. chrome.sidePanel.open()
-// only works while Chrome still considers this call part of the user's
-// keypress ("transient user activation") — awaiting anything (even a cheap
-// chrome.tabs.query) before calling it spends that activation on the await
-// instead, so open() silently rejects and .catch(() => {}) swallowed it.
-// That's why Cmd+E (screenshot — plain tabs.sendMessage, no gesture
-// requirement) kept working while Cmd+K (chat) quietly did nothing: this used
-// to `await chrome.tabs.query(...)` before ever reaching sidePanel.open().
+// callback is already handed instead of re-querying it — plain
+// tabs.sendMessage calls below have no user-gesture requirement to spend,
+// but there's no reason to burn the keypress's transient activation on an
+// unnecessary await regardless.
 chrome.commands.onCommand.addListener((command, tab) => {
   console.log('[Background] Received command:', command);
   if (!tab || !tab.id) return;
@@ -88,13 +84,12 @@ chrome.commands.onCommand.addListener((command, tab) => {
   if (command === 'screenshot' || command === 'capture') {
     chrome.tabs.sendMessage(tab.id, { action: 'START_CROP' }).catch(() => {});
   } else if (command === 'chat' || command === 'open_sidepanel') {
-    if (chrome.sidePanel) {
-      chrome.sidePanel.open({ windowId: tab.windowId }).catch((err) => {
-        console.warn('[Background] sidePanel.open() failed:', err);
-      });
-    } else {
-      chrome.tabs.sendMessage(tab.id, { action: 'TOGGLE_OVERLAY' }).catch(() => {});
-    }
+    // Toggles the in-page Chat Drawer (overlay.js's own injected panel) —
+    // the same thing clicking the FAB's sparkles button does — rather than
+    // Chrome's own native side panel. No transient-activation concern here
+    // either way: unlike sidePanel.open(), tabs.sendMessage has no user-
+    // gesture requirement to spend by awaiting something first.
+    chrome.tabs.sendMessage(tab.id, { action: 'TOGGLE_OVERLAY' }).catch(() => {});
   }
 });
 

@@ -407,6 +407,12 @@ class InPageOverlay {
         this.drawer.handleStreamError(msg.error);
       } else if (msg.action === 'CLOSE_DRAWER') {
         this.drawer.toggle(false);
+      } else if (msg.action === 'TOGGLE_OVERLAY') {
+        // Sent by service-worker.js's Cmd+K/Alt+K command handler — same
+        // toggle() the FAB's own sparkles button calls (fabs.js), so the
+        // shortcut opens/closes this in-page drawer instead of Chrome's
+        // native side panel.
+        this.drawer.toggle();
       }
     });
 
@@ -564,8 +570,8 @@ class InPageOverlay {
       enableFloatingButton = true,
       fabSize = 'normal',
       fabOpacity = 90,
-      popupOpacity = 92,
-      popupBlur = 16,
+      popupOpacity = 60,
+      popupBlur = 10,
       popupCardSize = 'normal',
       popupCardTheme = 'auto',
     } = await Storage.get();
@@ -590,7 +596,7 @@ class InPageOverlay {
       card.style.backdropFilter = `blur(${popupBlur}px) saturate(180%) url(#hw-liquid-glass-filter)`;
       card.style.webkitBackdropFilter = `blur(${popupBlur}px) saturate(180%)`;
       card.classList.toggle('hw-card-compact', popupCardSize === 'compact');
-      card.classList.remove('theme-cyber-blue', 'theme-emerald', 'theme-purple', 'theme-rose', 'theme-amber', 'theme-indigo');
+      card.classList.remove('theme-glass-light', 'theme-glass-dark', 'theme-cyber-blue', 'theme-emerald', 'theme-purple', 'theme-rose', 'theme-amber', 'theme-indigo');
       if (popupCardTheme !== 'auto') card.classList.add(`theme-${popupCardTheme}`);
     }
 

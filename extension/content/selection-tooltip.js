@@ -160,8 +160,8 @@ class SelectionTooltip {
     await this.refreshGatingState();
 
     const {
-      toolbarOpacity = 90,
-      toolbarBlur = 14,
+      toolbarOpacity = 25,
+      toolbarBlur = 6,
       toolbarShowText = true,
       toolbarSize = 'normal',
       toolbarTheme = 'auto',

@@ -248,12 +248,12 @@ export const DEFAULT_SETTINGS = {
   fabOpacity: 90, // 30 - 100% (Liquid Glass background alpha)
   fabPosition: null, // null (default docked position) | { dock: 'left' | 'right', top: number(px) } — set by dragging the FAB cluster
   drawerWidth: null, // null (default 480px from CSS) | number(px) — set by dragging the drawer's left-edge resize handle
-  popupOpacity: 92, // 40 - 100% (Liquid Glass background alpha)
-  popupBlur: 16, // 0 - 30px
+  popupOpacity: 60, // 0 - 100% (Liquid Glass background alpha)
+  popupBlur: 10, // 0 - 30px
   popupCardSize: "normal", // 'normal' | 'compact' (compact hides secondary buttons until hover, tighter padding) | 'minimize'
-  popupCardTheme: "auto", // 'auto' (default blue accent, dark-mode aware) | 'cyber-blue' | 'emerald' | 'purple' | 'rose' | 'amber' | 'indigo'
-  toolbarOpacity: 90, // 40 - 100%
-  toolbarBlur: 16,
+  popupCardTheme: "auto", // 'auto' (default blue accent, dark-mode aware) | 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple' | 'rose' | 'amber' | 'indigo'
+  toolbarOpacity: 25, // 0 - 100%
+  toolbarBlur: 6,
   toolbarShowText: true, // true: icon + label, false: icon only
   toolbarSize: "normal", // 'compact' | 'normal' | 'large'
   toolbarTheme: "auto", // 'auto' (follows OS light/dark) | 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple' | 'rose' | 'amber' | 'indigo'
@@ -272,15 +272,15 @@ export const DEFAULT_SETTINGS = {
   hoverTranslateModifiers: ["ctrl"], // subset of ['ctrl','shift','alt','meta']; [] = fires on hover alone, no key needed
   hoverTranslateGranularity: "sentence", // 'word' | 'sentence' | 'paragraph'
   hoverTranslateDelay: 350, // ms the pointer must stay still before a lookup fires
-  hoverTranslateOpacity: 90, // 40 - 100% — matches toolbarOpacity's default so the two glass surfaces read the same
-  hoverTranslateBlur: 16, // 0 - 30px — matches toolbarBlur's default, same reasoning
+  hoverTranslateOpacity: 60, // 0 - 100%
+  hoverTranslateBlur: 10, // 0 - 30px
   hoverTranslateFontSize: 13, // 11 - 16px
   hoverTranslateMaxWidth: 300, // 220 - 420px
   hoverTranslateTheme: "auto", // 'auto' (follows OS light/dark) | 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple' | 'rose' | 'amber' | 'indigo'
   hoverTranslateHighlight: true, // marker-style background tint over the word/sentence/paragraph being translated
   hoverTranslateHighlightColor: "#fef08a", // one of HOVER_HIGHLIGHT_COLORS (shared/hover-highlight-colors.js) — not a free color picker, a curated pastel swatch
-  hoverTranslateHighlightOpacity: 40, // 20 - 80% — tint strength for hoverTranslateHighlight + the 'draw'/'pulse' animations (see content/styles/tooltip.css's --hl-alpha)
-  hoverTranslateHighlightStyle: "fill", // one of HIGHLIGHT_STYLES (shared/highlight-styles.js) — shape drawn over the highlighted text
+  hoverTranslateHighlightOpacity: 30, // 20 - 80% — tint strength for hoverTranslateHighlight + the 'draw'/'pulse' animations (see content/styles/tooltip.css's --hl-alpha)
+  hoverTranslateHighlightStyle: "marker", // one of HIGHLIGHT_STYLES (shared/highlight-styles.js) — shape drawn over the highlighted text
   hoverTranslateAnimation: "draw", // 'none' | 'pulse' | 'glow' | 'sweep' | 'draw' — effect played on that text while holding the trigger key
   routingStrategy: "prefer_config", // 'prefer_config' (recommended) | 'prefer_nano' | 'nano_only' | 'config_only'
   nanoDownloadState: { inProgress: false, percent: null, updatedAt: 0 }, // shared cross-tab flag: is Gemini Nano's on-device model actively downloading right now
