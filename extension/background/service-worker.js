@@ -6,8 +6,11 @@
 import { AiEngine } from './ai-engine.js';
 import { keyRotator } from './key-rotator.js';
 import { Storage } from '../shared/storage.js';
-import { ensureOffscreenDocument } from './ocr-bridge.js';
+import { runOcrInOffscreen } from './ocr-bridge.js';
 import { detectLocalModels } from '../shared/local-model-detect.js';
+import { translateText, lookupWord } from './translate-engines.js';
+import { isSingleWord } from '../shared/dictionary.js';
+import { getCachedTranslation, setCachedTranslation } from './translate-cache.js';
 
 // State & active streams
 const activeStreams = new Map(); // requestId -> AbortController
@@ -32,9 +35,12 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     });
   });
 
-  // Enable SidePanel on action click if supported
+  // The toolbar icon opens the action popup (the quick translator), NOT the
+  // side panel: openPanelOnActionClick would override manifest.action's
+  // default_popup entirely. The chat panel keeps its own entry points —
+  // Alt+K / Cmd+K, the in-page floating button, and a button in that popup.
   if (chrome.sidePanel && chrome.sidePanel.setPanelBehavior) {
-    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((err) => {
+    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch((err) => {
       console.log('SidePanel behavior note:', err);
     });
   }
@@ -44,6 +50,23 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
     chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html#builtin-nano') });
   }
+
+  // A reload/update doesn't fire onStartup below (Chrome only fires that on
+  // an actual browser launch) — an updated extension mid-session should
+  // still start the next chat message in a fresh conversation rather than
+  // silently continuing whatever was active before. Consumed by
+  // Storage.addChatMessage()/switchConversation() — see storage.js.
+  if (details.reason === 'update') {
+    chrome.storage.local.set({ pendingNewSession: true });
+  }
+});
+
+// Fires once per actual browser launch (not on extension reload/update,
+// hence the onInstalled('update') branch above too) — the start of a new
+// "session" for conversation-continuity purposes. See storage.js's
+// SESSION_IDLE_MS doc comment for the full session-boundary rule.
+chrome.runtime.onStartup.addListener(() => {
+  chrome.storage.local.set({ pendingNewSession: true });
 });
 
 // 2. Context Menu Click Listener
@@ -65,26 +88,42 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 });
 
 // 3. Command Keybinding Listener (Alt+K, Alt+C, etc.)
-chrome.commands.onCommand.addListener(async (command, tab) => {
+//
+// Deliberately NOT an async listener, and deliberately uses the `tab` this
+// callback is already handed instead of re-querying it — plain
+// tabs.sendMessage calls below have no user-gesture requirement to spend,
+// but there's no reason to burn the keypress's transient activation on an
+// unnecessary await regardless.
+chrome.commands.onCommand.addListener((command, tab) => {
   console.log('[Background] Received command:', command);
-
-  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!activeTab || !activeTab.id) return;
+  if (!tab || !tab.id) return;
 
   if (command === 'screenshot' || command === 'capture') {
-    chrome.tabs.sendMessage(activeTab.id, { action: 'START_CROP' }).catch(() => {});
+    chrome.tabs.sendMessage(tab.id, { action: 'START_CROP' }).catch(() => {});
   } else if (command === 'chat' || command === 'open_sidepanel') {
-    if (chrome.sidePanel) {
-      await chrome.sidePanel.open({ windowId: activeTab.windowId }).catch(() => {});
-    } else {
-      chrome.tabs.sendMessage(activeTab.id, { action: 'TOGGLE_OVERLAY' }).catch(() => {});
-    }
+    // Toggles the in-page Chat Drawer (overlay.js's own injected panel) —
+    // the same thing clicking the FAB's sparkles button does — rather than
+    // Chrome's own native side panel. No transient-activation concern here
+    // either way: unlike sidePanel.open(), tabs.sendMessage has no user-
+    // gesture requirement to spend by awaiting something first.
+    chrome.tabs.sendMessage(tab.id, { action: 'TOGGLE_OVERLAY' }).catch(() => {});
   }
 });
 
 // 4. Runtime Message Listener
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const { action, payload } = message || {};
+
+  // content scripts can't call chrome.commands directly (that API isn't
+  // exposed to their isolated world), so overlay.js asks here instead — it
+  // needs the real per-OS bound accelerator to show next to the in-page FAB
+  // buttons (e.g. "⌘K" on macOS) instead of a hardcoded Windows/Linux hint.
+  if (action === 'GET_COMMAND_SHORTCUTS') {
+    chrome.commands.getAll((cmds) => {
+      sendResponse(Object.fromEntries((cmds || []).map((c) => [c.name, c.shortcut])));
+    });
+    return true; // Keep channel open (async sendResponse)
+  }
 
   // Capture current tab viewport screenshot
   if (action === 'CAPTURE_VISIBLE_TAB') {
@@ -158,22 +197,106 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   // Quick Hover Translate (content/hover-translate.js) — plain machine
-  // translation via the free, unauthenticated Google Translate endpoint, not
-  // the AI Key Pool: firing on every hovered word needs to be instant and
-  // free, not an LLM call per lookup. Same host_permissions/CORS reasoning
-  // as DETECT_LOCAL_MODELS above — must run from the background, not the
-  // content script's origin.
+  // translation through the keyless engine chain, not the AI Key Pool: firing
+  // on every hovered word needs to be instant and free, not an LLM call per
+  // lookup. Same host_permissions/CORS reasoning as DETECT_LOCAL_MODELS above
+  // — must run from the background, not the content script's origin.
   if (action === 'QUICK_TRANSLATE') {
     const { text, targetLang } = payload || {};
     (async () => {
+      const from = 'auto';
+      const to = (targetLang && targetLang !== 'auto') ? targetLang : 'en';
       try {
-        const tl = (targetLang && targetLang !== 'auto') ? targetLang : 'en';
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(tl)}&dt=t&q=${encodeURIComponent(text || '')}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const translation = (data[0] || []).map((seg) => seg[0] || '').join('');
-        sendResponse({ success: true, translation, detectedLang: data[2] || null });
+        const cached = await getCachedTranslation(text, from, to);
+        if (cached) {
+          sendResponse({ success: true, translation: cached.translation, detectedLang: cached.detectedLang });
+          return;
+        }
+
+        const { popupTranslateEngine } = await Storage.get(['popupTranslateEngine']);
+        const result = await translateText({ text, from, to, engine: popupTranslateEngine });
+        setCachedTranslation(text, from, to, result).catch(() => {});
+        sendResponse({ success: true, translation: result.translation, detectedLang: result.detectedLang });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+
+  // Popup quick translator. Two routes behind one message: a keyless engine,
+  // or the AI Key Pool when engine === 'ai'. The AI route is collected into a
+  // single reply instead of streamed — the popup can be dismissed mid-stream
+  // and would leave an orphaned AI_STREAM_CHUNK broadcast with no listener.
+  if (action === 'TRANSLATE_TEXT') {
+    const { text, from = 'auto', to = 'en', engine, preferredConfigId } = payload || {};
+    (async () => {
+      try {
+        if (engine === 'ai') {
+          const { systemPrompt } = await Storage.get(['systemPrompt']);
+          let collected = '';
+          let modelUsed = null;
+          const abortController = new AbortController();
+          await AiEngine.ask(
+            { prompt: text, studyMode: 'translate', preferredConfigId, systemPrompt, outputLanguage: to },
+            (chunk, meta) => {
+              if (chunk) collected += chunk;
+              if (meta?.model) modelUsed = meta.model;
+            },
+            abortController.signal
+          );
+          if (!collected.trim()) throw new Error('AI returned an empty translation.');
+          sendResponse({ success: true, translation: collected.trim(), engine: 'ai', model: modelUsed, isAi: true });
+          return;
+        }
+
+        // A single word gets a dictionary lookup first — phonetics, meanings by
+        // part of speech, example sentences — so the free engines reach parity
+        // with what the AI path already returns for a word. It answers null for
+        // anything it does not recognise as a word, which falls through to a
+        // plain translation below.
+        if (isSingleWord(text)) {
+          try {
+            const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
+            const entry = await lookupWord({ word: text, from, to, displayLang: uiLanguage });
+            if (entry) {
+              sendResponse({
+                success: true,
+                translation: JSON.stringify(entry),
+                detectedLang: entry.detectedLang,
+                engine: 'google-dict',
+                isDictionary: true,
+                spoken: { source: entry.word, target: entry.translation },
+                isAi: false,
+              });
+              return;
+            }
+          } catch {
+            // Lookup is an enrichment, never a reason to fail the translation.
+          }
+        }
+
+        const cached = await getCachedTranslation(text, from, to);
+        if (cached) {
+          // engine/fellBack không lưu trong cache (khoá cache gộp mọi engine
+          // dịch máy làm một, xem translate-cache.js) — trả lại engine đang
+          // được chọn hiện tại để UI (popup.js:247-248) không hiển thị
+          // "undefined", và fellBack: false vì lần này không có chuyện rơi
+          // provider nào cả, trả thẳng từ cache.
+          sendResponse({ success: true, translation: cached.translation, detectedLang: cached.detectedLang, engine, fellBack: false, isAi: false });
+          return;
+        }
+
+        const result = await translateText({ text, from, to, engine });
+        setCachedTranslation(text, from, to, result).catch(() => {});
+        sendResponse({
+          success: true,
+          translation: result.translation,
+          detectedLang: result.detectedLang,
+          engine: result.engine,
+          fellBack: result.fellBack,
+          isAi: false,
+        });
       } catch (err) {
         sendResponse({ success: false, error: err.message });
       }
@@ -194,7 +317,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Ask AI via Port / Message
   if (action === 'ASK_AI') {
-    const { prompt, imageBase64, studyMode, preferredConfigId, outputLanguage: reqLang, requestId = `req_${Date.now()}` } = payload || {};
+    const { prompt, imageBase64, studyMode, preferredConfigId, outputLanguage: reqLang, history, requestId = `req_${Date.now()}` } = payload || {};
     const abortController = new AbortController();
     activeStreams.set(requestId, abortController);
 
@@ -203,7 +326,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const outputLanguage = reqLang || storedLang;
       try {
         await AiEngine.ask(
-          { prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage },
+          { prompt, imageBase64, studyMode, preferredConfigId, systemPrompt, outputLanguage, history },
           (chunk, meta) => {
             // Send chunk back to sender
             if (sender.tab && sender.tab.id) {
@@ -258,21 +381,13 @@ if (action === 'PERFORM_OCR') {
   }
   (async () => {
     try {
-      await ensureOffscreenDocument();
-      const response = await chrome.runtime.sendMessage({
-        action: 'OFFSCREEN_RUN_OCR',
-        payload: { imageBase64, targetLang, requestId },
-      });
-      pendingOcrTabs.delete(requestId);
-      if (response && response.success) {
-        sendResponse({ success: true, text: response.text });
-      } else {
-        sendResponse({ success: false, error: response?.error || 'OCR nhận diện thất bại.' });
-      }
+      const text = await runOcrInOffscreen(imageBase64, targetLang, requestId);
+      sendResponse({ success: true, text });
     } catch (err) {
       console.error('[ServiceWorker] OCR dispatch error:', err);
-      pendingOcrTabs.delete(requestId);
       sendResponse({ success: false, error: err.message || String(err) });
+    } finally {
+      pendingOcrTabs.delete(requestId);
     }
   })();
   return true;

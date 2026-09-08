@@ -5,6 +5,7 @@
 
 import { Icons } from '../shared/icons.js';
 import { Storage } from '../shared/storage.js';
+import { ensureLiquidGlassFilter } from '../shared/liquid-glass.js';
 import { getOptionsI18n, getSelectionTooltipI18n, getFloatingPopupI18n } from '../shared/i18n.js';
 import { OptionsTooltips } from './options-tooltips.js';
 import { KeysTab } from './tabs/keys-tab.js';
@@ -101,6 +102,8 @@ export class OptionsController {
     setInner('optIconOcrExplain', Icons.helpCircle(18));
     setInner('optIconResetToolbarLayout', Icons.refresh(14));
     setInner('optIconResetHover', Icons.refresh(14));
+    setInner('optIconResetFab', Icons.refresh(14));
+    setInner('optIconResetPopup', Icons.refresh(14));
 
     // Local Model (Ollama / LM Studio) Panel & Guide Icons
     setInner('optIconServer', Icons.server(16));
@@ -332,8 +335,16 @@ export class OptionsController {
     setText('optLabelFabSize', dict.labelFabSize);
     setText('optLabelFabOpacity', dict.labelFabOpacity);
     setText('optLabelFabOpacityDesc', dict.labelFabOpacityDesc);
+    // Reuses the toolbar layout editor's own "Restore Default" string —
+    // same generic action, no need for a second near-identical i18n key.
+    setText('optBtnResetFabText', dict.toolbarLayoutResetBtn);
     setText('optCardToolbarTitle', dict.cardToolbarTitle);
     setText('optCardPopupTitle', dict.cardPopupTitle);
+    // Reuses the General tab's own enable-toggle strings for this same
+    // setting (enableTextTooltip) — same checkbox, just also surfaced here
+    // next to the toolbar's other appearance settings.
+    setText('optToolbarEnableTitle', dict.tooltipTitle);
+    setText('optToolbarEnableDesc', dict.tooltipDesc);
     setText('optLabelToolbarTheme', dict.labelToolbarTheme);
     setText('optLabelToolbarThemeDesc', dict.labelToolbarThemeDesc);
     setText('optLabelToolbarPosition', dict.labelToolbarPosition);
@@ -350,7 +361,7 @@ export class OptionsController {
 
     // Quick Hover Translate card
     setText('optCardHoverTitle', dict.cardHoverTitle);
-    setText('optHoverTranslateEnableTitle', dict.hoverTranslateTitle);
+    setText('optHoverTranslateEnableTitle', dict.hoverTranslateEnableTitle);
     setText('optHoverTranslateEnableDesc', dict.hoverTranslateDesc);
     setText('optLabelHoverModifier', dict.labelHoverModifier);
     setText('optLabelHoverModifierDesc', dict.labelHoverModifierDesc);
@@ -367,6 +378,12 @@ export class OptionsController {
     setText('optLabelHoverDelayDesc', dict.labelHoverDelayDesc);
     setText('optLabelHoverHighlight', dict.labelHoverHighlight);
     setText('optLabelHoverHighlightDesc', dict.labelHoverHighlightDesc);
+    setText('optLabelHoverHighlightColor', dict.labelHoverHighlightColor);
+    setText('optLabelHoverHighlightColorDesc', dict.labelHoverHighlightColorDesc);
+    setText('optLabelHoverHighlightOpacity', dict.labelHoverHighlightOpacity);
+    setText('optLabelHoverHighlightOpacityDesc', dict.labelHoverHighlightOpacityDesc);
+    setText('optLabelHoverHighlightStyle', dict.labelHoverHighlightStyle);
+    setText('optLabelHoverHighlightStyleDesc', dict.labelHoverHighlightStyleDesc);
     setText('optLabelHoverAnimation', dict.labelHoverAnimation);
     setText('optLabelHoverAnimationDesc', dict.labelHoverAnimationDesc);
     setText('optHoverAnimOptNone', dict.hoverAnimOptNone);
@@ -379,12 +396,16 @@ export class OptionsController {
     setText('optBtnResetHoverText', dict.toolbarLayoutResetBtn);
     setText('optLabelHoverTheme', dict.labelHoverTheme);
     setText('optLabelHoverThemeDesc', dict.labelHoverThemeDesc);
-    // Reuses the Selection Toolbar's own theme-option strings (same 5 values).
+    // Reuses the Selection Toolbar's own theme-option strings.
+    setText('optHoverThemeOptAuto', dict.toolbarThemeOptAuto);
     setText('optHoverThemeOptLight', dict.toolbarThemeOptLight);
     setText('optHoverThemeOptDark', dict.toolbarThemeOptDark);
     setText('optHoverThemeOptBlue', dict.toolbarThemeOptBlue);
     setText('optHoverThemeOptGreen', dict.toolbarThemeOptGreen);
     setText('optHoverThemeOptPurple', dict.toolbarThemeOptPurple);
+    setText('optHoverThemeOptRose', dict.toolbarThemeOptRose);
+    setText('optHoverThemeOptAmber', dict.toolbarThemeOptAmber);
+    setText('optHoverThemeOptIndigo', dict.toolbarThemeOptIndigo);
     setText('optLabelHoverOpacity', dict.labelHoverOpacity);
     setText('optLabelHoverOpacityDesc', dict.labelHoverOpacityDesc);
     setText('optLabelHoverBlur', dict.labelHoverBlur);
@@ -404,10 +425,29 @@ export class OptionsController {
     setText('optLabelPopupCardSizeDesc', dict.labelPopupCardSizeDesc);
     setText('optPopupCardSizeOptNormal', dict.popupCardSizeOptNormal);
     setText('optPopupCardSizeOptCompact', dict.popupCardSizeOptCompact);
+    setText('optPopupCardSizeOptMinimize', dict.popupCardSizeOptMinimize);
+    setText('optLabelPopupTheme', dict.labelPopupTheme);
+    setText('optLabelPopupThemeDesc', dict.labelPopupThemeDesc);
+    // Reuses the Selection Toolbar's own theme-option strings. glass-light/
+    // glass-dark here are a per-popup override, independent of the separate,
+    // global "Chế độ màu (Sáng/Tối)" (overlayTheme) setting — same relationship
+    // Toolbar's own glass-light/glass-dark options have to that global setting.
+    setText('optPopupThemeOptAuto', dict.toolbarThemeOptAuto);
+    setText('optPopupThemeOptLight', dict.toolbarThemeOptLight);
+    setText('optPopupThemeOptDark', dict.toolbarThemeOptDark);
+    setText('optPopupThemeOptBlue', dict.toolbarThemeOptBlue);
+    setText('optPopupThemeOptGreen', dict.toolbarThemeOptGreen);
+    setText('optPopupThemeOptPurple', dict.toolbarThemeOptPurple);
+    setText('optPopupThemeOptRose', dict.toolbarThemeOptRose);
+    setText('optPopupThemeOptAmber', dict.toolbarThemeOptAmber);
+    setText('optPopupThemeOptIndigo', dict.toolbarThemeOptIndigo);
     setText('optLabelPopupOpacity', dict.labelPopupOpacity);
     setText('optLabelPopupOpacityDesc', dict.labelPopupOpacityDesc);
     setText('optLabelPopupBlur', dict.labelPopupBlur);
     setText('optLabelPopupBlurDesc', dict.labelPopupBlurDesc);
+    // Reuses the toolbar layout editor's own "Restore Default" string —
+    // same generic action, no need for a second near-identical i18n key.
+    setText('optBtnResetPopupText', dict.toolbarLayoutResetBtn);
     setText('optLivePreviewBadge', dict.livePreviewBadge);
     setText('optLivePreviewSub', dict.livePreviewSub);
 
@@ -416,11 +456,15 @@ export class OptionsController {
     setText('optFabOptSmall', dict.fabOptSmall);
     setText('optFabOptNormal', dict.fabOptNormal);
     setText('optFabOptLarge', dict.fabOptLarge);
+    setText('optThemeOptAuto', dict.toolbarThemeOptAuto);
     setText('optThemeOptLight', dict.toolbarThemeOptLight);
     setText('optThemeOptDark', dict.toolbarThemeOptDark);
     setText('optThemeOptBlue', dict.toolbarThemeOptBlue);
     setText('optThemeOptGreen', dict.toolbarThemeOptGreen);
     setText('optThemeOptPurple', dict.toolbarThemeOptPurple);
+    setText('optThemeOptRose', dict.toolbarThemeOptRose);
+    setText('optThemeOptAmber', dict.toolbarThemeOptAmber);
+    setText('optThemeOptIndigo', dict.toolbarThemeOptIndigo);
     setText('optSizeOptCompact', dict.toolbarSizeOptCompact);
     setText('optSizeOptNormal', dict.toolbarSizeOptNormal);
     setText('optSizeOptLarge', dict.toolbarSizeOptLarge);
@@ -436,6 +480,7 @@ export class OptionsController {
     setText('prevPopupAnswerHeading', tooltipDict.answer);
     setText('prevPopupNextQuestion', popupDict.nextQuestion);
     setText('prevPopupCopy', popupDict.copy);
+    setText('prevMiniAnswerHeading', tooltipDict.answer);
 
     // Guide Tab
     setText('optHeadingGuide', dict.headingGuide);
@@ -510,5 +555,6 @@ export class OptionsController {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  ensureLiquidGlassFilter(document);
   new OptionsController();
 });

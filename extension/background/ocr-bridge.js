@@ -37,6 +37,13 @@ export async function ensureOffscreenDocument() {
 
 /**
  * Run OCR on a base64 image via the offscreen document.
+ *
+ * For callers OUTSIDE the offscreen document only (the service worker).
+ * chrome.runtime fires onMessage in every frame of the extension except the
+ * sender's own, so code living inside offscreen/ocr.html must import
+ * runLocalOcr() from offscreen/ocr.js and call it directly instead — a
+ * message sent from there would never reach the listener in the same frame.
+ *
  * @param {string} imageBase64
  * @param {string} [targetLang]
  * @param {string} [requestId]

@@ -1,0 +1,627 @@
+# Kế hoạch Triển khai Desktop App — Bản Phân tích Định hướng
+
+> Tài liệu cấp 2, viết theo yêu cầu §171 của [desktop-app.md](./desktop-app.md).
+> Phạm vi rộng hơn bản gốc: bản gốc chỉ đặc tả **dịch thuật**; tài liệu này mở rộng
+> sang **toàn bộ tính năng extension hiện có** (giải bài tập, tóm tắt, giải thích,
+> chat, trắc nghiệm, OCR, định tuyến AI đa provider, 13 ngôn ngữ UI).
+
+**Nguyên tắc xuyên suốt (đã chốt):** Extension và Desktop App là **hai sản phẩm độc
+lập hoàn toàn** — hai thư mục, hai build, hai chu kỳ release, hai version,
+**không chia sẻ một dòng code nào**. Chúng chỉ kế thừa tư tưởng của nhau.
+Extension giữ nguyên JavaScript ESM; Desktop dùng TypeScript strict.
+
+> - Cấu trúc thư mục, registry khai báo tập trung, tách config/env và quy ước chống
+>   god file: [desktop-app-structure.md](./desktop-app-structure.md)
+> - Hệ thống tài liệu cho ba đối tượng (người dùng / lập trình viên / AI agent),
+>   CHANGELOG và định nghĩa hoàn thành: [documentation-plan.md](./documentation-plan.md)
+
+---
+
+# 1. Khoảng cách giữa `desktop-app.md` và mục tiêu thật
+
+Bản `desktop-app.md` (5.642 dòng) là một đặc tả rất tốt nhưng **chỉ mô hình hoá một
+đường ống duy nhất**:
+
+```ts
+interface TranslationPipeline {
+  processPoint(point: Point): Promise<TranslationOverlayResult | null>;
+}
+```
+
+Đây là đường ống **hover → dịch**. Nó không mô tả được các tính năng còn lại vì 4 lý do
+kiến trúc:
+
+| # | Giả định của bản gốc | Vì sao vỡ khi thêm giải bài tập / tóm tắt |
+|---|---|---|
+| 1 | Input luôn là **một điểm chuột** (`Point`) | Giải bài tập cần **một vùng** (region), một file, hoặc một ảnh chụp; tóm tắt cần **cả trang/cả tài liệu** |
+| 2 | Output luôn là **một chuỗi text ngắn** | Lời giải là **markdown + KaTeX + streaming**, dài vài trăm dòng |
+| 3 | Backend là **Google Translate API** (1 request, ~200ms, miễn phí) | Giải/tóm tắt cần **AiEngine đa provider, streaming, key rotation, vision** (vài giây) |
+| 4 | Overlay là cửa sổ **trong suốt, click-through, không nhận focus** | Chat/lời giải cần cửa sổ **có focus, scroll được, copy được, hỏi tiếp được** |
+
+→ Cần **tổng quát hoá pipeline** và **tách thành 2 lane** (mục 4 & 5).
+
+---
+
+# 2. Kiểm kê tài sản: cái gì port được, cái gì phải viết lại
+
+Điểm mạnh lớn nhất của repo hiện tại: **bề mặt tiếp xúc với Chrome API cực kỳ hẹp**.
+Toàn bộ 12.526 dòng JS chỉ chạm vào Chrome qua đúng 24 API, và tập trung vào 4 nhóm:
+
+```
+ 60 refs  messaging   chrome.runtime.sendMessage / onMessage / tabs.sendMessage
+ 14 refs  asset URL   chrome.runtime.getURL
+ 11 refs  storage     chrome.storage.local / onChanged
+ ~20 refs shell/host  tabs.create, sidePanel.*, openOptionsPage, contextMenus,
+                      commands, captureVisibleTab, offscreen, scripting
+  3 refs  Nano        chrome.aiOriginTrial.languageModel
+```
+
+## 2.1. Nhóm A — Port nguyên trạng, 0 dòng phải sửa (~9.100 dòng)
+
+| File | Dòng | Vai trò |
+|---|---|---|
+| `shared/i18n/locales/*.js` (13 file) | 7.785 | Toàn bộ 13 locale |
+| `shared/i18n.js` | 90 | Resolver dictionary |
+| `shared/markdown-katex.js` | 396 | Render markdown + công thức |
+| `shared/icons.js` | 274 | SVG icon set |
+| `shared/dictionary.js` | 242 | Schema tra từ đơn |
+| `background/key-rotator.js` | 115 | Xoay vòng key pool, cooldown |
+| `shared/study-prompt.js` | 80 | 5 chế độ học tập |
+| `shared/toolbar-items.js` | 59 | Layout toolbar |
+| `shared/thinking-control.js` | 58 | Tắt thinking theo provider |
+
+**Đây là "bộ não" của sản phẩm và nó đã sẵn sàng chạy trên desktop.**
+
+## 2.2. Nhóm B — Port qua adapter, sửa nhẹ (~2.100 dòng)
+
+| File | Dòng | Chrome refs | Việc cần làm |
+|---|---|---|---|
+| `shared/storage.js` | 633 | 7 | Thay backend `chrome.storage.local` → SQLite/electron-store |
+| `shared/ocr-engine.js` | 567 | 10 | Thay `getURL` + IndexedDB → đường dẫn file thật; thêm native OCR |
+| `offscreen/ai-stream.js` | 469 | 5 | Bỏ heartbeat MV3, giữ nguyên logic 3 provider family |
+| `background/ai-engine.js` | 298 | 11 | Bỏ nhánh `chrome-builtin`, giữ toàn bộ routing |
+| `shared/local-model-detect.js` | 237 | 3 | `fetch` trực tiếp, không cần đi qua service worker |
+
+## 2.3. Nhóm C — UI: port được nhưng cần đổi shell (~3.000 dòng)
+
+`content/overlay/floating-card.js` (884 dòng, 5 chrome refs), `content/overlay/drawer.js`
+(768/6), `content/selection-tooltip.js` (463), `content/hover-translate.js` (524/4),
+`content/cropper.js` (352/2) — tất cả đều là **HTML + CSS + DOM thuần**, render vào
+Shadow DOM. Trên Electron chúng render vào `BrowserWindow` thay vì Shadow DOM.
+Toàn bộ CSS Liquid Glass (`content/styles/*.css`) dùng lại nguyên vẹn.
+
+## 2.4. Nhóm D — Không port được, phải thiết kế lại
+
+| Thành phần | Vì sao | Phương án desktop |
+|---|---|---|
+| **Gemini Nano** (`chrome.aiOriginTrial`) | API chỉ có trong Chrome | Ollama / LM Studio — **repo đã hỗ trợ sẵn 2 provider này** |
+| **Offscreen document** (`offscreen/*`) | Workaround cho giới hạn 30s của MV3 service worker | **Xoá hẳn** — Electron main process không có giới hạn này |
+| **Google Forms adapter** (`content/forms-adapter.js`) | Cần truy cập DOM để tự click radio | Chỉ gợi ý đáp án qua OCR/vision, **không auto-fill** |
+| **Service worker routing** (`background/service-worker.js`) | Message passing của extension | Electron IPC + preload |
+| `chrome.tabs.captureVisibleTab` | Chỉ chụp được tab | OS screen capture — **mạnh hơn**, chụp được mọi app |
+
+**Kết luận kiểm kê:** khoảng **75% logic nghiệp vụ có giá trị tham chiếu**. Phần phải
+thiết kế mới hoàn toàn nằm ở **tầng thu nhận nội dung** (DOM → OS) và **tầng shell**.
+Xem mục 3.3 để biết "tham chiếu" khác "port" thế nào sau quyết định tách hoàn toàn.
+
+---
+
+# 3. Nguyên tắc tách Extension / Desktop — ĐÃ CHỐT
+
+**Quyết định: hai app độc lập hoàn toàn trong một repo. Không có package lõi dùng chung.**
+
+```text
+homework-ai-extension/
+├── extension/     ← MV3, JavaScript ESM, không build step — GIỮ NGUYÊN VỊ TRÍ
+├── desktop/       ← Electron, TypeScript, Vite — hoàn toàn tự chứa
+├── roadmap/
+└── docs/
+```
+
+Hai thư mục **không import lẫn nhau, không có `packages/`, không có workspace**.
+Chúng chỉ **kế thừa tư tưởng**: cùng mô hình cấu hình, cùng 5 study mode, cùng
+13 ngôn ngữ, cùng triết lý Liquid Glass. Sửa một prompt hay thêm một locale key
+là **sửa ở cả hai nơi, có chủ đích**.
+
+## 3.1. Vì sao chấp nhận trùng lặp
+
+Trùng lặp ở đây **không phải nợ kỹ thuật, mà là ranh giới sản phẩm**. Hai app đi theo
+hai hướng tiếp cận khác nhau về bản chất:
+
+| | Extension | Desktop |
+|---|---|---|
+| Nguồn nội dung | DOM (có cấu trúc, có ngữ nghĩa) | Pixel + Accessibility tree (phẳng, nhiễu) |
+| Đơn vị làm việc | `Range`, `Node`, `Element` | `Rect`, `Point`, `ImageBuffer` |
+| Vòng đời | service worker bị kill sau 30s | process sống suốt phiên |
+| Bảo mật | CSP của MV3, không truy cập file | full Node, keychain, SQLite |
+| UI | Shadow DOM chèn vào trang lạ | `BrowserWindow` mình sở hữu |
+| Model on-device | Gemini Nano | Ollama / LM Studio |
+
+Một lõi dùng chung phục vụ cả hai sẽ phải trừu tượng hoá qua **6 khác biệt nền tảng
+này cùng lúc**. Cái giá là mỗi thay đổi phải cân nhắc "có vỡ bên kia không" — đắt hơn
+nhiều so với việc sửa hai chỗ một cách tường minh.
+
+**Đổi lại, mỗi app được tối ưu triệt để cho môi trường của nó** — desktop không phải
+mang theo bất kỳ giới hạn nào của MV3, extension không phải chờ desktop.
+
+## 3.2. Hệ quả cần chấp nhận (và cách kiểm soát)
+
+| Hệ quả | Kiểm soát |
+|---|---|
+| 13 locale tồn tại 2 bản, có thể lệch | Script `desktop/scripts/check-locale-parity.ts` — chỉ **cảnh báo** key có ở extension mà thiếu ở desktop, không ép đồng bộ. Chạy trong CI, không fail build |
+| Sửa study prompt phải sửa 2 nơi | Checklist trong `CLAUDE.md`; hai bản prompt **được phép khác nhau** (desktop có ngữ cảnh ảnh màn hình, extension có ngữ cảnh trang web) |
+| Provider catalog trùng | Chấp nhận — desktop bỏ `chrome-builtin`, thêm cấu hình riêng cho Ollama/LM Studio |
+| Version riêng | `extension/manifest.json` và `desktop/package.json` **không ràng buộc nhau**. Quy tắc bump ở `CLAUDE.md` áp dụng độc lập cho từng app |
+
+## 3.3. Việc "port" nghĩa là gì trong bối cảnh mới
+
+Mục 2 vẫn đúng về **giá trị tham chiếu**, nhưng đổi nghĩa: các file Nhóm A không còn
+là "cắt-dán vào package chung" mà là **bản tham chiếu để viết lại bằng TypeScript**.
+
+| Nhóm | Cách xử lý |
+|---|---|
+| **A** — 13 locale (7.785 dòng) | Chuyển sang `.ts` có type, **giữ nguyên nội dung chuỗi**. Đây là phần chép cơ học nhiều nhất và an toàn nhất |
+| **A** — `markdown-katex`, `icons`, `dictionary`, `key-rotator`, `study-prompt` | Viết lại có type. Logic giữ nguyên, thêm `interface` và tách file theo mục 4 của [desktop-app-structure.md](./desktop-app-structure.md) |
+| **B** — `ai-engine`, `ai-stream`, `ocr-engine`, `storage` | **Viết lại theo kiến trúc mới**, không port trực tiếp: `ai-engine.js` hiện là một `switch` lớn — desktop dùng provider registry (xem structure doc mục 5.1) |
+| **C** — UI | CSS Liquid Glass chép được gần nguyên; JS DOM thuần viết lại thành React component |
+| **D** | Không liên quan |
+
+**Ước lượng cập nhật:** giá trị tái sử dụng thực tế còn khoảng **40–45%** (chủ yếu là
+locale, CSS, prompt, thuật toán), thay vì 75% như phương án lõi chung. Đây là cái giá
+đã biết trước và chấp nhận.
+# 4. Tổng quát hoá pipeline: từ "dịch" sang "mọi tác vụ AI"
+
+Thay `processPoint(point) → TranslationOverlayResult` bằng ba giai đoạn tách bạch:
+
+```text
+   INTENT              ACQUISITION            EXECUTION            PRESENTATION
+   (người dùng          (lấy nội dung          (xử lý)              (hiển thị)
+    muốn gì)             từ màn hình)
+
+  hover        ──┐   ┌── accessibility ──┐  ┌── Lane A ──┐   ┌── HoverOverlay
+  hotkey       ──┤   │                   │  │ Translate  │   │  (click-through)
+  region-select──┼──▶┤── screen capture ─┼─▶┤            ├──▶┤
+  clipboard    ──┤   │      + OCR        │  │── Lane B ──│   │── ResultPanel
+  file-drop    ──┤   │                   │  │  AiEngine  │   │  (có focus)
+  tray-menu    ──┘   └── clipboard/file ─┘  └────────────┘   └── ChatWindow
+```
+
+## 4.1. Kiểu dữ liệu trung tâm
+
+```ts
+type Intent =
+  | { kind: 'translate';  granularity: 'word' | 'sentence' | 'paragraph' }
+  | { kind: 'solve';      studyMode: StudyMode }   // 5 chế độ hiện có
+  | { kind: 'summarize';  length: 'short' | 'detailed' }
+  | { kind: 'explain' }
+  | { kind: 'rewrite';    tone?: string }
+  | { kind: 'chat';       conversationId: string };
+
+/** Kết quả của tầng thu nhận — thay cho `Point` của bản gốc */
+interface AcquiredContent {
+  text?: string;                 // từ Accessibility hoặc OCR
+  image?: ImageBuffer;           // khi cần vision (đồ thị, công thức, hình vẽ)
+  bounds: Rect;                  // toạ độ màn hình để neo overlay
+  source: 'accessibility' | 'ocr' | 'capture' | 'clipboard' | 'file';
+  confidence?: number;
+  app?: ApplicationInfo;
+}
+
+interface Task { intent: Intent; content: AcquiredContent; }
+```
+
+## 4.2. Vì sao `image` phải là công dân hạng nhất
+
+Đây là điểm **bản gốc thiếu hẳn**. Extension hiện tại có `content/cropper.js` +
+vision model vì rất nhiều bài tập **không phải text**: đồ thị hàm số, hình học,
+công thức hoá học, sơ đồ mạch điện. OCR chuyển chúng thành text là **mất thông tin**.
+
+→ Quy tắc định tuyến thu nhận:
+
+```text
+intent = translate            → ưu tiên Accessibility, OCR là fallback (bản gốc đúng)
+intent = solve | explain      → ưu tiên GỬI THẲNG ẢNH cho vision model,
+                                text (AX/OCR) chỉ đi kèm làm ngữ cảnh phụ
+intent = summarize            → ưu tiên Accessibility (cần nhiều text, ảnh tốn token)
+```
+
+---
+
+# 5. Hai lane thực thi — quyết định kiến trúc quan trọng nhất
+
+Bản gốc gộp mọi thứ vào một đường. Thực tế có **hai chế độ vận hành khác nhau về
+bậc độ lớn** và không được để chúng chia sẻ hàng đợi, cache hay overlay:
+
+| | **Lane A — Dịch nhanh** | **Lane B — Suy luận LLM** |
+|---|---|---|
+| Tác vụ | hover translate, tra từ | solve, summarize, explain, chat, rewrite |
+| Backend | Google Translate endpoint (miễn phí, không key) | AiEngine đa provider + key rotation |
+| Độ trễ | 200–400ms | 2–30s (streaming) |
+| Chi phí | 0 | tính theo token |
+| Kích hoạt | tự động khi rê chuột | **luôn do người dùng chủ động** |
+| Cache | LRU + SQLite, hit rate cao | không cache (câu hỏi hiếm lặp) |
+| Huỷ request | bắt buộc, liên tục | theo thao tác người dùng |
+| Overlay | trong suốt, click-through, không focus | cửa sổ có focus, scroll, copy |
+| Đã có sẵn | `content/hover-translate.js` | `background/ai-engine.js` |
+
+**Quy tắc bất di bất dịch:** Lane B **không bao giờ tự kích hoạt bởi chuyển động chuột.**
+Nếu vi phạm, một lần rê chuột qua màn hình = hàng chục lời gọi LLM tính phí.
+Đây là rủi ro chi phí nghiêm trọng nhất của dự án.
+
+---
+
+# 6. Ma trận parity tính năng Extension → Desktop
+
+| Tính năng extension | Vị trí hiện tại | Desktop | Thay đổi tầng thu nhận |
+|---|---|---|---|
+| **Hover Translate** | `content/hover-translate.js` | ✅ Có | DOM Range → Accessibility/OCR (đúng phạm vi `desktop-app.md`) |
+| **Crop & Solve** (`Alt+C`) | `content/cropper.js` | ✅ Có, **mạnh hơn** | `captureVisibleTab` → OS capture: chụp được **mọi app**, không chỉ tab |
+| **Chat Drawer** (`Alt+K`) | `content/overlay/drawer.js` | ✅ Có | Shadow DOM → `BrowserWindow` always-on-top |
+| **Selection Toolbar** | `content/selection-tooltip.js` | ✅ Có, cần thiết kế lại trigger | Không có `selectionchange` toàn hệ thống → dùng hotkey + `AXSelectedText`, fallback region-select |
+| **5 Study Modes** | `shared/study-prompt.js` | ✅ Nguyên trạng | không |
+| **AI Routing + Key Pool** | `background/ai-engine.js` | ✅ Nguyên trạng | không |
+| **Multi-conversation history** | `shared/storage.js` | ✅ **Nâng cấp** | `chrome.storage` (giới hạn 50 hội thoại) → SQLite, không giới hạn, tìm kiếm full-text |
+| **13 locale UI** | `shared/i18n/` | ✅ Nguyên trạng | không |
+| **Liquid Glass customization** | `options/tabs/appearance-tab.js` | ✅ **Nâng cấp** | CSS giữ nguyên + thêm vibrancy/acrylic thật của OS |
+| **Local OCR (Tesseract WASM)** | `shared/ocr-engine.js` | ✅ **Nâng cấp** | + macOS Vision / Windows OCR (native, nhanh hơn ~10×), Tesseract làm fallback & cho `equ` |
+| **Gemini Nano on-device** | `shared/nano-status.js` | ❌ **Mất** | Thay bằng Ollama/LM Studio (đã hỗ trợ). Đổi mặc định `routingStrategy` → `prefer_config` |
+| **Google Forms auto-solve** | `content/forms-adapter.js` | ⚠️ **Suy giảm** | Chỉ gợi ý đáp án, không tự click. Auto-fill vẫn là **lợi thế độc quyền của extension** |
+| **Quiz solver trên web** | `content/forms-adapter.js` | ⚠️ Suy giảm | như trên |
+
+## 6.1. Tính năng chỉ desktop mới có (đề xuất mới)
+
+Đây là phần biện minh cho việc làm desktop app thay vì chỉ dùng extension:
+
+1. **Giải bài tập ở mọi ứng dụng** — PDF reader, Word, PowerPoint, ảnh chụp đề, phần mềm
+   học tập offline, máy ảo, remote desktop. Extension bất lực với tất cả những thứ này.
+2. **Clipboard watcher** — copy bất kỳ đoạn nào → hiện thanh hành động nổi
+   (Dịch / Giải / Tóm tắt / Giải thích).
+3. **Kéo–thả file vào tray** — thả PDF/ảnh → tóm tắt hoặc giải cả tài liệu.
+4. **Hotkey toàn hệ thống theo tác vụ** — mỗi intent một phím tắt
+   (`⌘⇧T` dịch vùng, `⌘⇧S` giải vùng, `⌘⇧M` tóm tắt vùng).
+5. **Tóm tắt phụ đề video liên tục** — chế độ continuous của `desktop-app.md` §67
+   nhưng áp cho intent `summarize`.
+6. **Chạy hoàn toàn offline** — Ollama/LM Studio + native OCR = không cần mạng,
+   không rời máy. Đây là điểm bán hàng mạnh cho môi trường giáo dục.
+
+---
+
+# 7. Bổ sung/điều chỉnh so với `desktop-app.md`
+
+| Mục bản gốc | Điều chỉnh cần thiết |
+|---|---|
+| §62 `TranslationPipeline` | → `TaskPipeline` với `Intent` (mục 4.1) |
+| §63 `TranslationOverlayResult` | → union: `TranslationResult` \| `StreamingResult` (markdown + KaTeX + trạng thái stream) |
+| §34–38 Overlay Window | Tách **hai loại cửa sổ**: `HoverOverlay` (click-through) và `ResultPanel` (có focus) — mục 5 |
+| §25 Translation Engine | Giữ nguyên cho Lane A; **thêm** AiEngine cho Lane B, hai hệ thống độc lập |
+| §57 Data Model | Thêm bảng `conversations` / `messages` (port từ `DEFAULT_SETTINGS.conversations`) |
+| §85 API Key Security | Bản gốc bàn về 1 key Google; thực tế cần bảo vệ **cả key pool đa provider** → OS keychain (`safeStorage` của Electron), không để plaintext |
+| §93 Configuration | Phải khớp schema `DEFAULT_SETTINGS` hiện có (≈45 khoá) để hai sản phẩm cùng một mô hình cấu hình |
+| §11–14 OCR | Bổ sung: giữ Tesseract cho `equ` (công thức toán) — native OCR của OS **không nhận diện được ký hiệu toán** |
+| §159 Tech Stack | Bổ sung KaTeX + markdown renderer (đã có sẵn `shared/markdown-katex.js`) |
+
+---
+
+# 8. Lộ trình theo giai đoạn
+
+> **Extension không bị đụng tới ở bất kỳ phase nào.** Không refactor, không dựng
+> workspace, không di chuyển thư mục. Mọi công việc dưới đây diễn ra hoàn toàn
+> bên trong `desktop/`.
+>
+> Chi tiết cấu trúc thư mục, registry, config/env và quy ước code:
+> [desktop-app-structure.md](./desktop-app-structure.md).
+
+## Phase 0 — Nền móng `desktop/`
+
+**Mục tiêu: dựng khung TypeScript + toàn bộ tầng khai báo tập trung, trước khi
+viết bất kỳ tính năng nào.** Đây là phase quyết định chất lượng cấu trúc — làm ẩu
+ở đây thì god file xuất hiện từ Phase 2.
+
+- [ ] `desktop/` với electron-vite + TypeScript strict + ESLint (bật `max-lines`,
+      `max-lines-per-function`, `complexity` — xem structure doc mục 7)
+- [ ] Ba `tsconfig` tách theo process (main / preload / renderer) + path alias
+- [ ] `src/shared/ipc/channels.ts` — **contract IPC có type, khai báo một lần**
+- [ ] `config/settings.schema.ts` — **schema cấu hình một nguồn sự thật**, sinh ra
+      cả defaults, validator, kiểu TS và UI Settings (structure doc mục 5.2)
+- [ ] `config/providers.config.ts`, `config/hotkeys.config.ts`, `config/ocr.config.ts`
+- [ ] `.env.example` + `src/shared/env.ts` (validate bằng zod lúc khởi động)
+- [ ] Chuyển 13 locale sang `.ts` có type — chép nội dung chuỗi từ extension
+- [ ] `scripts/check-locale-parity.ts` (cảnh báo, không fail build)
+
+**Nghiệm thu:** `npm run dev` mở cửa sổ trắng; thêm một setting mới = sửa **đúng một
+file** và nó tự xuất hiện trong UI Settings với đủ 13 ngôn ngữ.
+
+## Phase 1 — Khung Electron (tương ứng M1–M3 bản gốc)
+
+- [ ] Bootstrap main process, tray, cửa sổ Settings (React)
+- [ ] SQLite + migration runner; `SettingsService` đọc/ghi theo schema Phase 0
+- [ ] IPC + preload theo contract Phase 0, **bao gồm streaming** (quan trọng nhất)
+- [ ] Cửa sổ Settings tự render từ `settings.schema.ts` — 6 nhóm tab
+- [ ] Global hotkey (đọc từ `hotkeys.config.ts`, user đổi được) + `HoverOverlay`
+      trong suốt, click-through
+- [ ] Key pool lưu qua `safeStorage` (OS keychain) — **không bao giờ vào `.env`**
+
+**Nghiệm thu:** cấu hình được API key, chọn được ngôn ngữ UI trong 13 thứ tiếng,
+đổi được hotkey.
+
+## Phase 2 — Lane B trước Lane A (đảo thứ tự bản gốc)
+
+> **Đây là khác biệt lớn nhất so với `desktop-app.md`.** Bản gốc đặt Accessibility
+> ở M4 và OCR ở M5, trước cả translation ở M6. Nhưng **Crop & Solve chỉ cần screen
+> capture + vision model** — không cần Accessibility, không cần OCR, không cần
+> mouse tracking, không cần sentence detection. Nó là con đường ngắn nhất tới một
+> sản phẩm dùng được thật, và nó bám sát nhất phần logic đã được kiểm chứng ở extension.
+
+- [ ] Screen capture + region selector (port `content/cropper.js`)
+- [ ] `AiEngine` + `KeyRotator` + 3 provider adapter trong main process theo
+      provider registry (structure doc mục 5.1) — không còn offscreen, không còn `switch`
+- [ ] `ResultPanel`: streaming markdown + KaTeX (port `markdown-katex.js` + `floating-card.js`)
+- [ ] 5 study mode + chọn ngôn ngữ đầu ra
+- [ ] Chat window đa hội thoại trên SQLite (port `drawer.js`)
+- [ ] Ollama / LM Studio detection thay cho Gemini Nano
+
+**Nghiệm thu:** `⌘⇧S` → khoanh vùng bất kỳ trên màn hình → lời giải streaming có công thức.
+**Tại đây app đã có giá trị sử dụng thật**, độc lập với toàn bộ phần Accessibility/OCR.
+
+## Phase 3 — Lane A: Hover Translate (M2, M4–M7 bản gốc) — hoàn tất 2026-08-31
+
+- [x] Mouse tracking toàn cục + debounce + huỷ request (huỷ thật qua `AbortController`,
+      xem ADR liên quan tới sửa lỗi tooltip không tự ẩn)
+- [x] macOS Accessibility (AXUIElement) → `getTextAtPoint` (ADR-0006, ADR-0008)
+- [x] macOS Vision OCR fallback (ADR-0007, ADR-0008 tầng 4)
+- [x] Sentence detection, tolerance zone, text stability
+- [x] Provider dịch + SQLite cache — mở rộng thành **chuỗi 3 provider** (Google/Bing/
+      MyMemory, người dùng sắp xếp thứ tự) sau khi phát hiện endpoint Google có thể
+      bị chặn hẳn, không chỉ rate-limit (ADR-0009)
+- [x] Hệ thống quyền macOS (Accessibility + Screen Recording) + onboarding (ADR-0010)
+
+**Nghiệm thu:** rê chuột trên PDF/VS Code/app native → tooltip dịch trong <400ms.
+Đạt với đường Accessibility (287–664ms tuỳ độ trễ mạng của bước dịch). **Chưa đạt**
+với đường OCR fallback (740–939ms, đo thực nghiệm) — chấp nhận vì đây là fallback,
+không phải đường chính; xem lại nếu người dùng thật phàn nàn OCR cảm giác chậm.
+
+## Phase 4 — Mở rộng intent & Windows — hoàn tất 2026-09-01 (1 phần thu hẹp phạm vi)
+
+Toàn bộ 5 mục dưới đã có code, nhưng KHÔNG đồng nghĩa "đã kiểm chứng như Phase
+3". Ba mục (Windows, kéo-thả PDF, Tesseract) chỉ kiểm chứng được tĩnh
+(typecheck/script độc lập) — không chạy thử được end-to-end như Phase 3 đã làm
+với máy Mac thật + "đo thực nghiệm". Xem ghi chú CHƯA KIỂM CHỨNG ở từng mục.
+
+- [x] Intent `summarize` / `explain` / `rewrite` dùng lại pipeline Phase 2 — 2026-09-01.
+      Config (`intents.config.ts`) và prompt builder (`build-prompt.ts`) đã sẵn từ
+      trước; phần thiếu là tầng thu nhận: `task-pipeline.ts` gọi `acquire(intent)`
+      không kèm toạ độ chuột khi kích hoạt bằng hotkey/tray nên `accessibility`/`ocr`
+      luôn bị bỏ qua, và `acquire()` chưa có case `'clipboard'` nên `rewrite` luôn lỗi.
+      Đã sửa cả hai — xem CHANGELOG-desktop.md. **Chưa kiểm chứng bằng cách chạy app
+      thật** (chỉ `npm run check` tĩnh: typecheck/lint/test/i18n) — module này chạm
+      Electron `screen`/`clipboard` API, cùng nhóm với Accessibility/OCR native ở
+      Phase 3 vốn không có unit test, cần "đo thực nghiệm" như Phase 3 đã làm.
+- [x] Clipboard watcher + thanh hành động nổi — 2026-09-01. Poll clipboard
+      (`acquisition/clipboard/watcher.ts`, cùng lý do MouseTracker phải poll —
+      Electron không có event native cho thay đổi clipboard). Cửa sổ nhỏ
+      luôn-trên-cùng gần con trỏ, 3 nút: Tóm tắt/Giải thích/Viết lại (đi qua
+      `handleClipboardAction()` mới trong task-pipeline.ts, dùng thẳng text đã
+      bắt được — KHÔNG đọc lại clipboard ở thời điểm bấm, tránh dính đua tranh
+      nếu người dùng đã copy thứ khác trong lúc thanh còn hiện). Cố tình KHÔNG
+      có nút Dịch (Lane A, luồng UI khác hẳn — quickTranslate()/HoverOverlay
+      không qua showResult()) hay Giải bài (acquisition là `['capture']`, luôn
+      mở lớp phủ khoanh vùng, bỏ qua hẳn text đã copy). Setting
+      `clipboardWatcherEnabled` mặc định **TẮT** — đọc mọi thứ người dùng copy
+      là hành vi nhạy cảm. Đã xác minh: `npm run check` sạch, VÀ đã chạy thử
+      `npm run dev` thật trên máy này (macOS) — app khởi động sạch, setting
+      mới migrate đúng, route renderer mới load không lỗi transform. Chưa thử
+      bằng tay việc thật sự copy text và bấm nút (cần tương tác GUI).
+- [x] Kéo–thả file (PDF/ảnh) — 2026-09-01, macOS only (Tray.on('drop-files')
+      không tồn tại trên Windows/Linux trong Electron). Ảnh (PNG/JPG/WEBP) →
+      intent 'solve'. PDF → trích text layer bằng `pdfjs-dist` (thêm dependency
+      mới — xem lý do chọn thay vì native canvas trong
+      acquisition/pdf/extract-text.ts) → intent 'summarize'. KHÔNG hỗ trợ PDF
+      dạng scan (không có text layer) — cần render trang ra ảnh rồi OCR, và
+      lựa chọn phổ biến nhất để render PDF trong Node (`canvas`) là native
+      addon, đúng loại rủi ro ABI/node-gyp dự án đã né (ADR-0005); báo rõ cho
+      người dùng bằng Notification thay vì lặng lẽ không làm gì.
+      ⚠️ **Lưu ý bảo mật đã xử lý, không phải phát hiện chờ xử lý:** bản
+      `pdfjs-dist@5.x` mặc định dính CVE thực thi JS tuỳ ý khi mở PDF độc hại
+      (GHSA-hq66-cqwq-w95j) — đúng bề mặt tấn công của chính tính năng này.
+      Đã chốt `^6.2.108` (bản vá), xác nhận `npm audit` sạch cho riêng gói này
+      trước khi dùng.
+      Xác minh: `npm run typecheck` sạch. Trích text đã kiểm chứng THẬT bằng
+      script độc lập chạy qua `ELECTRON_RUN_AS_NODE=1 electron` (không phải
+      `node` hệ thống — pdfjs-dist@6 cần `Promise.withResolvers`, tức Node
+      ≥22.5 mà package.json engines đã khai; Electron 37 đi kèm Node
+      22.21.1, máy dev hệ thống chỉ có 20.19.1) — trích đúng "Hello World" từ
+      một PDF tối thiểu dựng tay. Đã `npm run pack` thật và `asar list` xác
+      nhận pdfjs-dist (kể cả standard_fonts/cmaps) được đóng gói đúng vào
+      app.asar dù electron-builder.yml không khai node_modules trong `files`.
+      KHÔNG test được việc kéo-thả file thật vào tray icon (cần tương tác GUI
+      kéo-thả, ngoài khả năng của phiên làm việc này) — chưa thêm test tự
+      động cho extract-text.ts cùng lý do Promise.withResolvers ở trên (sẽ
+      làm `npm test` báo lỗi giả trong môi trường Node <22.5).
+- [x] Windows: UI Automation + Windows OCR + xử lý DPI — 2026-09-01, **CHƯA ĐO
+      THỰC NGHIỆM, mức rủi ro cao hơn hẳn các mục đã tích khác trong tài liệu
+      này**. Máy phát triển là macOS, không có toolchain Windows để build/test —
+      viết bằng PowerShell (chạy trực tiếp, không cần biên dịch) thay vì native
+      C#/C++ đã tính ban đầu, cụ thể:
+      - Accessibility: `native/accessibility-windows/helper.ps1` dùng
+        `System.Windows.Automation` (TextPattern + fallback Name/BoundingRectangle),
+        set DPI-awareness Per-Monitor V2 qua P/Invoke để cố định hệ toạ độ — CHƯA
+        kiểm chứng có khớp `screen.getCursorScreenPoint()` của Electron như macOS
+        đã kiểm chứng thực nghiệm hay không.
+      - OCR: `native/ocr-windows/helper.ps1` dùng `Windows.Media.Ocr` (WinRT) —
+        điểm rủi ro nhất là cầu nối `IAsyncOperation<T>` → chờ được từ PowerShell
+        qua reflection (`AsTask()`), một kỹ thuật cộng đồng đã ghi lại nhưng CHƯA
+        chạy thử trong repo này.
+      - DPI: KHÔNG cần việc riêng — `capture/display.ts` đã dùng
+        `display.scaleFactor` của Electron hoàn toàn theo nền tảng-trung lập từ
+        trước, tự động đúng trên Windows nhiều màn hình DPI khác nhau.
+      - `permissions.service.ts` đã coi Windows luôn `{accessibility: true,
+        screenRecording: true}` từ trước (không có mô hình xin quyền kiểu TCC) —
+        không cần màn hình onboarding riêng cho Windows.
+      **Việc cần làm khi có máy Windows thật:** chạy `npm run dev` trên Windows,
+      thử hover một đoạn text ở vài loại app khác nhau (trình duyệt, Word/PDF
+      reader, app Electron khác), so khớp toạ độ trả về với vị trí con trỏ thật,
+      rồi mới tích "đã kiểm chứng" giống cách ADR-0006/0007 đã làm cho macOS.
+- [x] Native OCR + Tesseract fallback — 2026-09-01, **KHÔNG có phần `equ`**.
+      Đã điều tra và xác nhận phần "cho equ" (công thức toán) trong tiêu đề
+      mục này KHÔNG khả thi: tải cả ba kho chính thức của Tesseract
+      (`tessdata`, `tessdata_fast`, `tessdata_best`) và so hash — `equ.
+      traineddata` GIỐNG HỆT NHAU ở cả ba (cùng SHA-256), tức dự án Tesseract
+      chưa từng huấn luyện bản LSTM riêng cho ký hiệu toán, chỉ có bản
+      legacy-only. Pipeline OCR (đây và của chính extension) dùng oem=1
+      (LSTM_ONLY) — nạp equ vào sẽ báo lỗi "LSTM requested, but not
+      present!!", HỎNG HẲN OCR chứ không chỉ kém với công thức toán. Đúng
+      phát hiện đã có sẵn từ trước ở `extension/shared/ocr-engine.js` dòng
+      312-324 — không phải lặp lại một lỗi mới.
+
+      Phần LÀM ĐƯỢC: `acquisition/ocr/tesseract.ts` — Tesseract qua
+      `tesseract.js` (WASM thuần, không native addon, tránh rủi ro ABI/
+      node-gyp dự án đã né với better-sqlite3, ADR-0005), ngôn ngữ eng+vie
+      bundled (`resources/tessdata/*.gz`, tải từ tessdata_fast). Nối vào
+      `acquire.ts`: `tryOcr()` giờ thử OCR native trước (Vision/Windows OCR),
+      chỉ chạy Tesseract khi native không có sẵn HOẶC confidence dưới
+      ngưỡng `LIMITS.ocr.minConfidence` — Tesseract là WASM thuần nên chậm
+      hơn hẳn native, không đáng chạy song song ở đường nóng. Đã chuẩn hoá
+      thang confidence Tesseract (0-100) về 0-1 khớp Vision framework —
+      lệch thang đo sẽ làm ngưỡng minConfidence vô nghĩa, đã kiểm tra bằng
+      script thật (0.96 sau chuẩn hoá từ 96).
+
+      Xác minh: `npm run check` sạch. OCR + chuẩn hoá confidence + tính
+      offset từng từ đã kiểm chứng THẬT bằng script độc lập (ảnh dựng bằng
+      Python/Pillow, text "Hello Tesseract") chạy đúng logic sản xuất
+      (`lineToTextBlock()` copy nguyên văn) — ra đúng text, bounds, offset
+      từng từ, confidence 0.96. `npm run dev` thật trên máy này khởi động
+      sạch, import tesseract.js không lỗi. **Chưa kiểm chứng được đường
+      Tesseract THỰC SỰ kích hoạt trong `tryOcr()` khi hover thật** — cần
+      quyền Ghi màn hình (Screen Recording) mà sandbox này không có sẵn
+      (lỗi "Ảnh chụp rỗng" xảy ra TRƯỚC bước OCR, không phải lỗi do thay đổi
+      này — hành vi từ trước, đã xác nhận bằng log thật).
+
+## Phase 5 — Sản phẩm hoá
+
+- [x] Đa màn hình, Retina/DPI — **đã có từ Phase 2/3**, không phải việc mới:
+      `capture/display.ts` dùng `screen.getAllDisplays()`/`scaleFactor` đúng
+      cách xuyên suốt (không phải scaffolding). `fullscreen` — mới có phần
+      overlay CỦA CHÍNH APP nổi trên app khác đang fullscreen
+      (`setVisibleOnAllWorkspaces`), KHÔNG có phát hiện "app đang hover có
+      đang fullscreen không" để tự tạm dừng — cần thêm quan sát native, chưa
+      làm. "Exclusion zone" theo VÙNG MÀN HÌNH (khác loại trừ theo app) chưa
+      tồn tại dạng nào — cần UI vẽ/chọn vùng, phạm vi lớn hơn hẳn việc nối
+      settings có sẵn, chưa làm.
+      2026-09-03: nối 2 setting privacy tồn tại từ Phase 0 nhưng CHƯA TỪNG có
+      logic đọc (chỉ hiện UI suông) — `excludedApps` (thêm UI riêng
+      `ExcludedAppsPanel.tsx`, trước đó `type: 'json'` không có control nào)
+      và `pauseOnSensitiveApps` (danh sách cứng ~10 trình quản lý mật khẩu
+      phổ biến — KHÔNG phủ được "app ngân hàng" như mô tả setting đã hứa,
+      không có danh sách đủ đầy đủ để liệt kê cứng). Cả hai áp qua
+      `privacy/app-exclusion.ts`, chỉ hoạt động với nội dung lấy qua
+      Accessibility (nguồn duy nhất biết tên app) — nhánh OCR fallback không
+      loại trừ được. `pauseWhenScreenSharing` VẪN CHƯA nối — không có API
+      đáng tin cậy để phát hiện "app khác đang ghi màn hình mình", làm giả
+      sẽ tạo cảm giác an toàn sai (rủi ro riêng tư thật), quyết định không
+      làm thay vì làm ẩu.
+- [ ] electron-builder, ký số (notarize macOS / code-sign Windows), auto-update
+      — **CHỜ chứng chỉ thật**, xác nhận với người dùng 2026-09-03: chưa có
+      Developer ID Apple / cert Windows. electron-builder.yml đã sẵn sàng
+      đóng gói (xem mục Phase 4), chỉ thiếu bước ký. auto-update
+      (electron-updater) CỐ Ý cũng chưa làm — auto-update không ký trên
+      macOS gần như vô dụng (Gatekeeper chặn bản tải về), viết code cho một
+      tính năng phụ thuộc trực tiếp vào thứ chưa có là lãng phí, đợi ký số
+      xong làm cả hai cùng lúc.
+- [x] Chế độ hiệu năng Fast/Balanced/Accurate (§51 bản gốc) — 2026-09-03.
+      Setting `performanceMode` (acquisition.settings.ts) + `LIMITS.ocr.
+      performanceModes` (limits.config.ts) — điều chỉnh CHIỀU CAO vùng chụp
+      OCR fallback + NGƯỠNG TIN CẬY tối thiểu, đúng phạm vi §51 gốc (không
+      phải chọn model AI khác — đã đọc kỹ tài liệu gốc trước khi làm, tránh
+      hiểu sai phạm vi). `balanced` = nguyên số ĐÃ ĐO THỰC NGHIỆM 2026-09-01
+      (không đổi mặc định). `fast`/`accurate` là ước lượng có lý do dựa trên
+      số đã đo, chưa đo riêng — chưa có máy để đo lại.
+- [x] Trang chẩn đoán (§92 bản gốc) — 2026-09-03, **KHÔNG có phần gửi
+      telemetry**, xác nhận với người dùng: không có backend phân tích thật
+      để gửi tới, và "gửi giả" hay "không gửi gì nhưng báo đã bật" đều tệ
+      hơn không làm. `telemetryEnabled` (privacy.settings.ts) vẫn tồn tại
+      trên UI nhưng KHÔNG có logic nào đọc nó — y hệt hiện trạng trước khi
+      làm việc này, không giả vờ đã xong. Trang chẩn đoán (tab riêng "Chẩn
+      đoán", `DiagnosticsPanel.tsx` + `diagnostics.service.ts` +
+      IPC `diagnostics:get`) hiện trạng thái THẬT (không mock) của: platform/
+      arch/version, quyền Accessibility + Ghi màn hình (`checkPermissions()`
+      có sẵn), provider Accessibility/OCR có khởi động được không (gọi thật
+      `getAccessibilityProvider()`/`getOcrProvider()`, có tác dụng phụ khởi
+      động sớm helper native — chấp nhận được, cùng việc sẽ xảy ra khi hover
+      lần đầu), hover translate + clipboard watcher đang bật/tắt, số
+      provider AI/dịch đã bật. Đúng phạm vi §92 (trạng thái subsystem cho
+      người dùng tự chẩn đoán) — KHÔNG phải §91/§151 "Debug Mode" (vẽ
+      bounding-box OCR + info kỹ thuật từng lần dịch), một tính năng khác,
+      chưa làm.
+      **Phát hiện thật khi xây xong, đáng chú ý:** ảnh chụp màn hình lúc
+      kiểm chứng cho thấy `screenRecordingGranted` báo ✓ (đã cấp) trên máy
+      này, nhưng `captureDisplay()` thực tế vẫn lỗi "Ảnh chụp rỗng — thường
+      là do chưa cấp quyền Ghi màn hình" ngay sau đó trong cùng phiên chạy —
+      nghĩa là `systemPreferences.getMediaAccessStatus('screen')`
+      (permissions.service.ts) có thể báo sai/lạc hậu so với hành vi capture
+      thật, ít nhất trong môi trường dev chưa ký số. Trang chẩn đoán phản
+      ánh ĐÚNG những gì API hệ thống trả lời — không tự "sửa" cho khớp thực
+      tế capture, vì làm vậy sẽ che mất chính phát hiện này. Chưa điều tra
+      sâu thêm (nằm ngoài phạm vi "xây trang chẩn đoán"), ghi lại ở đây để
+      quay lại nếu ai đó gặp lại đúng triệu chứng này.
+- [x] **Bổ sung ngoài 4 mục gốc** (yêu cầu thêm khi quay lại Phase 5, 2026-09-01) —
+      icon Lucide khắp app, chủ đề Sáng/Tối/Theo hệ thống, tuỳ chỉnh giao diện
+      tooltip dịch (màu nền/độ trong suốt/màu chữ/cỡ chữ/độ mờ/bo góc). Chi
+      tiết trong CHANGELOG-desktop.md. Token màu gộp về
+      `src/renderer/theme/theme.css` dùng chung cho mọi cửa sổ (trước đây 4
+      file CSS tự khai lại y hệt một bộ token độc lập). `showWhen` trong
+      `SettingDef` (đã khai kiểu từ trước, chưa từng có UI xử lý) nay được
+      `SettingsApp.tsx` đọc thật — ẩn 6 tuỳ chọn tooltip cho tới khi bật công
+      tắc tuỳ chỉnh. Đã xác minh bằng ảnh chụp màn hình app chạy thật (not chỉ
+      typecheck): dark theme áp đúng, 10 icon tab hiện đúng, toggle + color
+      picker + slider % hoạt động đúng.
+
+---
+
+# 9. Rủi ro & các quyết định cần chốt trước khi code
+
+## 9.1. Rủi ro kỹ thuật
+
+| Rủi ro | Mức | Giảm thiểu |
+|---|---|---|
+| **Lane B bị kích hoạt bởi chuột → cháy chi phí API** | 🔴 Cao | Bất biến kiến trúc: Lane B chỉ nhận intent do người dùng chủ động. Thêm hạn mức request/phút + hiển thị số token đã dùng |
+| Accessibility trên macOS không ổn định với Electron/Chromium app | 🔴 Cao | Đây là rủi ro đã biết của bản gốc §10.4. Phase 2 không phụ thuộc vào nó → sản phẩm vẫn dùng được nếu Phase 3 chậm |
+| ~~Native module làm vỡ packaging & auto-update~~ | ✅ **Đã giải quyết** | Dùng `node:sqlite` dựng sẵn thay better-sqlite3 — không còn native module nào. Xem [ADR-0005](../dev/decisions/0005-dung-node-sqlite.md) |
+| Streaming qua Electron IPC bị nghẽn/rò | 🟠 TB | Thiết kế `Bus.stream` với backpressure + abort ngay từ Phase 1 |
+| Mất Gemini Nano làm hỏng trải nghiệm "dùng ngay không cần key" | 🟠 TB | Onboarding hướng dẫn cài Ollama; hoặc bundle sẵn một model nhỏ |
+| Quyền Screen Recording khiến người dùng bỏ cuộc ở lần chạy đầu | 🟠 TB | Phase 2 (`solve`) cần quyền này ngay → onboarding phải rất tốt, có màn hình kiểm tra như §95 |
+| **13 locale hai bản trôi khỏi nhau theo thời gian** | 🟠 TB | Hệ quả đã chấp nhận của mục 3. `check-locale-parity.ts` cảnh báo key lệch; quy tắc §1 `CLAUDE.md` áp riêng cho từng app |
+| Cấu trúc `desktop/` phình thành god file như `floating-card.js` (884 dòng) của extension | 🟠 TB | ESLint chặn cứng ở 400 dòng/file, 50 dòng/hàm ngay từ Phase 0 — trước khi có code để mà nhân nhượng |
+| Schema cấu hình tập trung trở thành nút thắt (mọi thứ đổ vào một file) | 🟡 Thấp | `settings.schema.ts` chia theo nhóm, mỗi nhóm một file, gộp lại ở `index.ts` |
+
+## 9.2. Quyết định
+
+### Đã chốt
+
+1. ✅ **Tách hoàn toàn** — hai app độc lập trong một repo, không có lõi dùng chung,
+   chấp nhận sửa hai nơi (mục 3).
+2. ✅ **Desktop dùng TypeScript strict** — extension giữ nguyên JavaScript ESM.
+
+### Còn cần chốt
+
+3. **Phạm vi MVP desktop:** làm cả `solve` + `translate`, hay ship `solve` trước
+   (Phase 2) rồi mới tới `translate` (Phase 3)? — Khuyến nghị: **ship Phase 2 trước.**
+4. **Windows song song hay sau macOS?** Bản gốc để Windows ở M8; khuyến nghị giữ vậy.
+5. **Đổi tên repo?** `homework-ai-extension` → `homework-ai` cho đúng phạm vi mới.
+6. **Mô hình phân phối:** miễn phí tự cấu hình key (như extension), hay có bản trả phí
+   với key sẵn? Ảnh hưởng trực tiếp tới thiết kế §85–86 của bản gốc.
+
+---
+
+# 10. Việc nên làm ngay tuần này
+
+1. Chốt 4 quyết định còn lại ở mục 9.2.
+2. Bắt đầu **Phase 0** — dựng `desktop/` và tầng khai báo tập trung theo
+   [desktop-app-structure.md](./desktop-app-structure.md). Extension không bị đụng tới,
+   nên phase này rủi ro bằng không với sản phẩm đang chạy.
+3. Làm một **spike 1 ngày** kiểm chứng hai giả định đắt nhất, trước khi cam kết lộ trình:
+   - Electron `desktopCapturer` + region selector có chụp được vùng màn hình đúng
+     toạ độ trên macOS Retina đa màn hình không?
+   - `AXUIElementCopyElementAtPosition` có lấy được text từ Chrome/VS Code/Preview không?
+
+   Nếu spike thứ hai thất bại, Phase 3 phải chuyển hẳn sang OCR-first — biết sớm
+   tiết kiệm được vài tuần.

@@ -19,18 +19,33 @@
  * by content/styles/tooltip.css.
  */
 
-import { Storage } from '../shared/storage.js';
+import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
 import { getHoverTranslateI18n } from '../shared/i18n.js';
+import { Icons } from '../shared/icons.js';
+import { speak, isSpeechAvailable } from '../shared/tts.js';
+import { buildHighlight, isValidHighlightStyle, DEFAULT_HIGHLIGHT_STYLE } from '../shared/highlight-styles.js';
 import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
 
 const SETTINGS_KEYS = [
   'enableHoverTranslate', 'hoverTranslateModifiers', 'hoverTranslateGranularity', 'hoverTranslateDelay',
   'hoverTranslateOpacity', 'hoverTranslateBlur', 'hoverTranslateFontSize', 'hoverTranslateMaxWidth', 'hoverTranslateTheme',
-  'hoverTranslateHighlight', 'hoverTranslateAnimation',
-  'outputLanguage', 'disabledSites', 'uiLanguage',
+  'hoverTranslateHighlight', 'hoverTranslateHighlightColor', 'hoverTranslateHighlightOpacity', 'hoverTranslateHighlightStyle',
+  'hoverTranslateAnimation', 'outputLanguage', 'disabledSites', 'uiLanguage',
 ];
 
 const MODIFIER_EVENT_KEYS = { ctrl: 'ctrlKey', shift: 'shiftKey', alt: 'altKey', meta: 'metaKey' };
+
+// '#rrggbb' -> 'R, G, B' for CSS custom properties (tooltip.css's --hl-rgb),
+// which need bare components to compose rgba(var(--hl-rgb), alpha) — a hex
+// string can't be dropped straight into rgba(). Returns null on anything
+// that isn't a plain 6-digit hex color, so callers can fall back cleanly
+// instead of painting a broken/transparent highlight from a bad setting.
+function hexToRgbString(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+}
 
 // Shared by detectParagraph() and findBlockContainer(): the tags treated as
 // "one block of text" when walking up from a hovered Text node.
@@ -68,6 +83,7 @@ class HoverTranslate {
     this.epoch = 0;
     this._activeRect = null;
     this._lastText = null;
+    this._spokenText = '';
     this._lastPoint = null;
     this._highlightBoxes = [];
     this.init();
@@ -85,7 +101,16 @@ class HoverTranslate {
     document.addEventListener('scroll', () => this.hideTooltip(), true);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') this.hideTooltip();
+      this.refreshModifierState(e);
     });
+    // ctrlKey/shiftKey/altKey/metaKey on this.lastPoint are otherwise only
+    // ever refreshed by mousemove — pressing (or releasing) the configured
+    // modifier while the cursor is already resting still on text, with no
+    // further mouse movement, left the pending dwell check reading whatever
+    // modifier state happened to be true on the last real mousemove instead
+    // of what's actually held right now, so it silently failed
+    // modifiersMatch() until the next move. See refreshModifierState().
+    document.addEventListener('keyup', (e) => this.refreshModifierState(e));
     document.addEventListener('mousedown', (e) => {
       if (this.tooltip && !e.target.closest('.hw-hover-translate-tip')) this.hideTooltip();
     });
@@ -126,6 +151,28 @@ class HoverTranslate {
       if (!overTooltip && !nearWord) this.hideTooltip();
     }
 
+    if (!this.settings.enableHoverTranslate) return;
+    this.dwellTimer = setTimeout(() => this.onDwell(), this.settings.hoverTranslateDelay || 350);
+  }
+
+  // Keydown/keyup handler: the cursor doesn't move when a modifier key alone
+  // is pressed or released, so if the mouse was already resting still on
+  // text before/without any further mousemove, this.lastPoint's
+  // ctrlKey/shiftKey/altKey/metaKey would otherwise stay frozen at whatever
+  // they were on the last real mousemove — e.g. still false right after
+  // pressing Ctrl, since no mousemove has happened since to update it. That
+  // made the feature only reliably fire when the modifier was already held
+  // *before* the cursor arrived (so a genuine mousemove captured it), not
+  // when pressed while already hovering. Refreshing here and re-arming the
+  // dwell timer makes both orders work the same way.
+  refreshModifierState(e) {
+    if (!this.lastPoint) return;
+    if (!['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+    this.lastPoint = {
+      ...this.lastPoint,
+      ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey, metaKey: e.metaKey,
+    };
+    clearTimeout(this.dwellTimer);
     if (!this.settings.enableHoverTranslate) return;
     this.dwellTimer = setTimeout(() => this.onDwell(), this.settings.hoverTranslateDelay || 350);
   }
@@ -181,7 +228,7 @@ class HoverTranslate {
     // any stale highlight boxes (via removeTooltip()) before either is
     // recreated — applying the new highlight after it, not before, so it
     // isn't immediately wiped out by that cleanup.
-    this.showLoadingTooltip(detection.rect);
+    this.showLoadingTooltip(detection.rect, detection.text);
     this.applyTextEffects(detection.range);
     this.runTranslate(detection.text, detection.rect);
   }
@@ -199,6 +246,31 @@ class HoverTranslate {
     const detection = this.detectTextAtPoint(this._lastPoint.x, this._lastPoint.y, gran);
     if (!detection || !detection.text) return;
     this.renderDetection(detection);
+  }
+
+  // Wired to the language switcher's <select> (showLoadingTooltip()). Persists
+  // the choice as the shared outputLanguage (same setting the Chat panel's own
+  // dropdown uses) and re-translates the text already showing, in place —
+  // unlike changeGranularity() this doesn't rebuild the tooltip itself, since
+  // that would tear out the very <select> the user is mid-interaction with.
+  async changeOutputLanguage(lang) {
+    if (lang === this.settings.outputLanguage || !this.tooltip) return;
+    this.settings.outputLanguage = lang;
+    await Storage.set({ outputLanguage: lang });
+
+    const code = this.tooltip.querySelector('.hw-ht-lang-code');
+    if (code) {
+      const entry = SUPPORTED_LANGUAGES.find((l) => l.id === lang);
+      code.textContent = !entry || entry.id === 'auto' ? '..' : entry.id.split('-')[0].toUpperCase();
+    }
+
+    const body = this.tooltip.querySelector('.hw-ht-body');
+    if (body) {
+      body.classList.add('hw-ht-loading');
+      body.textContent = this.dict.loadingLabel || 'Translating…';
+    }
+    this.epoch++;
+    this.runTranslate(this._spokenText, this._activeRect);
   }
 
   // ============================================================
@@ -303,12 +375,34 @@ class HoverTranslate {
   // into one string, recording each node's starting offset within it — the
   // mapping offsetToBoundary() uses to turn a segment's character range back
   // into real DOM boundary points.
+  //
+  // Also walks <br> elements (SHOW_ELEMENT, filtered to just those) purely to
+  // insert a space at each one — without it, a heading like
+  // `<h1>foo <br><span>bar</span></h1>` flattened to "foo" + "bar" with
+  // nothing in between the two text nodes, so "foo bar" came out as
+  // "foobar" (a real page hit this with a <br> splitting one visual line
+  // into two: "...vai trò" / "dựng từ..." merged into "...vai tròdựng từ...").
+  // Other block-level splits don't need this: findBlockContainer() already
+  // stops at the nearest real block tag, so everything collectTextNodes()
+  // walks is inline content where <br> is the only element that introduces
+  // a line break without its own text node.
   collectTextNodes(container) {
-    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
+      acceptNode(node) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          return node.tagName === 'BR' ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
     const nodes = [];
     let text = '';
     let n;
     while ((n = walker.nextNode())) {
+      if (n.nodeType === Node.ELEMENT_NODE) {
+        if (text && !/\s$/.test(text)) text += ' ';
+        continue;
+      }
       nodes.push({ node: n, start: text.length });
       text += n.data;
     }
@@ -354,14 +448,24 @@ class HoverTranslate {
   // Tooltip rendering
   // ============================================================
 
-  showLoadingTooltip(rect) {
+  showLoadingTooltip(rect, sourceText = '') {
     this.epoch++;
     this.removeTooltip();
+    this._spokenText = sourceText;
+
+    // 'auto' isn't a skin of its own — same resolution as the Selection
+    // Toolbar's own toolbarTheme (content/selection-tooltip.js) — tooltip.css
+    // only ever styled glass-light (the default look) and a .theme-glass-dark
+    // override, so pick whichever matches the OS's current preference.
+    const htTheme = this.settings.hoverTranslateTheme || 'glass-light';
+    const resolvedHtTheme = htTheme === 'auto'
+      ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
+      : htTheme;
 
     const tip = document.createElement('div');
-    tip.className = `hw-hover-translate-tip theme-${this.settings.hoverTranslateTheme || 'glass-light'}`;
-    tip.style.setProperty('--ht-alpha', ((this.settings.hoverTranslateOpacity ?? 96) / 100).toFixed(2));
-    tip.style.setProperty('--ht-blur', `${this.settings.hoverTranslateBlur ?? 18}px`);
+    tip.className = `hw-hover-translate-tip theme-${resolvedHtTheme}`;
+    tip.style.setProperty('--ht-alpha', ((this.settings.hoverTranslateOpacity ?? 90) / 100).toFixed(2));
+    tip.style.setProperty('--ht-blur', `${this.settings.hoverTranslateBlur ?? 16}px`);
     tip.style.setProperty('--ht-font-size', `${this.settings.hoverTranslateFontSize ?? 13}px`);
     tip.style.setProperty('--ht-max-width', `${this.settings.hoverTranslateMaxWidth ?? 300}px`);
 
@@ -372,7 +476,40 @@ class HoverTranslate {
       `)
       .join('');
 
+    // Pronounces the hovered text, not the translation: the reader already
+    // reads their own language in the tip — what they cannot do is say the
+    // foreign word they just looked up. Same reasoning as the solution card's
+    // Listen button (content/overlay/floating-card.js). Omitted entirely where
+    // the browser has no speech engine, rather than left there doing nothing.
+    const speakBtnHtml = (sourceText && isSpeechAvailable())
+      ? `<button class="hw-ht-speak-btn" title="${this.dict.listenSource || ''}">${Icons.volume2(13)}</button>`
+      : '';
+
+    if (speakBtnHtml) tip.classList.add('has-speak');
+
+    // Mirrors the speak button on the opposite corner — which language this
+    // translates to was otherwise never shown anywhere on the tip itself.
+    // Collapsed to the 2-letter code so that's visible without hovering;
+    // hovering just widens the chip to reveal the real <select> underneath
+    // (see tooltip.css) for changing it. Same setting as the Chat panel's
+    // own output-language dropdown (shared/storage.js SUPPORTED_LANGUAGES),
+    // not a separate one just for this feature.
+    const currentLangId = this.settings.outputLanguage || 'en';
+    const currentLang = SUPPORTED_LANGUAGES.find((l) => l.id === currentLangId) || SUPPORTED_LANGUAGES[1];
+    const langCode = currentLang.id === 'auto' ? '..' : currentLang.id.split('-')[0].toUpperCase();
+    const langOptionsHtml = SUPPORTED_LANGUAGES
+      .map((l) => `<option value="${l.id}" ${l.id === currentLangId ? 'selected' : ''}>${l.name}</option>`)
+      .join('');
+    const langSwitchHtml = `
+      <div class="hw-ht-lang-switch" title="${this.dict.outputLanguageLabel || ''}">
+        <span class="hw-ht-lang-code">${langCode}</span>
+        <select class="hw-ht-lang-select">${langOptionsHtml}</select>
+      </div>
+    `;
+
     tip.innerHTML = `
+      ${speakBtnHtml}
+      ${langSwitchHtml}
       <div class="hw-ht-gran-switch">${granDotsHtml}</div>
       <div class="hw-ht-body hw-ht-loading">${this.dict.loadingLabel || 'Translating…'}</div>
     `;
@@ -383,6 +520,16 @@ class HoverTranslate {
         e.stopPropagation();
         this.changeGranularity(btn.dataset.gran);
       });
+    });
+    tip.querySelector('.hw-ht-speak-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // 'auto' — the hovered text carries no declared language, so its script
+      // picks the voice, with the page's own lang breaking the Han tie.
+      speak(this._spokenText, 'auto', document.documentElement.lang || '');
+    });
+    tip.querySelector('.hw-ht-lang-select')?.addEventListener('change', (e) => {
+      this.changeOutputLanguage(e.target.value);
     });
 
     getSharedShadowRoot().appendChild(tip);
@@ -448,6 +595,7 @@ class HoverTranslate {
       this.tooltip = null;
     }
     this._activeRect = null;
+    this._spokenText = '';
     this.clearTextEffects();
   }
 
@@ -472,24 +620,73 @@ class HoverTranslate {
     const anim = this.settings.hoverTranslateAnimation || 'none';
     if (!highlightOn && anim === 'none') return;
 
-    this._highlightBoxes = Array.from(range.getClientRects())
-      .filter((r) => r.width > 0 && r.height > 0)
+    const style = isValidHighlightStyle(this.settings.hoverTranslateHighlightStyle)
+      ? this.settings.hoverTranslateHighlightStyle
+      : DEFAULT_HIGHLIGHT_STYLE;
+    const hlRgb = hexToRgbString(this.settings.hoverTranslateHighlightColor) || '254, 240, 138';
+    const hlAlpha = ((this.settings.hoverTranslateHighlightOpacity ?? 40) / 100).toFixed(2);
+    const rects = Array.from(range.getClientRects()).filter((r) => r.width > 0 && r.height > 0);
+
+    this._highlightBoxes = this.mergeRectsByLine(rects)
       .map((r, i) => {
         const box = document.createElement('div');
-        box.className = 'hw-hlbox';
-        if (highlightOn) box.classList.add('hw-hl-on');
+        box.style.setProperty('--hl-rgb', hlRgb);
+        box.style.setProperty('--hl-alpha', hlAlpha);
+
+        // The chosen style (fill/underline/marker/pencil/...) only actually
+        // draws when the highlight toggle is on — "glow"/"sweep" below stay
+        // available as a lighter decoration even with it off, same as
+        // before. A fresh seed per box+render keeps the hand-drawn styles
+        // looking freshly stroked every time text is hovered again, instead
+        // of the exact same wobble reappearing.
+        let pad = { left: 0, right: 0, top: 0, bottom: 0 };
+        if (highlightOn) {
+          const built = buildHighlight(style, r.width, r.height, (Date.now() ^ (i * 2654435761)) >>> 0);
+          box.className = `hw-hlbox ${built.wrapperClass} hw-hl-on`;
+          box.innerHTML = built.innerHTML;
+          pad = built.pad;
+        } else {
+          box.className = 'hw-hlbox';
+        }
         if (anim !== 'none') box.classList.add(`hw-anim-${anim}`);
         // "draw" mimics a highlighter pen moving across the text: each line
         // rect starts its reveal a little after the previous one instead of
         // all lines filling in at once.
         if (anim === 'draw') box.style.animationDelay = `${i * 120}ms`;
-        box.style.top = `${window.scrollY + r.top}px`;
-        box.style.left = `${window.scrollX + r.left}px`;
-        box.style.width = `${r.width}px`;
-        box.style.height = `${r.height}px`;
+        box.style.top = `${window.scrollY + r.top - pad.top}px`;
+        box.style.left = `${window.scrollX + r.left - pad.left}px`;
+        box.style.width = `${r.width + pad.left + pad.right}px`;
+        box.style.height = `${r.height + pad.top + pad.bottom}px`;
         getSharedShadowRoot().appendChild(box);
         return box;
       });
+  }
+
+  // Range.getClientRects() returns one fragment per inline "run" it crosses,
+  // not one per visual line — a sentence broken up by a few <b> tags reports
+  // a separate rect for every plain/bold run even where two runs sit on the
+  // very same line. Bold text's slightly different font metrics then give
+  // that run's rect a marginally different top/height than the plain-text
+  // run right next to it on the same line, so drawing one highlight box per
+  // fragment produced visibly overlapping, unevenly-shaded bands instead of
+  // one clean strip per line (see the bug report's screenshot). Fix: merge
+  // every fragment whose vertical span overlaps another's into a single
+  // line-level box spanning their combined width — same idea PDF.js and
+  // other text-highlighting implementations use for this exact quirk.
+  mergeRectsByLine(rects) {
+    const lines = [];
+    for (const r of [...rects].sort((a, b) => a.top - b.top)) {
+      const line = lines.find((l) => r.top < l.bottom && r.bottom > l.top);
+      if (line) {
+        line.left = Math.min(line.left, r.left);
+        line.right = Math.max(line.right, r.right);
+        line.top = Math.min(line.top, r.top);
+        line.bottom = Math.max(line.bottom, r.bottom);
+      } else {
+        lines.push({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+      }
+    }
+    return lines.map((l) => ({ left: l.left, top: l.top, width: l.right - l.left, height: l.bottom - l.top }));
   }
 
   clearTextEffects() {

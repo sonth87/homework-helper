@@ -1,0 +1,51 @@
+{
+  "name": "homework-helper-desktop",
+  "version": "0.1.0",
+  "description": "Homework Helper Desktop App — trợ lý AI giải bài tập & dịch thuật trên toàn màn hình",
+  "private": true,
+  "engines": {
+    "node": ">=22.5"
+  },
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "node scripts/dev.mjs dev",
+    "build": "npm run typecheck && electron-vite build",
+    "preview": "node scripts/dev.mjs preview",
+    "typecheck": "tsc --noEmit -p tsconfig.main.json && tsc --noEmit -p tsconfig.preload.json && tsc --noEmit -p tsconfig.renderer.json",
+    "lint": "eslint .",
+    "check:settings-i18n": "tsx scripts/check-settings-i18n.ts",
+    "check:locale-parity": "tsx scripts/check-locale-parity.ts",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run check:settings-i18n && npm run check:locale-parity",
+    "pack": "npm run build && npm run build:native:macos && electron-builder --dir",
+    "dist": "npm run build && npm run build:native:macos && electron-builder",
+    "test": "tsx --tsconfig tsconfig.main.json --test tests/*.test.ts",
+    "build:native:macos": "sh scripts/build-native-macos.sh",
+    "postinstall": "node -e \"process.platform==='darwin' && require('child_process').execSync('sh scripts/build-native-macos.sh', {stdio:'inherit'})\""
+  },
+  "dependencies": {
+    "katex": "^0.18.4",
+    "lucide-react": "^1.39.0",
+    "marked": "^18.0.11",
+    "pdfjs-dist": "^6.3.289",
+    "tesseract.js": "^7.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^37.10.3",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^5.0.0",
+    "eslint": "^9.18.0",
+    "globals": "^17.11.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0",
+    "vite": "^6.0.7",
+    "zustand": "^5.0.3"
+  }
+}

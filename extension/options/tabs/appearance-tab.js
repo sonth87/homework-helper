@@ -1,7 +1,35 @@
 import { Icons } from '../../shared/icons.js';
 import { Storage, DEFAULT_SETTINGS } from '../../shared/storage.js';
-import { getSelectionTooltipI18n } from '../../shared/i18n.js';
+import { getSelectionTooltipI18n, getOptionsI18n } from '../../shared/i18n.js';
 import { TOOLBAR_ITEM_ICONS, DEFAULT_TOOLBAR_LAYOUT, normalizeToolbarLayout } from '../../shared/toolbar-items.js';
+import { HOVER_HIGHLIGHT_COLORS } from '../../shared/hover-highlight-colors.js';
+import { HIGHLIGHT_STYLES, DEFAULT_HIGHLIGHT_STYLE, buildHighlight } from '../../shared/highlight-styles.js';
+import { TOOLBAR_THEME_COLORS } from '../../shared/toolbar-theme-colors.js';
+
+// shared/highlight-styles.js only knows style ids — the display name/desc for
+// each lives in i18n (options block) like every other user-facing string.
+const STYLE_I18N_KEYS = {
+  fill: ['hlStyleFill', 'hlStyleFillDesc'],
+  underline: ['hlStyleUnderline', 'hlStyleUnderlineDesc'],
+  'wavy-underline': ['hlStyleWavyUnderline', 'hlStyleWavyUnderlineDesc'],
+  'double-underline': ['hlStyleDoubleUnderline', 'hlStyleDoubleUnderlineDesc'],
+  marker: ['hlStyleMarker', 'hlStyleMarkerDesc'],
+  circle: ['hlStyleCircle', 'hlStyleCircleDesc'],
+  rectangle: ['hlStyleRectangle', 'hlStyleRectangleDesc'],
+  'natural-underline': ['hlStyleNaturalUnderline', 'hlStyleNaturalUnderlineDesc'],
+  pencil: ['hlStylePencil', 'hlStylePencilDesc'],
+  scribble: ['hlStyleScribble', 'hlStyleScribbleDesc'],
+};
+
+// '#rrggbb' -> 'R, G, B', matching content/hover-translate.js's own
+// hexToRgbString() — the preview here and the real highlight boxes both
+// need bare components to compose rgba(var(--hl-rgb), alpha).
+function hexToRgbString(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+}
 
 export class AppearanceTab {
   constructor(optionsController) {
@@ -18,29 +46,36 @@ export class AppearanceTab {
       enableFloatingButton = true,
       fabSize = 'normal',
       fabOpacity = 90,
-      popupOpacity = 92,
-      popupBlur = 16,
+      popupOpacity = 60,
+      popupBlur = 10,
       popupCardSize = 'normal',
+      popupCardTheme = 'auto',
+      enableTextTooltip = true,
       toolbarShowText = true,
       toolbarSize = 'normal',
-      toolbarTheme = 'glass-light',
+      toolbarTheme = 'auto',
       toolbarPosition = 'above',
-      toolbarOpacity = 90,
-      toolbarBlur = 14,
+      toolbarOpacity = 25,
+      toolbarBlur = 6,
       toolbarLayout,
-      enableHoverTranslate = false,
-      hoverTranslateModifiers = ['alt'],
-      hoverTranslateGranularity = 'word',
+      enableHoverTranslate = true,
+      hoverTranslateModifiers = ['ctrl'],
+      hoverTranslateGranularity = 'sentence',
       hoverTranslateDelay = 350,
-      hoverTranslateTheme = 'glass-light',
+      hoverTranslateTheme = 'auto',
       hoverTranslateHighlight = true,
-      hoverTranslateAnimation = 'none',
-      hoverTranslateOpacity = 96,
-      hoverTranslateBlur = 18,
+      hoverTranslateHighlightColor = '#fef08a',
+      hoverTranslateHighlightOpacity = 30,
+      hoverTranslateHighlightStyle = 'marker',
+      hoverTranslateAnimation = 'draw',
+      hoverTranslateOpacity = 60,
+      hoverTranslateBlur = 10,
       hoverTranslateFontSize = 13,
       hoverTranslateMaxWidth = 300,
       uiLanguage = 'vi',
     } = await Storage.get();
+
+    const dict = getOptionsI18n(uiLanguage);
 
     // DOM Controls
     const overlayThemeSelect = document.getElementById('optOverlayThemeSelect');
@@ -48,6 +83,10 @@ export class AppearanceTab {
     const fabSizeSelect = document.getElementById('optFabSizeSelect');
     const rangeFabOpacity = document.getElementById('optRangeFabOpacity');
     const valFabOpacity = document.getElementById('valFabOpacity');
+    const btnResetFab = document.getElementById('optBtnResetFab');
+    const fabSettingsSub = document.getElementById('optFabSettingsSub');
+    const checkToolbarEnableInline = document.getElementById('optCheckToolbarEnableInline');
+    const toolbarSettingsSub = document.getElementById('optToolbarSettingsSub');
     const checkToolbarText = document.getElementById('optCheckToolbarText');
     const toolbarSizeSelect = document.getElementById('optToolbarSizeSelect');
     const toolbarThemeSelect = document.getElementById('optToolbarThemeSelect');
@@ -69,6 +108,10 @@ export class AppearanceTab {
     const rangeHoverDelay = document.getElementById('optRangeHoverDelay');
     const valHoverDelay = document.getElementById('valHoverDelay');
     const checkHoverHighlight = document.getElementById('optCheckHoverHighlight');
+    const swatchGroupHoverHighlight = document.getElementById('optHoverHighlightSwatches');
+    const rangeHoverHighlightOpacity = document.getElementById('optRangeHoverHighlightOpacity');
+    const valHoverHighlightOpacity = document.getElementById('valHoverHighlightOpacity');
+    const styleSwatchGroup = document.getElementById('optHoverHighlightStyles');
     const hoverAnimationSelect = document.getElementById('optHoverAnimationSelect');
     const hoverThemeSelect = document.getElementById('optHoverThemeSelect');
     const rangeHoverOpacity = document.getElementById('optRangeHoverOpacity');
@@ -80,29 +123,132 @@ export class AppearanceTab {
     const rangeHoverMaxWidth = document.getElementById('optRangeHoverMaxWidth');
     const valHoverMaxWidth = document.getElementById('valHoverMaxWidth');
     const btnResetHover = document.getElementById('optBtnResetHover');
+    const hoverSettingsSub = document.getElementById('optHoverSettingsSub');
     const prevHoverTip = document.getElementById('prevHoverTip');
 
     const popupCardSizeSelect = document.getElementById('optPopupCardSizeSelect');
+    const popupThemeSelect = document.getElementById('optPopupThemeSelect');
     const rangePopupOpacity = document.getElementById('optRangePopupOpacity');
     const valPopupOpacity = document.getElementById('valPopupOpacity');
     const rangePopupBlur = document.getElementById('optRangePopupBlur');
     const valPopupBlur = document.getElementById('valPopupBlur');
+    const btnResetPopup = document.getElementById('optBtnResetPopup');
 
     // Live Preview Elements
     const prevToolbar = document.getElementById('prevToolbar');
     const prevPopup = document.getElementById('prevPopup');
     const prevFab = document.getElementById('prevFab');
+    // Minimize mode has no card mockup of its own in the markup — it swaps
+    // prevPopup out for this circle+popup pair (see the 'isMinimize' branch
+    // in updatePreview() below).
+    const prevMiniWrap = document.getElementById('prevMiniWrap');
+    const prevMiniPopup = document.getElementById('prevMiniPopup');
+    const prevMiniAnswerHeading = document.getElementById('prevMiniAnswerHeading');
+    const prevMiniCircle = document.getElementById('prevMiniCircle');
 
     if (!checkFab) return;
+
+    // Dims (and truly disables, not just visually) a card's own sub-settings
+    // while its "enable this whole feature" checkbox above it is off — those
+    // controls have nothing to act on until the feature is back on.
+    const setSubDimmed = (subEl, dimmed) => {
+      if (!subEl) return;
+      subEl.classList.toggle('is-dimmed', dimmed);
+      subEl.querySelectorAll('input, select, button, textarea').forEach((el) => {
+        el.disabled = dimmed;
+      });
+    };
+
+    // Curated pastel swatches for hoverTranslateHighlightColor (see
+    // shared/hover-highlight-colors.js) — rebuilt (not just re-marked) each
+    // call since it's also how loadAppearanceSettings()'s one-time initial
+    // render and btnResetHover's reset both populate it.
+    function renderHoverHighlightSwatches(selected) {
+      if (!swatchGroupHoverHighlight) return;
+      swatchGroupHoverHighlight.innerHTML = HOVER_HIGHLIGHT_COLORS.map((hex) => `
+        <button type="button" class="opt-color-swatch${hex === selected ? ' active' : ''}" data-color="${hex}" style="background:${hex};" aria-label="${hex}"></button>
+      `).join('');
+      swatchGroupHoverHighlight.querySelectorAll('.opt-color-swatch').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          Storage.set({ hoverTranslateHighlightColor: btn.dataset.color });
+          swatchGroupHoverHighlight.querySelectorAll('.opt-color-swatch').forEach((b) => b.classList.toggle('active', b === btn));
+          updatePreview();
+        });
+      });
+    }
+
+    function currentHlRgb() {
+      const hex = swatchGroupHoverHighlight?.querySelector('.opt-color-swatch.active')?.dataset.color;
+      return hexToRgbString(hex) || '254, 240, 138';
+    }
+
+    function currentHlAlpha() {
+      return ((parseInt(rangeHoverHighlightOpacity?.value, 10) || 40) / 100).toFixed(2);
+    }
+
+    // Paints one swatch button with a real, tiny rendering of its style (via
+    // shared/highlight-styles.js) over a plain "Aa" sample — the same
+    // generator the real page overlay uses, so the swatch is never just an
+    // icon standing in for the look.
+    // Fixed sample geometry (not the "Aa" span's real offsetWidth/Height):
+    // this swatch grid is built during loadAppearanceSettings(), which runs
+    // on every page load regardless of which tab is actually visible —
+    // usually not this one, since it's not the default. A hidden
+    // `.opt-section` is `display:none`, so any live measurement here would
+    // read 0x0 and silently paint nothing. A fixed box sidesteps that
+    // entirely (the tiny preview doesn't need to hug the real glyph size).
+    const SWATCH_SAMPLE = { w: 24, h: 16, left: 26, top: 13 };
+
+    function paintStyleSwatch(btn) {
+      btn.querySelectorAll('.hw-hlbox').forEach((b) => b.remove());
+      const { w, h, left, top } = SWATCH_SAMPLE;
+      const built = buildHighlight(btn.dataset.style, w, h, 777);
+      const box = document.createElement('div');
+      box.className = `hw-hlbox ${built.wrapperClass} hw-hl-on`;
+      box.innerHTML = built.innerHTML;
+      box.style.setProperty('--hl-rgb', currentHlRgb());
+      box.style.setProperty('--hl-alpha', currentHlAlpha());
+      box.style.top = `${top - built.pad.top}px`;
+      box.style.left = `${left - built.pad.left}px`;
+      box.style.width = `${w + built.pad.left + built.pad.right}px`;
+      box.style.height = `${h + built.pad.top + built.pad.bottom}px`;
+      btn.appendChild(box);
+    }
+
+    // Rebuilt (not just re-marked) each call, same reasoning as
+    // renderHoverHighlightSwatches() above — it's also how the initial
+    // render and btnResetHover's reset both populate it.
+    function renderHighlightStyleSwatches(selected) {
+      if (!styleSwatchGroup) return;
+      styleSwatchGroup.innerHTML = HIGHLIGHT_STYLES.map(({ id }) => {
+        const [titleKey, descKey] = STYLE_I18N_KEYS[id];
+        return `
+          <button type="button" class="opt-style-swatch${id === selected ? ' active' : ''}" data-style="${id}" data-tooltip-title="${dict[titleKey] || id}" data-tooltip-desc="${dict[descKey] || ''}">
+            <span class="opt-style-swatch-sample">Aa</span>
+          </button>
+        `;
+      }).join('');
+      styleSwatchGroup.querySelectorAll('.opt-style-swatch').forEach((btn) => {
+        paintStyleSwatch(btn);
+        btn.addEventListener('click', () => {
+          Storage.set({ hoverTranslateHighlightStyle: btn.dataset.style });
+          styleSwatchGroup.querySelectorAll('.opt-style-swatch').forEach((b) => b.classList.toggle('active', b === btn));
+          updatePreview();
+        });
+      });
+    }
 
     // Populate initial values
     if (overlayThemeSelect) overlayThemeSelect.value = overlayTheme;
     checkFab.checked = enableFloatingButton;
+    setSubDimmed(fabSettingsSub, !enableFloatingButton);
     if (fabSizeSelect) fabSizeSelect.value = fabSize;
     if (rangeFabOpacity) {
       rangeFabOpacity.value = fabOpacity;
       if (valFabOpacity) valFabOpacity.textContent = `${fabOpacity}%`;
     }
+    if (checkToolbarEnableInline) checkToolbarEnableInline.checked = enableTextTooltip;
+    setSubDimmed(toolbarSettingsSub, !enableTextTooltip);
     if (checkToolbarText) checkToolbarText.checked = toolbarShowText;
     if (toolbarSizeSelect) toolbarSizeSelect.value = toolbarSize;
     if (toolbarThemeSelect) toolbarThemeSelect.value = toolbarTheme;
@@ -118,6 +264,7 @@ export class AppearanceTab {
     }
 
     if (checkHoverTranslateInline) checkHoverTranslateInline.checked = enableHoverTranslate;
+    setSubDimmed(hoverSettingsSub, !enableHoverTranslate);
     Object.entries(checkHoverMods).forEach(([mod, el]) => {
       if (el) el.checked = hoverTranslateModifiers.includes(mod);
     });
@@ -127,6 +274,12 @@ export class AppearanceTab {
       if (valHoverDelay) valHoverDelay.textContent = `${hoverTranslateDelay}ms`;
     }
     if (checkHoverHighlight) checkHoverHighlight.checked = hoverTranslateHighlight;
+    renderHoverHighlightSwatches(hoverTranslateHighlightColor);
+    if (rangeHoverHighlightOpacity) {
+      rangeHoverHighlightOpacity.value = hoverTranslateHighlightOpacity;
+      if (valHoverHighlightOpacity) valHoverHighlightOpacity.textContent = `${hoverTranslateHighlightOpacity}%`;
+    }
+    renderHighlightStyleSwatches(hoverTranslateHighlightStyle);
     if (hoverAnimationSelect) hoverAnimationSelect.value = hoverTranslateAnimation;
     if (hoverThemeSelect) hoverThemeSelect.value = hoverTranslateTheme;
     if (rangeHoverOpacity) {
@@ -147,6 +300,7 @@ export class AppearanceTab {
     }
 
     if (popupCardSizeSelect) popupCardSizeSelect.value = popupCardSize;
+    if (popupThemeSelect) popupThemeSelect.value = popupCardTheme;
     if (rangePopupOpacity) {
       rangePopupOpacity.value = popupOpacity;
       if (valPopupOpacity) valPopupOpacity.textContent = `${popupOpacity}%`;
@@ -180,7 +334,7 @@ export class AppearanceTab {
             btn.style.width = '34px';
             btn.style.height = '34px';
           }
-          btn.style.background = btn.classList.contains('prev-fab-crop')
+          btn.style.background = btn.classList.contains('prev-fab-primary')
             ? `rgba(2, 132, 199, ${fabAlpha})`
             : `rgba(255, 255, 255, ${fabAlpha})`;
         });
@@ -190,7 +344,13 @@ export class AppearanceTab {
       if (prevToolbar && rangeToolbarOpacity && rangeToolbarBlur && toolbarThemeSelect) {
         const tbAlpha = (parseInt(rangeToolbarOpacity.value, 10) / 100).toFixed(2);
         const tbBlurVal = parseInt(rangeToolbarBlur.value, 10);
-        const tbTheme = toolbarThemeSelect.value;
+        // 'auto' isn't a real skin of its own — it resolves to whichever of
+        // the two Liquid Glass looks matches the OS's current preference,
+        // same as content/selection-tooltip.js does at render time.
+        const tbThemeSetting = toolbarThemeSelect.value;
+        const tbTheme = tbThemeSetting === 'auto'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
+          : tbThemeSetting;
         const tbSize = toolbarSizeSelect?.value || 'normal';
         const showText = checkToolbarText ? checkToolbarText.checked : true;
 
@@ -201,23 +361,19 @@ export class AppearanceTab {
           lbl.style.display = showText ? 'inline' : 'none';
         });
 
-        prevToolbar.style.backdropFilter = `blur(${tbBlurVal}px) saturate(180%)`;
+        // url(#hw-liquid-glass-filter): see shared/liquid-glass.js — has to be
+        // repeated on every inline backdropFilter write, since inline style
+        // always wins over whatever overlay.css's own rule declares.
+        prevToolbar.style.backdropFilter = `blur(${tbBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
         prevToolbar.style.webkitBackdropFilter = `blur(${tbBlurVal}px) saturate(180%)`;
 
+        const tbSolidRgb = TOOLBAR_THEME_COLORS[tbTheme];
         if (tbTheme === 'glass-dark') {
           prevToolbar.style.background = `rgba(15, 23, 42, ${tbAlpha})`;
           prevToolbar.style.color = '#f8fafc';
           prevToolbar.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-        } else if (tbTheme === 'cyber-blue') {
-          prevToolbar.style.background = `rgba(2, 132, 199, ${tbAlpha})`;
-          prevToolbar.style.color = '#ffffff';
-          prevToolbar.style.borderColor = 'rgba(255, 255, 255, 0.35)';
-        } else if (tbTheme === 'emerald') {
-          prevToolbar.style.background = `rgba(5, 150, 105, ${tbAlpha})`;
-          prevToolbar.style.color = '#ffffff';
-          prevToolbar.style.borderColor = 'rgba(255, 255, 255, 0.35)';
-        } else if (tbTheme === 'purple') {
-          prevToolbar.style.background = `rgba(124, 58, 237, ${tbAlpha})`;
+        } else if (tbSolidRgb) {
+          prevToolbar.style.background = `rgba(${tbSolidRgb}, ${tbAlpha})`;
           prevToolbar.style.color = '#ffffff';
           prevToolbar.style.borderColor = 'rgba(255, 255, 255, 0.35)';
         } else {
@@ -232,13 +388,43 @@ export class AppearanceTab {
       // .highlight-text demo paragraph as a stand-in for "text on the page",
       // since applyTextEffects() in hover-translate.js styles real page text
       // directly rather than a tooltip; there's nothing else in this mock to
-      // point it at.
+      // point it at. The shape itself is a real .hw-hlbox overlay built by
+      // shared/highlight-styles.js — same code path as the real content
+      // script — appended as a sibling of the paragraph inside the anchor,
+      // rather than a background/class on the paragraph itself, so every
+      // style (not just "fill") can be previewed accurately.
+      const prevDemoHighlightAnchor = document.getElementById('prevDemoHighlightAnchor');
       const prevDemoHighlight = document.getElementById('prevDemoHighlight');
-      if (prevDemoHighlight) {
-        prevDemoHighlight.classList.remove('opt-preview-hl-on', 'opt-preview-anim-pulse', 'opt-preview-anim-glow', 'opt-preview-anim-sweep', 'opt-preview-anim-draw');
-        if (checkHoverHighlight?.checked) prevDemoHighlight.classList.add('opt-preview-hl-on');
+      if (prevDemoHighlightAnchor && prevDemoHighlight) {
+        prevDemoHighlightAnchor.querySelectorAll('.hw-hlbox').forEach((b) => b.remove());
         const animVal = hoverAnimationSelect?.value || 'none';
-        if (animVal !== 'none') prevDemoHighlight.classList.add(`opt-preview-anim-${animVal}`);
+        const highlightOn = !!checkHoverHighlight?.checked;
+        if (highlightOn || animVal !== 'none') {
+          const box = document.createElement('div');
+          box.style.setProperty('--hl-rgb', currentHlRgb());
+          box.style.setProperty('--hl-alpha', currentHlAlpha());
+          let pad = { left: 0, right: 0, top: 0, bottom: 0 };
+          if (highlightOn) {
+            const activeStyle = styleSwatchGroup?.querySelector('.opt-style-swatch.active')?.dataset.style || DEFAULT_HIGHLIGHT_STYLE;
+            const built = buildHighlight(activeStyle, prevDemoHighlight.offsetWidth, prevDemoHighlight.offsetHeight, 42);
+            box.className = `hw-hlbox ${built.wrapperClass} hw-hl-on`;
+            box.innerHTML = built.innerHTML;
+            pad = built.pad;
+          } else {
+            box.className = 'hw-hlbox';
+          }
+          if (animVal !== 'none') box.classList.add(`hw-anim-${animVal}`);
+          box.style.top = `${prevDemoHighlight.offsetTop - pad.top}px`;
+          box.style.left = `${prevDemoHighlight.offsetLeft - pad.left}px`;
+          box.style.width = `${prevDemoHighlight.offsetWidth + pad.left + pad.right}px`;
+          box.style.height = `${prevDemoHighlight.offsetHeight + pad.top + pad.bottom}px`;
+          prevDemoHighlightAnchor.appendChild(box);
+        }
+        // Style-swatch previews stay in sync with the live color/opacity too.
+        styleSwatchGroup?.querySelectorAll('.hw-hlbox').forEach((b) => {
+          b.style.setProperty('--hl-rgb', currentHlRgb());
+          b.style.setProperty('--hl-alpha', currentHlAlpha());
+        });
       }
 
       // 2.5 Quick Hover Translate tooltip
@@ -247,24 +433,23 @@ export class AppearanceTab {
         const htBlurVal = parseInt(rangeHoverBlur.value, 10);
         const htFontSize = rangeHoverFontSize ? parseInt(rangeHoverFontSize.value, 10) : 13;
         const htMaxWidth = rangeHoverMaxWidth ? parseInt(rangeHoverMaxWidth.value, 10) : 300;
-        const htTheme = hoverThemeSelect.value;
+        // Same 'auto' resolution as the Toolbar preview above.
+        const htThemeSetting = hoverThemeSelect.value;
+        const htTheme = htThemeSetting === 'auto'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
+          : htThemeSetting;
 
         prevHoverTip.style.setProperty('--ht-max-width', `${htMaxWidth}px`);
         prevHoverTip.style.fontSize = `${htFontSize}px`;
-        prevHoverTip.style.backdropFilter = `blur(${htBlurVal}px) saturate(180%)`;
+        prevHoverTip.style.backdropFilter = `blur(${htBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
         prevHoverTip.style.webkitBackdropFilter = `blur(${htBlurVal}px) saturate(180%)`;
 
+        const htSolidRgb = TOOLBAR_THEME_COLORS[htTheme];
         if (htTheme === 'glass-dark') {
           prevHoverTip.style.background = `rgba(15, 23, 42, ${htAlpha})`;
           prevHoverTip.style.color = '#f8fafc';
-        } else if (htTheme === 'cyber-blue') {
-          prevHoverTip.style.background = `rgba(2, 132, 199, ${htAlpha})`;
-          prevHoverTip.style.color = '#ffffff';
-        } else if (htTheme === 'emerald') {
-          prevHoverTip.style.background = `rgba(5, 150, 105, ${htAlpha})`;
-          prevHoverTip.style.color = '#ffffff';
-        } else if (htTheme === 'purple') {
-          prevHoverTip.style.background = `rgba(124, 58, 237, ${htAlpha})`;
+        } else if (htSolidRgb) {
+          prevHoverTip.style.background = `rgba(${htSolidRgb}, ${htAlpha})`;
           prevHoverTip.style.color = '#ffffff';
         } else {
           prevHoverTip.style.background = `rgba(255, 255, 255, ${htAlpha})`;
@@ -276,14 +461,77 @@ export class AppearanceTab {
       if (prevPopup && rangePopupOpacity && rangePopupBlur) {
         const popAlpha = (parseInt(rangePopupOpacity.value, 10) / 100).toFixed(2);
         const popBlurVal = parseInt(rangePopupBlur.value, 10);
-        prevPopup.style.background = `rgba(255, 255, 255, ${popAlpha})`;
-        prevPopup.style.backdropFilter = `blur(${popBlurVal}px) saturate(180%)`;
-        prevPopup.style.webkitBackdropFilter = `blur(${popBlurVal}px) saturate(180%)`;
-        prevPopup.classList.toggle('compact', (popupCardSizeSelect?.value || 'normal') === 'compact');
+        const popSizeVal = popupCardSizeSelect?.value || 'normal';
+        prevPopup.classList.toggle('compact', popSizeVal === 'compact');
+
+        // 'auto' and the accent colours (cyber-blue/emerald/...) keep the
+        // popup's own glass background exactly as before — only the explicit
+        // glass-light/glass-dark choices force it, same split as the real
+        // .hw-solution-card.theme-glass-light/dark rules in overlay.css
+        // (auto/accent leave the card's background following the separate,
+        // global "Chế độ màu (Sáng/Tối)" setting; the accent only tints the
+        // primary button and ANSWER heading, never the popup surface itself).
+        const popThemeSetting = popupThemeSelect?.value || 'auto';
+        const popRgb = TOOLBAR_THEME_COLORS[popThemeSetting] || '2, 132, 199';
+        const popIsDark = popThemeSetting === 'glass-dark';
+        const popBg = popIsDark ? 'rgba(15, 23, 42, ' + popAlpha + ')' : `rgba(255, 255, 255, ${popAlpha})`;
+        const popColor = popIsDark ? '#f8fafc' : '#1e293b';
+
+        const applyPopupGlass = (el) => {
+          if (!el) return;
+          el.style.background = popBg;
+          el.style.color = popColor;
+          el.style.backdropFilter = `blur(${popBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
+          el.style.webkitBackdropFilter = `blur(${popBlurVal}px) saturate(180%)`;
+        };
+        applyPopupGlass(prevPopup);
+
+        const primaryBtn = prevPopup.querySelector('.prev-btn-blue');
+        const answerHeading = document.getElementById('prevPopupAnswerHeading');
+        if (primaryBtn) primaryBtn.style.background = `rgba(${popRgb}, 0.88)`;
+        if (answerHeading) answerHeading.style.color = `rgb(${popRgb})`;
+
+        // Minimize mode has no card at all in real usage — a small circle that
+        // reveals a popup above it on hover — so swap in a dedicated mockup
+        // instead of trying to squeeze that behavior out of the card preview.
+        const isMinimize = popSizeVal === 'minimize';
+        prevPopup.style.display = isMinimize ? 'none' : '';
+        if (prevMiniWrap) {
+          prevMiniWrap.style.display = isMinimize ? '' : 'none';
+          if (isMinimize) {
+            applyPopupGlass(prevMiniPopup);
+            if (prevMiniAnswerHeading) prevMiniAnswerHeading.style.color = `rgb(${popRgb})`;
+            if (prevMiniCircle) {
+              prevMiniCircle.style.borderColor = `rgba(${popRgb}, 0.35)`;
+              prevMiniCircle.style.setProperty('--prev-mini-rgb', popRgb);
+            }
+          }
+        }
       }
     };
 
     updatePreview();
+
+    // This tab's data loads unconditionally on page init (see options.js's
+    // init()), regardless of which nav tab is actually visible — usually not
+    // this one. A hidden `.opt-section` is `display:none`, so at that first
+    // updatePreview() call the highlight preview's real text box measures
+    // 0x0 and the shape overlay silently skips itself. Re-running once the
+    // section actually gets laid out (display:none -> real size fires this
+    // the same as any other resize) means it's correct as soon as the user
+    // switches to the tab, without needing options.js's nav code to know
+    // anything about this tab's internals.
+    const appearanceSection = document.getElementById('tabAppearance');
+    if (appearanceSection && typeof ResizeObserver !== 'undefined') {
+      let lastWidth = 0;
+      const ro = new ResizeObserver(() => {
+        if (appearanceSection.offsetWidth !== lastWidth) {
+          lastWidth = appearanceSection.offsetWidth;
+          updatePreview();
+        }
+      });
+      ro.observe(appearanceSection);
+    }
 
     // Event Listeners
     overlayThemeSelect?.addEventListener('change', () => {
@@ -292,6 +540,7 @@ export class AppearanceTab {
 
     checkFab.addEventListener('change', () => {
       Storage.set({ enableFloatingButton: checkFab.checked });
+      setSubDimmed(fabSettingsSub, !checkFab.checked);
       updatePreview();
     });
 
@@ -304,6 +553,36 @@ export class AppearanceTab {
       if (valFabOpacity) valFabOpacity.textContent = `${rangeFabOpacity.value}%`;
       Storage.set({ fabOpacity: parseInt(rangeFabOpacity.value, 10) });
       updatePreview();
+    });
+
+    // Resets every control in this card back to DEFAULT_SETTINGS — deliberately
+    // leaves enableFloatingButton untouched, same reasoning as btnResetHover
+    // below: on/off is a separate decision from "what should the default
+    // behavior/appearance be".
+    btnResetFab?.addEventListener('click', () => {
+      const d = DEFAULT_SETTINGS;
+
+      if (fabSizeSelect) fabSizeSelect.value = d.fabSize;
+      if (rangeFabOpacity) {
+        rangeFabOpacity.value = d.fabOpacity;
+        if (valFabOpacity) valFabOpacity.textContent = `${d.fabOpacity}%`;
+      }
+
+      Storage.set({
+        fabSize: d.fabSize,
+        fabOpacity: d.fabOpacity,
+      });
+      updatePreview();
+    });
+
+    // Same setting (enableTextTooltip) as General tab's own "Text Selection
+    // Quick Tooltip" checkbox (#optCheckTooltip) — kept in sync both ways,
+    // same pattern as checkHoverTranslateInline below.
+    checkToolbarEnableInline?.addEventListener('change', () => {
+      Storage.set({ enableTextTooltip: checkToolbarEnableInline.checked });
+      setSubDimmed(toolbarSettingsSub, !checkToolbarEnableInline.checked);
+      const generalCheck = document.getElementById('optCheckTooltip');
+      if (generalCheck) generalCheck.checked = checkToolbarEnableInline.checked;
     });
 
     checkToolbarText?.addEventListener('change', () => {
@@ -339,6 +618,7 @@ export class AppearanceTab {
 
     checkHoverTranslateInline?.addEventListener('change', () => {
       Storage.set({ enableHoverTranslate: checkHoverTranslateInline.checked });
+      setSubDimmed(hoverSettingsSub, !checkHoverTranslateInline.checked);
       const generalCheck = document.getElementById('optCheckHoverTranslate');
       if (generalCheck) generalCheck.checked = checkHoverTranslateInline.checked;
     });
@@ -363,6 +643,12 @@ export class AppearanceTab {
 
     checkHoverHighlight?.addEventListener('change', () => {
       Storage.set({ hoverTranslateHighlight: checkHoverHighlight.checked });
+      updatePreview();
+    });
+
+    rangeHoverHighlightOpacity?.addEventListener('input', () => {
+      if (valHoverHighlightOpacity) valHoverHighlightOpacity.textContent = `${rangeHoverHighlightOpacity.value}%`;
+      Storage.set({ hoverTranslateHighlightOpacity: parseInt(rangeHoverHighlightOpacity.value, 10) });
       updatePreview();
     });
 
@@ -415,6 +701,12 @@ export class AppearanceTab {
         if (valHoverDelay) valHoverDelay.textContent = `${d.hoverTranslateDelay}ms`;
       }
       if (checkHoverHighlight) checkHoverHighlight.checked = d.hoverTranslateHighlight;
+      renderHoverHighlightSwatches(d.hoverTranslateHighlightColor);
+      if (rangeHoverHighlightOpacity) {
+        rangeHoverHighlightOpacity.value = d.hoverTranslateHighlightOpacity;
+        if (valHoverHighlightOpacity) valHoverHighlightOpacity.textContent = `${d.hoverTranslateHighlightOpacity}%`;
+      }
+      renderHighlightStyleSwatches(d.hoverTranslateHighlightStyle);
       if (hoverAnimationSelect) hoverAnimationSelect.value = d.hoverTranslateAnimation;
       if (hoverThemeSelect) hoverThemeSelect.value = d.hoverTranslateTheme;
       if (rangeHoverOpacity) {
@@ -439,6 +731,9 @@ export class AppearanceTab {
         hoverTranslateGranularity: d.hoverTranslateGranularity,
         hoverTranslateDelay: d.hoverTranslateDelay,
         hoverTranslateHighlight: d.hoverTranslateHighlight,
+        hoverTranslateHighlightColor: d.hoverTranslateHighlightColor,
+        hoverTranslateHighlightOpacity: d.hoverTranslateHighlightOpacity,
+        hoverTranslateHighlightStyle: d.hoverTranslateHighlightStyle,
         hoverTranslateAnimation: d.hoverTranslateAnimation,
         hoverTranslateTheme: d.hoverTranslateTheme,
         hoverTranslateOpacity: d.hoverTranslateOpacity,
@@ -454,6 +749,11 @@ export class AppearanceTab {
       updatePreview();
     });
 
+    popupThemeSelect?.addEventListener('change', () => {
+      Storage.set({ popupCardTheme: popupThemeSelect.value });
+      updatePreview();
+    });
+
     rangePopupOpacity?.addEventListener('input', () => {
       if (valPopupOpacity) valPopupOpacity.textContent = `${rangePopupOpacity.value}%`;
       Storage.set({ popupOpacity: parseInt(rangePopupOpacity.value, 10) });
@@ -465,6 +765,56 @@ export class AppearanceTab {
       Storage.set({ popupBlur: parseInt(rangePopupBlur.value, 10) });
       updatePreview();
     });
+
+    // Resets every control in this card back to DEFAULT_SETTINGS. Unlike FAB/
+    // Hover, this card has no "enable this whole feature" checkbox of its own
+    // to leave untouched — the Homework Helper Popup's own on/off lives
+    // elsewhere (General tab), not here.
+    btnResetPopup?.addEventListener('click', () => {
+      const d = DEFAULT_SETTINGS;
+
+      if (popupCardSizeSelect) popupCardSizeSelect.value = d.popupCardSize;
+      if (popupThemeSelect) popupThemeSelect.value = d.popupCardTheme;
+      if (rangePopupOpacity) {
+        rangePopupOpacity.value = d.popupOpacity;
+        if (valPopupOpacity) valPopupOpacity.textContent = `${d.popupOpacity}%`;
+      }
+      if (rangePopupBlur) {
+        rangePopupBlur.value = d.popupBlur;
+        if (valPopupBlur) valPopupBlur.textContent = `${d.popupBlur}px`;
+      }
+
+      Storage.set({
+        popupCardSize: d.popupCardSize,
+        popupCardTheme: d.popupCardTheme,
+        popupOpacity: d.popupOpacity,
+        popupBlur: d.popupBlur,
+      });
+      updatePreview();
+    });
+
+    // Keeps this tab's two enable checkboxes correct when the underlying
+    // setting changes from somewhere with no direct line to this page's own
+    // DOM — the popup's quick-action widgets, or a second Options tab/window
+    // — none of which this tab hears about otherwise. The change-event
+    // dispatch below re-triggers the existing 'change' listeners above (same
+    // element, same handler), so dimming and the General-tab mirror both
+    // still update correctly instead of only the checkbox's visual state.
+    if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area !== 'local') return;
+        if (changes.enableTextTooltip && checkToolbarEnableInline &&
+          checkToolbarEnableInline.checked !== changes.enableTextTooltip.newValue) {
+          checkToolbarEnableInline.checked = changes.enableTextTooltip.newValue;
+          checkToolbarEnableInline.dispatchEvent(new Event('change'));
+        }
+        if (changes.enableHoverTranslate && checkHoverTranslateInline &&
+          checkHoverTranslateInline.checked !== changes.enableHoverTranslate.newValue) {
+          checkHoverTranslateInline.checked = changes.enableHoverTranslate.newValue;
+          checkHoverTranslateInline.dispatchEvent(new Event('change'));
+        }
+      });
+    }
   }
 
   // Drag-and-drop editor for which selection-toolbar tools sit directly on
@@ -587,9 +937,37 @@ export class AppearanceTab {
     render(layout);
     updateLivePreview(layout);
 
+    // Despite living right under the drag-and-drop layout editor, this is the
+    // ONLY reset control anywhere in the Selection Toolbar card — every other
+    // card (Hover Translate, Homework Helper Popup, FAB) resets its whole
+    // card from one button, so this one resets the card's theme/position/
+    // text/size/opacity/blur too, not just the tool ordering. Rather than
+    // duplicating each control's own Storage.set + live-preview logic here
+    // (out of reach anyway — updatePreview() is a closure local to
+    // loadAppearanceSettings(), a different method), this just sets each
+    // control's value/checked state and dispatches the same event type its
+    // own listener (wired in loadAppearanceSettings()) already reacts to —
+    // reusing that existing plumbing instead of re-implementing it.
     resetBtn?.addEventListener('click', () => {
       render(DEFAULT_TOOLBAR_LAYOUT.map((entry) => ({ ...entry })));
       persist();
+
+      const d = DEFAULT_SETTINGS;
+      const fire = (id, prop, value, eventName) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el[prop] = value;
+        el.dispatchEvent(new Event(eventName, { bubbles: true }));
+      };
+      fire('optToolbarThemeSelect', 'value', d.toolbarTheme, 'change');
+      // toolbarPosition has no DEFAULT_SETTINGS entry of its own — every
+      // reader (this file, selection-tooltip.js) falls back to 'above'
+      // inline instead, so that's hardcoded here to match.
+      fire('optToolbarPositionSelect', 'value', 'above', 'change');
+      fire('optCheckToolbarText', 'checked', d.toolbarShowText, 'change');
+      fire('optToolbarSizeSelect', 'value', d.toolbarSize, 'change');
+      fire('optRangeToolbarOpacity', 'value', d.toolbarOpacity, 'input');
+      fire('optRangeToolbarBlur', 'value', d.toolbarBlur, 'input');
     });
   }
 }

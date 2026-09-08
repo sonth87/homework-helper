@@ -41,8 +41,14 @@ const ID_PREFIX = { overlay: 'hw', sidepanel: 'sp', options: 'opt' };
 const CLOUD_SKIN = {
   overlay: {
     layout: 'compact',
+    // var(--hw-*), not a hardcoded light color — this card renders inside
+    // the in-page overlay's own shadow root, which switches these tokens
+    // with the extension's theme (see :host in content/styles/overlay.css).
+    // A literal #f8fafc here used to paint this one card light regardless
+    // of theme, while every row around it (styled through hw-* classes
+    // instead of inline styles) correctly went dark.
     cardStyle:
-      'border:1px solid rgba(226, 232, 240, 0.9); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:6px; background:#f8fafc;',
+      'border:1px solid var(--hw-border-color); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:6px; background:var(--hw-bg-secondary);',
     field: 'hw-input',
     select: 'hw-select',
     iconBtn: 'hw-icon-btn',

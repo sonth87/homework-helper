@@ -6,11 +6,13 @@
 import { Icons } from '../shared/icons.js';
 import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
 import { getI18n, getFloatingPopupI18n, getOptionsI18n } from '../shared/i18n.js';
+import { renderAnswer } from '../shared/markdown-katex.js';
 import { getOverlayThemeAttr } from '../shared/theme.js';
 import { OverlayFabs } from './overlay/fabs.js';
 import { OverlayDrawer } from './overlay/drawer.js';
 import { OverlayDrawerHistory } from './overlay/drawer-history.js';
 import { OverlayFloatingCard } from './overlay/floating-card.js';
+import { MinimizedCard } from './overlay/minimized-card.js';
 import { OverlayConfigModal } from './overlay/config-modal.js';
 import { OverlayRichTooltips } from './overlay/rich-tooltips.js';
 import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
@@ -27,6 +29,14 @@ class InPageOverlay {
     this.createShadowDOM();
     this.mountSubcomponents();
     this.setupGlobalListeners();
+    // Real per-OS bound accelerator (e.g. "⌘K" on macOS vs "Alt+K" on
+    // Windows/Linux) for the FAB tooltips below — chrome.commands isn't
+    // exposed to a content script's isolated world, so this asks the
+    // background for it instead (see its GET_COMMAND_SHORTCUTS handler).
+    // Falls back to {} (no shortcut shown) if the message ever fails.
+    this.commandShortcuts = await new Promise((resolve) => {
+      chrome.runtime.sendMessage({ action: 'GET_COMMAND_SHORTCUTS' }, (res) => resolve(res || {}));
+    }).catch(() => ({}));
     await this.applyAppearanceSettings();
     await this.applyLanguageI18n();
   }
@@ -55,10 +65,10 @@ class InPageOverlay {
       <!-- Jitter-free Slide-out FAB Container -->
       <div class="hw-fab-container" id="hwFabContainer">
         <div class="hw-fab-inner">
-          <button class="hw-fab-btn" id="hwFabCrop" data-tooltip-title="Chụp màn hình (Alt+C)" data-tooltip-desc="Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.">
+          <button class="hw-fab-btn" id="hwFabCrop" data-tooltip-title="Chụp màn hình" data-tooltip-desc="Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.">
             ${Icons.scissors(15)}
           </button>
-          <button class="hw-fab-btn hw-fab-primary" id="hwFabToggle" data-tooltip-title="Mở chat panel (Alt+K)" data-tooltip-desc="Mở ngăn kéo AI hỗ trợ giải bài tập chi tiết và đặt câu hỏi.">
+          <button class="hw-fab-btn hw-fab-primary" id="hwFabToggle" data-tooltip-title="Mở chat panel" data-tooltip-desc="Mở ngăn kéo AI hỗ trợ giải bài tập chi tiết và đặt câu hỏi.">
             ${Icons.sparkles(16)}
           </button>
         </div>
@@ -72,7 +82,7 @@ class InPageOverlay {
             ${Icons.appLogo(16)}
             <span id="hwPopupTitle">Homework Helper</span>
           </div>
-          <div class="hw-card-header-actions">
+          <div class="hw-card-header-actions" id="hwCardHeaderActions">
             <button class="hw-icon-btn" id="hwBtnCardHistory" data-tooltip-title="Lịch sử các câu hỏi" data-tooltip-desc="Xem lại các câu hỏi hoặc bài tập đã giải gần đây.">${Icons.history(14)}</button>
             <button class="hw-icon-btn" id="hwBtnCardCollapse" data-tooltip-title="Thu gọn" data-tooltip-desc="Thu popup thành một nút tròn nổi, kéo thả để di chuyển.">${Icons.chevronDown(14)}</button>
             <button class="hw-icon-btn" id="hwBtnCloseCard" data-tooltip-title="Đóng cửa sổ" data-tooltip-desc="Tắt popup giải bài">${Icons.x(14)}</button>
@@ -88,9 +98,13 @@ class InPageOverlay {
               <button class="hw-icon-btn" id="hwBtnCloseCardHistory">${Icons.x(13)}</button>
             </div>
           </div>
+          <div style="padding: 8px 10px 0;">
+            <input type="text" id="hwCardHistorySearch" style="width:100%; box-sizing:border-box; padding:6px 9px; border-radius:7px; border:1px solid var(--hw-border-color); font-size:12px; background:transparent; color:inherit; font-family:inherit;">
+          </div>
           <div class="hw-card-history-list" id="hwCardHistoryList">
             <!-- Rendered dynamically -->
           </div>
+          <button id="hwCardHistoryLoadMore" style="display:none; margin: 0 10px 8px; padding:6px; border-radius:7px; border:1px solid var(--hw-border-color); background:transparent; color:var(--hw-accent); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit;"></button>
           <div style="padding: 8px 10px; border-top: 1px solid var(--hw-border-color); background: var(--hw-bg-secondary); text-align: center;">
             <button class="hw-btn-open-drawer" id="hwBtnCardOpenDrawer" style="font-size: 11.5px; padding: 4px 10px; background: #0284c7; color: white; border: none; border-radius: 6px; cursor: pointer;">
               ${Icons.messageCircle(12)} Mở toàn bộ trong Khung Chat
@@ -100,7 +114,8 @@ class InPageOverlay {
 
         <!-- Secondary Translate Target Language Bar -->
         <div class="hw-translate-bar" id="hwTranslateBar" style="display: none;">
-          <span>Dịch sang:</span>
+          <div class="hw-ep" id="hwCardEnginePicker"></div>
+          <span class="hw-translate-bar-to" id="hwTranslateToLabel">Dịch sang:</span>
           <select class="hw-lang-target" id="hwLangTarget"></select>
         </div>
 
@@ -124,8 +139,14 @@ class InPageOverlay {
         <!-- Action Footer -->
         <div class="hw-card-footer">
           <div class="hw-card-actions-left">
+            <button class="hw-btn-card-action" id="hwBtnCardSpeak" style="display:none;">
+              ${Icons.volume2(14)} <span id="hwBtnCardSpeakLabel">Nghe</span>
+            </button>
             <button class="hw-btn-card-action" id="hwBtnCardCopy">
               ${Icons.copy(14)} <span id="hwBtnCardCopyLabel">Sao chép</span>
+            </button>
+            <button class="hw-btn-card-action" id="hwBtnCardFavorite" style="display:none;">
+              ${Icons.star(14)} <span id="hwBtnCardFavoriteLabel">Yêu thích</span>
             </button>
             <button class="hw-btn-card-action" id="hwBtnCardRetry">
               ${Icons.refresh(14)} <span id="hwBtnCardRetryLabel">Thử lại</span>
@@ -137,11 +158,37 @@ class InPageOverlay {
         </div>
       </div>
 
-      <!-- Compact-mode floating title tab — sibling of .hw-solution-card
+      <!-- Quick display-mode switcher (Normal/Compact/Minimize) — sibling
+           of .hw-solution-card (not a descendant), straddling the card's
+           own bottom edge (half in, half out) same as the minimized
+           circle's own popup switcher and hover-translate.js's granularity
+           switcher. Can't live inside the card itself: .hw-solution-card
+           has overflow:hidden (needed for its native resize handle), which
+           would clip a poke past its true boundary — see
+           setupModeSwitchFloat() in floating-card.js for the position
+           tracking this needs instead (the card can be dragged/resized). -->
+      <div class="hw-mode-switch" id="hwCardModeSwitch" style="display: none;">
+        <button class="hw-mode-dot" data-mode="normal" title="Normal">${Icons.layoutNormal(13)}</button>
+        <button class="hw-mode-dot" data-mode="compact" title="Compact">${Icons.layoutCompact(13)}</button>
+        <button class="hw-mode-dot" data-mode="minimize" title="Minimize">${Icons.layoutMinimize(13)}</button>
+      </div>
+
+      <!-- Compact-mode floating title chip — sibling of .hw-solution-card
            (not a descendant), positioned via JS so it can slide above the
            card's own top edge without being clipped by the card's
-           overflow:hidden. Its content is mirrored from .hw-card-title. -->
-      <div class="hw-card-float-tab" id="hwCardFloatTab" style="display: none;"></div>
+           overflow:hidden. The span is a mirror (its content is copied in),
+           kept deliberately small (icon + name only) rather than stretched
+           to the card's width. -->
+      <div class="hw-card-float-tab" id="hwCardFloatTab" style="display: none;">
+        <span class="hw-card-float-tab-title" id="hwCardFloatTabTitle"></span>
+      </div>
+
+      <!-- Compact-mode floating action buttons — a SEPARATE sibling (not
+           sharing the title chip's background) so the three controls read as
+           independent icons, not one long bar, next to it. Physically hosts
+           the REAL #hwCardHeaderActions node (not a clone) while compact —
+           see setupFloatTab() in floating-card.js. -->
+      <div class="hw-card-float-actions" id="hwCardFloatActions" style="display: none;"></div>
 
       <!-- Collapsed Solution Popup — round draggable FAB, snaps to nearest screen edge -->
       <button class="hw-card-collapsed-fab" id="hwCardCollapsedFab" style="display: none;">
@@ -189,9 +236,13 @@ class InPageOverlay {
               <button class="hw-icon-btn" id="hwBtnCloseDrawerHistory">${Icons.x(14)}</button>
             </div>
           </div>
+          <div style="padding: 8px 12px 0;">
+            <input type="text" id="hwDrawerHistorySearch" style="width:100%; box-sizing:border-box; padding:7px 10px; border-radius:8px; border:1px solid var(--hw-border-color); font-size:12.5px; background:transparent; color:inherit; font-family:inherit;">
+          </div>
           <div class="hw-drawer-history-list" id="hwDrawerHistoryList">
             <!-- Populated dynamically -->
           </div>
+          <button id="hwDrawerHistoryLoadMore" style="display:none; margin: 0 12px 10px; padding:7px; border-radius:8px; border:1px solid var(--hw-border-color); background:transparent; color:var(--hw-accent); font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit;"></button>
         </div>
 
         <!-- Active Model Rotation Bar (Matching Sidepanel) -->
@@ -221,7 +272,7 @@ class InPageOverlay {
         <div class="hw-input-container">
           <div class="hw-tools">
             <div class="hw-tools-left">
-              <button class="hw-btn-capture" id="hwBtnCapture" data-tooltip-title="Chụp màn hình (Alt+C)" data-tooltip-desc="Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.">
+              <button class="hw-btn-capture" id="hwBtnCapture" data-tooltip-title="Chụp màn hình" data-tooltip-desc="Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.">
                 ${Icons.scissors(14)} <span id="hwCaptureBtnLabel">Chụp ảnh</span>
               </button>
               <button class="hw-tool-btn" id="hwBtnUploadImg" data-tooltip-title="Tải ảnh bài tập" data-tooltip-desc="Đính kèm file hình ảnh bài tập từ máy tính.">
@@ -313,6 +364,7 @@ class InPageOverlay {
     this.drawer = new OverlayDrawer(this);
     this.drawerHistory = new OverlayDrawerHistory(this);
     this.floatingCard = new OverlayFloatingCard(this);
+    this.minimizedCard = new MinimizedCard(this);
     this.configModal = new OverlayConfigModal(this);
     this.fabs = new OverlayFabs(this);
   }
@@ -348,7 +400,10 @@ class InPageOverlay {
           this.floatingCard.openActionPopup('answer', query, rect);
         } else {
           this.drawer.toggle(true);
-          this.drawer.askAi({ prompt: query });
+          // A Google Forms question, not something the user typed in chat —
+          // treat it as an independent solve, not a follow-up in whatever
+          // conversation happens to be open (see askAi()'s isChat doc).
+          this.drawer.askAi({ prompt: query, isChat: false });
         }
       }
     });
@@ -363,6 +418,12 @@ class InPageOverlay {
         this.drawer.handleStreamError(msg.error);
       } else if (msg.action === 'CLOSE_DRAWER') {
         this.drawer.toggle(false);
+      } else if (msg.action === 'TOGGLE_OVERLAY') {
+        // Sent by service-worker.js's Cmd+K/Alt+K command handler — same
+        // toggle() the FAB's own sparkles button calls (fabs.js), so the
+        // shortcut opens/closes this in-page drawer instead of Chrome's
+        // native side panel.
+        this.drawer.toggle();
       }
     });
 
@@ -410,7 +471,7 @@ class InPageOverlay {
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local') {
-          if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.popupOpacity || changes.popupBlur || changes.popupCardSize || changes.overlayTheme) {
+          if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.popupOpacity || changes.popupBlur || changes.popupCardSize || changes.popupCardTheme || changes.overlayTheme) {
             this.applyAppearanceSettings();
           }
           if (changes.uiLanguage) {
@@ -420,7 +481,10 @@ class InPageOverlay {
             this.drawer.updateActiveModelBadge();
             this.fabs.updateGatingVisual?.();
           }
-          if ((changes.chatHistory || changes.activeConversationId || changes.conversations) && this.drawer.isOpen && !this.drawer.isStreaming) {
+          // loadInitialHistory() itself decides whether it's safe to rebuild
+          // — see its own doc comment — so this only needs to gate on the
+          // drawer actually being open.
+          if ((changes.chatHistory || changes.activeConversationId || changes.conversations) && this.drawer.isOpen) {
             this.drawer.loadInitialHistory();
           }
         }
@@ -520,12 +584,14 @@ class InPageOverlay {
       enableFloatingButton = true,
       fabSize = 'normal',
       fabOpacity = 90,
-      popupOpacity = 92,
-      popupBlur = 16,
+      popupOpacity = 60,
+      popupBlur = 10,
       popupCardSize = 'normal',
+      popupCardTheme = 'auto',
     } = await Storage.get();
 
     this.fabs.applyAppearance(enableFloatingButton, fabSize, fabOpacity);
+    this.floatingCard?.applyFabAppearance(fabSize, fabOpacity);
 
     const themeAttr = await getOverlayThemeAttr();
     if (themeAttr) this.host.setAttribute('data-theme', themeAttr);
@@ -535,9 +601,83 @@ class InPageOverlay {
     if (card) {
       const popAlpha = (popupOpacity / 100).toFixed(2);
       card.style.background = `rgba(var(--hw-glass-rgb), ${popAlpha})`;
-      card.style.backdropFilter = `blur(${popupBlur}px) saturate(180%)`;
+      // The url(#hw-liquid-glass-filter) reference (see shared/liquid-glass.js)
+      // has to be repeated here: this inline style write completely replaces
+      // whatever overlay.css's own .hw-solution-card rule declared for
+      // backdrop-filter — inline style always wins over a stylesheet rule
+      // regardless of selector specificity — so without it, every popupOpacity/
+      // popupBlur change silently strips the refraction filter back out.
+      card.style.backdropFilter = `blur(${popupBlur}px) saturate(180%) url(#hw-liquid-glass-filter)`;
       card.style.webkitBackdropFilter = `blur(${popupBlur}px) saturate(180%)`;
       card.classList.toggle('hw-card-compact', popupCardSize === 'compact');
+      card.classList.remove('theme-glass-light', 'theme-glass-dark', 'theme-cyber-blue', 'theme-emerald', 'theme-purple', 'theme-rose', 'theme-amber', 'theme-indigo');
+      if (popupCardTheme !== 'auto') card.classList.add(`theme-${popupCardTheme}`);
+    }
+
+    // Both the card footer's own switcher (#hwCardModeSwitch) and the
+    // minimized circle's popup switcher (#hwMiniModeSwitch) share the exact
+    // same .hw-mode-dot markup in this one shared shadow root, so a single
+    // query covers whichever of the two is actually in the DOM right now.
+    this.shadow.querySelectorAll('.hw-mode-dot').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.mode === popupCardSize);
+    });
+
+    this.syncDisplayModeLive(popupCardSize);
+  }
+
+  // Live-transitions whatever's actively showing right now — mid-solve/
+  // translate, or already finished/errored — between the real card and the
+  // minimized circle the instant the mode switcher (or the Options page's
+  // own dropdown) changes popupCardSize, instead of only taking effect the
+  // next time something is solved/translated. No-ops when nothing is
+  // currently up, or the display already matches the requested mode.
+  syncDisplayModeLive(popupCardSize) {
+    const fc = this.floatingCard;
+    const mini = this.minimizedCard;
+    const card = fc?.popupCard;
+    if (!fc || !card || !mini) return;
+
+    const cardShown = card.style.display === 'flex';
+    const miniShown = mini.isActive();
+    const wantMinimize = popupCardSize === 'minimize';
+
+    if (wantMinimize && cardShown) {
+      const content = this.shadow.getElementById('hwCardAnswerContent');
+      // The error banners (OCR failure, free-engine translate failure, chat
+      // stream error) are written straight into this element's HTML rather
+      // than kept in activeCardResponseText, so its own text is the one
+      // reliable way to carry the exact message shown onto the circle.
+      const text = fc.cardStatus === 'error'
+        ? (content?.textContent || '').trim()
+        : fc.activeCardResponseText;
+      mini.adopt(fc.cardStatus, text);
+      card.style.display = 'none';
+      return;
+    }
+
+    if (!wantMinimize && miniShown) {
+      const { status, responseText } = mini.handoff();
+      fc.cardStatus = status;
+      fc.activeCardResponseText = responseText;
+      card.style.display = 'flex';
+      const content = this.shadow.getElementById('hwCardAnswerContent');
+      if (content) {
+        if (status === 'error') {
+          fc.stopLoadingSteps();
+          content.innerHTML = `<span style="color:var(--hw-danger);">${responseText}</span>`;
+        } else if (responseText) {
+          fc.stopLoadingSteps();
+          content.innerHTML = renderAnswer(responseText, {
+            allowMarkdownDict: content.classList.contains('hw-dict-mode'),
+            speakLabel: fc.speakLabel,
+            targetLang: fc.targetLang,
+          });
+        }
+        // else: still loading with nothing streamed yet — the loading-steps
+        // animation has been running in this (until now hidden) card the
+        // whole time, so there's nothing to (re)start here.
+      }
+      fc.syncSpeakButton();
     }
   }
 
@@ -561,7 +701,10 @@ class InPageOverlay {
     const activeConvTitle = s.getElementById('hwActiveConvTitle');
     const btnDrawerAddConv = s.getElementById('hwBtnDrawerAddConv');
     const btnCardCopyLabel = s.getElementById('hwBtnCardCopyLabel');
+    const btnCardSpeakLabel = s.getElementById('hwBtnCardSpeakLabel');
     const btnCardRetryLabel = s.getElementById('hwBtnCardRetryLabel');
+    const btnCardFavoriteLabel = s.getElementById('hwBtnCardFavoriteLabel');
+    const translateToLabel = s.getElementById('hwTranslateToLabel');
     const configModalTitle = s.getElementById('hwConfigModalTitle');
 
     if (textarea) textarea.placeholder = dict.placeholder;
@@ -577,7 +720,16 @@ class InPageOverlay {
     }
     if (btnDrawerAddConv) btnDrawerAddConv.innerHTML = `${Icons.plus(13)} ${dict.newChat}`;
     if (btnCardCopyLabel) btnCardCopyLabel.textContent = cardDict.copy || 'Copy';
+    if (btnCardSpeakLabel) btnCardSpeakLabel.textContent = cardDict.listen || 'Listen';
     if (btnCardRetryLabel) btnCardRetryLabel.textContent = cardDict.retry || 'Retry';
+    if (btnCardFavoriteLabel) btnCardFavoriteLabel.textContent = cardDict.favorite || 'Favorite';
+    if (translateToLabel) translateToLabel.textContent = cardDict.translateToLabel || 'Translate to:';
+    s.querySelectorAll('#hwCardModeSwitch .hw-mode-dot, #hwMiniModeSwitch .hw-mode-dot').forEach((btn) => {
+      const key = { normal: 'modeNormalLabel', compact: 'modeCompactLabel', minimize: 'modeMinimizeLabel' }[btn.dataset.mode];
+      if (key && cardDict[key]) btn.title = cardDict[key];
+    });
+    this.floatingCard?.applyEnginePickerLabels(cardDict);
+    this.floatingCard?.applyHistorySheetLabels(cardDict);
 
     // Populate native language options (with compact names for display)
     if (langSelect) {
@@ -627,10 +779,21 @@ class InPageOverlay {
     // Update tooltips with refined strings
     if (dict.tooltips) {
       const t = dict.tooltips;
-      s.getElementById('hwFabToggle')?.setAttribute('data-tooltip-title', t.open?.title || 'Mở chat panel (Alt+K)');
+      // Base titles carry no keybinding hint of their own (13 locales'
+      // general.tooltips.open/capture.title) — appending the real bound
+      // accelerator here instead of baking a Windows/Linux-only "(Alt+K)"
+      // into the translation is what makes this show "(⌘K)" on macOS.
+      const withShortcut = (title, shortcut) => (shortcut ? `${title} (${shortcut})` : title);
+      s.getElementById('hwFabToggle')?.setAttribute(
+        'data-tooltip-title',
+        withShortcut(t.open?.title || 'Mở chat panel', this.commandShortcuts?.chat)
+      );
       s.getElementById('hwFabToggle')?.setAttribute('data-tooltip-desc', t.open?.desc || '');
 
-      s.getElementById('hwFabCrop')?.setAttribute('data-tooltip-title', t.capture?.title || 'Chụp màn hình (Alt+C)');
+      s.getElementById('hwFabCrop')?.setAttribute(
+        'data-tooltip-title',
+        withShortcut(t.capture?.title || 'Chụp màn hình', this.commandShortcuts?.screenshot)
+      );
       s.getElementById('hwFabCrop')?.setAttribute('data-tooltip-desc', t.capture?.desc || '');
 
       s.getElementById('hwDrawerEdgeClose')?.setAttribute('data-tooltip-title', t.close?.title || 'Đóng chat panel');
@@ -659,7 +822,10 @@ class InPageOverlay {
       s.getElementById('hwBtnConfigGuide')?.setAttribute('data-tooltip-title', t.guide?.title || 'Xem hướng dẫn nhanh');
       s.getElementById('hwBtnConfigGuide')?.setAttribute('data-tooltip-desc', t.guide?.desc || '');
 
-      s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-title', t.capture?.title || 'Chụp màn hình (Alt+C)');
+      s.getElementById('hwBtnCapture')?.setAttribute(
+        'data-tooltip-title',
+        withShortcut(t.capture?.title || 'Chụp màn hình', this.commandShortcuts?.screenshot)
+      );
       s.getElementById('hwBtnCapture')?.setAttribute('data-tooltip-desc', t.capture?.desc || 'Khoanh vùng bài tập hoặc đồ thị trên màn hình để giải ngay lập tức.');
 
       // Floating Solution Card Popups Tooltips

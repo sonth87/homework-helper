@@ -192,8 +192,8 @@ body {
 }
 
 .blob-2 {
-  width: 150px;
-  height: 150px;
+  width: 180px;
+  height: 180px;
   background: rgba(236, 72, 153, 0.35);
   bottom: 30px;
   right: 40px;
@@ -215,29 +215,104 @@ body {
 }
 
 .highlight-text {
-  background: rgba(254, 240, 138, 0.6);
   padding: 2px 4px;
   border-radius: 4px;
   width: fit-content;
+  margin: 0;
+  position: relative;
 }
 
-/* Hover-translate highlight/animation live preview — mirrors the .hw-hlbox
-   effects in content/styles/tooltip.css (applied to real page text), reused
-   here on an in-flow demo paragraph since there is no real overlay box to
-   point the preview at. */
-.opt-preview-hl-on {
-  background: rgba(254, 240, 138, 0.6);
+/* Hover-translate highlight/animation live preview — an exact copy of the
+   .hw-hlbox rendering rules in content/styles/tooltip.css (applied to real
+   page text via content/hover-translate.js + shared/highlight-styles.js).
+   Same class names on purpose: this is a completely separate document/
+   stylesheet from the content script's, so there's no collision, and reusing
+   the names means the preview can never silently drift from the real
+   rendering. #prevDemoHighlightAnchor wraps the demo paragraph so the shape
+   overlay (built by appearance-tab.js, id #prevDemoHighlightShape) can be
+   absolutely positioned over it the same way a real .hw-hlbox sits over
+   page text. */
+.opt-hl-preview-anchor {
+  position: relative;
+  display: inline-block;
 }
 
-.opt-preview-anim-pulse {
+.hw-hlbox {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 3px;
+  background: transparent;
+  --hl-rgb: 254, 240, 138;
+  --hl-alpha: 0.4;
+  --hl-alpha-strong: min(0.95, calc(var(--hl-alpha) * 2.2));
+}
+
+.hw-style-fill.hw-hl-on {
+  background: rgba(var(--hl-rgb), var(--hl-alpha));
+}
+
+.hw-hl-bar {
+  position: absolute;
+  border-radius: 2px;
+  background: rgba(var(--hl-rgb), var(--hl-alpha-strong));
+}
+
+.hw-hl-svg {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.hw-hl-stroke {
+  stroke: rgba(var(--hl-rgb), var(--hl-alpha-strong));
+}
+
+.hw-hl-outline {
+  stroke: rgba(var(--hl-rgb), var(--hl-alpha-strong));
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hw-hl-marker-fill {
+  fill: rgba(var(--hl-rgb), var(--hl-alpha));
+}
+
+.hw-hl-marker-edge {
+  stroke: rgba(var(--hl-rgb), calc(var(--hl-alpha) * 0.6));
+  stroke-width: 1;
+}
+
+.hw-hl-pencil-wash {
+  fill: rgba(var(--hl-rgb), calc(var(--hl-alpha) * 0.5));
+}
+
+.hw-hl-hatch-line {
+  stroke: rgba(var(--hl-rgb), var(--hl-alpha-strong));
+  stroke-width: 1.3;
+}
+
+.hw-hl-hatch-line-2 {
+  stroke: rgba(var(--hl-rgb), calc(var(--hl-alpha-strong) * 0.5));
+  stroke-width: 1.1;
+}
+
+.hw-hl-scribble {
+  stroke: rgba(var(--hl-rgb), var(--hl-alpha-strong));
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hw-hlbox.hw-anim-pulse {
   animation: hwHlPulse 1.1s ease-in-out infinite;
 }
 @keyframes hwHlPulse {
-  0%, 100% { background-color: rgba(254, 240, 138, 0.22); }
-  50% { background-color: rgba(254, 240, 138, 0.65); }
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
 }
 
-.opt-preview-anim-glow {
+.hw-hlbox.hw-anim-glow {
   animation: hwHlGlow 1.3s ease-in-out infinite;
 }
 @keyframes hwHlGlow {
@@ -245,9 +320,7 @@ body {
   50% { box-shadow: 0 0 10px 3px rgba(245, 158, 11, 0.55); }
 }
 
-.opt-preview-anim-draw {
-  display: inline-block;
-  background: rgba(254, 240, 138, 0.6);
+.hw-hlbox.hw-anim-draw {
   transform: scaleX(0);
   transform-origin: left;
   animation: hwHlDraw 0.35s ease-out forwards;
@@ -256,10 +329,7 @@ body {
   to { transform: scaleX(1); }
 }
 
-.opt-preview-anim-sweep {
-  position: relative;
-}
-.opt-preview-anim-sweep::after {
+.hw-hlbox.hw-anim-sweep::after {
   content: '';
   position: absolute;
   left: 0;
@@ -286,11 +356,26 @@ body {
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.45);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
-  font-weight: 600;
+  font-weight: 400;
   transition: all 0.15s ease;
+  overflow: hidden;
+}
+
+.opt-preview-hover-tip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
 }
 
 /* Preview Toolbar */
+.opt-preview-toolbar-wrapper {
+  width: 100%;
+}
+
 .opt-preview-toolbar {
   position: relative;
   z-index: 5;
@@ -303,6 +388,17 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.45);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
   transition: all 0.15s ease;
+  overflow: hidden;
+}
+
+.opt-preview-toolbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
 }
 
 .prev-tb-logo {
@@ -332,10 +428,11 @@ body {
 /* Mirrors .hw-selection-toolbar.size-compact/.size-large in tooltip.css so
    the live preview actually reflects the "Kích cỡ Toolbar" select. */
 .opt-preview-toolbar.size-compact {
-  padding: 2px 6px;
+  padding: 0px 0px;
+  gap: 0px;
 }
 .opt-preview-toolbar.size-compact .prev-tb-btn {
-  padding: 3px 6px;
+  padding: 4px 4px;
   font-size: 10px;
 }
 
@@ -358,6 +455,16 @@ body {
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
   overflow: hidden;
   transition: all 0.15s ease;
+}
+
+.opt-preview-popup::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
 }
 
 .prev-popup-header {
@@ -414,6 +521,101 @@ body {
   border-radius: 8px;
   font-size: 11px;
   color: #475569;
+}
+
+/* Preview "Thu nhỏ" (Minimize) mode — mirrors content/styles/minimized-card.css's
+   .hw-mini-circle/.hw-mini-popup: shown together (popup right-aligned above its
+   circle) instead of requiring an actual hover, since this is a static settings
+   preview. Pinned near the bottom-right of .opt-mock-page, matching the real
+   circle's fixed bottom-corner placement — anchored via `right` (not `left`)
+   with enough clearance to stay left of .opt-preview-fab's own bottom-right
+   column so the two previews don't overlap. Hidden by default; toggled on by
+   updatePreview() in tabs/appearance-tab.js when popupCardSizeSelect.value
+   === 'minimize'. */
+.opt-preview-mini-wrap {
+  position: absolute;
+  right: 64px;
+  bottom: 16px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.opt-preview-mini-popup {
+  position: relative;
+  z-index: 5;
+  max-width: 260px;
+  min-width: 160px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+  font-size: 11px;
+  line-height: 1.3;
+  color: #1e293b;
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+
+.opt-preview-mini-popup::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
+}
+
+.prev-mini-popup-heading,
+.prev-mini-popup-content {
+  position: relative;
+  z-index: 1;
+}
+
+.prev-mini-popup-heading {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 3px;
+}
+
+.opt-preview-mini-circle {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid rgba(2, 132, 199, 0.35);
+  --prev-mini-rgb: 2, 132, 199;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+  transition: all 0.15s ease;
+}
+
+/* Two staggered rings expand outward and fade, played continuously — mirrors
+   .hw-mini-circle:hover::before/::after in minimized-card.css, but always-on
+   here (not gated on :hover) since this is a static preview meant to be seen
+   without the viewer having to hover it themselves. */
+.opt-preview-mini-circle::before,
+.opt-preview-mini-circle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--prev-mini-rgb), 0.7);
+  opacity: 0;
+  pointer-events: none;
+  animation: hwPrevMiniRipple 2s ease-out infinite;
+}
+
+.opt-preview-mini-circle::after {
+  animation-delay: 0.85s;
+}
+
+@keyframes hwPrevMiniRipple {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(3.2); opacity: 0; }
 }
 
 /* Preview mirror of the compact solution-popup mode — the header bar
@@ -503,7 +705,7 @@ body {
   transition: all 0.15s ease;
 }
 
-.prev-fab-crop {
+.prev-fab-primary {
   background: rgba(2, 132, 199, 0.85);
   color: #ffffff;
 }
@@ -620,6 +822,80 @@ body {
 .opt-select:focus,
 .opt-input:focus {
   border-color: #0284c7;
+}
+
+/* Curated pastel swatch picker (hoverTranslateHighlightColor) — a fixed
+   palette instead of a free <input type="color">, populated at runtime by
+   appearance-tab.js from shared/hover-highlight-colors.js. */
+.opt-color-swatch-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.opt-color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12);
+  transition: transform 0.1s ease, border-color 0.15s ease;
+}
+
+.opt-color-swatch:hover {
+  transform: scale(1.1);
+}
+
+.opt-color-swatch.active {
+  border-color: #0284c7;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12), 0 0 0 2px #ffffff, 0 0 0 3px #0284c7;
+}
+
+/* Highlight-style picker (hoverTranslateHighlightStyle) — each swatch is a
+   real, tiny rendering of that style (via shared/highlight-styles.js,
+   painted by appearance-tab.js's renderHighlightStyleSwatches()), not an
+   icon standing in for it, so what you pick is exactly what you get. */
+.opt-style-swatch-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.opt-style-swatch {
+  position: relative;
+  width: 76px;
+  height: 42px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  background: #f8fafc;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.1);
+  overflow: hidden;
+  transition: transform 0.1s ease, border-color 0.15s ease;
+}
+
+.opt-style-swatch:hover {
+  transform: translateY(-1px);
+}
+
+.opt-style-swatch.active {
+  border-color: #0284c7;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.1), 0 0 0 2px #ffffff, 0 0 0 3px #0284c7;
+}
+
+.opt-style-swatch-sample {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
 }
 
 .opt-textarea {
@@ -1050,15 +1326,19 @@ body {
 /* ========================================================= */
 /* Rich Tooltip (Options Page)                                */
 /* ========================================================= */
+/* Liquid Glass Light — the options page has no dark mode of its own (no
+   overlayTheme/data-theme plumbing exists here, unlike popup/sidepanel/the
+   in-page overlay), so "default light, follows theme" for this page means
+   just the light glass recipe; there is no dark theme to switch to. */
 .opt-tooltip-popup {
   position: fixed;
   z-index: 2147483647;
   max-width: 280px;
-  background: rgba(15, 23, 42, 0.92);
-  backdrop-filter: blur(14px) saturate(180%);
-  -webkit-backdrop-filter: blur(14px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(6px) saturate(180%) url(#hw-liquid-glass-filter);
+  -webkit-backdrop-filter: blur(6px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
   border-radius: 10px;
   padding: 8px 12px;
   pointer-events: none;
@@ -1066,6 +1346,16 @@ body {
   display: none;
   transform: translateY(4px);
   transition: opacity 0.15s ease, transform 0.15s ease;
+  color: #1e293b;
+}
+
+.opt-tooltip-popup::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
 }
 
 .opt-tooltip-popup.visible {
@@ -1076,14 +1366,14 @@ body {
 .opt-tooltip-title {
   font-weight: 700;
   font-size: 12px;
-  color: #38bdf8;
+  color: #0284c7;
   margin-bottom: 2px;
 }
 
 .opt-tooltip-desc {
   font-size: 11.5px;
   line-height: 1.4;
-  color: #e2e8f0;
+  color: #334155;
 }
 
 /* Local Model Installation Guide */
@@ -1333,6 +1623,23 @@ body {
   gap: 16px;
 }
 
+/* Wraps the settings that only matter while a card's own on/off toggle
+   (the row above it) is enabled — e.g. FAB size/opacity, or every Hover
+   Translate option below its "Enable" checkbox. Same flex/gap as
+   .opt-settings-list itself so nesting it doesn't collapse the vertical
+   rhythm between rows. */
+.opt-settings-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.opt-settings-sub.is-dimmed {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
 .opt-setting-row {
   display: flex;
   align-items: center;
@@ -1509,7 +1816,7 @@ body {
   right: 28px;
   background: rgba(15, 23, 42, 0.94);
   color: #ffffff;
-  backdrop-filter: blur(14px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(180%) url(#hw-liquid-glass-filter);
   -webkit-backdrop-filter: blur(14px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);

@@ -139,11 +139,34 @@ export const Icons = {
     <path d="m6 6 12 12"></path>
   `, size, cls),
 
+  // Favorite toggle (translate history). The path carries no fill of its own
+  // so it inherits — an outline by default, solid once a caller's CSS sets
+  // `fill: currentColor` on an `.is-active` state (a stylesheet rule beats
+  // this svg's own `fill="none"`, since presentation attributes lose to any
+  // author rule).
+  star: (size = 18, cls = '') => createSvg(`
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+  `, size, cls),
+
   maximize: (size = 18, cls = '') => createSvg(`
     <polyline points="15 3 21 3 21 9"></polyline>
     <polyline points="9 21 3 21 3 15"></polyline>
     <line x1="21" y1="3" x2="14" y2="10"></line>
     <line x1="3" y1="21" x2="10" y2="14"></line>
+  `, size, cls),
+
+  // Popup display-mode quick switcher (Normal / Compact / Minimize) — see
+  // content/overlay.js's .hw-mode-switch and content/overlay/minimized-card.js.
+  layoutNormal: (size = 18, cls = '') => createSvg(`
+    <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+  `, size, cls),
+
+  layoutCompact: (size = 18, cls = '') => createSvg(`
+    <rect x="3" y="8" width="18" height="8" rx="2"></rect>
+  `, size, cls),
+
+  layoutMinimize: (size = 18, cls = '') => createSvg(`
+    <circle cx="12" cy="12" r="4.5"></circle>
   `, size, cls),
 
   externalLink: (size = 18, cls = '') => createSvg(`
@@ -165,6 +188,18 @@ export const Icons = {
     <path d="M7 2h1"></path>
     <path d="m22 22-5-10-5 10"></path>
     <path d="M14 18h6"></path>
+  `, size, cls),
+
+  // Cursor pointer — Quick Hover Translate: reading a word by hovering
+  // rather than clicking/selecting it, so the mark itself is the cursor.
+  mousePointer: (size = 18, cls = '') => createSvg(`
+    <path d="M4.037 4.688a.495.495 0 0 1 .651-.651l16.5 6.5a.5.5 0 0 1-.06.947l-6.917 1.781a2 2 0 0 0-1.442 1.442L11.988 21.6a.5.5 0 0 1-.947.06z"></path>
+  `, size, cls),
+
+  volume2: (size = 18, cls = '') => createSvg(`
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
   `, size, cls),
 
   fileText: (size = 18, cls = '') => createSvg(`
@@ -268,6 +303,18 @@ export const Icons = {
     <rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect>
     <line x1="6" x2="6.01" y1="6" y2="6"></line>
     <line x1="6" x2="6.01" y1="18" y2="18"></line>
+  `, size, cls),
+
+  keyboard: (size = 18, cls = '') => createSvg(`
+    <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+    <path d="M6 8h.01"></path>
+    <path d="M10 8h.01"></path>
+    <path d="M14 8h.01"></path>
+    <path d="M18 8h.01"></path>
+    <path d="M8 12h.01"></path>
+    <path d="M12 12h.01"></path>
+    <path d="M16 12h.01"></path>
+    <path d="M7 16h10"></path>
   `, size, cls),
 };
 

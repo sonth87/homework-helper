@@ -1,0 +1,63 @@
+/**
+ * Cache kết quả OCR theo NỘI DUNG ẢNH đã chụp — rê chuột từ từ này sang từ kế
+ * bên trong CÙNG một dòng/đoạn thường chụp trúng gần như đúng y hệt vùng ảnh
+ * của lần hover trước (dải 160-320px tuỳ performanceMode, quét trọn bề rộng
+ * màn hình — xem tryOcr() trong acquire.ts), nhưng trước đây mỗi lần hover
+ * đều OCR lại từ đầu (~300-400ms/lần, đo được thật trong log người dùng gửi:
+ * acquireMs: 426.2) dù ảnh giống hệt lần ngay trước.
+ *
+ * Khoá theo NỘI DUNG (hash ảnh) + ENGINE (native/tesseract — hai engine chạy
+ * trên cùng ảnh vẫn tính là hai khoá khác nhau, xem hashOf() bên dưới), KHÔNG
+ * theo toạ độ vùng — tự động đúng cả khi
+ * màn hình đã cuộn/đổi nội dung ở đúng toạ độ đó (hash khác → cache miss tự
+ * nhiên), không cần logic riêng theo dõi "vùng này còn hợp lệ không".
+ *
+ * SHA-256, không phải hash nhanh (djb2...) — một collision ở đây phục vụ NHẦM
+ * kết quả OCR của một vùng ảnh hoàn toàn khác cho vùng hiện tại, khác hẳn hậu
+ * quả của cache miss thường (chỉ chậm hơn chút). Đáng giá thêm vài micro-giây
+ * tính hash để loại hẳn rủi ro đó — "trả lời sai còn tệ hơn không trả lời" là
+ * nguyên tắc xuyên suốt dự án (roadmap/known-issues.md).
+ *
+ * Chỉ cache trong bộ nhớ tiến trình (không SQLite) — nội dung màn hình đổi
+ * liên tục, không có giá trị gì khi bền qua các lần khởi động app. Không cần
+ * TTL: cache đúng theo NỘI DUNG nên không có khái niệm "hết hạn" — ảnh giống
+ * hệt thì kết quả OCR chắc chắn vẫn đúng dù cách nhau bao lâu; chỉ cần giới
+ * hạn SỐ LƯỢNG để không phình bộ nhớ vô hạn qua một phiên làm việc dài.
+ */
+
+import { createHash } from 'node:crypto';
+import type { OcrResult } from '@shared/types/content';
+
+const MAX_ENTRIES = 20;
+const cache = new Map<string, OcrResult>();
+
+// Khoá GỒM CẢ engine, không chỉ nội dung ảnh — native và Tesseract chạy trên
+// CÙNG một ảnh vẫn phải tính là hai khoá khác nhau. BUG THẬT đã tự bắt được
+// lúc viết: nếu chỉ khoá theo ảnh, kết quả native (đã cache) sẽ bị trả về
+// nhầm cho lần thử Tesseract kế tiếp trên cùng ảnh đó (tryOcr() thử native
+// trước, rơi qua Tesseract khi native confidence thấp) — hai engine cho ra
+// text/bounds/confidence khác hẳn nhau, không thể dùng lẫn.
+function hashOf(base64: string, engine: string): string {
+  return createHash('sha256').update(engine).update(' ').update(base64).digest('hex');
+}
+
+export function getCachedOcrResult(base64: string, engine: string): OcrResult | null {
+  return cache.get(hashOf(base64, engine)) ?? null;
+}
+
+export function setCachedOcrResult(base64: string, engine: string, result: OcrResult): void {
+  const key = hashOf(base64, engine);
+  if (!cache.has(key) && cache.size >= MAX_ENTRIES) {
+    // Map giữ thứ tự CHÈN — phần tử đầu tiên trả về từ keys() chính là cũ
+    // nhất, xoá nó để nhường chỗ. Không cần LRU đầy đủ (theo dõi lần truy cập
+    // gần nhất) cho một cache nhỏ, ngắn hạn như thế này.
+    const oldest = cache.keys().next().value;
+    if (oldest !== undefined) cache.delete(oldest);
+  }
+  cache.set(key, result);
+}
+
+/** Nút "Xoá cache/cooldown" ở trang Chẩn đoán — buộc lần hover kế tiếp nhận dạng lại từ đầu, không đợi hết TTL (cache này vốn không có TTL). */
+export function clearOcrCache(): void {
+  cache.clear();
+}

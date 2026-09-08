@@ -14,7 +14,7 @@
  */
 
 import { formatStudyPrompt } from '../shared/study-prompt.js';
-import { runOcrInOffscreen } from '../background/ocr-bridge.js';
+import { runLocalOcr } from './ocr.js';
 import { getThinkingDisableValue } from '../shared/thinking-control.js';
 import { isSingleWord, DICTIONARY_SCHEMA } from '../shared/dictionary.js';
 
@@ -50,7 +50,7 @@ async function fetchWithSchemaFallback(doFetch, wantsSchema) {
 /**
  * Google Gemini SSE Stream
  */
-async function streamGemini(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled }, onChunk, signal) {
+async function streamGemini(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled, history = [] }, onChunk, signal) {
   const baseUrl = config.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
   const model = config.model || 'gemini-2.5-flash';
   const url = `${baseUrl}/models/${model}:streamGenerateContent?alt=sse&key=${config.apiKey}`;
@@ -79,9 +79,15 @@ async function streamGemini(config, { prompt, imageBase64, studyMode, outputLang
     if (level) generationConfig.thinkingConfig = { thinkingLevel: level };
   }
 
+  // Gemini has no 'assistant' role — its own past replies must be resent as 'model'.
+  const historyContents = history.map((h) => ({
+    role: h.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: h.content }],
+  }));
+
   const wantsSchema = wantsDictionarySchema(studyMode, prompt);
   const buildPayload = (useSchema) => ({
-    contents: [{ role: 'user', parts }],
+    contents: [...historyContents, { role: 'user', parts }],
     system_instruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
     generationConfig: useSchema
       ? { ...generationConfig, responseMimeType: 'application/json', responseSchema: DICTIONARY_SCHEMA }
@@ -139,7 +145,7 @@ async function streamGemini(config, { prompt, imageBase64, studyMode, outputLang
 /**
  * OpenAI / DeepSeek / Groq / OpenRouter / Custom Streaming
  */
-async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled }, onChunk, signal) {
+async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled, history = [] }, onChunk, signal) {
   const baseUrl = config.baseUrl || 'https://api.openai.com/v1';
   const model = config.model || 'gpt-4o';
   const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
@@ -154,7 +160,10 @@ async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, 
   if (isLocalTextOnly && imageBase64 && config.ocrFallback !== false) {
     onChunk('', { status: 'switching', notice: `Model "${model}" không đọc được ảnh trực tiếp, đang OCR trích xuất chữ từ ảnh trước khi gửi...` });
     try {
-      const ocrText = await runOcrInOffscreen(imageBase64, outputLanguage);
+      // Direct call, not chrome.runtime.sendMessage: the OCR listener lives in
+      // this same offscreen document, and the runtime never delivers a message
+      // back to the sender's own frame.
+      const ocrText = await runLocalOcr(imageBase64, outputLanguage);
       effectivePrompt = ocrText.trim()
         ? `${prompt}\n\n[Nội dung câu hỏi & các phương án từ ảnh]:\n${ocrText.trim()}`
         : prompt;
@@ -180,6 +189,11 @@ async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, 
   const messages = [];
   if (systemPrompt) {
     messages.push({ role: 'system', content: systemPrompt });
+  }
+  // Lịch sử không chứa ảnh (chỉ lượt hiện tại mới có, xem ai-engine.js) nên
+  // đẩy thẳng vào giữa system prompt và lượt hiện tại là đủ.
+  for (const h of history) {
+    messages.push({ role: h.role, content: h.content });
   }
   messages.push({ role: 'user', content: userContent.length === 1 ? fullPrompt : userContent });
 
@@ -302,7 +316,7 @@ async function streamOpenAiCompatible(config, { prompt, imageBase64, studyMode, 
 /**
  * Anthropic Claude Streaming
  */
-async function streamClaude(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled }, onChunk, signal) {
+async function streamClaude(config, { prompt, imageBase64, studyMode, outputLanguage, systemPrompt, thinkingEnabled, history = [] }, onChunk, signal) {
   const baseUrl = config.baseUrl || 'https://api.anthropic.com/v1';
   const model = config.model || 'claude-3-5-sonnet-20241022';
   const url = `${baseUrl.replace(/\/+$/, '')}/messages`;
@@ -324,11 +338,16 @@ async function streamClaude(config, { prompt, imageBase64, studyMode, outputLang
   const fullPrompt = formatStudyPrompt(studyMode, prompt, outputLanguage);
   content.push({ type: 'text', text: fullPrompt });
 
+  const historyMessages = history.map((h) => ({
+    role: h.role,
+    content: [{ type: 'text', text: h.content }],
+  }));
+
   const payload = {
     model,
     max_tokens: 4096,
     system: systemPrompt || undefined,
-    messages: [{ role: 'user', content }],
+    messages: [...historyMessages, { role: 'user', content }],
     stream: true,
     temperature: 0.4,
   };

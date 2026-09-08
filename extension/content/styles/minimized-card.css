@@ -1,0 +1,411 @@
+/**
+ * "Minimize" display mode for the floating solution/translation popup
+ * (content/overlay/minimized-card.js) — a fixed circular indicator in the
+ * corner of the screen instead of the full card, with a hover-revealed
+ * result preview. Deliberately its own stylesheet/component, not layered
+ * onto overlay.css's existing .hw-solution-card rules, to keep this new
+ * display mode from ever fighting with the normal/compact card's styling.
+ */
+
+.hw-mini-circle {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2147483630;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  /* Fallbacks for before start() has read the Selection Toolbar's own
+     toolbarTheme/toolbarOpacity/toolbarBlur and set the real values — the
+     same blue as the 'cyber-blue' theme (this extension's long-standing
+     default accent) at that setting's own 90%/14px defaults, so the very
+     first paint already looks right instead of flashing a different look. */
+  --hw-mini-rgb: 2, 132, 199;
+  --hw-mini-alpha: 0.9;
+  --hw-mini-blur: 14px;
+  backdrop-filter: blur(var(--hw-mini-blur)) saturate(180%) url(#hw-liquid-glass-filter);
+  -webkit-backdrop-filter: blur(var(--hw-mini-blur)) saturate(180%);
+  border: 3px solid rgba(var(--hw-mini-rgb), calc(var(--hw-mini-alpha) * 0.35));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hw-mini-circle:hover {
+  transform: scale(1.06);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+}
+
+/* Hover: two staggered rings expand outward from the circle and fade —
+   concentric ripples, like a stone dropped in water — for as long as the
+   cursor stays over it. Independent of loading/done/error, which is the
+   circle's own border animating/colouring; this is purely the hover cue. */
+.hw-mini-circle::before,
+.hw-mini-circle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--hw-mini-rgb), 0.7);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hw-mini-circle:hover::before {
+  animation: hwMiniRipple 2s ease-out infinite;
+}
+
+.hw-mini-circle:hover::after {
+  animation: hwMiniRipple 2s ease-out 0.85s infinite;
+}
+
+@keyframes hwMiniRipple {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(3.2); opacity: 0; }
+}
+
+/* Loading: the ring itself spins, one side lit up — stops the instant a
+   result/translation arrives (finalize() removes this class), which is the
+   whole signal the user watches for. */
+.hw-mini-circle.hw-mini-loading {
+  border-color: rgba(var(--hw-mini-rgb), calc(var(--hw-mini-alpha) * 0.3));
+  border-top-color: rgba(var(--hw-mini-rgb), var(--hw-mini-alpha));
+  animation: hwMiniSpin 0.85s linear infinite;
+}
+
+@keyframes hwMiniSpin {
+  to { transform: rotate(360deg); }
+}
+
+.hw-mini-circle.hw-mini-loading:hover {
+  animation-play-state: running;
+}
+
+/* Done: a plain, fully solid-colour ring — no spin, reads as "ready". Once
+   settled there with nothing else moving, it's easy to forget the circle is
+   even interactive — so every 15s (one loop of hwMiniIdlePulse) a single
+   ring flashes outward from it as a "still here, still working" nudge.
+   :not(:hover) so hovering swaps this out for the richer, faster two-ring
+   hwMiniRipple above instead of the two competing for the same ::before. */
+.hw-mini-circle.hw-mini-done {
+  border-color: rgba(var(--hw-mini-rgb), var(--hw-mini-alpha));
+}
+
+.hw-mini-circle.hw-mini-done:not(:hover)::before {
+  animation: hwMiniIdlePulse 15s ease-out infinite;
+}
+
+@keyframes hwMiniIdlePulse {
+  0%, 100% { transform: scale(1); opacity: 0; }
+  2% { opacity: 0.8; }
+  12% { transform: scale(2.6); opacity: 0; }
+}
+
+.hw-mini-circle.hw-mini-error {
+  border-color: rgba(239, 68, 68, var(--hw-mini-alpha));
+}
+
+.hw-mini-circle.hw-mini-error::before,
+.hw-mini-circle.hw-mini-error::after {
+  border-color: rgba(239, 68, 68, 0.7);
+}
+
+/* Small close button — hidden until hovering the circle, per the "cực kỳ
+   đơn giản" brief: no persistent chrome on a control that's supposed to
+   almost disappear into the corner of the page. */
+.hw-mini-close {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: #475569;
+  color: #ffffff;
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.12s ease, transform 0.12s ease, background 0.12s ease;
+  pointer-events: none;
+}
+
+.hw-mini-circle:hover .hw-mini-close {
+  opacity: 0.5;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.hw-mini-close:hover {
+  background: #ef4444;
+}
+
+/* The hover-revealed result preview. No header, no footer, no title —
+   just the rendered answer and two bare utility icons, positioned relative
+   to wherever the circle currently is (see minimized-card.js positionPopup(),
+   which always keeps this fully inside the viewport). */
+.hw-mini-popup {
+  position: fixed;
+  z-index: 2147483631;
+  display: none;
+  max-width: 320px;
+  min-width: 160px;
+  border-radius: 12px;
+  /* Fallbacks for before _applyGlassTheme() has read the real Homework
+     Helper Popup opacity/blur settings (popupOpacity/popupBlur) and set
+     these. --hw-glass-rgb/--hw-text-main are the same :host-level tokens
+     overlay.css's .hw-solution-card uses — inherited automatically since
+     this popup lives in the same shared shadow root — so this now follows
+     the page's dark/light overlayTheme exactly like the real Normal/Compact
+     card's background does, instead of staying fixed white against a dark
+     page (which used to read as a flat, non-glassy grey box: a near-opaque
+     light fill over a dark backdrop barely lets any of it refract through). */
+  --hw-mini-popup-alpha: 0.96;
+  --hw-mini-popup-blur: 6px;
+  background: rgba(var(--hw-glass-rgb), var(--hw-mini-popup-alpha));
+  backdrop-filter: blur(var(--hw-mini-popup-blur)) saturate(180%) url(#hw-liquid-glass-filter);
+  -webkit-backdrop-filter: blur(var(--hw-mini-popup-blur)) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--hw-text-main);
+}
+
+/* popupCardTheme = 'glass-light'/'glass-dark' pins this popup's own glass
+   independent of the global overlayTheme, mirroring .hw-solution-card's own
+   .theme-glass-light/.theme-glass-dark in overlay.css exactly (same token
+   set — this popup and the real card are, in effect, the same "Homework
+   Helper Popup" settings applied to two different display modes). Toggled
+   by _applyGlassTheme() in minimized-card.js. */
+.hw-mini-popup.theme-glass-light {
+  --hw-bg-hover: #f1f5f9;
+  --hw-border-color: #e2e8f0;
+  --hw-text-main: #0f172a;
+  --hw-text-muted: #64748b;
+  --hw-accent: #0284c7;
+  --hw-accent-rgb: 2, 132, 199;
+  --hw-success: #16a34a;
+  --hw-glass-rgb: 255, 255, 255;
+}
+
+.hw-mini-popup.theme-glass-dark {
+  --hw-bg-hover: #334155;
+  --hw-border-color: #334155;
+  --hw-text-main: #f8fafc;
+  --hw-text-muted: #94a3b8;
+  --hw-accent: #38bdf8;
+  --hw-accent-rgb: 56, 189, 248;
+  --hw-success: #22c55e;
+  --hw-glass-rgb: 15, 23, 42;
+}
+
+.hw-mini-popup::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.04) 15%, rgba(255, 255, 255, 0) 25%);
+}
+
+/* Deliberately the thing that scrolls (long answers), separate from the
+   outer .hw-mini-popup box above — see the comment in minimized-card.js's
+   buildDom() for why #hwMiniModeSwitch needs that split. */
+.hw-mini-popup-scroll {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 2px 4px;
+}
+
+.hw-mini-popup-content {
+  word-break: break-word;
+}
+
+.hw-mini-popup-content p {
+  margin: 0 0 8px;
+}
+.hw-mini-popup-content p:last-child {
+  margin-bottom: 0;
+}
+
+.hw-mini-loading-text {
+  color: var(--hw-text-muted);
+  font-style: italic;
+}
+
+/* Structured dictionary layout (single-word translate results) — the same
+   classes overlay.css's .hw-card-answer-content styles for the real card
+   (built by formatDictionaryEntry() in shared/markdown-katex.js), and now
+   the same theme-aware --hw-accent/--hw-text-muted tokens too, since
+   .hw-mini-popup's own background above follows the page's dark/light
+   overlayTheme the same way the real card's does. */
+.hw-mini-popup-content .hw-dict-headword {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.hw-mini-popup-content .hw-dict-phonetic {
+  font-size: 11px;
+  font-weight: 200;
+  color: var(--hw-text-muted);
+  margin-left: 2px;
+}
+
+.hw-mini-popup-content .hw-dict-speak {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--hw-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.hw-mini-popup-content .hw-dict-speak:hover {
+  background: rgba(var(--hw-accent-rgb), 0.12);
+  color: var(--hw-accent);
+}
+
+.hw-mini-popup-content .hw-dict-sense {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.hw-mini-popup-content .hw-dict-sense:last-of-type {
+  margin-bottom: 0;
+}
+
+.hw-mini-popup-content .hw-dict-pos {
+  flex: 0 0 auto;
+  min-width: 28px;
+  max-width: 90px;
+  font-size: 9px;
+  font-weight: 200;
+  color: var(--hw-text-muted);
+  padding-top: 2px;
+}
+
+.hw-mini-popup-content .hw-dict-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.hw-mini-popup-content .hw-dict-gloss {
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.hw-mini-popup-content .hw-dict-example {
+  font-size: 12px;
+  color: var(--hw-text-muted);
+  line-height: 1.5;
+}
+
+.hw-mini-popup-content .hw-dict-example code.inline-code,
+.hw-mini-popup-content em {
+  font-family: inherit;
+  font-size: inherit;
+  font-style: normal;
+  background: none;
+  padding: 0;
+  color: var(--hw-accent);
+  font-weight: 600;
+}
+
+.hw-mini-popup-content .hw-dict-desc {
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: var(--hw-bg-hover);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--hw-text-muted);
+  line-height: 1.5;
+}
+
+.hw-mini-popup-content .hw-dict-desc-term {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--hw-text-main);
+  margin-bottom: 4px;
+}
+
+.hw-mini-popup-content .hw-dict-desc-text {
+  color: var(--hw-text-muted);
+}
+
+.hw-mini-popup-content .md-h2 {
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+.hw-mini-popup-content .md-ol, 
+.hw-mini-popup-content .md-ul {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    padding-inline-start: 24px;
+}
+
+/* Bare icons — no background pill, no border, just the glyph — per the
+   "chỉ icon, không màu background" brief for this stripped-down popup. */
+.hw-mini-popup-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--hw-border-color);
+}
+
+.hw-mini-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--hw-text-muted);
+  cursor: pointer;
+  transition: color 0.12s ease, transform 0.12s ease;
+}
+
+.hw-mini-icon-btn:hover {
+  color: var(--hw-accent);
+  transform: scale(1.1);
+}
+
+.hw-mini-icon-btn.hw-mini-copied {
+  color: var(--hw-success);
+}
+
+/* Reuses overlay.css's .hw-mode-switch/.hw-mode-dot (same shared shadow
+   root) — floats half outside the popup's own bottom edge (own containing
+   block is .hw-mini-popup, which is position:fixed) instead of sitting
+   in-line, same trick as hover-translate.js's own granularity switcher —
+   so growing the dots on hover never changes any box's height and nothing
+   ever jumps. Always visible (unlike .hw-mini-popup-actions above, which
+   only shows once done) since switching away from Minimize should work
+   mid-loading and on error too. */
+.hw-mini-mode-switch {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  justify-content: center;
+}

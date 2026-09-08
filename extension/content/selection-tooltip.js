@@ -36,8 +36,23 @@ class SelectionTooltip {
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local' && (changes.apiConfigs || changes.nanoDownloadState || changes.isNanoReady)) {
+          // apiConfigs in particular can rewrite itself several times in quick
+          // succession while an unrelated generation is in flight elsewhere on
+          // the page (key-rotator.js stamping a cooldown per failed key). A
+          // toolbar already open for a *different* selection has nothing to do
+          // with that generation, but used to remove and rebuild itself on
+          // every single one of those writes — flickering for as long as the
+          // other request kept rotating keys. Only re-render when the gating
+          // state this toolbar actually reflects (blocked/nano status/download
+          // progress) has genuinely changed.
+          const prevBlocked = this.isAiBlocked;
+          const prevStatus = this.nanoStatus;
+          const prevDownload = JSON.stringify(this.nanoDownloadState);
           this.refreshGatingState().then(() => {
-            if (this.toolbar && this._lastRect) this.renderToolbar(this._lastRect);
+            const stateChanged = this.isAiBlocked !== prevBlocked
+              || this.nanoStatus !== prevStatus
+              || JSON.stringify(this.nanoDownloadState) !== prevDownload;
+            if (stateChanged && this.toolbar && this._lastRect) this.renderToolbar(this._lastRect);
           });
         }
       });
@@ -88,14 +103,21 @@ class SelectionTooltip {
   }
 
   handleMouseDown(e) {
-    if (this.toolbar && !this.toolbar.contains(e.target) && (!this.dropdown || !this.dropdown.contains(e.target))) {
+    if (this.toolbar && !this.toolbar.contains(e.target)
+        && (!this.dropdown || !this.dropdown.contains(e.target))
+        && (!this.submenu || !this.submenu.contains(e.target))) {
       this.removeToolbar();
     }
   }
 
   async handleMouseUp(e) {
-    // If clicking inside existing toolbar or dropdown, don't re-trigger or dismiss
-    if (this.toolbar && (this.toolbar.contains(e.target) || (this.dropdown && this.dropdown.contains(e.target)))) {
+    // If clicking inside existing toolbar, dropdown, or its submenu, don't
+    // re-trigger or dismiss. The submenu is checked separately from the
+    // dropdown — see toggleDropdown()'s portal note — since it's no longer
+    // one of the dropdown's own descendants.
+    if (this.toolbar && (this.toolbar.contains(e.target)
+        || (this.dropdown && this.dropdown.contains(e.target))
+        || (this.submenu && this.submenu.contains(e.target)))) {
       return;
     }
 
@@ -138,11 +160,11 @@ class SelectionTooltip {
     await this.refreshGatingState();
 
     const {
-      toolbarOpacity = 90,
-      toolbarBlur = 14,
+      toolbarOpacity = 25,
+      toolbarBlur = 6,
       toolbarShowText = true,
       toolbarSize = 'normal',
-      toolbarTheme = 'glass-light',
+      toolbarTheme = 'auto',
       toolbarPosition = 'above',
       toolbarLayout,
       uiLanguage = 'en',
@@ -154,21 +176,42 @@ class SelectionTooltip {
 
     const dict = getSelectionTooltipI18n(uiLanguage);
     const layout = normalizeToolbarLayout(toolbarLayout);
+    // Whether every tool has been moved into the dropdown lane (Options >
+    // Appearance drag-and-drop layout editor) — computed up front so both
+    // the container class below and the innerHTML further down agree on it.
+    const hasMainItems = layout.some((item) => item.area === 'main');
+
+    // 'auto' isn't a skin of its own — tooltip.css only ever styled
+    // glass-light (the default look) and a .theme-glass-dark override, so
+    // resolve to whichever of those two matches the OS's current preference
+    // rather than adding a third, parallel @media-driven variant.
+    const resolvedTheme = toolbarTheme === 'auto'
+      ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
+      : toolbarTheme;
+    // toggleDropdown() needs this too, to theme the portalled dropdown/
+    // submenu the same way — they're no longer nested inside this.toolbar
+    // (see its portal note), so a plain `.hw-selection-toolbar.theme-X
+    // .hw-tb-dropdown` descendant selector can't reach them anymore.
+    this.resolvedTheme = resolvedTheme;
 
     this.toolbar = document.createElement('div');
-    this.toolbar.className = `hw-selection-toolbar size-${toolbarSize} theme-${toolbarTheme}`;
+    // With no main items, the bar has nothing left but the logo — drop the
+    // pill chrome (background/border/shadow) so it reads as a bare icon
+    // instead of an empty-looking pill (see .hw-tb-logo-only in tooltip.css).
+    this.toolbar.className = `hw-selection-toolbar size-${toolbarSize} theme-${resolvedTheme}${hasMainItems ? '' : ' hw-tb-logo-only'}`;
 
     // Liquid Glass CSS Variables (avoids CSS opacity bug on backdrop-filter)
     this.toolbar.style.setProperty('--tb-alpha', `${(toolbarOpacity / 100).toFixed(2)}`);
     this.toolbar.style.setProperty('--tb-blur', `${toolbarBlur}px`);
 
-    const top = toolbarPosition === 'below'
-      ? window.scrollY + rect.bottom + 10
-      : window.scrollY + rect.top - 46;
-    const left = window.scrollX + rect.left + rect.width / 2;
-
-    this.toolbar.style.top = `${Math.max(10, top)}px`;
-    this.toolbar.style.left = `${Math.max(10, Math.min(window.innerWidth - 360, left - 140))}px`;
+    // Real top/left are computed after the toolbar is in the DOM (see the
+    // getBoundingClientRect() call by appendChild below) so centering uses
+    // its actual rendered width/height instead of a guessed box size — the
+    // full pill and the logo-only bare icon (.hw-tb-logo-only in
+    // tooltip.css) are different enough that a fixed guess for one drifts
+    // off-center for the other. Hidden until then so it doesn't flash at
+    // the browser's default (top-left-ish) position first.
+    this.toolbar.style.visibility = 'hidden';
 
     // Stop mousedown/mouseup inside the toolbar from propagating to
     // document. Beyond the original "don't dismiss on our own click" intent,
@@ -182,7 +225,12 @@ class SelectionTooltip {
     this.toolbar.addEventListener('mouseup', (e) => e.stopPropagation());
 
     const iconOnlyCls = toolbarShowText ? '' : 'icon-only';
-    const hasMainItems = layout.some((item) => item.area === 'main');
+    // toggleDropdown() needs this to know whether it should wire up the
+    // hover-to-keep-open behaviour on the dropdown/submenu it creates — that
+    // behaviour only belongs to this (no main items) hover-triggered flow,
+    // never the "..." click-to-toggle one below, which stays open regardless
+    // of where the pointer wanders until explicitly dismissed.
+    this.hoverTriggeredDropdown = !hasMainItems;
 
     const mainButtonsHtml = layout
       .filter((item) => item.area === 'main')
@@ -207,7 +255,7 @@ class SelectionTooltip {
     // trigger — so the chevron button is dropped and the logo becomes the
     // hover-to-open trigger instead (see the mouseenter wiring below).
     this.toolbar.innerHTML = `
-      <div class="hw-tb-logo${hasMainItems ? '' : ' hw-tb-logo-hoverable'}" id="hwTbLogo">${Icons.appLogo(18)}</div>
+      <div class="hw-tb-logo${hasMainItems ? '' : ' hw-tb-logo-hoverable'}" id="hwTbLogo">${Icons.appLogo(hasMainItems ? 18 : 16)}</div>
       ${statusPillHtml}
       ${mainButtonsHtml}
       ${hasMainItems ? `
@@ -236,36 +284,76 @@ class SelectionTooltip {
       });
     } else {
       // Hover the smiley logo itself to open the dropdown. Same "grace
-      // period before closing" idea as the disable submenu below: the
-      // dropdown is appended as a child of this.toolbar, so as long as the
-      // pointer is anywhere inside the toolbar+dropdown, this.toolbar still
-      // matches :hover and the close is skipped.
+      // period before closing" idea as the disable submenu below. The
+      // dropdown is portalled out of this.toolbar now (see toggleDropdown()),
+      // so the close check also has to ask the dropdown itself whether the
+      // pointer is over it — it used to be enough to ask just the toolbar,
+      // back when the dropdown was one of its own descendants and :hover
+      // matched through the whole subtree.
       const logo = this.toolbar.querySelector('#hwTbLogo');
-      let closeTimer = null;
-      const scheduleClose = () => {
-        clearTimeout(closeTimer);
-        closeTimer = setTimeout(() => {
-          if (this.dropdown && !this.toolbar?.matches(':hover')) {
-            this.dropdown.remove();
-            this.dropdown = null;
-          }
-        }, 200);
-      };
       logo.addEventListener('mouseenter', () => {
-        clearTimeout(closeTimer);
+        this.clearDropdownCloseTimer();
         if (!this.dropdown) this.toggleDropdown(rect);
       });
-      logo.addEventListener('mouseleave', scheduleClose);
-      this.toolbar.addEventListener('mouseleave', scheduleClose);
+      logo.addEventListener('mouseleave', () => this.scheduleDropdownClose());
+      this.toolbar.addEventListener('mouseleave', () => this.scheduleDropdownClose());
     }
 
     getSharedShadowRoot().appendChild(this.toolbar);
+
+    // Now that it exists in the DOM, measure its real box to center it
+    // horizontally on the selection and place it above/below with a fixed
+    // gap — see the visibility:hidden note above for why this waits until
+    // after appendChild instead of guessing a size beforehand.
+    const tbRect = this.toolbar.getBoundingClientRect();
+    const top = toolbarPosition === 'below'
+      ? window.scrollY + rect.bottom + 10
+      : window.scrollY + rect.top - tbRect.height - 8;
+    const left = window.scrollX + rect.left + rect.width / 2 - tbRect.width / 2;
+
+    this.toolbar.style.top = `${Math.max(10, top)}px`;
+    this.toolbar.style.left = `${Math.max(10, Math.min(window.innerWidth - tbRect.width - 10, left))}px`;
+    this.toolbar.style.visibility = 'visible';
+  }
+
+  /** Cancels a pending scheduleDropdownClose(). */
+  clearDropdownCloseTimer() {
+    clearTimeout(this._dropdownCloseTimer);
+  }
+
+  /** Used only by the hover-to-open (no main items) path in renderToolbar() —
+   * the click-to-toggle "..." button closes explicitly instead. Checks all
+   * three of toolbar/dropdown/submenu: they're independent portalled
+   * elements now (see toggleDropdown()'s portal note), so hovering the
+   * submenu no longer keeps :hover matching on the dropdown the way it did
+   * back when the submenu was nested inside it — each one has to be asked
+   * separately whether the pointer is currently over it. */
+  scheduleDropdownClose() {
+    this.clearDropdownCloseTimer();
+    this._dropdownCloseTimer = setTimeout(() => {
+      const stillHovering = this.toolbar?.matches(':hover')
+        || this.dropdown?.matches(':hover')
+        || this.submenu?.matches(':hover');
+      if (this.dropdown && !stillHovering) {
+        this.closeDropdown();
+      }
+    }, 200);
+  }
+
+  closeDropdown() {
+    if (this.submenu) {
+      this.submenu.remove();
+      this.submenu = null;
+    }
+    if (this.dropdown) {
+      this.dropdown.remove();
+      this.dropdown = null;
+    }
   }
 
   async toggleDropdown(rect) {
     if (this.dropdown) {
-      this.dropdown.remove();
-      this.dropdown = null;
+      this.closeDropdown();
       return;
     }
 
@@ -279,11 +367,33 @@ class SelectionTooltip {
     const dict = getSelectionTooltipI18n(uiLanguage);
     const layout = normalizeToolbarLayout(toolbarLayout);
 
+    // Portalled onto the shared shadow root instead of appended into
+    // this.toolbar: this.toolbar has its own backdrop-filter, and a nested
+    // descendant's backdrop-filter only ever sees what its filtered ancestor
+    // itself painted — not the real page behind it — so it rendered as
+    // essentially unblurred. Confirmed by an isolated before/after render
+    // comparison (identical CSS, only the nesting differed). Same problem,
+    // same fix shared/engine-picker.js already uses for its own dropdown —
+    // see its file-level portal note. --tb-alpha/--tb-blur and the theme
+    // class are copied across by hand since they no longer inherit down
+    // from this.toolbar once they're siblings rather than parent/child.
     this.dropdown = document.createElement('div');
-    this.dropdown.className = 'hw-tb-dropdown';
+    this.dropdown.className = `hw-tb-dropdown theme-${this.resolvedTheme}`;
+    this.dropdown.style.setProperty('--tb-alpha', this.toolbar.style.getPropertyValue('--tb-alpha'));
+    this.dropdown.style.setProperty('--tb-blur', this.toolbar.style.getPropertyValue('--tb-blur'));
     // Same reasoning as this.toolbar's guard above.
     this.dropdown.addEventListener('mousedown', (e) => e.stopPropagation());
     this.dropdown.addEventListener('mouseup', (e) => e.stopPropagation());
+    // Only the hover-triggered (no main items) flow auto-closes on
+    // mouseleave at all — see renderToolbar()'s hoverTriggeredDropdown
+    // comment. Wiring this unconditionally made the click-to-toggle "..."
+    // dropdown close itself just from the pointer wandering off it, which
+    // it never used to do (that one only closes on an explicit outside
+    // click or clicking "..." again).
+    if (this.hoverTriggeredDropdown) {
+      this.dropdown.addEventListener('mouseenter', () => this.clearDropdownCloseTimer());
+      this.dropdown.addEventListener('mouseleave', () => this.scheduleDropdownClose());
+    }
 
     const dropdownItemsHtml = layout
       .filter((item) => item.area === 'dropdown')
@@ -303,17 +413,38 @@ class SelectionTooltip {
       <div class="hw-tb-menu-item" id="hwTbDisableItem">
         <div class="hw-tb-menu-item-left">${Icons.slash(15)} ${dict.disable}</div>
         ${Icons.chevronRight(13)}
-        
-        <!-- Submenu -->
-        <div class="hw-tb-submenu" id="hwTbSubmenu" style="display: none;">
-          <button class="hw-tb-sub-item" data-disable="session">${dict.disableSession}</button>
-          <button class="hw-tb-sub-item" data-disable="page">${dict.disablePage}</button>
-          <button class="hw-tb-sub-item" data-disable="site">${dict.disableSite}</button>
-          <button class="hw-tb-sub-item" data-disable="global">${dict.disableGlobal}</button>
-          <div class="hw-tb-sub-footer">${dict.disableFooter}</div>
-        </div>
       </div>
     `;
+
+    // Positioned against the toolbar's own box, in the same document-relative
+    // coordinate space this.toolbar itself uses (position:absolute off the
+    // shared shadow host, not the viewport — see renderToolbar()'s own
+    // top/left math) now that it's no longer laid out by the CSS cascade as
+    // this.toolbar's own child.
+    const toolbarRect = this.toolbar.getBoundingClientRect();
+    this.dropdown.style.top = `${window.scrollY + toolbarRect.bottom + 6}px`;
+    this.dropdown.style.left = `${window.scrollX + toolbarRect.left}px`;
+    getSharedShadowRoot().appendChild(this.dropdown);
+
+    // The submenu is its own portalled element too, for the exact same
+    // backdrop-filter reason as the dropdown above (it would otherwise be
+    // nested inside the now-already-filtered dropdown, tripping the same
+    // trap one level deeper).
+    this.submenu = document.createElement('div');
+    this.submenu.className = `hw-tb-submenu theme-${this.resolvedTheme}`;
+    this.submenu.style.setProperty('--tb-alpha', this.toolbar.style.getPropertyValue('--tb-alpha'));
+    this.submenu.style.setProperty('--tb-blur', this.toolbar.style.getPropertyValue('--tb-blur'));
+    this.submenu.style.display = 'none';
+    this.submenu.innerHTML = `
+      <button class="hw-tb-sub-item" data-disable="session">${dict.disableSession}</button>
+      <button class="hw-tb-sub-item" data-disable="page">${dict.disablePage}</button>
+      <button class="hw-tb-sub-item" data-disable="site">${dict.disableSite}</button>
+      <button class="hw-tb-sub-item" data-disable="global">${dict.disableGlobal}</button>
+      <div class="hw-tb-sub-footer">${dict.disableFooter}</div>
+    `;
+    this.submenu.addEventListener('mousedown', (e) => e.stopPropagation());
+    this.submenu.addEventListener('mouseup', (e) => e.stopPropagation());
+    getSharedShadowRoot().appendChild(this.submenu);
 
     // Submenu open/close.
     //
@@ -325,18 +456,37 @@ class SelectionTooltip {
     // grace period before closing, and click-to-toggle so the row works
     // without hovering at all (touch, trackpad taps, keyboard).
     const disableItem = this.dropdown.querySelector('#hwTbDisableItem');
-    const submenu = this.dropdown.querySelector('#hwTbSubmenu');
+    const submenu = this.submenu;
     let submenuCloseTimer = null;
 
-    const openSubmenu = () => {
-      clearTimeout(submenuCloseTimer);
-      submenu.classList.remove('flip-left');
+    const positionSubmenu = () => {
+      const r = disableItem.getBoundingClientRect();
+      // Measure at full opacity/display first — an offsetWidth read while
+      // still display:none would come back 0, and the flip decision below
+      // needs the real box size.
+      submenu.style.visibility = 'hidden';
       submenu.style.display = 'flex';
+      const w = submenu.offsetWidth;
       // Flip to the left when the toolbar sits close enough to the right edge
       // that the submenu would open off-screen.
-      if (submenu.getBoundingClientRect().right > window.innerWidth - 8) {
-        submenu.classList.add('flip-left');
-      }
+      const overflowsRight = r.right + 6 + w > window.innerWidth - 8;
+      submenu.classList.toggle('flip-left', overflowsRight);
+      const left = overflowsRight ? r.left - 6 - w : r.right + 6;
+      submenu.style.left = `${window.scrollX + Math.max(8, left)}px`;
+      submenu.style.top = `${window.scrollY + r.top}px`;
+      submenu.style.visibility = 'visible';
+    };
+    const openSubmenu = () => {
+      clearTimeout(submenuCloseTimer);
+      // The submenu is a portalled sibling of this.dropdown now, positioned
+      // outside its box — so moving the pointer from disableItem onto the
+      // submenu fires this.dropdown's own mouseleave along the way (see
+      // toggleDropdown()'s guard on that listener). In hover-triggered mode
+      // that would otherwise schedule the whole thing closing out from under
+      // a pointer that's still very much within the dropdown+submenu group,
+      // just not over the dropdown element itself anymore.
+      if (this.hoverTriggeredDropdown) this.clearDropdownCloseTimer();
+      positionSubmenu();
     };
     const hideSubmenu = () => {
       clearTimeout(submenuCloseTimer);
@@ -345,6 +495,7 @@ class SelectionTooltip {
     const hideSubmenuSoon = () => {
       clearTimeout(submenuCloseTimer);
       submenuCloseTimer = setTimeout(hideSubmenu, 200);
+      if (this.hoverTriggeredDropdown) this.scheduleDropdownClose();
     };
 
     disableItem.addEventListener('mouseenter', openSubmenu);
@@ -355,9 +506,11 @@ class SelectionTooltip {
     // Opens only, never toggles: a mouse click is always preceded by the
     // hover that already opened the submenu, so toggling here would close it
     // the instant it was clicked. Closing is mouseleave's job (or picking one
-    // of the items).
+    // of the items). No longer needs to check whether the click landed
+    // inside the submenu itself — it's a portalled sibling now, not a
+    // descendant of disableItem, so a click there never reaches this
+    // listener in the first place.
     disableItem.addEventListener('click', (e) => {
-      if (submenu.contains(e.target)) return;
       e.preventDefault();
       e.stopPropagation();
       openSubmenu();
@@ -383,8 +536,6 @@ class SelectionTooltip {
         this.triggerAction(action, rect);
       });
     });
-
-    this.toolbar.appendChild(this.dropdown);
   }
 
   // 'session' and 'page' both live in sessionStorage; the page key was being
@@ -449,10 +600,8 @@ class SelectionTooltip {
 
   removeToolbar() {
     this.epoch++;
-    if (this.dropdown) {
-      this.dropdown.remove();
-      this.dropdown = null;
-    }
+    this.clearDropdownCloseTimer();
+    this.closeDropdown();
     if (this.toolbar) {
       this.toolbar.remove();
       this.toolbar = null;
