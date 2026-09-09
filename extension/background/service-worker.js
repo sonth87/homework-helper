@@ -304,6 +304,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  // Test ONE specific API config in isolation (the "Test Connection" button)
+  // — deliberately bypasses AiEngine.ask()'s routing/failover so a bad key
+  // can't be masked by a successful fallback to another key or Gemini Nano,
+  // and waits for the real result instead of ASK_AI's immediate ack.
+  if (action === 'TEST_API_CONFIG') {
+    const { configId } = payload || {};
+    (async () => {
+      try {
+        const { apiConfigs = [] } = await Storage.get(['apiConfigs']);
+        const config = (apiConfigs || []).find((c) => c.id === configId);
+        if (!config) throw new Error('Config not found');
+        await AiEngine.testConfig(config);
+        sendResponse({ success: true });
+      } catch (err) {
+        sendResponse({ success: false, error: err.message });
+      }
+    })();
+    return true;
+  }
+
   // Abort ongoing stream
   if (action === 'ABORT_STREAM') {
     const { requestId } = payload || {};

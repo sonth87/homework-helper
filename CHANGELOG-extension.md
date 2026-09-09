@@ -17,7 +17,45 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
-## [1.11.0] — 2026-09-08
+## [1.10.3] — 2026-09-09
+
+### Thêm mới
+- Tuỳ chọn mới trong Cài đặt > Giao diện > Nút Nổi Trong Trang: "Tự động ẩn".
+  Mặc định bật, giữ hành vi cũ (2 nút nổi tự thu vào sát mép màn hình khi
+  không dùng tới, hiện lại khi rê chuột vào). Tắt đi để 2 nút luôn hiển thị
+  đầy đủ ngoài mép màn hình, không tự thu vào nữa.
+- Danh sách AI Model & API Key (ở popup nút nổi, Side Panel, và trang Cài đặt)
+  giờ mặc định thu gọn từng mục, chỉ hiện tên và trạng thái bật/tắt — bấm vào
+  mũi tên để xem/sửa chi tiết (provider, model, API Key...). Mỗi mục cũng có
+  thêm ô "Tên gợi nhớ" (không bắt buộc) để đặt tên riêng, giúp phân biệt nhanh
+  khi có nhiều Model/Key được thêm vào cùng lúc.
+- Kết quả "Test Connection" giờ được ghi nhớ: test thành công sẽ tô viền cả
+  Model/Key đó màu xanh lá và ẩn luôn nút Test (đỡ tốn thêm lượt gọi cho một
+  Key đã biết chạy tốt); test lỗi thì tô viền đỏ. Sửa Provider/Model/Key sẽ
+  xoá trạng thái đó để test lại (chỉ đổi tên gợi nhớ thì không ảnh hưởng).
+  Ô nhập API Key và nút Test giờ nằm chung một hàng, nút Test chỉ bấm được
+  khi đã nhập Key. Ngoài ra, nếu một Model/Key chưa từng được test mà lại
+  được dùng thật (lúc hỏi bài) và thành công hoặc báo sai Key/không có
+  quyền truy cập, hệ thống cũng tự ghi nhận kết quả đó luôn — riêng lỗi kiểu
+  hết hạn mức/giới hạn tốc độ thì không tính, để tránh gắn nhầm một Key vẫn
+  tốt thành lỗi.
+
+### Sửa lỗi
+- Toàn bộ UI nổi trong trang (nút nổi, khung chat, thanh công cụ bôi đen,
+  tooltip dịch khi rê chuột...) đôi khi hiển thị sai font chữ hoặc sai màu
+  chữ tuỳ theo trang web đang mở — do CSS riêng của một số trang web "rò rỉ"
+  vào giao diện extension. Nay giao diện extension luôn giữ đúng font và màu
+  chữ của chính nó, không còn phụ thuộc vào trang web đang xem.
+- Nút "Test Connection" trên mỗi Model/API Key luôn báo "Key hợp lệ & Hoạt
+  động" ngay cả khi điền sai hoàn toàn — do nó chỉ đọc phản hồi xác nhận đã
+  gửi yêu cầu đi (chưa phải kết quả thật), và có thể "ăn may" nhờ tự động
+  chuyển sang Key khác hoặc Gemini Nano khi Key đang kiểm tra bị lỗi. Nay nút
+  này kiểm tra đúng một Key/Model được chọn, không dùng key khác thay thế, và
+  chỉ báo hợp lệ khi thật sự nhận được phản hồi từ đúng nơi đó.
+
+---
+
+## [1.10.1] — 2026-09-08
 
 ### Thêm mới
 - Khối code trong lời giải (Python, JavaScript, Java, C/C++/C#, CSS, HTML,

@@ -305,6 +305,7 @@ export const DEFAULT_SETTINGS = {
   overlayTheme: "auto", // 'auto' (follow system) | 'light' | 'dark'
   fabSize: "normal", // 'tiny' | 'small' | 'normal' | 'large'
   fabOpacity: 90, // 30 - 100% (Liquid Glass background alpha)
+  fabAutoHide: true, // true (slides into the screen edge at rest, revealed on hover) | false (stays fully visible)
   fabPosition: null, // null (default docked position) | { dock: 'left' | 'right', top: number(px) } — set by dragging the FAB cluster
   drawerWidth: null, // null (default 480px from CSS) | number(px) — set by dragging the drawer's left-edge resize handle
   popupOpacity: 60, // 0 - 100% (Liquid Glass background alpha)

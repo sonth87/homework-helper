@@ -102,7 +102,7 @@ export class OverlayFabs {
     crop.classList.toggle('hw-fab-blocked', blocked);
   }
 
-  applyAppearance(enableFloatingButton = true, fabSize = 'normal', fabOpacity = 90) {
+  applyAppearance(enableFloatingButton = true, fabSize = 'normal', fabOpacity = 90, fabAutoHide = true) {
     const fab = this.shadow.getElementById('hwFabContainer');
     if (!fab) return;
 
@@ -110,6 +110,7 @@ export class OverlayFabs {
     fab.classList.remove('hw-fab-size-tiny', 'hw-fab-size-small', 'hw-fab-size-normal', 'hw-fab-size-large');
     fab.classList.add(`hw-fab-size-${fabSize || 'normal'}`);
     fab.style.setProperty('--hw-fab-alpha', (fabOpacity / 100).toFixed(2));
+    fab.classList.toggle('hw-fab-static', !fabAutoHide);
   }
 
   // Docks the FAB cluster at a saved { dock: 'left'|'right', top } position

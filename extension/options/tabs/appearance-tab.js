@@ -46,6 +46,7 @@ export class AppearanceTab {
       enableFloatingButton = true,
       fabSize = 'normal',
       fabOpacity = 90,
+      fabAutoHide = true,
       popupOpacity = 60,
       popupBlur = 10,
       popupCardSize = 'normal',
@@ -83,6 +84,7 @@ export class AppearanceTab {
     const fabSizeSelect = document.getElementById('optFabSizeSelect');
     const rangeFabOpacity = document.getElementById('optRangeFabOpacity');
     const valFabOpacity = document.getElementById('valFabOpacity');
+    const checkFabAutoHide = document.getElementById('optCheckFabAutoHide');
     const btnResetFab = document.getElementById('optBtnResetFab');
     const fabSettingsSub = document.getElementById('optFabSettingsSub');
     const checkToolbarEnableInline = document.getElementById('optCheckToolbarEnableInline');
@@ -247,6 +249,7 @@ export class AppearanceTab {
       rangeFabOpacity.value = fabOpacity;
       if (valFabOpacity) valFabOpacity.textContent = `${fabOpacity}%`;
     }
+    if (checkFabAutoHide) checkFabAutoHide.checked = fabAutoHide;
     if (checkToolbarEnableInline) checkToolbarEnableInline.checked = enableTextTooltip;
     setSubDimmed(toolbarSettingsSub, !enableTextTooltip);
     if (checkToolbarText) checkToolbarText.checked = toolbarShowText;
@@ -320,6 +323,7 @@ export class AppearanceTab {
         const fSize = fabSizeSelect?.value || 'normal';
         const fabAlpha = rangeFabOpacity ? (parseInt(rangeFabOpacity.value, 10) / 100).toFixed(2) : '0.9';
         prevFab.style.display = isFabVisible ? 'flex' : 'none';
+        prevFab.classList.toggle('prev-fab-static', checkFabAutoHide ? !checkFabAutoHide.checked : false);
         prevFab.querySelectorAll('.prev-fab-btn').forEach((btn) => {
           if (fSize === 'tiny') {
             btn.style.width = '22px';
@@ -555,9 +559,14 @@ export class AppearanceTab {
       updatePreview();
     });
 
+    checkFabAutoHide?.addEventListener('change', () => {
+      Storage.set({ fabAutoHide: checkFabAutoHide.checked });
+      updatePreview();
+    });
+
     // Resets every control in this card back to DEFAULT_SETTINGS — deliberately
-    // leaves enableFloatingButton untouched, same reasoning as btnResetHover
-    // below: on/off is a separate decision from "what should the default
+    // leaves enableFloatingButton (and fabAutoHide, same reasoning) untouched:
+    // on/off is a separate decision from "what should the default
     // behavior/appearance be".
     btnResetFab?.addEventListener('click', () => {
       const d = DEFAULT_SETTINGS;

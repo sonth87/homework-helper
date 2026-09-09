@@ -472,7 +472,7 @@ class InPageOverlay {
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local') {
-          if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.popupOpacity || changes.popupBlur || changes.popupCardSize || changes.popupCardTheme || changes.overlayTheme) {
+          if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.fabAutoHide || changes.popupOpacity || changes.popupBlur || changes.popupCardSize || changes.popupCardTheme || changes.overlayTheme) {
             this.applyAppearanceSettings();
           }
           if (changes.uiLanguage) {
@@ -599,13 +599,14 @@ class InPageOverlay {
       enableFloatingButton = true,
       fabSize = 'normal',
       fabOpacity = 90,
+      fabAutoHide = true,
       popupOpacity = 60,
       popupBlur = 10,
       popupCardSize = 'normal',
       popupCardTheme = 'auto',
     } = await Storage.get();
 
-    this.fabs.applyAppearance(enableFloatingButton, fabSize, fabOpacity);
+    this.fabs.applyAppearance(enableFloatingButton, fabSize, fabOpacity, fabAutoHide);
     this.floatingCard?.applyFabAppearance(fabSize, fabOpacity);
 
     const themeAttr = await getOverlayThemeAttr();

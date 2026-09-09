@@ -162,7 +162,7 @@ export class SidePanelKeysModal {
       variant: "sidepanel",
       state: this,
       onModelsAdded: (newConfigs) => {
-        newConfigs.forEach((cfg) => list.appendChild(createLocalKeyCard(cfg, { dict, variant: "sidepanel", onChange })));
+        newConfigs.forEach((cfg) => list.appendChild(createLocalKeyCard(cfg, { isNew: true, dict, variant: "sidepanel", onChange })));
         onChange();
       },
     });

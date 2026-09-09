@@ -158,7 +158,7 @@ export class OverlayConfigModal {
       variant: 'overlay',
       state: this,
       onModelsAdded: (newConfigs) => {
-        newConfigs.forEach((cfg) => list.appendChild(createLocalKeyCard(cfg, { dict, variant: 'overlay', onChange })));
+        newConfigs.forEach((cfg) => list.appendChild(createLocalKeyCard(cfg, { isNew: true, dict, variant: 'overlay', onChange })));
         onChange();
       },
     });

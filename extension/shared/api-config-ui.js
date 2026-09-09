@@ -102,11 +102,6 @@ export function createKeyCard(cfg, { isNew = false, dict = {}, variant, onChange
     providerObj.models.map((m) => `<option value="${m.id}" ${cfg.model === m.id ? 'selected' : ''}>${m.name}</option>`).join('') +
     `<option value="__custom__" ${isCustomModel ? 'selected' : ''}>✏️ ${d.customModelOption || 'Tự điền model (Custom)...'}</option>`;
 
-  const cooldownText = () =>
-    cfg.cooldownUntil && cfg.cooldownUntil > Date.now()
-      ? `${Icons.alertCircle(12)} ${fmt(d.statusCooldown || 'Cooling down ({time})', { time: new Date(cfg.cooldownUntil).toLocaleTimeString() })}`
-      : d.statusReady || 'Status: Ready';
-
   const keyPlaceholder = () => {
     if (providerObj.requiresKey === false) {
       return d.localKeyOptionalPlaceholder || 'API Key (Không bắt buộc cho Local AI)';
@@ -116,6 +111,18 @@ export function createKeyCard(cfg, { isNew = false, dict = {}, variant, onChange
       : (d.modalKeyPlaceholder || 'Enter API Key');
   };
 
+  // A user-given label always wins for the header text — falls back to the
+  // provider name so an unlabeled card still identifies itself.
+  const displayName = () => (cfg.label && cfg.label.trim()) || providerObj.name;
+
+  // The key input's bottom-right corner doubles as the test-result readout
+  // (see the two `cfg-key-wrap` blocks below): extra padding-bottom on the
+  // input pushes its own text up, leaving a strip for the overlay status —
+  // pointer-events:none + user-select:none so it never steals a click/select
+  // meant for the input sitting right under it.
+  const statusOverlayStyle =
+    'position:absolute; right:8px; bottom:3px; max-width:calc(100% - 16px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; pointer-events:none; user-select:none; line-height:1.2;';
+
   if (skin.layout === 'wide') {
     el.className = 'opt-key-card';
     el.setAttribute('data-id', cfg.id);
@@ -123,44 +130,60 @@ export function createKeyCard(cfg, { isNew = false, dict = {}, variant, onChange
       <div class="opt-key-header">
         <label class="opt-key-provider-title">
           <input type="checkbox" class="cfg-enabled" ${cfg.isEnabled ? 'checked' : ''}>
-          <span class="cfg-provider-name">${providerObj.name}</span>
+          <span class="cfg-display-name">${displayName()}</span>
         </label>
-        <button class="opt-btn-secondary cfg-delete" style="color:#ef4444; padding:4px 8px; font-size:12px;" title="${d.deleteKey || 'Delete'}">
-          ${Icons.trash(14)} ${d.deleteKey || 'Delete'}
-        </button>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="opt-icon-btn-plain cfg-toggle" title="${d.apiConfigToggleDetails || 'Show/hide details'}">${Icons.chevronDown(16)}</button>
+          <button class="opt-btn-secondary cfg-delete" style="color:#ef4444; padding:4px 8px; font-size:12px;" title="${d.deleteKey || 'Delete'}">
+            ${Icons.trash(14)} ${d.deleteKey || 'Delete'}
+          </button>
+        </div>
       </div>
-      <div class="opt-key-grid">
-        <select class="opt-select cfg-provider" style="min-width:0;">${providerOptions}</select>
-        <select class="opt-select cfg-model" style="min-width:0;">${buildModelOptions()}</select>
-        <input type="password" class="opt-input cfg-key" placeholder="${keyPlaceholder()}" value="${cfg.apiKey || ''}">
-      </div>
-      <input type="text" class="opt-input cfg-custom-model" placeholder="${d.customModelPlaceholder || 'Nhập tên/mã model (vd: gemini-3.5-pro, gpt-5, claude-4...)'}" value="${isCustomModel && cfg.model !== '__custom__' ? cfg.model : ''}" style="margin-top:6px; ${isCustomModel ? 'display:block;' : 'display:none;'}">
-      <input type="text" class="opt-input cfg-base-url" placeholder="${providerObj.defaultBaseUrl || 'Base URL (http://localhost:...)'}" value="${cfg.baseUrl || (providerObj.requiresBaseUrl ? providerObj.defaultBaseUrl : '')}" style="margin-top:6px; ${providerObj.requiresBaseUrl ? 'display:block;' : 'display:none;'}">
-      <div class="opt-key-actions">
-        <div class="cfg-status" style="font-size:12px; color:#64748b;">${cooldownText()}</div>
-        <button class="opt-btn-secondary cfg-test" style="padding:4px 10px; font-size:12px;">${Icons.refresh(12)} ${d.testConnection || 'Test Connection'}</button>
+      <div class="cfg-card-body" style="display:none; flex-direction:column; gap:10px;">
+        <input type="text" class="opt-input cfg-label" placeholder="${d.apiConfigLabelPlaceholder || 'Tên gợi nhớ (không bắt buộc)'}" value="${cfg.label || ''}">
+        <div style="display:grid; grid-template-columns:180px minmax(0,1fr); gap:10px;">
+          <select class="opt-select cfg-provider" style="min-width:0;">${providerOptions}</select>
+          <select class="opt-select cfg-model" style="min-width:0;">${buildModelOptions()}</select>
+        </div>
+        <input type="text" class="opt-input cfg-custom-model" placeholder="${d.customModelPlaceholder || 'Nhập tên/mã model (vd: gemini-3.5-pro, gpt-5, claude-4...)'}" value="${isCustomModel && cfg.model !== '__custom__' ? cfg.model : ''}" style="${isCustomModel ? 'display:block;' : 'display:none;'}">
+        <input type="text" class="opt-input cfg-base-url" placeholder="${providerObj.defaultBaseUrl || 'Base URL (http://localhost:...)'}" value="${cfg.baseUrl || (providerObj.requiresBaseUrl ? providerObj.defaultBaseUrl : '')}" style="${providerObj.requiresBaseUrl ? 'display:block;' : 'display:none;'}">
+        <div style="display:flex; gap:8px; align-items:stretch;">
+          <div class="cfg-key-wrap" style="position:relative; flex:1; min-width:0;">
+            <input type="password" class="opt-input cfg-key" placeholder="${keyPlaceholder()}" value="${cfg.apiKey || ''}" style="width:100%; box-sizing:border-box; padding-bottom:18px;">
+            <span class="cfg-status" style="${statusOverlayStyle} font-size:11px;"></span>
+          </div>
+          <button class="opt-btn-secondary cfg-test" style="padding:4px 10px; font-size:12px; flex-shrink:0;">${Icons.refresh(12)} ${d.testConnection || 'Test Connection'}</button>
+        </div>
       </div>
     `;
   } else {
     el.style.cssText = skin.cardStyle;
     el.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <label style="display:flex; align-items:center; gap:6px; font-weight:600; font-size:13px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+        <label style="display:flex; align-items:center; gap:6px; font-weight:600; font-size:13px; min-width:0; flex:1;">
           <input type="checkbox" class="cfg-enabled" ${cfg.isEnabled ? 'checked' : ''}>
-          <span class="cfg-provider-name">${providerObj.name}</span>
+          <span class="cfg-display-name" style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${displayName()}</span>
         </label>
-        <button class="${skin.iconBtn} cfg-delete" style="color:#ef4444;" title="${d.deleteKey || 'Delete'}">${Icons.trash(14)}</button>
+        <div style="display:flex; align-items:center; gap:2px; flex-shrink:0;">
+          <button class="${skin.iconBtn} cfg-toggle" title="${d.apiConfigToggleDetails || 'Show/hide details'}">${Icons.chevronDown(14)}</button>
+          <button class="${skin.iconBtn} cfg-delete" style="color:#ef4444;" title="${d.deleteKey || 'Delete'}">${Icons.trash(14)}</button>
+        </div>
       </div>
-      <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px;">
-        <select class="${skin.select} cfg-provider" style="min-width:0;">${providerOptions}</select>
-        <select class="${skin.select} cfg-model" style="min-width:0;">${buildModelOptions()}</select>
-      </div>
-      <input type="text" class="${skin.field} cfg-custom-model" placeholder="${d.customModelPlaceholder || 'Nhập tên/mã model (vd: gemini-3.5-pro, gpt-5, claude-4...)'}" value="${isCustomModel && cfg.model !== '__custom__' ? cfg.model : ''}" style="margin-top:2px; ${isCustomModel ? 'display:block;' : 'display:none;'}">
-      <input type="text" class="${skin.field} cfg-base-url" placeholder="${providerObj.defaultBaseUrl || 'Base URL (http://localhost:...)'}" value="${cfg.baseUrl || (providerObj.requiresBaseUrl ? providerObj.defaultBaseUrl : '')}" style="margin-top:2px; ${providerObj.requiresBaseUrl ? 'display:block;' : 'display:none;'}">
-      <input type="password" class="${skin.field} cfg-key" placeholder="${keyPlaceholder()}" value="${cfg.apiKey || ''}">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
-        <span class="cfg-status" style="font-size:11px; color:#64748b; flex:1;">${cooldownText()}</span>
-        <button class="${skin.iconBtn} cfg-test" title="${d.testConnection || 'Test Connection'}">${Icons.refresh(13)}</button>
+      <div class="cfg-card-body" style="display:none; flex-direction:column; gap:6px;">
+        <input type="text" class="${skin.field} cfg-label" placeholder="${d.apiConfigLabelPlaceholder || 'Tên gợi nhớ (không bắt buộc)'}" value="${cfg.label || ''}">
+        <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px;">
+          <select class="${skin.select} cfg-provider" style="min-width:0;">${providerOptions}</select>
+          <select class="${skin.select} cfg-model" style="min-width:0;">${buildModelOptions()}</select>
+        </div>
+        <input type="text" class="${skin.field} cfg-custom-model" placeholder="${d.customModelPlaceholder || 'Nhập tên/mã model (vd: gemini-3.5-pro, gpt-5, claude-4...)'}" value="${isCustomModel && cfg.model !== '__custom__' ? cfg.model : ''}" style="${isCustomModel ? 'display:block;' : 'display:none;'}">
+        <input type="text" class="${skin.field} cfg-base-url" placeholder="${providerObj.defaultBaseUrl || 'Base URL (http://localhost:...)'}" value="${cfg.baseUrl || (providerObj.requiresBaseUrl ? providerObj.defaultBaseUrl : '')}" style="${providerObj.requiresBaseUrl ? 'display:block;' : 'display:none;'}">
+        <div style="display:flex; gap:6px; align-items:stretch;">
+          <div class="cfg-key-wrap" style="position:relative; flex:1; min-width:0;">
+            <input type="password" class="${skin.field} cfg-key" placeholder="${keyPlaceholder()}" value="${cfg.apiKey || ''}" style="width:100%; box-sizing:border-box; padding-bottom:16px;">
+            <span class="cfg-status" style="${statusOverlayStyle} font-size:9.5px;"></span>
+          </div>
+          <button class="${skin.iconBtn} cfg-test" title="${d.testConnection || 'Test Connection'}" style="flex-shrink:0;">${Icons.refresh(13)}</button>
+        </div>
       </div>
     `;
   }
@@ -173,9 +196,44 @@ export function createKeyCard(cfg, { isNew = false, dict = {}, variant, onChange
   const enabledInput = el.querySelector('.cfg-enabled');
   const testBtn = el.querySelector('.cfg-test');
   const statusEl = el.querySelector('.cfg-status');
+  const labelInput = el.querySelector('.cfg-label');
+  const displayNameEl = el.querySelector('.cfg-display-name');
+  const bodyEl = el.querySelector('.cfg-card-body');
+  const toggleBtn = el.querySelector('.cfg-toggle');
+  const toggleIconSize = skin.layout === 'wide' ? 16 : 14;
 
   const getSelectedModel = () =>
     modelSelect.value === '__custom__' ? customModelInput.value.trim() || '__custom__' : modelSelect.value;
+
+  // Persisted "Test Connection" result — a real green/red border the user
+  // can trust across sessions, not just a live-only status line. Cleared by
+  // any change to provider/model/key/base URL (those actually change what
+  // gets connected to); left alone by the nickname or enabled toggle.
+  let connectionStatus = cfg.connectionStatus || null;
+
+  const applyStatusUI = () => {
+    el.style.borderColor = connectionStatus === 'valid' ? '#16a34a' : connectionStatus === 'invalid' ? '#ef4444' : '';
+    // A key that's already confirmed working has no reason to spend another
+    // request re-proving it — the button only comes back once something
+    // about the connection itself actually changes (see clearStatus below).
+    testBtn.style.display = connectionStatus === 'valid' ? 'none' : '';
+  };
+
+  const updateTestBtnEnabled = () => {
+    const currentProviderObj = DEFAULT_PROVIDERS.find((p) => p.id === providerSelect.value) || providerObj;
+    const disabled = currentProviderObj.requiresKey !== false && !keyInput.value.trim();
+    testBtn.disabled = disabled;
+    testBtn.style.opacity = disabled ? '0.45' : '';
+    testBtn.style.cursor = disabled ? 'not-allowed' : '';
+    testBtn.title = disabled ? (d.enterKeyFirst || 'Please enter an API Key before testing') : (d.testConnection || 'Test Connection');
+  };
+
+  const clearStatus = () => {
+    if (!connectionStatus) return;
+    connectionStatus = null;
+    statusEl.textContent = '';
+    applyStatusUI();
+  };
 
   const save = async () => {
     await Storage.saveApiConfig({
@@ -185,9 +243,26 @@ export function createKeyCard(cfg, { isNew = false, dict = {}, variant, onChange
       baseUrl: baseUrlInput.value.trim(),
       apiKey: keyInput.value.trim(),
       isEnabled: enabledInput.checked,
+      label: labelInput.value.trim(),
+      connectionStatus,
     });
     onChange?.();
   };
+
+  // Collapsed by default (see `isNew` below) so a long list of configured
+  // keys stays scannable — only the header (checkbox, name, actions) shows
+  // until the user explicitly asks for the detail fields.
+  const setExpanded = (expanded) => {
+    bodyEl.style.display = expanded ? 'flex' : 'none';
+    toggleBtn.innerHTML = expanded ? Icons.chevronUp(toggleIconSize) : Icons.chevronDown(toggleIconSize);
+  };
+  toggleBtn.addEventListener('click', () => setExpanded(bodyEl.style.display === 'none'));
+
+  labelInput.addEventListener('input', () => {
+    const currentProviderName = (DEFAULT_PROVIDERS.find((p) => p.id === providerSelect.value) || providerObj).name;
+    displayNameEl.textContent = labelInput.value.trim() || currentProviderName;
+    save();
+  });
 
   const updateCustomModelVisibility = () => {
     customModelInput.style.display = modelSelect.value === '__custom__' ? 'block' : 'none';
@@ -196,8 +271,8 @@ export function createKeyCard(cfg, { isNew = false, dict = {}, variant, onChange
 
   providerSelect.addEventListener('change', () => {
     const pObj = DEFAULT_PROVIDERS.find((p) => p.id === providerSelect.value) || DEFAULT_PROVIDERS[0];
-    const nameEl = el.querySelector('.cfg-provider-name');
-    if (nameEl) nameEl.textContent = pObj.name;
+    // A user-given label always wins — don't clobber it with the new provider's name.
+    if (!labelInput.value.trim()) displayNameEl.textContent = pObj.name;
     modelSelect.innerHTML =
       pObj.models.map((m) => `<option value="${m.id}">${m.name}</option>`).join('') +
       `<option value="__custom__">✏️ ${d.customModelOption || 'Tự điền model (Custom)...'}</option>`;
@@ -215,17 +290,30 @@ export function createKeyCard(cfg, { isNew = false, dict = {}, variant, onChange
       : (skin.layout === 'wide' ? `${d.keyPlaceholder || 'Enter API Key'} (sk-... / AIza...)` : (d.modalKeyPlaceholder || 'Enter API Key'));
 
     updateCustomModelVisibility();
+    clearStatus();
+    updateTestBtnEnabled();
     save();
   });
 
   modelSelect.addEventListener('change', () => {
     updateCustomModelVisibility();
+    clearStatus();
     save();
   });
 
-  customModelInput.addEventListener('input', save);
-  baseUrlInput.addEventListener('input', save);
-  keyInput.addEventListener('input', save);
+  customModelInput.addEventListener('input', () => {
+    clearStatus();
+    save();
+  });
+  baseUrlInput.addEventListener('input', () => {
+    clearStatus();
+    save();
+  });
+  keyInput.addEventListener('input', () => {
+    clearStatus();
+    updateTestBtnEnabled();
+    save();
+  });
   enabledInput.addEventListener('change', save);
 
   el.querySelector('.cfg-delete').addEventListener('click', async () => {
@@ -235,23 +323,37 @@ export function createKeyCard(cfg, { isNew = false, dict = {}, variant, onChange
   });
 
   testBtn.addEventListener('click', () => {
+    testBtn.disabled = true;
+    testBtn.style.opacity = '0.6';
+    testBtn.style.cursor = 'wait';
     statusEl.textContent = d.testingConnection || 'Testing...';
-    if (!keyInput.value.trim() && providerObj.requiresKey !== false) {
-      statusEl.innerHTML = `<span style="color:#ef4444;">${d.enterKeyFirst || 'Please enter an API Key before testing'}</span>`;
-      return;
-    }
+    statusEl.title = '';
     chrome.runtime.sendMessage(
-      { action: 'ASK_AI', payload: { prompt: 'Reply "Connected OK"', preferredConfigId: cfg.id } },
+      { action: 'TEST_API_CONFIG', payload: { configId: cfg.id } },
       (res) => {
         if (res?.success) {
+          connectionStatus = 'valid';
           statusEl.innerHTML = `<span style="color:#16a34a;">${Icons.check(11)} ${d.keyValid || 'Key Valid & Working'}</span>`;
         } else {
-          statusEl.innerHTML = `<span style="color:#ef4444;">${d.keyInvalid || 'Connection Failed:'} ${res?.error || 'Unknown Error'}</span>`;
+          connectionStatus = 'invalid';
+          const errMsg = `${d.keyInvalid || 'Connection Failed:'} ${res?.error || 'Unknown Error'}`;
+          statusEl.innerHTML = `<span style="color:#ef4444;">${errMsg}</span>`;
+          statusEl.title = errMsg;
         }
+        applyStatusUI();
+        updateTestBtnEnabled();
+        save();
       }
     );
   });
 
+  applyStatusUI();
+  updateTestBtnEnabled();
+  if (cfg.cooldownUntil && cfg.cooldownUntil > Date.now()) {
+    statusEl.innerHTML = `<span style="color:#d97706;">${Icons.alertCircle(11)} ${fmt(d.statusCooldown || 'Cooling down ({time})', { time: new Date(cfg.cooldownUntil).toLocaleTimeString() })}</span>`;
+  }
+
+  setExpanded(isNew);
   if (isNew) save();
   return el;
 }
@@ -262,7 +364,7 @@ export function createKeyCard(cfg, { isNew = false, dict = {}, variant, onChange
 // already picked via the "Add Local Model" ping flow.
 // =======================================================
 
-export function createLocalKeyCard(cfg, { dict = {}, variant, onChange } = {}) {
+export function createLocalKeyCard(cfg, { isNew = false, dict = {}, variant, onChange } = {}) {
   const d = dict;
   const skin = LOCAL_SKIN[variant];
   // Options is a full-width page — a labeled "Test Connection" button fits
@@ -307,6 +409,13 @@ export function createLocalKeyCard(cfg, { dict = {}, variant, onChange } = {}) {
     ? `<span class="opt-local-vision-tag">${d.localVisionTag || 'Vision'}</span>`
     : `<span class="opt-local-textonly-tag">${d.localTextOnlyTag || 'Text only'}</span>`;
 
+  // A user-given label always wins for the header text — falls back to the
+  // detected model name so an unlabeled card still identifies itself.
+  const displayName = (cfg.label && cfg.label.trim()) || prettyName;
+  const toggleBtnAttrs = skin === 'sp'
+    ? 'style="display:inline-flex; align-items:center; background:none; border:none; cursor:pointer; color:inherit; padding:0; font:inherit;"'
+    : 'class="opt-help-icon" style="background:none; border:none; cursor:pointer; padding:0; font:inherit;"';
+
   el.innerHTML = `
     <label class="${toggleClass}">
       <input type="checkbox" class="cfg-enabled" ${cfg.isEnabled ? 'checked' : ''}>
@@ -315,19 +424,23 @@ export function createLocalKeyCard(cfg, { dict = {}, variant, onChange } = {}) {
     <div class="${infoClass}">
       <div class="${titleRowClass}">
         <span class="${badgeClass}">${providerLabel}</span>
-        <span class="${nameClass}">${prettyName}</span>
+        <span class="${nameClass} cfg-display-name">${displayName}</span>
         ${visionTag}
         <span ${helpIconAttrs} data-tooltip-title="${d.localModelHelpTitle || 'Can this model actually read images?'}" data-tooltip-desc="${d.localModelHelpDesc || ''}">${Icons.helpCircle(skin === 'sp' ? 12 : 13)}</span>
+        <button type="button" ${toggleBtnAttrs} class="cfg-toggle" title="${d.apiConfigToggleDetails || 'Show/hide details'}">${Icons.chevronDown(13)}</button>
       </div>
-      <div class="${metaClass}">${cfg.model} &middot; ${cfg.baseUrl || ''}</div>
-      ${embeddingWarning ? `<div style="display:flex; align-items:center; gap:4px; font-size:11px; color:#d97706; margin-top:4px;">${Icons.alertCircle(12)} ${d.localEmbeddingCardWarning || 'Embedding model — cannot answer questions. Delete and add a chat model instead.'}</div>` : ''}
-      ${!embeddingWarning && !isVision ? `
-        <label class="${ocrToggleClass}" style="${skin === 'sp' ? 'display:flex; align-items:center; gap:5px; font-size:10px; color:var(--text-muted); margin-top:3px; cursor:pointer;' : ''}">
-          <input type="checkbox" class="cfg-ocr-fallback" ${skin === 'sp' ? 'style="width:12px;height:12px;"' : ''} ${ocrFallbackOn ? 'checked' : ''}>
-          <span>${d.localOcrFallbackToggle || 'Auto-OCR screenshots into text before sending'}</span>
-        </label>
-      ` : ''}
-      <div class="${statusClass} cfg-status"></div>
+      <div class="cfg-card-body" style="display:none; flex-direction:column;">
+        <input type="text" class="${skin === 'sp' ? 'sp-field' : 'opt-input'} cfg-label" placeholder="${d.apiConfigLabelPlaceholder || 'Tên gợi nhớ (không bắt buộc)'}" value="${cfg.label || ''}" style="margin-bottom:4px;">
+        <div class="${metaClass}">${cfg.model} &middot; ${cfg.baseUrl || ''}</div>
+        ${embeddingWarning ? `<div style="display:flex; align-items:center; gap:4px; font-size:11px; color:#d97706; margin-top:4px;">${Icons.alertCircle(12)} ${d.localEmbeddingCardWarning || 'Embedding model — cannot answer questions. Delete and add a chat model instead.'}</div>` : ''}
+        ${!embeddingWarning && !isVision ? `
+          <label class="${ocrToggleClass}" style="${skin === 'sp' ? 'display:flex; align-items:center; gap:5px; font-size:10px; color:var(--text-muted); margin-top:3px; cursor:pointer;' : ''}">
+            <input type="checkbox" class="cfg-ocr-fallback" ${skin === 'sp' ? 'style="width:12px;height:12px;"' : ''} ${ocrFallbackOn ? 'checked' : ''}>
+            <span>${d.localOcrFallbackToggle || 'Auto-OCR screenshots into text before sending'}</span>
+          </label>
+        ` : ''}
+        <div class="${statusClass} cfg-status"></div>
+      </div>
     </div>
     <div class="${actionsClass}">
       <button class="${iconBtn} cfg-test" style="${isWide ? 'padding:4px 10px; font-size:12px;' : ''}" title="${d.testConnection || 'Test Connection'}">${Icons.refresh(skin === 'sp' ? 14 : 12)}${isWide ? ` ${d.testConnection || 'Test Connection'}` : ''}</button>
@@ -339,6 +452,33 @@ export function createLocalKeyCard(cfg, { dict = {}, variant, onChange } = {}) {
   const ocrFallbackInput = el.querySelector('.cfg-ocr-fallback');
   const statusEl = el.querySelector('.cfg-status');
   const testBtn = el.querySelector('.cfg-test');
+  const labelInput = el.querySelector('.cfg-label');
+  const displayNameEl = el.querySelector('.cfg-display-name');
+  const bodyEl = el.querySelector('.cfg-card-body');
+  const toggleBtn = el.querySelector('.cfg-toggle');
+
+  const setExpanded = (expanded) => {
+    bodyEl.style.display = expanded ? 'flex' : 'none';
+    toggleBtn.innerHTML = expanded ? Icons.chevronUp(13) : Icons.chevronDown(13);
+  };
+  toggleBtn.addEventListener('click', () => setExpanded(bodyEl.style.display === 'none'));
+  setExpanded(isNew);
+
+  // Persisted "Test Connection" result — same border-color contract as the
+  // cloud key card. Nothing on a local-model card (model/baseUrl) is
+  // user-editable after it's added, so unlike the cloud card there's no
+  // "clear on edit" path needed here.
+  let connectionStatus = cfg.connectionStatus || null;
+  const applyStatusUI = () => {
+    el.style.borderColor = connectionStatus === 'valid' ? '#16a34a' : connectionStatus === 'invalid' ? '#ef4444' : '';
+    testBtn.style.display = connectionStatus === 'valid' ? 'none' : '';
+  };
+  applyStatusUI();
+
+  labelInput.addEventListener('input', async () => {
+    displayNameEl.textContent = labelInput.value.trim() || prettyName;
+    await Storage.saveApiConfig({ id: cfg.id, label: labelInput.value.trim() });
+  });
 
   enabledInput.addEventListener('change', async () => {
     await Storage.saveApiConfig({ id: cfg.id, isEnabled: enabledInput.checked });
@@ -356,15 +496,25 @@ export function createLocalKeyCard(cfg, { dict = {}, variant, onChange } = {}) {
   });
 
   testBtn.addEventListener('click', () => {
+    testBtn.disabled = true;
+    testBtn.style.opacity = '0.6';
+    testBtn.style.cursor = 'wait';
     statusEl.textContent = d.testingConnection || 'Testing...';
     chrome.runtime.sendMessage(
-      { action: 'ASK_AI', payload: { prompt: 'Reply "Connected OK"', preferredConfigId: cfg.id } },
-      (res) => {
+      { action: 'TEST_API_CONFIG', payload: { configId: cfg.id } },
+      async (res) => {
         if (res?.success) {
+          connectionStatus = 'valid';
           statusEl.innerHTML = `<span style="color:#16a34a;">${Icons.check(11)} ${d.keyValid || 'Key Valid & Working'}</span>`;
         } else {
+          connectionStatus = 'invalid';
           statusEl.innerHTML = `<span style="color:#ef4444;">${res?.error || d.keyInvalid || 'Connection failed'}</span>`;
         }
+        applyStatusUI();
+        testBtn.disabled = false;
+        testBtn.style.opacity = '';
+        testBtn.style.cursor = '';
+        await Storage.saveApiConfig({ id: cfg.id, connectionStatus });
       }
     );
   });

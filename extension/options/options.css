@@ -680,15 +680,29 @@ body {
   display: none;
 }
 
-/* Preview FAB */
+/* Preview FAB — mirrors content/styles/overlay.css's real auto-hide slide:
+   tucked toward the edge (clipped by .opt-mock-page's overflow:hidden) and
+   dimmed at rest, revealed on hover. .prev-fab-static (toggled by
+   updatePreview() when the Auto-hide checkbox is off) mirrors the real
+   .hw-fab-static and keeps it fully visible instead. */
 .opt-preview-fab {
   position: absolute;
-  right: 8px;
+  right: 0px;
   bottom: 20px;
   z-index: 5;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  transform: translateX(14px);
+  opacity: 0.65;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+.opt-preview-fab:hover,
+.opt-preview-fab.prev-fab-static {
+  transform: translateX(0);
+  right: 8px;
+  opacity: 1;
 }
 
 .prev-fab-btn {

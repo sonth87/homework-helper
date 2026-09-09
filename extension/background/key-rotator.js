@@ -72,6 +72,11 @@ class KeyRotator {
     const { apiConfigs = [] } = await Storage.get(['apiConfigs']);
     const now = Date.now();
     const cooldownDuration = statusCode === 429 ? 60 * 1000 : 30 * 1000; // 60s for rate limit, 30s for server error
+    // Only 401/403 unambiguously mean "this key/config itself is bad" — a
+    // 429 (rate limit) or a 5xx/network hiccup says nothing about whether
+    // the key works, so those must never flip an untested config's Test
+    // Connection badge to red on their own.
+    const isAuthFailure = statusCode === 401 || statusCode === 403;
 
     const updated = apiConfigs.map((cfg) => {
       if (cfg.id === configId) {
@@ -80,6 +85,12 @@ class KeyRotator {
           failureCount: (cfg.failureCount || 0) + 1,
           cooldownUntil: now + cooldownDuration,
           lastError: `HTTP ${statusCode} at ${new Date().toLocaleTimeString()}`,
+          // Only set from real usage while the config has never been tested
+          // (see reportSuccess below for the other half of this contract) —
+          // once a status exists (from a manual test or a prior real
+          // failure/success), only editing the config or re-testing changes
+          // it again.
+          ...(isAuthFailure && !cfg.connectionStatus ? { connectionStatus: 'invalid' } : {}),
         };
       }
       return cfg;
@@ -103,6 +114,9 @@ class KeyRotator {
           failureCount: 0,
           cooldownUntil: 0,
           lastUsed: now,
+          // A real successful reply is proof enough regardless of error
+          // type — unlike the failure side there's no ambiguous case here.
+          ...(cfg.connectionStatus ? {} : { connectionStatus: 'valid' }),
         };
       }
       return cfg;

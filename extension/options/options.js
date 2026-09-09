@@ -335,6 +335,8 @@ export class OptionsController {
     setText('optLabelFabSize', dict.labelFabSize);
     setText('optLabelFabOpacity', dict.labelFabOpacity);
     setText('optLabelFabOpacityDesc', dict.labelFabOpacityDesc);
+    setText('optLabelFabAutoHide', dict.labelFabAutoHide);
+    setText('optLabelFabAutoHideDesc', dict.labelFabAutoHideDesc);
     // Reuses the toolbar layout editor's own "Restore Default" string —
     // same generic action, no need for a second near-identical i18n key.
     setText('optBtnResetFabText', dict.toolbarLayoutResetBtn);

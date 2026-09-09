@@ -170,6 +170,22 @@ export class AiEngine {
   }
 
   /**
+   * Tests exactly ONE specific config, with none of ask()'s failover —
+   * "Test Connection" needs to know whether THIS key/server works, not
+   * whether the extension can answer via whatever it falls back to next.
+   * Resolves on a real reply from that provider, throws its real error
+   * otherwise; never silently succeeds via another key or Gemini Nano.
+   */
+  static async testConfig(config) {
+    const params = { prompt: 'Reply "Connected OK"', studyMode: 'direct', outputLanguage: 'en', systemPrompt: '' };
+    if (config.provider === 'chrome-builtin') {
+      await this.streamChromeBuiltin(params, () => {});
+    } else {
+      await streamViaOffscreen(config.provider, config, params, () => {});
+    }
+  }
+
+  /**
    * Chrome Built-in AI (Gemini Nano On-Device Prompt API)
    */
   static async streamChromeBuiltin({ prompt, imageBase64, studyMode, outputLanguage, systemPrompt, history = [] }, onChunk, signal) {

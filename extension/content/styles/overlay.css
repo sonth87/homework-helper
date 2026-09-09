@@ -1,10 +1,19 @@
 /* Shadow DOM In-Page Overlay Styles (Liquid Glass Aesthetic) */
 :host {
   all: initial;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #18181b;
+  /* !important on these four: `all: initial` only wins ties on the host
+     element's own box — it does NOT guarantee this typography stays put
+     while inheriting down into the shadow tree. A host page's own global
+     reset (e.g. `* { font-family: "...", box-sizing: border-box; }`, one of
+     the most common patterns on the web) can still out-compete a plain
+     :host declaration for the *inherited* value, even though :host's
+     selector specificity is nominally higher — confirmed via DevTools on
+     real sites where the in-page UI silently inherited the host page's own
+     font/color. !important is the only reliable guarantee here. */
+  font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, 'Segoe UI', Arial, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  color: #18181b !important;
   box-sizing: border-box;
 
   /* Theme tokens — same names/values as sidepanel.css's :root so the whole
@@ -45,7 +54,7 @@
 
 @media (prefers-color-scheme: dark) {
   :host(:not([data-theme="light"])) {
-    color: #f8fafc;
+    color: #f8fafc !important;
     --hw-bg-primary: #0f172a;
     --hw-bg-secondary: #1e293b;
     --hw-bg-hover: #334155;
@@ -69,7 +78,7 @@
 }
 
 :host([data-theme="dark"]) {
-  color: #f8fafc;
+  color: #f8fafc !important;
   --hw-bg-primary: #0f172a;
   --hw-bg-secondary: #1e293b;
   --hw-bg-hover: #334155;
@@ -141,6 +150,18 @@
 }
 
 .hw-fab-container.hw-fab-dock-left:hover .hw-fab-inner {
+  transform: translateX(10px);
+}
+
+/* "Tự động ẩn" (Auto-hide) setting turned OFF — the cluster stays fully
+   visible at rest instead of sliding back into the screen edge, matching
+   the same revealed position hover would otherwise produce. */
+.hw-fab-container.hw-fab-static .hw-fab-inner {
+  transform: translateX(-10px);
+  opacity: 1;
+}
+
+.hw-fab-container.hw-fab-static.hw-fab-dock-left .hw-fab-inner {
   transform: translateX(10px);
 }
 
@@ -1900,7 +1921,7 @@
 
 .hw-modal-content {
   width: 100%;
-  max-width: 420px;
+  max-width: 100%;
   max-height: 85vh;
   background: var(--hw-bg-primary);
   border-radius: 16px;
