@@ -433,6 +433,11 @@ export default {
     overlayThemeOptAuto: "Как в системе",
     overlayThemeOptLight: "Светлый",
     overlayThemeOptDark: "Тёмный",
+    cardLiquidGlassTitle: "Liquid Glass",
+    labelLiquidGlassScale: "Искажение (Scale)",
+    labelLiquidGlassScaleDesc: "Насколько сильно фон за стеклом искажается — чем выше значение, тем сильнее волны.",
+    labelLiquidGlassFrequency: "Частота шума",
+    labelLiquidGlassFrequencyDesc: "Насколько мелкий или крупный узор шума на стекле — низкое значение даёт крупные плавные полосы, высокое — мелкую плотную рябь.",
     cardFabTitle: "Плавающие кнопки на странице (FAB)",
     labelFabDisplay: "Показывать кнопки на веб-страницах",
     descFabDisplay:

@@ -480,6 +480,11 @@ export default {
     overlayThemeOptAuto: "ตามระบบอัตโนมัติ",
     overlayThemeOptLight: "สว่าง",
     overlayThemeOptDark: "มืด",
+    cardLiquidGlassTitle: "Liquid Glass",
+    labelLiquidGlassScale: "ความบิดเบี้ยว (Scale)",
+    labelLiquidGlassScaleDesc: "ระดับการบิดเบือนภาพด้านหลังกระจก — ยิ่งสูงยิ่งเป็นคลื่นแรง",
+    labelLiquidGlassFrequency: "ความถี่จุดรบกวน",
+    labelLiquidGlassFrequencyDesc: "ความละเอียดของลวดลายจุดรบกวนบนกระจก — ค่าต่ำให้ลายเส้นใหญ่เรียบ ค่าสูงให้คลื่นเล็กถี่",
     cardFabTitle: "ปุ่มลอยบนหน้าเว็บ (FABs)",
     labelFabDisplay: "แสดงปุ่มลอยบนเว็บไซต์",
     labelFabDisplayDesc:

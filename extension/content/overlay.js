@@ -16,6 +16,7 @@ import { MinimizedCard } from './overlay/minimized-card.js';
 import { OverlayConfigModal } from './overlay/config-modal.js';
 import { OverlayRichTooltips } from './overlay/rich-tooltips.js';
 import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
+import { updateLiquidGlassFilter } from '../shared/liquid-glass.js';
 
 class InPageOverlay {
   constructor() {
@@ -475,6 +476,12 @@ class InPageOverlay {
           if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.fabAutoHide || changes.popupOpacity || changes.popupBlur || changes.popupCardSize || changes.popupCardTheme || changes.overlayTheme) {
             this.applyAppearanceSettings();
           }
+          if (changes.liquidGlassScale || changes.liquidGlassFrequency) {
+            updateLiquidGlassFilter(this.shadow, {
+              scale: changes.liquidGlassScale?.newValue,
+              frequency: changes.liquidGlassFrequency?.newValue,
+            });
+          }
           if (changes.uiLanguage) {
             this.applyLanguageI18n(changes.uiLanguage.newValue);
           }
@@ -624,7 +631,7 @@ class InPageOverlay {
       // regardless of selector specificity — so without it, every popupOpacity/
       // popupBlur change silently strips the refraction filter back out.
       card.style.backdropFilter = `blur(${popupBlur}px) saturate(180%) url(#hw-liquid-glass-filter)`;
-      card.style.webkitBackdropFilter = `blur(${popupBlur}px) saturate(180%)`;
+      card.style.webkitBackdropFilter = `blur(${popupBlur}px) saturate(180%) url(#hw-liquid-glass-filter)`;
       card.classList.toggle('hw-card-compact', popupCardSize === 'compact');
       card.classList.remove('theme-glass-light', 'theme-glass-dark', 'theme-cyber-blue', 'theme-emerald', 'theme-purple', 'theme-rose', 'theme-amber', 'theme-indigo');
       if (popupCardTheme !== 'auto') card.classList.add(`theme-${popupCardTheme}`);

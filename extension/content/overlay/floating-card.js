@@ -467,8 +467,18 @@ export class OverlayFloatingCard {
       e.preventDefault();
     });
 
+    // Capture phase on both, same reasoning as fabs.js's
+    // makeFabContainerDraggable() — without it, a host page's own
+    // capture-phase mouseup handler swallowing this once (page builders and
+    // similar drag-heavy sites are the common case) leaves `isPressed` stuck
+    // true forever: not only can the icon never be dragged again, the
+    // "plain click reopens the popup" path below (which lives inside this
+    // same mouseup) stops firing too — clicking it would silently do
+    // nothing. e.buttons===0 self-corrects on the next mousemove if a
+    // mouseup ever is lost that way.
     window.addEventListener('mousemove', (e) => {
       if (!isPressed) return;
+      if (e.buttons === 0) { isPressed = false; hasMoved = false; fab.classList.remove('hw-fab-dragging'); return; }
       if (!hasMoved) {
         // Small threshold so a plain click doesn't jitter the FAB by a pixel.
         if (Math.abs(e.clientX - startX) < 4 && Math.abs(e.clientY - startY) < 4) return;
@@ -479,7 +489,7 @@ export class OverlayFloatingCard {
       const top = Math.max(0, Math.min(window.innerHeight - this.fabSize, e.clientY - offsetY));
       fab.style.left = `${left}px`;
       fab.style.top = `${top}px`;
-    });
+    }, true);
 
     window.addEventListener('mouseup', () => {
       if (!isPressed) return;
@@ -494,7 +504,7 @@ export class OverlayFloatingCard {
       const { left, top } = this.snapRectToNearestEdge(fab.getBoundingClientRect());
       fab.style.left = `${left}px`;
       fab.style.top = `${top}px`;
-    });
+    }, true);
   }
 
   // Rotates through a set of short "thinking..." phrases every 5s while
@@ -731,18 +741,24 @@ export class OverlayFloatingCard {
     header.addEventListener('mousedown', startDrag);
     floatTab?.addEventListener('mousedown', startDrag);
 
+    // Capture phase on both — see fabs.js's makeFabContainerDraggable() for
+    // why: a host page's own capture-phase mousemove/mouseup handler could
+    // otherwise swallow these before they reach `window`, and e.buttons===0
+    // below self-corrects if a mouseup ever does get lost that way (instead
+    // of leaving the popup stuck following the cursor forever).
     window.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
+      if (e.buttons === 0) { isDragging = false; return; }
       const left = Math.max(10, Math.min(window.innerWidth - 300, e.clientX - offsetX));
       const top = Math.max(10, Math.min(window.innerHeight - 200, e.clientY - offsetY));
       card.style.left = `${left}px`;
       card.style.top = `${top}px`;
       card.style.right = 'auto';
-    });
+    }, true);
 
     window.addEventListener('mouseup', () => {
       isDragging = false;
-    });
+    }, true);
   }
 
   async showSolutionCard(imageBase64, mode = 'solve') {

@@ -85,6 +85,19 @@ export class OverlayDrawer {
     let isResizing = false;
     let currentWidth = null;
 
+    // Shared by the real mouseup below and the e.buttons self-correction in
+    // mousemove — a lost mouseup here is worse than the other drag bugs in
+    // this file: document.body.style.userSelect would stay stuck at 'none'
+    // forever, silently making the *entire page's* text unselectable until
+    // reload, not just breaking the drawer's own resize.
+    const stopResizing = async () => {
+      isResizing = false;
+      handle.classList.remove('active');
+      drawer.classList.remove('resizing');
+      document.body.style.userSelect = '';
+      if (currentWidth) await Storage.set({ drawerWidth: currentWidth });
+    };
+
     handle.addEventListener('mousedown', (e) => {
       isResizing = true;
       handle.classList.add('active');
@@ -93,21 +106,22 @@ export class OverlayDrawer {
       e.preventDefault();
     });
 
+    // Capture phase on both — see fabs.js's makeFabContainerDraggable() for
+    // why a host page's own capture-phase mousemove/mouseup handler
+    // (drag-and-drop-heavy sites especially) can otherwise swallow these
+    // before they ever reach a bubble-phase listener on `window`.
     window.addEventListener('mousemove', (e) => {
       if (!isResizing) return;
+      if (e.buttons === 0) { stopResizing(); return; }
       const maxAllowed = Math.min(MAX_WIDTH, window.innerWidth - 80);
       currentWidth = Math.max(MIN_WIDTH, Math.min(maxAllowed, window.innerWidth - e.clientX));
       drawer.style.setProperty('--hw-drawer-width', `${currentWidth}px`);
-    });
+    }, true);
 
-    window.addEventListener('mouseup', async () => {
+    window.addEventListener('mouseup', () => {
       if (!isResizing) return;
-      isResizing = false;
-      handle.classList.remove('active');
-      drawer.classList.remove('resizing');
-      document.body.style.userSelect = '';
-      if (currentWidth) await Storage.set({ drawerWidth: currentWidth });
-    });
+      stopResizing();
+    }, true);
   }
 
   // Rotates through a set of short "thinking..." phrases every 5s while
@@ -194,11 +208,15 @@ export class OverlayDrawer {
     s.getElementById('hwDrawerEdgeClose')?.addEventListener('click', () => this.toggle(false));
     s.getElementById('hwDrawerBackdrop')?.addEventListener('click', () => this.toggle(false));
 
+    // Capture phase — same reasoning as the resize handlers above: a host
+    // page with its own capture-phase Escape handling (common on sites with
+    // custom modals/hotkeys) would otherwise be able to swallow this before
+    // it ever reaches a bubble-phase listener on `window`.
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.isOpen) {
         this.toggle(false);
       }
-    });
+    }, true);
 
     // Clear Chat
     s.getElementById('hwBtnClear')?.addEventListener('click', async () => {

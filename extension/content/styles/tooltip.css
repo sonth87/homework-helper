@@ -24,7 +24,7 @@
   padding: 4px 8px;
   background: rgba(255, 255, 255, var(--tb-alpha, 0.8));
   backdrop-filter: blur(var(--tb-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(var(--tb-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--tb-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 24px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -397,7 +397,7 @@
      to the bar right above it. 1.5× the bar's own --tb-blur closes that gap
      (confirmed by eye against a few multiples) while still scaling with it. */
   backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%);
+  -webkit-backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%) url(#hw-liquid-glass-filter);
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 14px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -466,7 +466,7 @@
      to look comparably blurred to the bar despite this panel's larger size. */
   background: rgba(255, 255, 255, var(--tb-alpha, 0.8));
   backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%);
+  -webkit-backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%) url(#hw-liquid-glass-filter);
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 14px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -564,7 +564,7 @@
   padding: 8px 12px;
   background: rgba(255, 255, 255, var(--ht-alpha, 0.9));
   backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 12px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -661,7 +661,7 @@
 .hw-ht-gran-switch:hover {
   background: rgba(255, 255, 255, var(--ht-alpha, 0.9));
   backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
   border-color: rgba(255, 255, 255, 0.5);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
 }

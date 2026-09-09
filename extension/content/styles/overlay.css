@@ -189,7 +189,7 @@
   border-radius: 50%;
   background: rgba(var(--hw-glass-rgb), var(--hw-fab-alpha, 0.9));
   backdrop-filter: blur(16px) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%) url(#hw-liquid-glass-filter);
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
   display: flex;
@@ -399,7 +399,7 @@
   max-height: 80vh;
   background: rgba(var(--hw-glass-rgb), var(--popup-alpha, 0.92));
   backdrop-filter: blur(var(--popup-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(var(--popup-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--popup-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
   border-radius: 18px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -441,7 +441,7 @@
   bottom: 0;
   background: rgba(var(--hw-glass-rgb), 0.98);
   backdrop-filter: blur(20px) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px) url(#hw-liquid-glass-filter);
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -1173,7 +1173,7 @@
   color: var(--hw-text-main);
   background: rgba(var(--hw-glass-rgb), 0.5);
   backdrop-filter: blur(8px) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%) url(#hw-liquid-glass-filter);
   border: 1px solid var(--hw-border-color);
   border-radius: 10px 10px 0 0;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.12);
@@ -1279,7 +1279,7 @@
   height: 100vh;
   background: rgba(var(--hw-glass-rgb), 0.95);
   backdrop-filter: blur(20px) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%) url(#hw-liquid-glass-filter);
   box-shadow: -10px 0 40px rgba(0, 0, 0, 0.18), inset 1px 0 0 0 rgba(255, 255, 255, 0.4);
   border-left: 1px solid rgba(255, 255, 255, 0.5);
   z-index: 2147483640;
@@ -1330,7 +1330,7 @@
   border-radius: 8px 0 0 8px;
   background: rgba(var(--hw-glass-rgb), 0.92);
   backdrop-filter: blur(16px) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px) url(#hw-liquid-glass-filter);
   border: 1px solid var(--hw-border-color);
   border-right: none;
   color: var(--hw-text-muted);
@@ -1468,7 +1468,7 @@
   bottom: 0;
   background: rgba(var(--hw-glass-rgb), 0.98);
   backdrop-filter: blur(20px) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px) url(#hw-liquid-glass-filter);
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -2299,7 +2299,7 @@
   right: 24px;
   background: rgba(15, 23, 42, 0.9);
   backdrop-filter: blur(12px) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px) url(#hw-liquid-glass-filter);
   color: #ffffff;
   padding: 8px 16px;
   border-radius: 20px;
@@ -2334,7 +2334,7 @@
   position: fixed;
   background: rgba(var(--hw-glass-rgb), 0.3);
   backdrop-filter: blur(6px) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(6px) saturate(180%);
+  -webkit-backdrop-filter: blur(6px) saturate(180%) url(#hw-liquid-glass-filter);
   color: var(--hw-text-main);
   padding: 8px 12px;
   border-radius: 8px;

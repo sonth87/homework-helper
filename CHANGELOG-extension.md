@@ -17,6 +17,47 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.11.0] — 2026-09-09
+
+### Thêm mới
+- Tuỳ chọn mới trong Cài đặt > Giao diện: mục "Liquid Glass" để tự chỉnh độ
+  biến dạng (Scale) và tần số nhiễu (Frequency) của hiệu ứng kính lỏng —
+  áp dụng ngay cho mọi khung kính trong extension (nút nổi, popup, thanh
+  công cụ bôi đen, tooltip dịch...) vì tất cả dùng chung một hiệu ứng. Có
+  nút khôi phục về mặc định.
+
+### Sửa lỗi
+- Trên một số trang web (thường là trang có sẵn phím tắt riêng, trình phát
+  video, hoặc khung kéo-thả riêng), bấm Esc không hủy được thao tác chụp màn
+  hình, hoặc không kéo/phóng to-thu nhỏ được vùng chọn khi đang chụp — do
+  chính trang đó đã "chặn" các phím/thao tác này trước khi tới lượt extension
+  xử lý. Nay đã sửa để hoạt động đúng trên các trang này mà không ảnh hưởng
+  gì tới thao tác bình thường khác của trang.
+- Mỗi lần dùng tính năng chụp màn hình sẽ để sót lại một số trình lắng nghe
+  sự kiện chuột/bàn phím không được dọn dẹp đúng cách, tích tụ dần nếu dùng
+  tính năng này nhiều lần trong một phiên duyệt web. Nay đã dọn dẹp đúng sau
+  mỗi lần chụp.
+- Cùng một nguyên nhân như lỗi chụp màn hình ở trên, mở rộng ra các thao tác
+  kéo-thả khác: trên một số trang web (ví dụ trang có sẵn khung kéo-thả nội
+  dung riêng), không kéo di chuyển được popup lời giải/dịch, không kéo được
+  2 nút nổi sang vị trí khác, không đổi được độ rộng ngăn kéo chat, hoặc thu
+  gọn popup thành icon xong thì icon đó bị "kẹt" — không kéo lại được cũng
+  không bấm mở lại popup được. Đã sửa để hoạt động đúng trên các trang này.
+  Đồng thời vá luôn một lỗi hiếm nhưng nặng: nếu việc kéo ngăn kéo chat bị
+  ngắt giữa chừng theo đúng kiểu lỗi trên, toàn bộ trang có thể bị "khoá"
+  không bôi đen/chọn được chữ nào nữa cho tới khi tải lại trang.
+- Một lỗi có sẵn từ trước: nếu extension được cập nhật/tải lại đúng lúc một
+  trang đang mở, các tính năng hiển thị trong trang (chụp màn hình, dịch khi
+  rê chuột, thanh công cụ bôi đen...) có thể báo lỗi "chrome.runtime.getURL
+  is not a function" khi bấm vào. Nay xử lý êm hơn giống các phần khác của
+  extension vốn đã làm — không còn báo lỗi, chỉ chờ người dùng tải lại trang.
+- Card Model Local (Ollama/LM Studio) ở popup nút nổi và trang Cài đặt bị lỗi
+  không bấm mở/thu gọn được ("Cannot read properties of null") do nút mở
+  rộng bị gán trùng 2 thuộc tính class cùng lúc — trình duyệt chỉ giữ lại 1
+  trong 2, khiến nút mất class cần thiết để hoạt động. Đã sửa.
+
+---
+
 ## [1.10.3] — 2026-09-09
 
 ### Thêm mới

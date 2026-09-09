@@ -434,6 +434,11 @@ export default {
     overlayThemeOptAuto: "Suivre le système",
     overlayThemeOptLight: "Clair",
     overlayThemeOptDark: "Sombre",
+    cardLiquidGlassTitle: "Liquid Glass",
+    labelLiquidGlassScale: "Distorsion (Scale)",
+    labelLiquidGlassScaleDesc: "À quel point l'arrière-plan derrière le verre se déforme — plus la valeur est élevée, plus l'ondulation est forte.",
+    labelLiquidGlassFrequency: "Fréquence du bruit",
+    labelLiquidGlassFrequencyDesc: "À quel point le motif de bruit sur le verre est fin ou grossier — une valeur basse donne de grandes traînées lisses, une valeur haute donne de petites ondulations denses.",
     cardFabTitle: "Boutons flottants dans la page (FAB)",
     labelFabDisplay: "Afficher les boutons flottants sur les pages",
     descFabDisplay:

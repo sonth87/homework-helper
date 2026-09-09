@@ -436,6 +436,30 @@
               </div>
             </div>
 
+            <!-- 0.5 Liquid Glass -->
+            <div class="opt-card">
+              <h3 class="opt-card-title" id="optCardLiquidGlassTitle" style="margin-bottom:12px;">Liquid Glass</h3>
+              <div class="opt-settings-list">
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title"><span id="optLabelLiquidGlassScale">Độ biến dạng (Scale)</span> <span id="valLiquidGlassScale">30</span></div>
+                    <div class="opt-setting-desc" id="optLabelLiquidGlassScaleDesc">Mức độ bẻ cong hình ảnh phía sau lớp kính — càng cao càng lượn sóng mạnh.</div>
+                  </div>
+                  <input type="range" id="optRangeLiquidGlassScale" min="0" max="200" step="1" value="30" class="opt-range">
+                </div>
+                <div class="opt-setting-row">
+                  <div>
+                    <div class="opt-setting-title"><span id="optLabelLiquidGlassFrequency">Tần số nhiễu (Frequency)</span> <span id="valLiquidGlassFrequency">0.02</span></div>
+                    <div class="opt-setting-desc" id="optLabelLiquidGlassFrequencyDesc">Độ mịn/thô của hoạ tiết nhiễu trên lớp kính — thấp cho vệt lớn mượt, cao cho gợn sóng nhỏ dày đặc.</div>
+                  </div>
+                  <input type="range" id="optRangeLiquidGlassFrequency" min="0.001" max="0.1" step="0.001" value="0.02" class="opt-range">
+                </div>
+                <button type="button" class="opt-btn-secondary" id="optBtnResetLiquidGlass" style="align-self:flex-start;">
+                  <span id="optIconResetLiquidGlass"></span> <span id="optBtnResetLiquidGlassText">Khôi phục mặc định</span>
+                </button>
+              </div>
+            </div>
+
             <!-- 1. Floating Action Buttons (FAB) -->
             <div class="opt-card">
               <h3 class="opt-card-title" id="optCardFabTitle" style="margin-bottom:12px;">Floating Action Buttons (FAB)</h3>

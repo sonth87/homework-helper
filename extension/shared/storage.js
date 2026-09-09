@@ -303,6 +303,12 @@ export const DEFAULT_SETTINGS = {
   enableTextTooltip: true,
   enableFloatingButton: true,
   overlayTheme: "auto", // 'auto' (follow system) | 'light' | 'dark'
+  // Shared SVG refraction filter (shared/liquid-glass.js) behind every glass
+  // surface's backdrop-filter — one filter definition per document/shadow
+  // root, so these two values apply everywhere at once. Defaults match what
+  // the filter was hardcoded to before this became configurable.
+  liquidGlassScale: 30, // 0 - 200 (feDisplacementMap scale — how far the backdrop warps)
+  liquidGlassFrequency: 0.02, // 0.001 - 0.1 (feTurbulence baseFrequency — noise coarseness: lower = larger blobs, higher = finer ripples)
   fabSize: "normal", // 'tiny' | 'small' | 'normal' | 'large'
   fabOpacity: 90, // 30 - 100% (Liquid Glass background alpha)
   fabAutoHide: true, // true (slides into the screen edge at rest, revealed on hover) | false (stays fully visible)

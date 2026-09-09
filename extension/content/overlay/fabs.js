@@ -161,6 +161,12 @@ export class OverlayFabs {
     let offsetX = 0;
     let offsetY = 0;
 
+    const stopDragging = () => {
+      isPressed = false;
+      fab.classList.remove('hw-fab-dragging');
+      this.overlay.richTooltips?.suppress(false);
+    };
+
     fab.addEventListener('mousedown', (e) => {
       isPressed = true;
       hasMoved = false;
@@ -171,8 +177,20 @@ export class OverlayFabs {
       offsetY = e.clientY - rect.top;
     });
 
+    // Capture phase on both: a host page's own capture-phase mousemove/
+    // mouseup handler (common on drag-and-drop-heavy sites — page builders,
+    // Kanban boards, etc.) calling stopPropagation() would otherwise reach
+    // `window` first and swallow the event before this bubble-phase listener
+    // ever saw it — leaving `isPressed` stuck true forever after the very
+    // first drag attempt (the mouseup that should clear it never arrives),
+    // so the cluster would then silently follow the cursor on every future
+    // mousemove, including ones that have nothing to do with dragging it.
     window.addEventListener('mousemove', (e) => {
       if (!isPressed) return;
+      // e.buttons is a live snapshot of what's held down *right now* — if a
+      // mouseup got lost somewhere (see above) this is what self-corrects on
+      // the very next mousemove instead of staying stuck.
+      if (e.buttons === 0) { stopDragging(); return; }
 
       if (!hasMoved) {
         // Small threshold so a plain click doesn't jitter the cluster by a pixel.
@@ -192,15 +210,13 @@ export class OverlayFabs {
       fab.style.bottom = 'auto';
       fab.style.left = `${left}px`;
       fab.style.top = `${top}px`;
-    });
+    }, true);
 
     window.addEventListener('mouseup', async () => {
       if (!isPressed) return;
-      isPressed = false;
-      if (!hasMoved) return;
-
-      fab.classList.remove('hw-fab-dragging');
-      this.overlay.richTooltips?.suppress(false);
+      const wasMoved = hasMoved;
+      stopDragging();
+      if (!wasMoved) return;
 
       const rect = fab.getBoundingClientRect();
       const dockLeft = rect.left + rect.width / 2 < window.innerWidth / 2;
@@ -209,6 +225,6 @@ export class OverlayFabs {
       const fabPosition = { dock: dockLeft ? 'left' : 'right', top };
       this.applyPosition(fabPosition);
       await Storage.set({ fabPosition });
-    });
+    }, true);
   }
 }

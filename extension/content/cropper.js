@@ -26,6 +26,21 @@ class ScreenCropper {
     this.dragStartRect = null;
     this.moveOffset = { x: 0, y: 0 };
 
+    // Bound once and reused for both addEventListener/removeEventListener —
+    // `fn.bind(this)` creates a NEW function every time it's called, so
+    // passing a fresh `.bind()` to removeEventListener() would never match
+    // the one actually registered, silently leaking these 3 global
+    // listeners on every crop session forever. Capture phase (see where
+    // these are attached below) so a host page's own capture-phase
+    // keydown/mousemove handler — common for custom hotkeys, video players,
+    // drag-to-resize widgets — calling stopPropagation() can't swallow the
+    // event before it ever reaches us; this only guarantees delivery, it
+    // never calls stopPropagation() itself, so the page's own handling of
+    // the same event is unaffected.
+    this.boundMouseMove = this.onMouseMove.bind(this);
+    this.boundMouseUp = this.onMouseUp.bind(this);
+    this.boundKeyDown = this.onKeyDown.bind(this);
+
     // Loaded eagerly (not on first start()) so the sheet has landed well
     // before the user ever presses Alt+C — see shadow-root.js. tooltip.css is
     // needed too: the crop toolbar (renderToolbar()) reuses the text-selection
@@ -81,9 +96,9 @@ class ScreenCropper {
 
     // Attach mouse event listeners
     this.overlay.addEventListener('mousedown', this.onMouseDown.bind(this));
-    window.addEventListener('mousemove', this.onMouseMove.bind(this));
-    window.addEventListener('mouseup', this.onMouseUp.bind(this));
-    window.addEventListener('keydown', this.onKeyDown.bind(this));
+    window.addEventListener('mousemove', this.boundMouseMove, true);
+    window.addEventListener('mouseup', this.boundMouseUp, true);
+    window.addEventListener('keydown', this.boundKeyDown, true);
 
     getSharedShadowRoot().appendChild(this.overlay);
   }
@@ -146,6 +161,13 @@ class ScreenCropper {
 
   onMouseMove(e) {
     if (!this.dragMode) return;
+
+    // e.buttons is a live snapshot of what's held down right now — if this
+    // page ever swallowed the real mouseup (see the capture-phase comment in
+    // the constructor), this self-corrects on the very next mousemove by
+    // finalizing the selection exactly as a real mouseup would, instead of
+    // leaving dragMode stuck and the box endlessly tracking the cursor.
+    if (e.buttons === 0) { this.onMouseUp(); return; }
 
     if (this.dragMode === 'draw') {
       const currentX = e.clientX;
@@ -357,6 +379,11 @@ class ScreenCropper {
   }
 
   onKeyDown(e) {
+    // Guards against ever reacting to Escape presses outside an active crop
+    // session — belt-and-suspenders alongside the removeEventListener fix
+    // below, so a future regression there can't resurrect the old bug where
+    // a leaked listener re-ran cleanup() on every unrelated Escape press.
+    if (!this.overlay) return;
     if (e.key === 'Escape') {
       this.cleanup();
     }
@@ -368,9 +395,13 @@ class ScreenCropper {
       this.overlay = null;
     }
     this.dragMode = null;
-    window.removeEventListener('mousemove', this.onMouseMove);
-    window.removeEventListener('mouseup', this.onMouseUp);
-    window.removeEventListener('keydown', this.onKeyDown);
+    // Capture flag must match what was passed to addEventListener() above —
+    // omitting it here (defaults to false) would silently fail to remove a
+    // capture-phase listener, same class of bug as the stale-bind() one this
+    // replaced.
+    window.removeEventListener('mousemove', this.boundMouseMove, true);
+    window.removeEventListener('mouseup', this.boundMouseUp, true);
+    window.removeEventListener('keydown', this.boundKeyDown, true);
     window.dispatchEvent(new CustomEvent('HOMEWORK_AI_RESTORE_UI'));
   }
 }

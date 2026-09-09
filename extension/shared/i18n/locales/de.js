@@ -431,6 +431,11 @@ export default {
     overlayThemeOptAuto: "System folgen",
     overlayThemeOptLight: "Hell",
     overlayThemeOptDark: "Dunkel",
+    cardLiquidGlassTitle: "Liquid Glass",
+    labelLiquidGlassScale: "Verzerrung (Scale)",
+    labelLiquidGlassScaleDesc: "Wie stark sich der Hintergrund hinter dem Glas verzerrt — höhere Werte erzeugen stärkere Wellen.",
+    labelLiquidGlassFrequency: "Rauschfrequenz",
+    labelLiquidGlassFrequencyDesc: "Wie fein oder grob das Rauschmuster auf dem Glas ist — niedrige Werte ergeben große, glatte Streifen, hohe Werte dichte, kleine Wellen.",
     cardFabTitle: "Schwebende Buttons (Floating FABs)",
     labelFabDisplay: "Schwebende Buttons auf Webseiten anzeigen",
     descFabDisplay:

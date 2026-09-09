@@ -487,6 +487,13 @@ export default {
     overlayThemeOptAuto: "Tự động theo hệ thống",
     overlayThemeOptLight: "Sáng",
     overlayThemeOptDark: "Tối",
+    cardLiquidGlassTitle: "Liquid Glass",
+    labelLiquidGlassScale: "Độ biến dạng (Scale)",
+    labelLiquidGlassScaleDesc:
+      "Mức độ bẻ cong hình ảnh phía sau lớp kính — càng cao càng lượn sóng mạnh.",
+    labelLiquidGlassFrequency: "Tần số nhiễu",
+    labelLiquidGlassFrequencyDesc:
+      "Độ mịn/thô của hoạ tiết nhiễu trên lớp kính — thấp cho vệt lớn mượt, cao cho gợn sóng nhỏ dày đặc.",
     cardFabTitle: "Nút Nổi Trong Trang (Floating FABs)",
     labelFabDisplay: "Hiển thị nút nổi trên website",
     labelFabDisplayDesc:

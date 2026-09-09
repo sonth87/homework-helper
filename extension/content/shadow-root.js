@@ -10,7 +10,8 @@
  * neither side's fonts, colors, or resets bleed into the other.
  */
 
-import { ensureLiquidGlassFilter } from '../shared/liquid-glass.js';
+import { ensureLiquidGlassFilter, updateLiquidGlassFilter } from '../shared/liquid-glass.js';
+import { Storage } from '../shared/storage.js';
 
 let shadowRoot = null;
 
@@ -47,7 +48,17 @@ export function getSharedShadowRoot() {
   document.documentElement.appendChild(host);
 
   shadowRoot = host.attachShadow({ mode: 'open' });
+  // Injected synchronously with the library defaults first — this function
+  // has to stay sync (every caller across cropper.js/hover-translate.js/
+  // selection-tooltip.js/overlay.js expects an immediate ShadowRoot back,
+  // not a Promise) — then nudged to the user's real saved values a moment
+  // later once Storage resolves. That gap is a couple of milliseconds at
+  // most, same tradeoff overlay.js's own applyAppearanceSettings() already
+  // makes for its other settings.
   ensureLiquidGlassFilter(shadowRoot);
+  Storage.get(['liquidGlassScale', 'liquidGlassFrequency']).then(({ liquidGlassScale, liquidGlassFrequency }) => {
+    updateLiquidGlassFilter(shadowRoot, { scale: liquidGlassScale, frequency: liquidGlassFrequency });
+  });
   return shadowRoot;
 }
 
@@ -59,6 +70,17 @@ export function getSharedShadowRoot() {
  */
 export function ensureStylesheet(href) {
   const root = getSharedShadowRoot();
+  // Same defensive check as Storage.get()/set() (shared/storage.js):
+  // chrome.runtime.id reads as undefined once the extension is reloaded/
+  // updated while this content script is still injected in an already-open
+  // tab — chrome.runtime.getURL() then throws synchronously ("chrome.runtime
+  // .getURL is not a function") instead of failing gracefully. The whole
+  // extension is about to stop working in this tab regardless, so return a
+  // harmless detached <link> instead of crashing whatever feature (crop,
+  // hover-translate, the selection toolbar...) just tried to open.
+  if (typeof chrome === 'undefined' || !chrome.runtime?.id) {
+    return document.createElement('link');
+  }
   const url = chrome.runtime.getURL(href);
   const existing = root.querySelector(`link[href="${url}"]`);
   if (existing) return existing;

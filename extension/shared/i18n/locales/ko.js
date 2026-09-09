@@ -432,6 +432,11 @@ export default {
     overlayThemeOptAuto: "시스템 설정에 따름",
     overlayThemeOptLight: "라이트",
     overlayThemeOptDark: "다크",
+    cardLiquidGlassTitle: "리퀴드 글라스",
+    labelLiquidGlassScale: "왜곡 정도 (Scale)",
+    labelLiquidGlassScaleDesc: "유리 뒤 배경이 휘어지는 정도 — 값이 높을수록 물결이 강해집니다.",
+    labelLiquidGlassFrequency: "노이즈 빈도",
+    labelLiquidGlassFrequencyDesc: "유리 위 노이즈 패턴의 세밀함 정도 — 낮으면 크고 매끄러운 무늬, 높으면 촘촘하고 작은 잔물결이 됩니다.",
     cardFabTitle: "페이지 플로팅 버튼 (Floating FABs)",
     labelFabDisplay: "웹페이지에 플로팅 버튼 표시",
     descFabDisplay:

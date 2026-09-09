@@ -412,9 +412,17 @@ export function createLocalKeyCard(cfg, { isNew = false, dict = {}, variant, onC
   // A user-given label always wins for the header text — falls back to the
   // detected model name so an unlabeled card still identifies itself.
   const displayName = (cfg.label && cfg.label.trim()) || prettyName;
+  // Class kept out of toggleBtnAttrs and merged into the template's own
+  // class="cfg-toggle" below instead of sitting as a second, separate
+  // class="..." on the same tag — two class attributes on one element isn't
+  // a merge, the HTML parser keeps only the first and silently drops the
+  // second, which left every 'opt'-skin toggle button (overlay + options)
+  // with no cfg-toggle class at all and querySelector('.cfg-toggle')
+  // returning null.
+  const toggleBtnClass = skin === 'sp' ? '' : 'opt-help-icon';
   const toggleBtnAttrs = skin === 'sp'
     ? 'style="display:inline-flex; align-items:center; background:none; border:none; cursor:pointer; color:inherit; padding:0; font:inherit;"'
-    : 'class="opt-help-icon" style="background:none; border:none; cursor:pointer; padding:0; font:inherit;"';
+    : 'style="background:none; border:none; cursor:pointer; padding:0; font:inherit;"';
 
   el.innerHTML = `
     <label class="${toggleClass}">
@@ -427,7 +435,7 @@ export function createLocalKeyCard(cfg, { isNew = false, dict = {}, variant, onC
         <span class="${nameClass} cfg-display-name">${displayName}</span>
         ${visionTag}
         <span ${helpIconAttrs} data-tooltip-title="${d.localModelHelpTitle || 'Can this model actually read images?'}" data-tooltip-desc="${d.localModelHelpDesc || ''}">${Icons.helpCircle(skin === 'sp' ? 12 : 13)}</span>
-        <button type="button" ${toggleBtnAttrs} class="cfg-toggle" title="${d.apiConfigToggleDetails || 'Show/hide details'}">${Icons.chevronDown(13)}</button>
+        <button type="button" class="${toggleBtnClass} cfg-toggle" ${toggleBtnAttrs} title="${d.apiConfigToggleDetails || 'Show/hide details'}">${Icons.chevronDown(13)}</button>
       </div>
       <div class="cfg-card-body" style="display:none; flex-direction:column;">
         <input type="text" class="${skin === 'sp' ? 'sp-field' : 'opt-input'} cfg-label" placeholder="${d.apiConfigLabelPlaceholder || 'Tên gợi nhớ (không bắt buộc)'}" value="${cfg.label || ''}" style="margin-bottom:4px;">

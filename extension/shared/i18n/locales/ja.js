@@ -430,6 +430,11 @@ export default {
     overlayThemeOptAuto: "システムに従う",
     overlayThemeOptLight: "ライト",
     overlayThemeOptDark: "ダーク",
+    cardLiquidGlassTitle: "リキッドグラス",
+    labelLiquidGlassScale: "歪み具合 (Scale)",
+    labelLiquidGlassScaleDesc: "ガラスの背後にある背景がどれだけ歪むか — 値が高いほど波打ちが強くなります。",
+    labelLiquidGlassFrequency: "ノイズの周波数",
+    labelLiquidGlassFrequencyDesc: "ガラス上のノイズ模様の細かさ — 低いと大きく滑らかな筋に、高いと細かく密な波紋になります。",
     cardFabTitle: "ページ内フローティングボタン (FAB)",
     labelFabDisplay: "Webページ上にフローティングボタンを表示",
     descFabDisplay:

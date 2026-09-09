@@ -5,7 +5,7 @@
 
 import { Icons } from '../shared/icons.js';
 import { Storage } from '../shared/storage.js';
-import { ensureLiquidGlassFilter } from '../shared/liquid-glass.js';
+import { ensureLiquidGlassFilter, updateLiquidGlassFilter } from '../shared/liquid-glass.js';
 import { getOptionsI18n, getSelectionTooltipI18n, getFloatingPopupI18n } from '../shared/i18n.js';
 import { OptionsTooltips } from './options-tooltips.js';
 import { KeysTab } from './tabs/keys-tab.js';
@@ -103,6 +103,7 @@ export class OptionsController {
     setInner('optIconResetToolbarLayout', Icons.refresh(14));
     setInner('optIconResetHover', Icons.refresh(14));
     setInner('optIconResetFab', Icons.refresh(14));
+    setInner('optIconResetLiquidGlass', Icons.refresh(14));
     setInner('optIconResetPopup', Icons.refresh(14));
 
     // Local Model (Ollama / LM Studio) Panel & Guide Icons
@@ -329,6 +330,14 @@ export class OptionsController {
     setText('optOverlayThemeOptAuto', dict.overlayThemeOptAuto);
     setText('optOverlayThemeOptLight', dict.overlayThemeOptLight);
     setText('optOverlayThemeOptDark', dict.overlayThemeOptDark);
+    setText('optCardLiquidGlassTitle', dict.cardLiquidGlassTitle);
+    setText('optLabelLiquidGlassScale', dict.labelLiquidGlassScale);
+    setText('optLabelLiquidGlassScaleDesc', dict.labelLiquidGlassScaleDesc);
+    setText('optLabelLiquidGlassFrequency', dict.labelLiquidGlassFrequency);
+    setText('optLabelLiquidGlassFrequencyDesc', dict.labelLiquidGlassFrequencyDesc);
+    // Reuses the same generic "Restore Default" string as the FAB/Toolbar/
+    // Popup/Hover cards below — see their own identical comment.
+    setText('optBtnResetLiquidGlassText', dict.toolbarLayoutResetBtn);
     setText('optCardFabTitle', dict.cardFabTitle);
     setText('optLabelFabDisplay', dict.labelFabDisplay);
     setText('optLabelFabDisplayDesc', dict.labelFabDisplayDesc);
@@ -558,5 +567,13 @@ export class OptionsController {
 
 document.addEventListener('DOMContentLoaded', () => {
   ensureLiquidGlassFilter(document);
+  // Injected with the library defaults above (this callback could be made
+  // async instead and awaited before injecting, but every other appearance
+  // setting in this codebase accepts the same brief default-then-actual
+  // flash rather than delaying first paint on a Storage round-trip — see
+  // shadow-root.js's identical tradeoff).
+  Storage.get(['liquidGlassScale', 'liquidGlassFrequency']).then(({ liquidGlassScale, liquidGlassFrequency }) => {
+    updateLiquidGlassFilter(document, { scale: liquidGlassScale, frequency: liquidGlassFrequency });
+  });
   new OptionsController();
 });

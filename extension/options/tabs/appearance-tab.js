@@ -5,6 +5,7 @@ import { TOOLBAR_ITEM_ICONS, DEFAULT_TOOLBAR_LAYOUT, normalizeToolbarLayout } fr
 import { HOVER_HIGHLIGHT_COLORS } from '../../shared/hover-highlight-colors.js';
 import { HIGHLIGHT_STYLES, DEFAULT_HIGHLIGHT_STYLE, buildHighlight } from '../../shared/highlight-styles.js';
 import { TOOLBAR_THEME_COLORS } from '../../shared/toolbar-theme-colors.js';
+import { updateLiquidGlassFilter } from '../../shared/liquid-glass.js';
 
 // shared/highlight-styles.js only knows style ids — the display name/desc for
 // each lives in i18n (options block) like every other user-facing string.
@@ -43,6 +44,8 @@ export class AppearanceTab {
   async loadAppearanceSettings() {
     const {
       overlayTheme = 'auto',
+      liquidGlassScale = DEFAULT_SETTINGS.liquidGlassScale,
+      liquidGlassFrequency = DEFAULT_SETTINGS.liquidGlassFrequency,
       enableFloatingButton = true,
       fabSize = 'normal',
       fabOpacity = 90,
@@ -80,6 +83,11 @@ export class AppearanceTab {
 
     // DOM Controls
     const overlayThemeSelect = document.getElementById('optOverlayThemeSelect');
+    const rangeLiquidGlassScale = document.getElementById('optRangeLiquidGlassScale');
+    const valLiquidGlassScale = document.getElementById('valLiquidGlassScale');
+    const rangeLiquidGlassFrequency = document.getElementById('optRangeLiquidGlassFrequency');
+    const valLiquidGlassFrequency = document.getElementById('valLiquidGlassFrequency');
+    const btnResetLiquidGlass = document.getElementById('optBtnResetLiquidGlass');
     const checkFab = document.getElementById('optCheckFab');
     const fabSizeSelect = document.getElementById('optFabSizeSelect');
     const rangeFabOpacity = document.getElementById('optRangeFabOpacity');
@@ -242,6 +250,14 @@ export class AppearanceTab {
 
     // Populate initial values
     if (overlayThemeSelect) overlayThemeSelect.value = overlayTheme;
+    if (rangeLiquidGlassScale) {
+      rangeLiquidGlassScale.value = liquidGlassScale;
+      if (valLiquidGlassScale) valLiquidGlassScale.textContent = `${liquidGlassScale}`;
+    }
+    if (rangeLiquidGlassFrequency) {
+      rangeLiquidGlassFrequency.value = liquidGlassFrequency;
+      if (valLiquidGlassFrequency) valLiquidGlassFrequency.textContent = `${liquidGlassFrequency}`;
+    }
     checkFab.checked = enableFloatingButton;
     setSubDimmed(fabSettingsSub, !enableFloatingButton);
     if (fabSizeSelect) fabSizeSelect.value = fabSize;
@@ -369,7 +385,7 @@ export class AppearanceTab {
         // repeated on every inline backdropFilter write, since inline style
         // always wins over whatever overlay.css's own rule declares.
         prevToolbar.style.backdropFilter = `blur(${tbBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
-        prevToolbar.style.webkitBackdropFilter = `blur(${tbBlurVal}px) saturate(180%)`;
+        prevToolbar.style.webkitBackdropFilter = `blur(${tbBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
 
         const tbSolidRgb = TOOLBAR_THEME_COLORS[tbTheme];
         if (tbTheme === 'glass-dark') {
@@ -446,7 +462,7 @@ export class AppearanceTab {
         prevHoverTip.style.setProperty('--ht-max-width', `${htMaxWidth}px`);
         prevHoverTip.style.fontSize = `${htFontSize}px`;
         prevHoverTip.style.backdropFilter = `blur(${htBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
-        prevHoverTip.style.webkitBackdropFilter = `blur(${htBlurVal}px) saturate(180%)`;
+        prevHoverTip.style.webkitBackdropFilter = `blur(${htBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
 
         const htSolidRgb = TOOLBAR_THEME_COLORS[htTheme];
         if (htTheme === 'glass-dark') {
@@ -486,7 +502,7 @@ export class AppearanceTab {
           el.style.background = popBg;
           el.style.color = popColor;
           el.style.backdropFilter = `blur(${popBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
-          el.style.webkitBackdropFilter = `blur(${popBlurVal}px) saturate(180%)`;
+          el.style.webkitBackdropFilter = `blur(${popBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
         };
         applyPopupGlass(prevPopup);
 
@@ -540,6 +556,39 @@ export class AppearanceTab {
     // Event Listeners
     overlayThemeSelect?.addEventListener('change', () => {
       Storage.set({ overlayTheme: overlayThemeSelect.value });
+    });
+
+    // Updates the shared SVG filter in place (see shared/liquid-glass.js) —
+    // every glass surface on this same page (including the live preview
+    // mock below) references that one filter by id, so this alone makes
+    // the whole page's glass warp update live, no separate preview-specific
+    // code needed the way the other appearance sliders require.
+    rangeLiquidGlassScale?.addEventListener('input', () => {
+      const scale = Number(rangeLiquidGlassScale.value);
+      if (valLiquidGlassScale) valLiquidGlassScale.textContent = `${scale}`;
+      updateLiquidGlassFilter(document, { scale });
+      Storage.set({ liquidGlassScale: scale });
+    });
+
+    rangeLiquidGlassFrequency?.addEventListener('input', () => {
+      const frequency = Number(rangeLiquidGlassFrequency.value);
+      if (valLiquidGlassFrequency) valLiquidGlassFrequency.textContent = `${frequency}`;
+      updateLiquidGlassFilter(document, { frequency });
+      Storage.set({ liquidGlassFrequency: frequency });
+    });
+
+    btnResetLiquidGlass?.addEventListener('click', () => {
+      const d = DEFAULT_SETTINGS;
+      if (rangeLiquidGlassScale) {
+        rangeLiquidGlassScale.value = d.liquidGlassScale;
+        if (valLiquidGlassScale) valLiquidGlassScale.textContent = `${d.liquidGlassScale}`;
+      }
+      if (rangeLiquidGlassFrequency) {
+        rangeLiquidGlassFrequency.value = d.liquidGlassFrequency;
+        if (valLiquidGlassFrequency) valLiquidGlassFrequency.textContent = `${d.liquidGlassFrequency}`;
+      }
+      updateLiquidGlassFilter(document, { scale: d.liquidGlassScale, frequency: d.liquidGlassFrequency });
+      Storage.set({ liquidGlassScale: d.liquidGlassScale, liquidGlassFrequency: d.liquidGlassFrequency });
     });
 
     checkFab.addEventListener('change', () => {

@@ -437,6 +437,11 @@ export default {
     overlayThemeOptAuto: "Ikuti sistem",
     overlayThemeOptLight: "Terang",
     overlayThemeOptDark: "Gelap",
+    cardLiquidGlassTitle: "Liquid Glass",
+    labelLiquidGlassScale: "Distorsi (Scale)",
+    labelLiquidGlassScaleDesc: "Seberapa besar latar belakang di balik kaca melengkung — semakin tinggi, semakin kuat riaknya.",
+    labelLiquidGlassFrequency: "Frekuensi noise",
+    labelLiquidGlassFrequencyDesc: "Seberapa halus atau kasar pola noise pada kaca — nilai rendah menghasilkan garis besar yang halus, nilai tinggi menghasilkan riak kecil yang padat.",
     cardFabTitle: "Tombol Mengambang Halaman (FAB)",
     labelFabDisplay: "Tampilkan tombol mengambang di web",
     descFabDisplay:
