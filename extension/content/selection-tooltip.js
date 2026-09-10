@@ -169,6 +169,7 @@ class SelectionTooltip {
       toolbarPosition = 'above',
       toolbarLayout,
       uiLanguage = 'en',
+      overlayTheme = 'auto',
     } = await Storage.get();
 
     // A newer render/removal happened while we were waiting on storage — abort so we
@@ -194,12 +195,25 @@ class SelectionTooltip {
     // (see its portal note), so a plain `.hw-selection-toolbar.theme-X
     // .hw-tb-dropdown` descendant selector can't reach them anymore.
     this.resolvedTheme = resolvedTheme;
+    // Text/icon colour is a SEPARATE decision from the background above —
+    // it tracks overlayTheme (falling back to the OS preference when that's
+    // 'auto'), the same relationship popupCardTheme's own text has to
+    // overlayTheme on .hw-solution-card (content/overlay.js). An explicit
+    // 'glass-light'/'glass-dark' toolbarTheme choice still wins outright,
+    // matching .hw-solution-card.theme-glass-light/dark's own override of
+    // the global setting — but any accent colour (or 'auto') defers to it,
+    // instead of always forcing white the way a fixed colour pill would.
+    const textIsDark = toolbarTheme === 'glass-dark'
+      || (toolbarTheme !== 'glass-light'
+        && (overlayTheme === 'dark'
+          || (overlayTheme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)));
+    this.tbTextLight = textIsDark;
 
     this.toolbar = document.createElement('div');
     // With no main items, the bar has nothing left but the logo — drop the
     // pill chrome (background/border/shadow) so it reads as a bare icon
     // instead of an empty-looking pill (see .hw-tb-logo-only in tooltip.css).
-    this.toolbar.className = `hw-selection-toolbar size-${toolbarSize} theme-${resolvedTheme}${hasMainItems ? '' : ' hw-tb-logo-only'}`;
+    this.toolbar.className = `hw-selection-toolbar size-${toolbarSize} theme-${resolvedTheme}${hasMainItems ? '' : ' hw-tb-logo-only'}${textIsDark ? ' hw-tb-text-light' : ''}`;
 
     // Liquid Glass CSS Variables (avoids CSS opacity bug on backdrop-filter)
     this.toolbar.style.setProperty('--tb-alpha', `${(toolbarOpacity / 100).toFixed(2)}`);
@@ -387,7 +401,7 @@ class SelectionTooltip {
     // class are copied across by hand since they no longer inherit down
     // from this.toolbar once they're siblings rather than parent/child.
     this.dropdown = document.createElement('div');
-    this.dropdown.className = `hw-tb-dropdown theme-${this.resolvedTheme}`;
+    this.dropdown.className = `hw-tb-dropdown theme-${this.resolvedTheme}${this.tbTextLight ? ' hw-tb-text-light' : ''}`;
     this.dropdown.style.setProperty('--tb-alpha', this.toolbar.style.getPropertyValue('--tb-alpha'));
     this.dropdown.style.setProperty('--tb-blur', this.toolbar.style.getPropertyValue('--tb-blur'));
     // Same reasoning as this.toolbar's guard above.
@@ -449,7 +463,7 @@ class SelectionTooltip {
     // nested inside the now-already-filtered dropdown, tripping the same
     // trap one level deeper).
     this.submenu = document.createElement('div');
-    this.submenu.className = `hw-tb-submenu theme-${this.resolvedTheme}`;
+    this.submenu.className = `hw-tb-submenu theme-${this.resolvedTheme}${this.tbTextLight ? ' hw-tb-text-light' : ''}`;
     this.submenu.style.setProperty('--tb-alpha', this.toolbar.style.getPropertyValue('--tb-alpha'));
     this.submenu.style.setProperty('--tb-blur', this.toolbar.style.getPropertyValue('--tb-blur'));
     this.submenu.style.display = 'none';

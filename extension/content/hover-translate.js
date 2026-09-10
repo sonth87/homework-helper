@@ -31,7 +31,7 @@ const SETTINGS_KEYS = [
   'enableHoverTranslate', 'hoverTranslateModifiers', 'hoverTranslateGranularity', 'hoverTranslateDelay',
   'hoverTranslateOpacity', 'hoverTranslateBlur', 'hoverTranslateFontSize', 'hoverTranslateMaxWidth', 'hoverTranslateTheme',
   'hoverTranslateHighlight', 'hoverTranslateHighlightColor', 'hoverTranslateHighlightOpacity', 'hoverTranslateHighlightStyle',
-  'hoverTranslateAnimation', 'outputLanguage', 'disabledSites', 'uiLanguage',
+  'hoverTranslateAnimation', 'outputLanguage', 'disabledSites', 'uiLanguage', 'overlayTheme',
 ];
 
 const MODIFIER_EVENT_KEYS = { ctrl: 'ctrlKey', shift: 'shiftKey', alt: 'altKey', meta: 'metaKey' };
@@ -462,9 +462,21 @@ class HoverTranslate {
     const resolvedHtTheme = htTheme === 'auto'
       ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
       : htTheme;
+    // Text/icon colour is a SEPARATE decision from the background above —
+    // same overlayTheme-driven relationship .hw-selection-toolbar's own
+    // hw-tb-text-light has to toolbarTheme (see its comment in
+    // content/selection-tooltip.js), and popupCardTheme's text has to
+    // .hw-solution-card. An explicit 'glass-light'/'glass-dark' htTheme
+    // choice still wins outright; any accent colour (or 'auto') defers to
+    // overlayTheme instead of always forcing white.
+    const overlayTheme = this.settings.overlayTheme || 'auto';
+    const textIsDark = htTheme === 'glass-dark'
+      || (htTheme !== 'glass-light'
+        && (overlayTheme === 'dark'
+          || (overlayTheme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)));
 
     const tip = document.createElement('div');
-    tip.className = `hw-hover-translate-tip theme-${resolvedHtTheme}`;
+    tip.className = `hw-hover-translate-tip theme-${resolvedHtTheme}${textIsDark ? ' hw-tb-text-light' : ''}`;
     tip.style.setProperty('--ht-alpha', ((this.settings.hoverTranslateOpacity ?? 90) / 100).toFixed(2));
     tip.style.setProperty('--ht-blur', `${this.settings.hoverTranslateBlur ?? 6}px`);
     tip.style.setProperty('--ht-font-size', `${this.settings.hoverTranslateFontSize ?? 13}px`);

@@ -60,238 +60,128 @@
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Themes */
+/* Themes: background/border only. Text/icon colour is deliberately NOT part
+   of any of these — it tracks overlayTheme (falling back to the OS
+   preference when that's 'auto'), exactly like popupCardTheme's own text on
+   .hw-solution-card: an accent colour only ever tints the background,
+   never forces a fixed text colour of its own. See .hw-tb-text-light
+   further below, toggled by renderToolbar()/toggleDropdown() in
+   selection-tooltip.js independently of which of these is active. */
 .hw-selection-toolbar.theme-glass-dark {
   background: rgba(15, 23, 42, var(--tb-alpha, 0.8));
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-  color: #f8fafc;
 }
-.hw-selection-toolbar.theme-glass-dark .hw-tb-btn {
-  color: #e2e8f0;
-}
-.hw-selection-toolbar.theme-glass-dark .hw-tb-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-}
-
 .hw-selection-toolbar.theme-cyber-blue {
   background: rgba(2, 132, 199, var(--tb-alpha, 0.82));
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
 }
-.hw-selection-toolbar.theme-cyber-blue .hw-tb-btn {
-  color: #ffffff;
-}
-.hw-selection-toolbar.theme-cyber-blue .hw-tb-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
 .hw-selection-toolbar.theme-emerald {
   background: rgba(5, 150, 105, var(--tb-alpha, 0.82));
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
 }
-.hw-selection-toolbar.theme-emerald .hw-tb-btn {
-  color: #ffffff;
-}
-.hw-selection-toolbar.theme-emerald .hw-tb-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
 .hw-selection-toolbar.theme-purple {
   background: rgba(124, 58, 237, var(--tb-alpha, 0.82));
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
 }
-.hw-selection-toolbar.theme-purple .hw-tb-btn {
-  color: #ffffff;
-}
-.hw-selection-toolbar.theme-purple .hw-tb-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
 .hw-selection-toolbar.theme-rose {
   background: rgba(225, 29, 72, var(--tb-alpha, 0.82));
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
 }
-.hw-selection-toolbar.theme-rose .hw-tb-btn {
-  color: #ffffff;
-}
-.hw-selection-toolbar.theme-rose .hw-tb-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
 .hw-selection-toolbar.theme-amber {
   background: rgba(217, 119, 6, var(--tb-alpha, 0.82));
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
 }
-.hw-selection-toolbar.theme-amber .hw-tb-btn {
-  color: #ffffff;
-}
-.hw-selection-toolbar.theme-amber .hw-tb-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
 .hw-selection-toolbar.theme-indigo {
   background: rgba(79, 70, 229, var(--tb-alpha, 0.82));
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
 }
-.hw-selection-toolbar.theme-indigo .hw-tb-btn {
-  color: #ffffff;
+
+/* Applied whenever the surface currently counts as dark (glass-dark, or
+   'auto'/an accent colour while overlayTheme resolves dark) — see
+   .hw-selection-toolbar's own base color: #1e293b two rules up for the
+   light-text default this overrides. At a low Toolbar Opacity setting an
+   accent tint can end up barely visible (mostly whatever's behind the glass
+   bleeding through) while this white text/icons stay fully opaque — the
+   text-shadow/drop-shadow keep them legible regardless of how transparent
+   the tint currently is; harmless dead weight on the genuinely-dark
+   glass-dark background, where it's not needed but doesn't hurt anything. */
+.hw-selection-toolbar.hw-tb-text-light {
+  color: #f8fafc;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
-.hw-selection-toolbar.theme-indigo .hw-tb-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+.hw-selection-toolbar.hw-tb-text-light svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+.hw-selection-toolbar.hw-tb-text-light .hw-tb-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 /* .hw-tb-dropdown/.hw-tb-submenu (further below) used to be styled only via
    .hw-selection-toolbar.theme-X descendant selectors, back when they were
    DOM children of .hw-selection-toolbar — so they stayed the plain
-   light-glass look no matter which of the 4 themes above was active. They're
+   light-glass look no matter which of the themes above was active. They're
    portalled out to the shared shadow root now instead (see toggleDropdown()
    in selection-tooltip.js — a child's own backdrop-filter barely renders at
    all nested inside an ancestor that already has one of its own), so they
-   carry the theme-X class directly rather than inheriting it from an
-   ancestor, and these selectors target that class on the element itself.
-   Same tinted "liquid glass" treatment as the toolbar bar: same base colour,
-   same var(--tb-alpha) (copied onto each element by hand in JS now, for the
-   same not-a-descendant-anymore reason) — only the colour needs restating
-   per theme here. */
+   carry the theme-X (and hw-tb-text-light) class directly rather than
+   inheriting it from an ancestor, and these selectors target that class on
+   the element itself. Same tinted "liquid glass" treatment as the toolbar
+   bar: same base colour, same var(--tb-alpha) (copied onto each element by
+   hand in JS now, for the same not-a-descendant-anymore reason) — only the
+   colour needs restating per theme here. */
 .hw-tb-dropdown.theme-glass-dark,
 .hw-tb-submenu.theme-glass-dark {
   background: rgba(15, 23, 42, var(--tb-alpha, 0.8));
   border-color: rgba(255, 255, 255, 0.16);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
-.hw-tb-dropdown.theme-glass-dark .hw-tb-menu-item,
-.hw-tb-submenu.theme-glass-dark .hw-tb-sub-item {
-  color: #e2e8f0;
-}
-.hw-tb-dropdown.theme-glass-dark .hw-tb-menu-item:hover,
-.hw-tb-submenu.theme-glass-dark .hw-tb-sub-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-}
-.hw-tb-submenu.theme-glass-dark .hw-tb-sub-footer {
-  color: #94a3b8;
-  border-top-color: rgba(255, 255, 255, 0.12);
-}
-
 .hw-tb-dropdown.theme-cyber-blue,
 .hw-tb-submenu.theme-cyber-blue {
   background: rgba(2, 132, 199, var(--tb-alpha, 0.82));
   border-color: rgba(255, 255, 255, 0.3);
 }
-.hw-tb-dropdown.theme-cyber-blue .hw-tb-menu-item,
-.hw-tb-submenu.theme-cyber-blue .hw-tb-sub-item {
-  color: #ffffff;
-}
-.hw-tb-dropdown.theme-cyber-blue .hw-tb-menu-item:hover,
-.hw-tb-submenu.theme-cyber-blue .hw-tb-sub-item:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-}
-.hw-tb-submenu.theme-cyber-blue .hw-tb-sub-footer {
-  color: rgba(255, 255, 255, 0.75);
-  border-top-color: rgba(255, 255, 255, 0.25);
-}
-
 .hw-tb-dropdown.theme-emerald,
 .hw-tb-submenu.theme-emerald {
   background: rgba(5, 150, 105, var(--tb-alpha, 0.82));
   border-color: rgba(255, 255, 255, 0.3);
 }
-.hw-tb-dropdown.theme-emerald .hw-tb-menu-item,
-.hw-tb-submenu.theme-emerald .hw-tb-sub-item {
-  color: #ffffff;
-}
-.hw-tb-dropdown.theme-emerald .hw-tb-menu-item:hover,
-.hw-tb-submenu.theme-emerald .hw-tb-sub-item:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-}
-.hw-tb-submenu.theme-emerald .hw-tb-sub-footer {
-  color: rgba(255, 255, 255, 0.75);
-  border-top-color: rgba(255, 255, 255, 0.25);
-}
-
 .hw-tb-dropdown.theme-purple,
 .hw-tb-submenu.theme-purple {
   background: rgba(124, 58, 237, var(--tb-alpha, 0.82));
   border-color: rgba(255, 255, 255, 0.3);
 }
-.hw-tb-dropdown.theme-purple .hw-tb-menu-item,
-.hw-tb-submenu.theme-purple .hw-tb-sub-item {
-  color: #ffffff;
-}
-.hw-tb-dropdown.theme-purple .hw-tb-menu-item:hover,
-.hw-tb-submenu.theme-purple .hw-tb-sub-item:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-}
-.hw-tb-submenu.theme-purple .hw-tb-sub-footer {
-  color: rgba(255, 255, 255, 0.75);
-  border-top-color: rgba(255, 255, 255, 0.25);
-}
-
 .hw-tb-dropdown.theme-rose,
 .hw-tb-submenu.theme-rose {
   background: rgba(225, 29, 72, var(--tb-alpha, 0.82));
   border-color: rgba(255, 255, 255, 0.3);
 }
-.hw-tb-dropdown.theme-rose .hw-tb-menu-item,
-.hw-tb-submenu.theme-rose .hw-tb-sub-item {
-  color: #ffffff;
-}
-.hw-tb-dropdown.theme-rose .hw-tb-menu-item:hover,
-.hw-tb-submenu.theme-rose .hw-tb-sub-item:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-}
-.hw-tb-submenu.theme-rose .hw-tb-sub-footer {
-  color: rgba(255, 255, 255, 0.75);
-  border-top-color: rgba(255, 255, 255, 0.25);
-}
-
 .hw-tb-dropdown.theme-amber,
 .hw-tb-submenu.theme-amber {
   background: rgba(217, 119, 6, var(--tb-alpha, 0.82));
   border-color: rgba(255, 255, 255, 0.3);
 }
-.hw-tb-dropdown.theme-amber .hw-tb-menu-item,
-.hw-tb-submenu.theme-amber .hw-tb-sub-item {
-  color: #ffffff;
-}
-.hw-tb-dropdown.theme-amber .hw-tb-menu-item:hover,
-.hw-tb-submenu.theme-amber .hw-tb-sub-item:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-}
-.hw-tb-submenu.theme-amber .hw-tb-sub-footer {
-  color: rgba(255, 255, 255, 0.75);
-  border-top-color: rgba(255, 255, 255, 0.25);
-}
-
 .hw-tb-dropdown.theme-indigo,
 .hw-tb-submenu.theme-indigo {
   background: rgba(79, 70, 229, var(--tb-alpha, 0.82));
   border-color: rgba(255, 255, 255, 0.3);
 }
-.hw-tb-dropdown.theme-indigo .hw-tb-menu-item,
-.hw-tb-submenu.theme-indigo .hw-tb-sub-item {
-  color: #ffffff;
+
+/* Same hw-tb-text-light toggle as the toolbar above, applied directly since
+   these aren't descendants of it (see the portal note above) — independent
+   of which theme-X background is active. .hw-tb-menu-item/.hw-tb-sub-item's
+   own base rule (further below) is the dark-text default this overrides. */
+.hw-tb-dropdown.hw-tb-text-light .hw-tb-menu-item,
+.hw-tb-submenu.hw-tb-text-light .hw-tb-sub-item {
+  color: #f1f5f9;
 }
-.hw-tb-dropdown.theme-indigo .hw-tb-menu-item:hover,
-.hw-tb-submenu.theme-indigo .hw-tb-sub-item:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
+.hw-tb-dropdown.hw-tb-text-light .hw-tb-menu-item:hover,
+.hw-tb-submenu.hw-tb-text-light .hw-tb-sub-item:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
-.hw-tb-submenu.theme-indigo .hw-tb-sub-footer {
-  color: rgba(255, 255, 255, 0.75);
-  border-top-color: rgba(255, 255, 255, 0.25);
+.hw-tb-submenu.hw-tb-text-light .hw-tb-sub-footer {
+  color: #94a3b8;
+  border-top-color: rgba(255, 255, 255, 0.16);
 }
 
 .hw-tb-logo {
@@ -619,41 +509,51 @@
   transform: scale(1) translateY(0);
 }
 
+/* Background/border only — see the identical comment on
+   .hw-selection-toolbar's own theme-X rules above. Text/icon colour is
+   .hw-tb-text-light-driven, same toggle name reused here for consistency. */
 .hw-hover-translate-tip.theme-glass-dark {
   background: rgba(15, 23, 42, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-  color: #f8fafc;
 }
 .hw-hover-translate-tip.theme-cyber-blue {
   background: rgba(2, 132, 199, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
 }
 .hw-hover-translate-tip.theme-emerald {
   background: rgba(5, 150, 105, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
 }
 .hw-hover-translate-tip.theme-purple {
   background: rgba(124, 58, 237, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
 }
 .hw-hover-translate-tip.theme-rose {
   background: rgba(225, 29, 72, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
 }
 .hw-hover-translate-tip.theme-amber {
   background: rgba(217, 119, 6, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
 }
 .hw-hover-translate-tip.theme-indigo {
   background: rgba(79, 70, 229, var(--ht-alpha, 0.9));
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
+}
+
+/* Same reasoning and values as .hw-selection-toolbar.hw-tb-text-light above
+   — applied whenever this tip currently counts as dark (glass-dark, or
+   'auto'/an accent colour while overlayTheme resolves dark), toggled by
+   hover-translate.js independently of which theme-X background is active.
+   The tip's own base color: #1e293b (declared on .hw-hover-translate-tip
+   itself, further up this file) is the light-text default this overrides. */
+.hw-hover-translate-tip.hw-tb-text-light {
+  color: #f8fafc;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.hw-hover-translate-tip.hw-tb-text-light svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
 }
 
 /* Word/Sentence/Paragraph quick switcher (content/hover-translate.js) —

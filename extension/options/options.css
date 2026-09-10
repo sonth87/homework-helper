@@ -174,6 +174,25 @@ body {
   min-height: 480px;
   padding: 20px 16px;
   overflow: hidden;
+  transition: background 0.15s ease;
+}
+
+/* Toggled by updatePreview() in tabs/appearance-tab.js via
+   effectiveOverlayDark — this mock "page" the glass surfaces float over
+   should look dark whenever overlayTheme resolves to dark, same as the real
+   in-page overlay's :host([data-theme="dark"])/@media dark palette (this
+   isn't the Options page's own chrome going dark — see the header comment on
+   .opt-tooltip-popup below — just the simulated webpage backdrop). */
+.opt-mock-page.theme-dark {
+  background: #0f172a;
+}
+
+.opt-mock-page.theme-dark .opt-mock-text {
+  color: #cbd5e1;
+}
+
+.opt-mock-page.theme-dark .opt-mock-text h3 {
+  color: #f8fafc;
 }
 
 .opt-mock-blob {
@@ -425,6 +444,15 @@ body {
   font-weight: 500;
 }
 
+/* Toggled in updatePreview() (tabs/appearance-tab.js) alongside the toolbar's
+   own inline text-shadow — mirrors content/styles/tooltip.css's identical fix
+   for the real toolbar. text-shadow (set inline, since it's just one value
+   like color) inherits into .prev-tb-label on its own; the icons are SVG
+   strokes it doesn't reach, so they need this filter instead. */
+.opt-preview-toolbar.prev-accent-text svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
 /* Mirrors .hw-selection-toolbar.size-compact/.size-large in tooltip.css so
    the live preview actually reflects the "Kích cỡ Toolbar" select. */
 .opt-preview-toolbar.size-compact {
@@ -488,7 +516,13 @@ body {
   padding-left: 8px;
   border-left: 2.5px solid #0284c7;
   font-size: 12px;
-  color: #0f172a;
+  /* No color here on purpose — inherits from #prevPopup/#prevMiniPopup's own
+     inline color (popColor in updatePreview(), tabs/appearance-tab.js), which
+     already tracks dark/light correctly. A hardcoded color here would win
+     over that (an element's own explicit color always beats an inherited
+     one) and silently stay dark even once the ancestor switches to light
+     text for a dark background — exactly what happened before this comment
+     existed. */
 }
 
 .prev-popup-footer {

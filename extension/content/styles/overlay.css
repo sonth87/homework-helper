@@ -321,9 +321,13 @@
    > Homework Helper Popup) — independent from overlayTheme's own light/dark
    glass background above. 'auto' (the default) leaves --hw-accent at
    whatever :host already set (its own light/dark-aware value); a named
-   theme here overrides just the accent, reusing the same RGB triples as the
+   theme here overrides the accent, reusing the same RGB triples as the
    Selection Toolbar / Quick Hover Translate (shared/toolbar-theme-colors.js)
-   for one consistent set of brand colors across the extension. */
+   for one consistent set of brand colors across the extension. --hw-accent-rgb
+   here also becomes this card's own Glass Tint Overlay — see the
+   isAccentTheme branch in applyAppearanceSettings() (content/overlay.js),
+   which sources the card's background from this instead of the neutral
+   --hw-glass-rgb whenever one of these six is picked. */
 .hw-solution-card.theme-cyber-blue { --hw-accent: #0284c7; --hw-accent-hover: #0369a1; --hw-accent-rgb: 2, 132, 199; }
 .hw-solution-card.theme-emerald { --hw-accent: #059669; --hw-accent-hover: #047857; --hw-accent-rgb: 5, 150, 105; }
 .hw-solution-card.theme-purple { --hw-accent: #7c3aed; --hw-accent-hover: #6d28d9; --hw-accent-rgb: 124, 58, 237; }
@@ -934,19 +938,19 @@
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  background: #0284c7;
+  background: var(--hw-accent);
   color: #ffffff;
   border: none;
   border-radius: 10px;
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--hw-accent-rgb), 0.3);
   transition: all 0.15s ease;
 }
 
 .hw-btn-card-primary:hover {
-  background: #0369a1;
+  background: var(--hw-accent-hover);
   transform: translateY(-1px);
 }
 

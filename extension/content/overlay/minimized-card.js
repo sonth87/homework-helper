@@ -151,10 +151,11 @@ export class MinimizedCard {
   _applyGlassTheme() {
     Storage.get(['popupCardTheme', 'popupOpacity', 'popupBlur']).then(
       ({ popupCardTheme, popupOpacity = 60, popupBlur = 6 }) => {
+        const popupAlpha = (popupOpacity / 100).toFixed(2);
         this.circleEl.style.setProperty('--hw-mini-rgb', resolveThemeColorRgb(popupCardTheme));
-        this.circleEl.style.setProperty('--hw-mini-alpha', (popupOpacity / 100).toFixed(2));
+        this.circleEl.style.setProperty('--hw-mini-alpha', popupAlpha);
         this.circleEl.style.setProperty('--hw-mini-blur', `${popupBlur}px`);
-        this.popupEl.style.setProperty('--hw-mini-popup-alpha', (popupOpacity / 100).toFixed(2));
+        this.popupEl.style.setProperty('--hw-mini-popup-alpha', popupAlpha);
         this.popupEl.style.setProperty('--hw-mini-popup-blur', `${popupBlur}px`);
         // The two custom properties just set above only drive
         // minimized-card.css's own pre-JS fallback backdrop-filter (see its
@@ -162,6 +163,17 @@ export class MinimizedCard {
         // per-instance refraction filter (circleGlass/popupGlass, attached
         // in buildDom()), which needs its filterId rebuilt into the string
         // by hand here since popupBlur can change after attach time.
+        // Glass Tint Overlay, same isAccentTheme split as the real card's
+        // applyAppearanceSettings() (content/overlay.js) — an explicit accent
+        // theme tints this popup's own glass background too, not just the
+        // hover-tint on its action buttons below (which already reads
+        // --hw-accent-rgb, but had nothing but the ambient default to read
+        // until now since nothing in this file ever set it for this element).
+        const isAccentTheme = !['auto', 'glass-light', 'glass-dark'].includes(popupCardTheme);
+        this.popupEl.style.setProperty('--hw-accent-rgb', resolveThemeColorRgb(popupCardTheme));
+        this.popupEl.style.background = isAccentTheme
+          ? `rgba(${resolveThemeColorRgb(popupCardTheme)}, ${popupAlpha})`
+          : '';
         const circleGlassId = this.circleGlass?.filterId;
         const circleBackdrop = circleGlassId
           ? `url(#${circleGlassId}) blur(${popupBlur}px) saturate(180%)`

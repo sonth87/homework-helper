@@ -653,7 +653,21 @@ class InPageOverlay {
     const card = this.floatingCard?.popupCard;
     if (card) {
       const popAlpha = (popupOpacity / 100).toFixed(2);
-      card.style.background = `rgba(var(--hw-glass-rgb), ${popAlpha})`;
+      // Glass Tint Overlay: an explicit accent theme (cyber-blue/emerald/
+      // purple/rose/amber/indigo) tints the card's own glass background
+      // toward --hw-accent-rgb (set by the theme-X class below) instead of
+      // the neutral --hw-glass-rgb every other theme uses — same technique
+      // as "Apple Optical Lens"'s tintColor/tintOpacity in the reference
+      // liquid-glass project (its container's backgroundColor IS the tint,
+      // computed from the same accent value already driving the primary
+      // button/heading here, not a separate free-form color). 'auto' and the
+      // two 'glass-light'/'glass-dark' overrides intentionally keep the
+      // neutral background — those aren't accent choices, see the .theme-X
+      // rules in overlay.css.
+      const isAccentTheme = !['auto', 'glass-light', 'glass-dark'].includes(popupCardTheme);
+      card.style.background = isAccentTheme
+        ? `rgba(var(--hw-accent-rgb), ${popAlpha})`
+        : `rgba(var(--hw-glass-rgb), ${popAlpha})`;
       // The url(#...) reference has to be repeated here: this inline style
       // write completely replaces whatever overlay.css's own
       // .hw-solution-card rule declared for backdrop-filter — inline style
