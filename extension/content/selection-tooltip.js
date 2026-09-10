@@ -9,6 +9,7 @@ import { getSelectionTooltipI18n } from '../shared/i18n.js';
 import { TOOLBAR_ITEM_ICONS, normalizeToolbarLayout } from '../shared/toolbar-items.js';
 import { NANO_STATUS } from '../shared/nano-status.js';
 import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
+import { attachLiquidGlassRefraction } from '../shared/liquid-glass-refraction.js';
 
 class SelectionTooltip {
   constructor() {
@@ -300,6 +301,10 @@ class SelectionTooltip {
     }
 
     getSharedShadowRoot().appendChild(this.toolbar);
+    // Fresh per appearance (created and .remove()'d — see hide()/wherever
+    // this.toolbar = null runs) — its own destroy() has to run there too,
+    // or every text selection leaks another filter/ResizeObserver.
+    this.toolbarGlass = attachLiquidGlassRefraction(this.toolbar, { blur: toolbarBlur, saturate: 1.8 });
 
     // Now that it exists in the DOM, measure its real box to center it
     // horizontally on the selection and place it above/below with a fixed
@@ -342,10 +347,14 @@ class SelectionTooltip {
 
   closeDropdown() {
     if (this.submenu) {
+      this.submenuGlass?.destroy();
+      this.submenuGlass = null;
       this.submenu.remove();
       this.submenu = null;
     }
     if (this.dropdown) {
+      this.dropdownGlass?.destroy();
+      this.dropdownGlass = null;
       this.dropdown.remove();
       this.dropdown = null;
     }
@@ -425,6 +434,15 @@ class SelectionTooltip {
     this.dropdown.style.top = `${window.scrollY + toolbarRect.bottom + 6}px`;
     this.dropdown.style.left = `${window.scrollX + toolbarRect.left}px`;
     getSharedShadowRoot().appendChild(this.dropdown);
+    // Fresh every open, torn down in closeDropdown() — its destroy() runs
+    // there too.
+    this.dropdownGlass = attachLiquidGlassRefraction(this.dropdown, {
+      // ×1.5 — same reasoning as the CSS fallback this replaces (see
+      // .hw-tb-dropdown in tooltip.css): a larger panel needs a stronger
+      // radius to read as comparably blurred to the bar.
+      blur: (parseInt(this.dropdown.style.getPropertyValue('--tb-blur'), 10) || 6) * 1.5,
+      saturate: 1.8,
+    });
 
     // The submenu is its own portalled element too, for the exact same
     // backdrop-filter reason as the dropdown above (it would otherwise be
@@ -445,6 +463,15 @@ class SelectionTooltip {
     this.submenu.addEventListener('mousedown', (e) => e.stopPropagation());
     this.submenu.addEventListener('mouseup', (e) => e.stopPropagation());
     getSharedShadowRoot().appendChild(this.submenu);
+    // Fresh every open, torn down in closeDropdown() — its destroy() runs
+    // there too. Starts display:none (see above), so its very first
+    // refresh() here is a no-op; the ResizeObserver inside picks it up once
+    // it's actually shown.
+    this.submenuGlass = attachLiquidGlassRefraction(this.submenu, {
+      // ×1.5 — same reasoning as .hw-tb-dropdown's own attach call above.
+      blur: (parseInt(this.submenu.style.getPropertyValue('--tb-blur'), 10) || 6) * 1.5,
+      saturate: 1.8,
+    });
 
     // Submenu open/close.
     //
@@ -603,6 +630,8 @@ class SelectionTooltip {
     this.clearDropdownCloseTimer();
     this.closeDropdown();
     if (this.toolbar) {
+      this.toolbarGlass?.destroy();
+      this.toolbarGlass = null;
       this.toolbar.remove();
       this.toolbar = null;
     }

@@ -5,7 +5,7 @@
 
 import { Icons } from '../shared/icons.js';
 import { Storage } from '../shared/storage.js';
-import { ensureLiquidGlassFilter, updateLiquidGlassFilter } from '../shared/liquid-glass.js';
+import { attachLiquidGlassRefraction, setGlobalGlassParams } from '../shared/liquid-glass-refraction.js';
 import { getOptionsI18n, getSelectionTooltipI18n, getFloatingPopupI18n } from '../shared/i18n.js';
 import { OptionsTooltips } from './options-tooltips.js';
 import { KeysTab } from './tabs/keys-tab.js';
@@ -32,6 +32,8 @@ export class OptionsController {
     this.setupNavigation();
     this.initImageLightbox();
     OptionsTooltips.init();
+    const optToastEl = document.getElementById('optToast');
+    if (optToastEl) attachLiquidGlassRefraction(optToastEl, { blur: 14, saturate: 1.8 });
     await this.applyLanguageI18n();
 
     await this.keysTab.init();
@@ -333,8 +335,8 @@ export class OptionsController {
     setText('optCardLiquidGlassTitle', dict.cardLiquidGlassTitle);
     setText('optLabelLiquidGlassScale', dict.labelLiquidGlassScale);
     setText('optLabelLiquidGlassScaleDesc', dict.labelLiquidGlassScaleDesc);
-    setText('optLabelLiquidGlassFrequency', dict.labelLiquidGlassFrequency);
-    setText('optLabelLiquidGlassFrequencyDesc', dict.labelLiquidGlassFrequencyDesc);
+    setText('optLabelLiquidGlassChroma', dict.labelLiquidGlassChroma);
+    setText('optLabelLiquidGlassChromaDesc', dict.labelLiquidGlassChromaDesc);
     // Reuses the same generic "Restore Default" string as the FAB/Toolbar/
     // Popup/Hover cards below — see their own identical comment.
     setText('optBtnResetLiquidGlassText', dict.toolbarLayoutResetBtn);
@@ -566,14 +568,14 @@ export class OptionsController {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  ensureLiquidGlassFilter(document);
-  // Injected with the library defaults above (this callback could be made
-  // async instead and awaited before injecting, but every other appearance
-  // setting in this codebase accepts the same brief default-then-actual
-  // flash rather than delaying first paint on a Storage round-trip — see
-  // shadow-root.js's identical tradeoff).
-  Storage.get(['liquidGlassScale', 'liquidGlassFrequency']).then(({ liquidGlassScale, liquidGlassFrequency }) => {
-    updateLiquidGlassFilter(document, { scale: liquidGlassScale, frequency: liquidGlassFrequency });
+  // OptionsController()'s init() (below) attaches several surfaces
+  // (OptionsTooltips, optToast, the Appearance tab's preview mocks) using
+  // whatever Scale/Chroma this module currently holds, synchronously, before
+  // this Storage round-trip can resolve — same brief default-then-actual
+  // flash every other appearance setting in this codebase accepts rather
+  // than delaying first paint (see shadow-root.js's identical tradeoff).
+  Storage.get(['liquidGlassScale', 'liquidGlassChroma']).then(({ liquidGlassScale, liquidGlassChroma }) => {
+    setGlobalGlassParams({ scale: liquidGlassScale, chroma: liquidGlassChroma });
   });
   new OptionsController();
 });

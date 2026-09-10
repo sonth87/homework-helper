@@ -15,13 +15,12 @@ import { AI_PROVIDER_ID, PICKABLE_PROVIDER_IDS, providerName } from '../shared/t
 import { TranslateHistorySheet } from '../shared/translate-history-sheet.js';
 import { renderAnswer, bindCopyCodeButtons } from '../shared/markdown-katex.js';
 import { speak, isSpeechAvailable, bindSpeakButtons } from '../shared/tts.js';
-import { ensureLiquidGlassFilter, updateLiquidGlassFilter } from '../shared/liquid-glass.js';
+import { setGlobalGlassParams } from '../shared/liquid-glass-refraction.js';
 import { PopupTooltips } from './popup-tooltips.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  ensureLiquidGlassFilter(document);
-  Storage.get(['liquidGlassScale', 'liquidGlassFrequency']).then(({ liquidGlassScale, liquidGlassFrequency }) => {
-    updateLiquidGlassFilter(document, { scale: liquidGlassScale, frequency: liquidGlassFrequency });
+  Storage.get(['liquidGlassScale', 'liquidGlassChroma']).then(({ liquidGlassScale, liquidGlassChroma }) => {
+    setGlobalGlassParams({ scale: liquidGlassScale, chroma: liquidGlassChroma });
   });
   // navigator.clipboard.readText() (see pickUpClipboard() near the bottom)
   // throws "Document is not focused" unless this window actually holds OS

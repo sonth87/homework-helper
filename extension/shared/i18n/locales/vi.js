@@ -490,10 +490,10 @@ export default {
     cardLiquidGlassTitle: "Liquid Glass",
     labelLiquidGlassScale: "Độ biến dạng (Scale)",
     labelLiquidGlassScaleDesc:
-      "Mức độ bẻ cong hình ảnh phía sau lớp kính — càng cao càng lượn sóng mạnh.",
-    labelLiquidGlassFrequency: "Tần số nhiễu",
-    labelLiquidGlassFrequencyDesc:
-      "Độ mịn/thô của hoạ tiết nhiễu trên lớp kính — thấp cho vệt lớn mượt, cao cho gợn sóng nhỏ dày đặc.",
+      "Độ khúc xạ/phồng lên của lớp kính — càng âm hiệu ứng càng mạnh, về 0 sẽ tắt dần.",
+    labelLiquidGlassChroma: "Viền màu (Chroma)",
+    labelLiquidGlassChromaDesc:
+      "Độ tách màu ở viền khúc xạ — 0 tắt hẳn hiệu ứng viền cầu vồng, càng cao viền càng rõ.",
     cardFabTitle: "Nút Nổi Trong Trang (Floating FABs)",
     labelFabDisplay: "Hiển thị nút nổi trên website",
     labelFabDisplayDesc:

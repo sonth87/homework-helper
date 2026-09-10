@@ -436,9 +436,9 @@ export default {
     overlayThemeOptDark: "Sombre",
     cardLiquidGlassTitle: "Liquid Glass",
     labelLiquidGlassScale: "Distorsion (Scale)",
-    labelLiquidGlassScaleDesc: "À quel point l'arrière-plan derrière le verre se déforme — plus la valeur est élevée, plus l'ondulation est forte.",
-    labelLiquidGlassFrequency: "Fréquence du bruit",
-    labelLiquidGlassFrequencyDesc: "À quel point le motif de bruit sur le verre est fin ou grossier — une valeur basse donne de grandes traînées lisses, une valeur haute donne de petites ondulations denses.",
+    labelLiquidGlassScaleDesc: "À quel point l'arrière-plan derrière le verre se réfracte/bombe — plus la valeur est négative, plus l'effet est fort ; vers 0, il s'estompe.",
+    labelLiquidGlassChroma: "Chroma (Frange de bord)",
+    labelLiquidGlassChromaDesc: "Séparation des couleurs sur le bord réfracté — 0 désactive complètement l'effet de frange arc-en-ciel, une valeur plus élevée le rend plus visible.",
     cardFabTitle: "Boutons flottants dans la page (FAB)",
     labelFabDisplay: "Afficher les boutons flottants sur les pages",
     descFabDisplay:

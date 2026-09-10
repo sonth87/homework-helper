@@ -303,19 +303,19 @@ export const DEFAULT_SETTINGS = {
   enableTextTooltip: true,
   enableFloatingButton: true,
   overlayTheme: "auto", // 'auto' (follow system) | 'light' | 'dark'
-  // Shared SVG refraction filter (shared/liquid-glass.js) behind every glass
-  // surface's backdrop-filter — one filter definition per document/shadow
-  // root, so these two values apply everywhere at once. Defaults match what
-  // the filter was hardcoded to before this became configurable.
-  liquidGlassScale: 30, // 0 - 200 (feDisplacementMap scale — how far the backdrop warps)
-  liquidGlassFrequency: 0.02, // 0.001 - 0.1 (feTurbulence baseFrequency — noise coarseness: lower = larger blobs, higher = finer ripples)
+  // Per-element refraction (shared/liquid-glass-refraction.js) behind every
+  // glass surface's backdrop-filter — these two feed every attached surface's
+  // feDisplacementMap at once (setGlobalGlassParams()), so they apply
+  // everywhere simultaneously despite each surface having its own filter.
+  liquidGlassScale: -187, // -300 - 0 (feDisplacementMap scale — more negative = stronger magnifying bulge)
+  liquidGlassChroma: 10, // 0 - 20 (per-channel scale stagger — the faint RGB-fringe "prism" look at the edge; 0 disables it)
   fabSize: "normal", // 'tiny' | 'small' | 'normal' | 'large'
   fabOpacity: 90, // 30 - 100% (Liquid Glass background alpha)
   fabAutoHide: true, // true (slides into the screen edge at rest, revealed on hover) | false (stays fully visible)
   fabPosition: null, // null (default docked position) | { dock: 'left' | 'right', top: number(px) } — set by dragging the FAB cluster
   drawerWidth: null, // null (default 480px from CSS) | number(px) — set by dragging the drawer's left-edge resize handle
   popupOpacity: 60, // 0 - 100% (Liquid Glass background alpha)
-  popupBlur: 10, // 0 - 30px
+  popupBlur: 6, // 0 - 30px
   popupCardSize: "normal", // 'normal' | 'compact' (compact hides secondary buttons until hover, tighter padding) | 'minimize'
   popupCardTheme: "auto", // 'auto' (default blue accent, dark-mode aware) | 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple' | 'rose' | 'amber' | 'indigo'
   toolbarOpacity: 25, // 0 - 100%
@@ -339,7 +339,7 @@ export const DEFAULT_SETTINGS = {
   hoverTranslateGranularity: "sentence", // 'word' | 'sentence' | 'paragraph'
   hoverTranslateDelay: 350, // ms the pointer must stay still before a lookup fires
   hoverTranslateOpacity: 60, // 0 - 100%
-  hoverTranslateBlur: 10, // 0 - 30px
+  hoverTranslateBlur: 6, // 0 - 30px
   hoverTranslateFontSize: 13, // 11 - 16px
   hoverTranslateMaxWidth: 300, // 220 - 420px
   hoverTranslateTheme: "auto", // 'auto' (follows OS light/dark) | 'glass-light' | 'glass-dark' | 'cyber-blue' | 'emerald' | 'purple' | 'rose' | 'amber' | 'indigo'

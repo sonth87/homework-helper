@@ -24,6 +24,7 @@ import { renderAnswer } from '../../shared/markdown-katex.js';
 import { speak, isSpeechAvailable } from '../../shared/tts.js';
 import { resolveThemeColorRgb } from '../../shared/toolbar-theme-colors.js';
 import { ensureStylesheet } from '../shadow-root.js';
+import { attachLiquidGlassRefraction } from '../../shared/liquid-glass-refraction.js';
 
 export class MinimizedCard {
   constructor(overlay) {
@@ -49,6 +50,11 @@ export class MinimizedCard {
     circle.innerHTML = `<button class="hw-mini-close" title="${this.overlay.drawer.currentDict?.miniCloseLabel || ''}">${Icons.x(8)}</button>`;
     this.shadow.appendChild(circle);
     this.circleEl = circle;
+    // blur here is just the attach-time starting point (matches
+    // minimized-card.css's own --hw-mini-blur default) — _applyGlassTheme()
+    // below rebuilds the real backdrop-filter string from the live
+    // "Popup Blur" setting using this handle's filterId every time it runs.
+    this.circleGlass = attachLiquidGlassRefraction(circle, { blur: 14, saturate: 1.8, border: 0.15 });
 
     const popup = document.createElement('div');
     popup.className = 'hw-mini-popup';
@@ -76,6 +82,14 @@ export class MinimizedCard {
     `;
     this.shadow.appendChild(popup);
     this.popupEl = popup;
+    // Real per-instance refraction (shared/liquid-glass-refraction.js)
+    // instead of the shared noise filter minimized-card.css still declares
+    // for every other glass surface. blur here is just the attach-time
+    // starting point (matches minimized-card.css's own --hw-mini-popup-blur
+    // default) — like the circle above, _applyGlassTheme() rebuilds the
+    // real backdrop-filter string from the live "Popup Blur" setting using
+    // this handle's filterId every time it runs.
+    this.popupGlass = attachLiquidGlassRefraction(popup, { blur: 6, saturate: 1.8 });
 
     circle.addEventListener('mouseenter', () => this.openPopup());
     circle.addEventListener('mouseleave', () => this.scheduleClosePopup());
@@ -136,12 +150,30 @@ export class MinimizedCard {
   // file re-reading its settings fresh rather than caching them.
   _applyGlassTheme() {
     Storage.get(['popupCardTheme', 'popupOpacity', 'popupBlur']).then(
-      ({ popupCardTheme, popupOpacity = 60, popupBlur = 10 }) => {
+      ({ popupCardTheme, popupOpacity = 60, popupBlur = 6 }) => {
         this.circleEl.style.setProperty('--hw-mini-rgb', resolveThemeColorRgb(popupCardTheme));
         this.circleEl.style.setProperty('--hw-mini-alpha', (popupOpacity / 100).toFixed(2));
         this.circleEl.style.setProperty('--hw-mini-blur', `${popupBlur}px`);
         this.popupEl.style.setProperty('--hw-mini-popup-alpha', (popupOpacity / 100).toFixed(2));
         this.popupEl.style.setProperty('--hw-mini-popup-blur', `${popupBlur}px`);
+        // The two custom properties just set above only drive
+        // minimized-card.css's own pre-JS fallback backdrop-filter (see its
+        // file comment) — each element's real, live one is its own
+        // per-instance refraction filter (circleGlass/popupGlass, attached
+        // in buildDom()), which needs its filterId rebuilt into the string
+        // by hand here since popupBlur can change after attach time.
+        const circleGlassId = this.circleGlass?.filterId;
+        const circleBackdrop = circleGlassId
+          ? `url(#${circleGlassId}) blur(${popupBlur}px) saturate(180%)`
+          : `blur(${popupBlur}px) saturate(180%)`;
+        this.circleEl.style.backdropFilter = circleBackdrop;
+        this.circleEl.style.webkitBackdropFilter = circleBackdrop;
+        const popupGlassId = this.popupGlass?.filterId;
+        const popupBackdrop = popupGlassId
+          ? `url(#${popupGlassId}) blur(${popupBlur}px) saturate(180%)`
+          : `blur(${popupBlur}px) saturate(180%)`;
+        this.popupEl.style.backdropFilter = popupBackdrop;
+        this.popupEl.style.webkitBackdropFilter = popupBackdrop;
         // 'glass-light'/'glass-dark' pin this popup's own glass regardless of
         // the global overlayTheme, same override .hw-solution-card gets from
         // its own identical .theme-glass-light/.theme-glass-dark classes.
@@ -237,6 +269,10 @@ export class MinimizedCard {
     this.positionPopup();
     this.popupEl.style.display = 'block';
     this._popupVisible = true;
+    // Content (and therefore size) is different on every open — refresh
+    // immediately instead of waiting on the ResizeObserver's 120ms debounce,
+    // so the very first frame shown already has a correctly-sized map.
+    this.popupGlass?.refresh();
   }
 
   scheduleClosePopup() {

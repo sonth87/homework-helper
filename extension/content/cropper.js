@@ -7,6 +7,7 @@ import { Icons } from '../shared/icons.js';
 import { Storage } from '../shared/storage.js';
 import { getCropperI18n, getI18n } from '../shared/i18n.js';
 import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
+import { attachLiquidGlassRefraction } from '../shared/liquid-glass-refraction.js';
 
 const RESIZE_HANDLE_DIRS = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
 const MIN_SELECTION_SIZE = 20;
@@ -87,6 +88,7 @@ class ScreenCropper {
     tip.className = 'hw-crop-tip';
     tip.innerHTML = `${Icons.scissors(16)} <span>${dict.tip}</span>`;
     this.overlay.appendChild(tip);
+    this.tipEl = tip;
 
     // Selection box
     this.selectionBox = document.createElement('div');
@@ -101,6 +103,13 @@ class ScreenCropper {
     window.addEventListener('keydown', this.boundKeyDown, true);
 
     getSharedShadowRoot().appendChild(this.overlay);
+    // getRootNode() (inside attachLiquidGlassRefraction()) only resolves to
+    // the shared shadow root once connected — has to run after the line
+    // above, not right after creating `tip`. This whole overlay (tip
+    // included) is fresh per crop session and torn down in cleanup(), where
+    // this handle's destroy() runs so the filter/ResizeObserver don't leak
+    // across repeated Alt+C presses.
+    this.tipGlass = attachLiquidGlassRefraction(this.tipEl, { blur: 16, saturate: 1.8 });
   }
 
   clearHandles() {
@@ -390,6 +399,8 @@ class ScreenCropper {
   }
 
   cleanup() {
+    this.tipGlass?.destroy();
+    this.tipGlass = null;
     if (this.overlay) {
       this.overlay.remove();
       this.overlay = null;

@@ -435,9 +435,9 @@ export default {
     overlayThemeOptDark: "Тёмный",
     cardLiquidGlassTitle: "Liquid Glass",
     labelLiquidGlassScale: "Искажение (Scale)",
-    labelLiquidGlassScaleDesc: "Насколько сильно фон за стеклом искажается — чем выше значение, тем сильнее волны.",
-    labelLiquidGlassFrequency: "Частота шума",
-    labelLiquidGlassFrequencyDesc: "Насколько мелкий или крупный узор шума на стекле — низкое значение даёт крупные плавные полосы, высокое — мелкую плотную рябь.",
+    labelLiquidGlassScaleDesc: "Насколько сильно фон за стеклом преломляется/выпячивается — чем более отрицательное значение, тем сильнее эффект; к 0 эффект отключается.",
+    labelLiquidGlassChroma: "Хрома (кайма по краю)",
+    labelLiquidGlassChromaDesc: "Разделение цветов по преломлённому краю — 0 полностью отключает радужную кайму, чем выше значение, тем она заметнее.",
     cardFabTitle: "Плавающие кнопки на странице (FAB)",
     labelFabDisplay: "Показывать кнопки на веб-страницах",
     descFabDisplay:

@@ -8,7 +8,7 @@ import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
 import { formatMarkdownAndMath, renderAnswer, bindCopyCodeButtons } from '../shared/markdown-katex.js';
 import { getI18n } from '../shared/i18n.js';
 import { bindSpeakButtons } from '../shared/tts.js';
-import { ensureLiquidGlassFilter, updateLiquidGlassFilter } from '../shared/liquid-glass.js';
+import { setGlobalGlassParams } from '../shared/liquid-glass-refraction.js';
 import { checkNanoAvailability, NANO_STATUS } from '../shared/nano-status.js';
 import { SidePanelTooltips } from './sidepanel-tooltips.js';
 import { SidePanelKeysModal } from './sidepanel-keys-modal.js';
@@ -874,9 +874,8 @@ export class SidePanelController {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  ensureLiquidGlassFilter(document);
-  Storage.get(['liquidGlassScale', 'liquidGlassFrequency']).then(({ liquidGlassScale, liquidGlassFrequency }) => {
-    updateLiquidGlassFilter(document, { scale: liquidGlassScale, frequency: liquidGlassFrequency });
+  Storage.get(['liquidGlassScale', 'liquidGlassChroma']).then(({ liquidGlassScale, liquidGlassChroma }) => {
+    setGlobalGlassParams({ scale: liquidGlassScale, chroma: liquidGlassChroma });
   });
   new SidePanelController();
 });

@@ -16,7 +16,7 @@ import { MinimizedCard } from './overlay/minimized-card.js';
 import { OverlayConfigModal } from './overlay/config-modal.js';
 import { OverlayRichTooltips } from './overlay/rich-tooltips.js';
 import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
-import { updateLiquidGlassFilter } from '../shared/liquid-glass.js';
+import { attachLiquidGlassRefraction, setGlobalGlassParams } from '../shared/liquid-glass-refraction.js';
 
 class InPageOverlay {
   constructor() {
@@ -347,6 +347,33 @@ class InPageOverlay {
 
     this.shadow.appendChild(container);
 
+    // Real per-instance refraction (shared/liquid-glass-refraction.js) for
+    // every glass surface built into this one template — replaces the old
+    // shared noise filter (shared/liquid-glass.js) entirely for these. Each
+    // element's own displacement map depends on its actual size/radius, so
+    // this has to run after the whole template is connected to the shadow
+    // root (getRootNode() inside attachLiquidGlassRefraction() only
+    // resolves to the shadow root once attached) — this exact spot.
+    // hwSolutionCard's returned filterId is threaded into
+    // applyAppearanceSettings()'s own backdrop-filter write below so the
+    // "Popup Blur" setting keeps working without the two fighting over the
+    // same inline style; the rest have nothing else touching their
+    // backdrop-filter, so the library manages it entirely on its own.
+    this.solutionCardGlass = attachLiquidGlassRefraction(this.shadow.getElementById('hwSolutionCard'), {
+      blur: 16,
+      saturate: 1.8,
+    });
+    // blur/saturate below each match exactly what that element's own
+    // pre-edit CSS rule declared (some never had saturate(180%) at all —
+    // saturate:1 preserves that instead of picking up the library's own
+    // default 1.5 boost none of these were actually designed around).
+    attachLiquidGlassRefraction(this.shadow.getElementById('hwFabCrop'), { blur: 16, saturate: 1.8, border: 0.15 });
+    attachLiquidGlassRefraction(this.shadow.getElementById('hwFabToggle'), { blur: 16, saturate: 1.8, border: 0.15 });
+    attachLiquidGlassRefraction(this.shadow.getElementById('hwCardHistoryPanel'), { blur: 20, saturate: 1 });
+    attachLiquidGlassRefraction(this.shadow.getElementById('hwCardFloatTab'), { blur: 8, saturate: 1.8 });
+    attachLiquidGlassRefraction(this.shadow.getElementById('hwDrawerEdgeClose'), { blur: 16, saturate: 1, border: 0.15 });
+    attachLiquidGlassRefraction(this.shadow.getElementById('hwDrawerHistoryPanel'), { blur: 20, saturate: 1 });
+
     // Reveal as soon as overlay.css is in. katex.min.css is deliberately not
     // waited on — it only matters inside a rendered answer and is far heavier,
     // so gating the FAB on it would trade a flash for a stall. An error or a
@@ -476,10 +503,10 @@ class InPageOverlay {
           if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.fabAutoHide || changes.popupOpacity || changes.popupBlur || changes.popupCardSize || changes.popupCardTheme || changes.overlayTheme) {
             this.applyAppearanceSettings();
           }
-          if (changes.liquidGlassScale || changes.liquidGlassFrequency) {
-            updateLiquidGlassFilter(this.shadow, {
+          if (changes.liquidGlassScale || changes.liquidGlassChroma) {
+            setGlobalGlassParams({
               scale: changes.liquidGlassScale?.newValue,
-              frequency: changes.liquidGlassFrequency?.newValue,
+              chroma: changes.liquidGlassChroma?.newValue,
             });
           }
           if (changes.uiLanguage) {
@@ -592,6 +619,9 @@ class InPageOverlay {
       toast.id = 'hwToast';
       toast.className = 'hw-toast';
       this.shadow.appendChild(toast);
+      // Created once and reused for every toast after this (see the (!toast)
+      // guard above) — no destroy() needed, it never leaves the DOM.
+      attachLiquidGlassRefraction(toast, { blur: 12, saturate: 1 });
     }
     toast.innerHTML = `<span style="display:flex;align-items:center;gap:6px;">${Icons.checkCircle(14)} <span>${msg}</span></span>`;
     toast.classList.add('show');
@@ -608,7 +638,7 @@ class InPageOverlay {
       fabOpacity = 90,
       fabAutoHide = true,
       popupOpacity = 60,
-      popupBlur = 10,
+      popupBlur = 6,
       popupCardSize = 'normal',
       popupCardTheme = 'auto',
     } = await Storage.get();
@@ -624,14 +654,27 @@ class InPageOverlay {
     if (card) {
       const popAlpha = (popupOpacity / 100).toFixed(2);
       card.style.background = `rgba(var(--hw-glass-rgb), ${popAlpha})`;
-      // The url(#hw-liquid-glass-filter) reference (see shared/liquid-glass.js)
-      // has to be repeated here: this inline style write completely replaces
-      // whatever overlay.css's own .hw-solution-card rule declared for
-      // backdrop-filter — inline style always wins over a stylesheet rule
-      // regardless of selector specificity — so without it, every popupOpacity/
-      // popupBlur change silently strips the refraction filter back out.
-      card.style.backdropFilter = `blur(${popupBlur}px) saturate(180%) url(#hw-liquid-glass-filter)`;
-      card.style.webkitBackdropFilter = `blur(${popupBlur}px) saturate(180%) url(#hw-liquid-glass-filter)`;
+      // The url(#...) reference has to be repeated here: this inline style
+      // write completely replaces whatever overlay.css's own
+      // .hw-solution-card rule declared for backdrop-filter — inline style
+      // always wins over a stylesheet rule regardless of selector
+      // specificity — so without it, every popupOpacity/popupBlur change
+      // would silently strip the refraction filter back out. This card's own
+      // per-instance filter (this.solutionCardGlass, see createShadowDOM())
+      // is independently reactive to this setting unlike every other glass
+      // surface's filter, so its id has to be threaded through here instead
+      // of just letting the library manage its own backdrop-filter.
+      // glassId is only ever null if attach itself failed (unsupported
+      // browser, or hwSolutionCard missing from the DOM) — attach's own
+      // unsupported-branch already wrote a frosted fallback inline, so this
+      // just needs to not reference any SVG filter id in that case (there is
+      // no longer a shared filter definition to fall back to).
+      const glassId = this.solutionCardGlass?.filterId;
+      const cardBackdrop = glassId
+        ? `url(#${glassId}) blur(${popupBlur}px) saturate(180%)`
+        : `blur(${popupBlur}px) saturate(180%)`;
+      card.style.backdropFilter = cardBackdrop;
+      card.style.webkitBackdropFilter = cardBackdrop;
       card.classList.toggle('hw-card-compact', popupCardSize === 'compact');
       card.classList.remove('theme-glass-light', 'theme-glass-dark', 'theme-cyber-blue', 'theme-emerald', 'theme-purple', 'theme-rose', 'theme-amber', 'theme-indigo');
       if (popupCardTheme !== 'auto') card.classList.add(`theme-${popupCardTheme}`);

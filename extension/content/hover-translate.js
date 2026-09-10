@@ -25,6 +25,7 @@ import { Icons } from '../shared/icons.js';
 import { speak, isSpeechAvailable } from '../shared/tts.js';
 import { buildHighlight, isValidHighlightStyle, DEFAULT_HIGHLIGHT_STYLE } from '../shared/highlight-styles.js';
 import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
+import { attachLiquidGlassRefraction } from '../shared/liquid-glass-refraction.js';
 
 const SETTINGS_KEYS = [
   'enableHoverTranslate', 'hoverTranslateModifiers', 'hoverTranslateGranularity', 'hoverTranslateDelay',
@@ -465,7 +466,7 @@ class HoverTranslate {
     const tip = document.createElement('div');
     tip.className = `hw-hover-translate-tip theme-${resolvedHtTheme}`;
     tip.style.setProperty('--ht-alpha', ((this.settings.hoverTranslateOpacity ?? 90) / 100).toFixed(2));
-    tip.style.setProperty('--ht-blur', `${this.settings.hoverTranslateBlur ?? 16}px`);
+    tip.style.setProperty('--ht-blur', `${this.settings.hoverTranslateBlur ?? 6}px`);
     tip.style.setProperty('--ht-font-size', `${this.settings.hoverTranslateFontSize ?? 13}px`);
     tip.style.setProperty('--ht-max-width', `${this.settings.hoverTranslateMaxWidth ?? 300}px`);
 
@@ -534,6 +535,14 @@ class HoverTranslate {
 
     getSharedShadowRoot().appendChild(tip);
     this.tooltip = tip;
+    // Fresh per hover (created and .remove()'d — see removeTooltip()) —
+    // its destroy() has to run there too, or every hover-translate leaks
+    // another filter/ResizeObserver.
+    this.tooltipGlass = attachLiquidGlassRefraction(tip, { blur: this.settings.hoverTranslateBlur ?? 6, saturate: 1.8 });
+    // .hw-ht-gran-switch grows its own glass pill on :hover (tooltip.css) —
+    // same per-tip lifecycle as the tip itself, torn down alongside it below.
+    const granSwitchEl = tip.querySelector('.hw-ht-gran-switch');
+    if (granSwitchEl) this.granSwitchGlass = attachLiquidGlassRefraction(granSwitchEl, { blur: this.settings.hoverTranslateBlur ?? 6, saturate: 1.8 });
     this._activeRect = rect;
     this.positionTooltip(tip, rect);
   }
@@ -591,6 +600,10 @@ class HoverTranslate {
 
   removeTooltip() {
     if (this.tooltip) {
+      this.tooltipGlass?.destroy();
+      this.tooltipGlass = null;
+      this.granSwitchGlass?.destroy();
+      this.granSwitchGlass = null;
       this.tooltip.remove();
       this.tooltip = null;
     }

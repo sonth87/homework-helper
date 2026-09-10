@@ -20,11 +20,13 @@ _Chưa có thay đổi nào chờ phát hành._
 ## [1.11.0] — 2026-09-09
 
 ### Thêm mới
-- Tuỳ chọn mới trong Cài đặt > Giao diện: mục "Liquid Glass" để tự chỉnh độ
-  biến dạng (Scale) và tần số nhiễu (Frequency) của hiệu ứng kính lỏng —
-  áp dụng ngay cho mọi khung kính trong extension (nút nổi, popup, thanh
-  công cụ bôi đen, tooltip dịch...) vì tất cả dùng chung một hiệu ứng. Có
-  nút khôi phục về mặc định.
+- Hiệu ứng "kính lỏng" (khúc xạ/bo phồng thật sự phía sau lớp kính, không chỉ
+  làm mờ nền) nay áp dụng cho toàn bộ khung kính trong extension — 2 nút nổi,
+  popup lời giải/dịch, chế độ thu gọn thành icon, ngăn kéo chat, thanh công cụ
+  bôi đen, tooltip dịch khi rê chuột, tooltip/toast ở popup nút nổi, Side Panel
+  và trang Cài đặt. Tuỳ chọn mới trong Cài đặt > Giao diện: mục "Liquid Glass"
+  để tự chỉnh độ biến dạng (Scale) và viền màu khúc xạ (Chroma) — áp dụng ngay
+  lập tức cho mọi khung kính cùng lúc. Có nút khôi phục về mặc định.
 
 ### Sửa lỗi
 - Trên một số trang web (thường là trang có sẵn phím tắt riêng, trình phát

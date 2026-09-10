@@ -1,13 +1,17 @@
 /* Text Selection Floating Toolbar & Submenus Styles (Liquid Glass Aesthetic)
  *
- * "Liquid glass" pattern used throughout this file (and mirrored in every
- * other glass surface across both apps — see shared/liquid-glass.js):
- *   1. `url(#hw-liquid-glass-filter)` chained into backdrop-filter alongside
- *      the existing blur() — an SVG feTurbulence+feDisplacementMap filter
- *      (injected once per shadow root/document by ensureLiquidGlassFilter())
- *      that actually refracts the page behind the glass instead of just
- *      softening it, which is what makes it read as *glass* rather than
- *      frosted plastic. Every existing blur/opacity value is untouched.
+ * "Liquid glass" pattern used throughout this file:
+ *   1. Real per-instance refraction (shared/liquid-glass-refraction.js) —
+ *      each element's own JS creation site calls attachLiquidGlassRefraction()
+ *      after it's connected to the DOM, which sets its `backdrop-filter`
+ *      inline (blur()/saturate()/url(#its-own-filter-id)) and keeps it sized
+ *      to that element via a ResizeObserver. The blur()/saturate() values
+ *      declared here in CSS only matter for the one frame before that JS
+ *      runs — no url(#...) belongs in these declarations, since the inline
+ *      write always overrides them anyway. Elements that get created and
+ *      .remove()'d repeatedly (the toolbar, its dropdown/submenu, the hover
+ *      tooltip) call the returned handle's destroy() at the same place they
+ *      remove() the element, or the filter/ResizeObserver leaks.
  *   2. A `::before` overlay — a diagonal specular-highlight gradient plus an
  *      inset glow — so the panel catches a believable light reflection
  *      instead of floating bare over whatever the refracted backdrop looks
@@ -23,8 +27,13 @@
   gap: 3px;
   padding: 4px 8px;
   background: rgba(255, 255, 255, var(--tb-alpha, 0.8));
-  backdrop-filter: blur(var(--tb-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(var(--tb-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
+  /* No url(#...) here on purpose — selection-tooltip.js's renderToolbar()
+     sets this element's own per-instance refraction filter inline
+     (attachLiquidGlassRefraction()), which always wins over this stylesheet
+     rule. This plain fallback only matters for the one frame before that
+     JS runs. */
+  backdrop-filter: blur(var(--tb-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--tb-blur, 16px)) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 24px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -396,8 +405,13 @@
      reads through clearly at a glance, looking barely blurred at all next
      to the bar right above it. 1.5× the bar's own --tb-blur closes that gap
      (confirmed by eye against a few multiples) while still scaling with it. */
-  backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%) url(#hw-liquid-glass-filter);
+  /* No url(#...) here on purpose — selection-tooltip.js's toggleDropdown()
+     sets this element's own per-instance refraction filter inline
+     (attachLiquidGlassRefraction()), which always wins over this stylesheet
+     rule. This plain fallback only matters for the one frame before that
+     JS runs. */
+  backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%);
+  -webkit-backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 14px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -465,8 +479,13 @@
      --tb-alpha as-is (copied on by hand in JS), blur radius is boosted 1.5×
      to look comparably blurred to the bar despite this panel's larger size. */
   background: rgba(255, 255, 255, var(--tb-alpha, 0.8));
-  backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%) url(#hw-liquid-glass-filter);
+  /* No url(#...) here on purpose — selection-tooltip.js's toggleDropdown()
+     sets this element's own per-instance refraction filter inline
+     (attachLiquidGlassRefraction()), which always wins over this stylesheet
+     rule. This plain fallback only matters for the one frame before that
+     JS runs. */
+  backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%);
+  -webkit-backdrop-filter: blur(calc(var(--tb-blur, 16px) * 1.5)) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 14px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -563,8 +582,12 @@
   max-width: var(--ht-max-width, 300px);
   padding: 8px 12px;
   background: rgba(255, 255, 255, var(--ht-alpha, 0.9));
-  backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
+  /* No url(#...) here on purpose — hover-translate.js sets this element's
+     own per-instance refraction filter inline (attachLiquidGlassRefraction()),
+     which always wins over this stylesheet rule. This plain fallback only
+     matters for the one frame before that JS runs. */
+  backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 12px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -660,8 +683,12 @@
    happens to look like, with no contrast guarantee. */
 .hw-ht-gran-switch:hover {
   background: rgba(255, 255, 255, var(--ht-alpha, 0.9));
-  backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%) url(#hw-liquid-glass-filter);
+  /* No url(#...) here on purpose — hover-translate.js sets this element's
+     own per-instance refraction filter inline (attachLiquidGlassRefraction()),
+     which always wins over this stylesheet rule. This plain fallback only
+     matters for the one frame before that JS runs. */
+  backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--ht-blur, 16px)) saturate(180%);
   border-color: rgba(255, 255, 255, 0.5);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
 }

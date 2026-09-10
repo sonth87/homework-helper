@@ -9,6 +9,7 @@ import { getI18n } from '../../shared/i18n.js';
 import { OcrEngine } from '../../shared/ocr-engine.js';
 import { NANO_STATUS } from '../../shared/nano-status.js';
 import { truncateHistory } from '../../shared/history-budget.js';
+import { attachLiquidGlassRefraction } from '../../shared/liquid-glass-refraction.js';
 
 export class OverlayDrawer {
   constructor(overlay) {
@@ -41,6 +42,13 @@ export class OverlayDrawer {
     this.setupListeners();
     this.applyDrawerWidth();
     this.makeDrawerResizable();
+    // Pilot: real per-instance refraction (shared/liquid-glass-refraction.js)
+    // instead of the shared noise filter overlay.css still declares for
+    // every other glass surface — no separate reactive-blur JS elsewhere
+    // fights over this element's backdrop-filter the way the solution card's
+    // does (see content/overlay.js), so this owns it outright.
+    const drawer = this.shadow.getElementById('hwDrawer');
+    if (drawer) this.drawerGlass = attachLiquidGlassRefraction(drawer, { blur: 20, saturate: 1.8 });
   }
 
   /**

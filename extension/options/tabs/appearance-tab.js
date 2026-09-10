@@ -5,7 +5,7 @@ import { TOOLBAR_ITEM_ICONS, DEFAULT_TOOLBAR_LAYOUT, normalizeToolbarLayout } fr
 import { HOVER_HIGHLIGHT_COLORS } from '../../shared/hover-highlight-colors.js';
 import { HIGHLIGHT_STYLES, DEFAULT_HIGHLIGHT_STYLE, buildHighlight } from '../../shared/highlight-styles.js';
 import { TOOLBAR_THEME_COLORS } from '../../shared/toolbar-theme-colors.js';
-import { updateLiquidGlassFilter } from '../../shared/liquid-glass.js';
+import { attachLiquidGlassRefraction, setGlobalGlassParams } from '../../shared/liquid-glass-refraction.js';
 
 // shared/highlight-styles.js only knows style ids — the display name/desc for
 // each lives in i18n (options block) like every other user-facing string.
@@ -45,13 +45,13 @@ export class AppearanceTab {
     const {
       overlayTheme = 'auto',
       liquidGlassScale = DEFAULT_SETTINGS.liquidGlassScale,
-      liquidGlassFrequency = DEFAULT_SETTINGS.liquidGlassFrequency,
+      liquidGlassChroma = DEFAULT_SETTINGS.liquidGlassChroma,
       enableFloatingButton = true,
       fabSize = 'normal',
       fabOpacity = 90,
       fabAutoHide = true,
       popupOpacity = 60,
-      popupBlur = 10,
+      popupBlur = 6,
       popupCardSize = 'normal',
       popupCardTheme = 'auto',
       enableTextTooltip = true,
@@ -73,7 +73,7 @@ export class AppearanceTab {
       hoverTranslateHighlightStyle = 'marker',
       hoverTranslateAnimation = 'draw',
       hoverTranslateOpacity = 60,
-      hoverTranslateBlur = 10,
+      hoverTranslateBlur = 6,
       hoverTranslateFontSize = 13,
       hoverTranslateMaxWidth = 300,
       uiLanguage = 'vi',
@@ -85,8 +85,8 @@ export class AppearanceTab {
     const overlayThemeSelect = document.getElementById('optOverlayThemeSelect');
     const rangeLiquidGlassScale = document.getElementById('optRangeLiquidGlassScale');
     const valLiquidGlassScale = document.getElementById('valLiquidGlassScale');
-    const rangeLiquidGlassFrequency = document.getElementById('optRangeLiquidGlassFrequency');
-    const valLiquidGlassFrequency = document.getElementById('valLiquidGlassFrequency');
+    const rangeLiquidGlassChroma = document.getElementById('optRangeLiquidGlassChroma');
+    const valLiquidGlassChroma = document.getElementById('valLiquidGlassChroma');
     const btnResetLiquidGlass = document.getElementById('optBtnResetLiquidGlass');
     const checkFab = document.getElementById('optCheckFab');
     const fabSizeSelect = document.getElementById('optFabSizeSelect');
@@ -155,6 +155,22 @@ export class AppearanceTab {
     const prevMiniPopup = document.getElementById('prevMiniPopup');
     const prevMiniAnswerHeading = document.getElementById('prevMiniAnswerHeading');
     const prevMiniCircle = document.getElementById('prevMiniCircle');
+
+    // Same real per-instance refraction as the actual in-page popup card
+    // (content/overlay.js), mini-popup (minimized-card.js), toolbar
+    // (selection-tooltip.js) and hover-translate tooltip (hover-translate.js),
+    // applied here too so every effect is visible without leaving this page.
+    // Attached once (loadAppearanceSettings() only ever runs once per page
+    // load, unlike updatePreview() below it) — the Liquid Glass card's Scale/
+    // Chroma sliders below DO affect all four (setGlobalGlassParams() reaches
+    // every attached surface in this document at once, this page included);
+    // Popup Opacity/Blur and the Toolbar/Hover-Translate Blur sliders instead
+    // only ever affect their own element, via each one's own filterId lookup
+    // in updatePreview() below.
+    const prevPopupGlass = prevPopup ? attachLiquidGlassRefraction(prevPopup, { blur: 16, saturate: 1.8 }) : null;
+    const prevMiniPopupGlass = prevMiniPopup ? attachLiquidGlassRefraction(prevMiniPopup, { blur: 6, saturate: 1.8 }) : null;
+    const prevToolbarGlass = prevToolbar ? attachLiquidGlassRefraction(prevToolbar, { blur: 16, saturate: 1.8 }) : null;
+    const prevHoverTipGlass = prevHoverTip ? attachLiquidGlassRefraction(prevHoverTip, { blur: 16, saturate: 1.8 }) : null;
 
     if (!checkFab) return;
 
@@ -254,9 +270,9 @@ export class AppearanceTab {
       rangeLiquidGlassScale.value = liquidGlassScale;
       if (valLiquidGlassScale) valLiquidGlassScale.textContent = `${liquidGlassScale}`;
     }
-    if (rangeLiquidGlassFrequency) {
-      rangeLiquidGlassFrequency.value = liquidGlassFrequency;
-      if (valLiquidGlassFrequency) valLiquidGlassFrequency.textContent = `${liquidGlassFrequency}`;
+    if (rangeLiquidGlassChroma) {
+      rangeLiquidGlassChroma.value = liquidGlassChroma;
+      if (valLiquidGlassChroma) valLiquidGlassChroma.textContent = `${liquidGlassChroma}`;
     }
     checkFab.checked = enableFloatingButton;
     setSubDimmed(fabSettingsSub, !enableFloatingButton);
@@ -381,11 +397,18 @@ export class AppearanceTab {
           lbl.style.display = showText ? 'inline' : 'none';
         });
 
-        // url(#hw-liquid-glass-filter): see shared/liquid-glass.js — has to be
-        // repeated on every inline backdropFilter write, since inline style
-        // always wins over whatever overlay.css's own rule declares.
-        prevToolbar.style.backdropFilter = `blur(${tbBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
-        prevToolbar.style.webkitBackdropFilter = `blur(${tbBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
+        // prevToolbarGlass: this mock's own per-instance filter (see attach
+        // above) — reference it by id, or this write (which reruns on every
+        // preview tick) would silently strip the filter back out the first
+        // time Blur moves. glassId is only null if attach itself failed
+        // (unsupported browser), in which case there's no filter id at all
+        // to reference.
+        const tbGlassId = prevToolbarGlass?.filterId;
+        const tbBackdrop = tbGlassId
+          ? `url(#${tbGlassId}) blur(${tbBlurVal}px) saturate(180%)`
+          : `blur(${tbBlurVal}px) saturate(180%)`;
+        prevToolbar.style.backdropFilter = tbBackdrop;
+        prevToolbar.style.webkitBackdropFilter = tbBackdrop;
 
         const tbSolidRgb = TOOLBAR_THEME_COLORS[tbTheme];
         if (tbTheme === 'glass-dark') {
@@ -461,8 +484,14 @@ export class AppearanceTab {
 
         prevHoverTip.style.setProperty('--ht-max-width', `${htMaxWidth}px`);
         prevHoverTip.style.fontSize = `${htFontSize}px`;
-        prevHoverTip.style.backdropFilter = `blur(${htBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
-        prevHoverTip.style.webkitBackdropFilter = `blur(${htBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
+        // prevHoverTipGlass: same filterId-reference pattern as the Toolbar
+        // preview above (see the comment there).
+        const htGlassId = prevHoverTipGlass?.filterId;
+        const htBackdrop = htGlassId
+          ? `url(#${htGlassId}) blur(${htBlurVal}px) saturate(180%)`
+          : `blur(${htBlurVal}px) saturate(180%)`;
+        prevHoverTip.style.backdropFilter = htBackdrop;
+        prevHoverTip.style.webkitBackdropFilter = htBackdrop;
 
         const htSolidRgb = TOOLBAR_THEME_COLORS[htTheme];
         if (htTheme === 'glass-dark') {
@@ -497,14 +526,23 @@ export class AppearanceTab {
         const popBg = popIsDark ? 'rgba(15, 23, 42, ' + popAlpha + ')' : `rgba(255, 255, 255, ${popAlpha})`;
         const popColor = popIsDark ? '#f8fafc' : '#1e293b';
 
-        const applyPopupGlass = (el) => {
+        // glassId: each of these two mocks got its own per-instance filter
+        // above (prevPopupGlass/prevMiniPopupGlass) — reference that one
+        // specifically, or this write (which reruns on every preview tick)
+        // would silently strip the filter back out the first time Opacity/
+        // Blur moves.
+        const applyPopupGlass = (el, glass) => {
           if (!el) return;
           el.style.background = popBg;
           el.style.color = popColor;
-          el.style.backdropFilter = `blur(${popBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
-          el.style.webkitBackdropFilter = `blur(${popBlurVal}px) saturate(180%) url(#hw-liquid-glass-filter)`;
+          const glassId = glass?.filterId;
+          const backdrop = glassId
+            ? `url(#${glassId}) blur(${popBlurVal}px) saturate(180%)`
+            : `blur(${popBlurVal}px) saturate(180%)`;
+          el.style.backdropFilter = backdrop;
+          el.style.webkitBackdropFilter = backdrop;
         };
-        applyPopupGlass(prevPopup);
+        applyPopupGlass(prevPopup, prevPopupGlass);
 
         const primaryBtn = prevPopup.querySelector('.prev-btn-blue');
         const answerHeading = document.getElementById('prevPopupAnswerHeading');
@@ -519,7 +557,7 @@ export class AppearanceTab {
         if (prevMiniWrap) {
           prevMiniWrap.style.display = isMinimize ? '' : 'none';
           if (isMinimize) {
-            applyPopupGlass(prevMiniPopup);
+            applyPopupGlass(prevMiniPopup, prevMiniPopupGlass);
             if (prevMiniAnswerHeading) prevMiniAnswerHeading.style.color = `rgb(${popRgb})`;
             if (prevMiniCircle) {
               prevMiniCircle.style.borderColor = `rgba(${popRgb}, 0.35)`;
@@ -558,23 +596,23 @@ export class AppearanceTab {
       Storage.set({ overlayTheme: overlayThemeSelect.value });
     });
 
-    // Updates the shared SVG filter in place (see shared/liquid-glass.js) —
-    // every glass surface on this same page (including the live preview
-    // mock below) references that one filter by id, so this alone makes
-    // the whole page's glass warp update live, no separate preview-specific
+    // setGlobalGlassParams() reaches every attached surface in this
+    // document's own copy of shared/liquid-glass-refraction.js at once
+    // (including the four preview mocks above), so this alone makes the
+    // whole page's glass warp update live, no separate preview-specific
     // code needed the way the other appearance sliders require.
     rangeLiquidGlassScale?.addEventListener('input', () => {
       const scale = Number(rangeLiquidGlassScale.value);
       if (valLiquidGlassScale) valLiquidGlassScale.textContent = `${scale}`;
-      updateLiquidGlassFilter(document, { scale });
+      setGlobalGlassParams({ scale });
       Storage.set({ liquidGlassScale: scale });
     });
 
-    rangeLiquidGlassFrequency?.addEventListener('input', () => {
-      const frequency = Number(rangeLiquidGlassFrequency.value);
-      if (valLiquidGlassFrequency) valLiquidGlassFrequency.textContent = `${frequency}`;
-      updateLiquidGlassFilter(document, { frequency });
-      Storage.set({ liquidGlassFrequency: frequency });
+    rangeLiquidGlassChroma?.addEventListener('input', () => {
+      const chroma = Number(rangeLiquidGlassChroma.value);
+      if (valLiquidGlassChroma) valLiquidGlassChroma.textContent = `${chroma}`;
+      setGlobalGlassParams({ chroma });
+      Storage.set({ liquidGlassChroma: chroma });
     });
 
     btnResetLiquidGlass?.addEventListener('click', () => {
@@ -583,12 +621,12 @@ export class AppearanceTab {
         rangeLiquidGlassScale.value = d.liquidGlassScale;
         if (valLiquidGlassScale) valLiquidGlassScale.textContent = `${d.liquidGlassScale}`;
       }
-      if (rangeLiquidGlassFrequency) {
-        rangeLiquidGlassFrequency.value = d.liquidGlassFrequency;
-        if (valLiquidGlassFrequency) valLiquidGlassFrequency.textContent = `${d.liquidGlassFrequency}`;
+      if (rangeLiquidGlassChroma) {
+        rangeLiquidGlassChroma.value = d.liquidGlassChroma;
+        if (valLiquidGlassChroma) valLiquidGlassChroma.textContent = `${d.liquidGlassChroma}`;
       }
-      updateLiquidGlassFilter(document, { scale: d.liquidGlassScale, frequency: d.liquidGlassFrequency });
-      Storage.set({ liquidGlassScale: d.liquidGlassScale, liquidGlassFrequency: d.liquidGlassFrequency });
+      setGlobalGlassParams({ scale: d.liquidGlassScale, chroma: d.liquidGlassChroma });
+      Storage.set({ liquidGlassScale: d.liquidGlassScale, liquidGlassChroma: d.liquidGlassChroma });
     });
 
     checkFab.addEventListener('change', () => {

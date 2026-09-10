@@ -433,9 +433,9 @@ export default {
     overlayThemeOptDark: "Dunkel",
     cardLiquidGlassTitle: "Liquid Glass",
     labelLiquidGlassScale: "Verzerrung (Scale)",
-    labelLiquidGlassScaleDesc: "Wie stark sich der Hintergrund hinter dem Glas verzerrt — höhere Werte erzeugen stärkere Wellen.",
-    labelLiquidGlassFrequency: "Rauschfrequenz",
-    labelLiquidGlassFrequencyDesc: "Wie fein oder grob das Rauschmuster auf dem Glas ist — niedrige Werte ergeben große, glatte Streifen, hohe Werte dichte, kleine Wellen.",
+    labelLiquidGlassScaleDesc: "Wie stark der Hintergrund hinter dem Glas sich bricht/wölbt — je negativer, desto stärker der Effekt, Richtung 0 schaltet ihn aus.",
+    labelLiquidGlassChroma: "Chroma (Randsaum)",
+    labelLiquidGlassChromaDesc: "Farbtrennung am gebrochenen Rand — 0 deaktiviert den Regenbogensaum komplett, höhere Werte machen ihn sichtbarer.",
     cardFabTitle: "Schwebende Buttons (Floating FABs)",
     labelFabDisplay: "Schwebende Buttons auf Webseiten anzeigen",
     descFabDisplay:

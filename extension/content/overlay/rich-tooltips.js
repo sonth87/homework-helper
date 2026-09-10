@@ -2,6 +2,8 @@
  * Shadow DOM Rich Tooltips Engine
  */
 
+import { attachLiquidGlassRefraction } from '../../shared/liquid-glass-refraction.js';
+
 export class OverlayRichTooltips {
   constructor(shadow) {
     this.shadow = shadow;
@@ -23,6 +25,9 @@ export class OverlayRichTooltips {
       tooltipEl.id = 'hwTooltipPopup';
       tooltipEl.className = 'hw-rich-tooltip';
       this.shadow.appendChild(tooltipEl);
+      // Created once and reused for every tooltip shown after this (see the
+      // (!tooltipEl) guard above) — no destroy() needed, it never leaves the DOM.
+      attachLiquidGlassRefraction(tooltipEl, { blur: 6, saturate: 1.8 });
     }
 
     const showTooltip = (el) => {

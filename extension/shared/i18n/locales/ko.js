@@ -434,9 +434,9 @@ export default {
     overlayThemeOptDark: "다크",
     cardLiquidGlassTitle: "리퀴드 글라스",
     labelLiquidGlassScale: "왜곡 정도 (Scale)",
-    labelLiquidGlassScaleDesc: "유리 뒤 배경이 휘어지는 정도 — 값이 높을수록 물결이 강해집니다.",
-    labelLiquidGlassFrequency: "노이즈 빈도",
-    labelLiquidGlassFrequencyDesc: "유리 위 노이즈 패턴의 세밀함 정도 — 낮으면 크고 매끄러운 무늬, 높으면 촘촘하고 작은 잔물결이 됩니다.",
+    labelLiquidGlassScaleDesc: "유리 뒤 배경이 굴절되어 부풀어 오르는 정도 — 값이 음수로 클수록 효과가 강해지고, 0에 가까워지면 꺼집니다.",
+    labelLiquidGlassChroma: "크로마(가장자리 색번짐)",
+    labelLiquidGlassChromaDesc: "굴절된 가장자리의 색 분리 정도 — 0이면 무지개 색번짐 효과가 완전히 꺼지고, 값이 높을수록 더 뚜렷해집니다.",
     cardFabTitle: "페이지 플로팅 버튼 (Floating FABs)",
     labelFabDisplay: "웹페이지에 플로팅 버튼 표시",
     descFabDisplay:

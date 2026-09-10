@@ -2,6 +2,8 @@
  * Rich Tooltips Engine for SidePanel
  */
 
+import { attachLiquidGlassRefraction } from '../shared/liquid-glass-refraction.js';
+
 export class SidePanelTooltips {
   static init() {
     let tooltipEl = document.getElementById('spGlobalTooltip');
@@ -10,6 +12,7 @@ export class SidePanelTooltips {
       tooltipEl.id = 'spGlobalTooltip';
       tooltipEl.className = 'sp-tooltip-popup';
       document.body.appendChild(tooltipEl);
+      attachLiquidGlassRefraction(tooltipEl, { blur: 6, saturate: 1.8 });
     }
 
     let hideTimeout = null;

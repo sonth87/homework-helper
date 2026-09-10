@@ -2,6 +2,8 @@
  * Rich Tooltips Engine for the Toolbar Popup
  */
 
+import { attachLiquidGlassRefraction } from '../shared/liquid-glass-refraction.js';
+
 export class PopupTooltips {
   static init() {
     let tooltipEl = document.getElementById('popGlobalTooltip');
@@ -10,6 +12,7 @@ export class PopupTooltips {
       tooltipEl.id = 'popGlobalTooltip';
       tooltipEl.className = 'pop-tooltip-popup';
       document.body.appendChild(tooltipEl);
+      attachLiquidGlassRefraction(tooltipEl, { blur: 6, saturate: 1.8 });
     }
 
     let hideTimeout = null;

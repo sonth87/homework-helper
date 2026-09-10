@@ -10,7 +10,7 @@
  * neither side's fonts, colors, or resets bleed into the other.
  */
 
-import { ensureLiquidGlassFilter, updateLiquidGlassFilter } from '../shared/liquid-glass.js';
+import { setGlobalGlassParams } from '../shared/liquid-glass-refraction.js';
 import { Storage } from '../shared/storage.js';
 
 let shadowRoot = null;
@@ -48,16 +48,17 @@ export function getSharedShadowRoot() {
   document.documentElement.appendChild(host);
 
   shadowRoot = host.attachShadow({ mode: 'open' });
-  // Injected synchronously with the library defaults first — this function
-  // has to stay sync (every caller across cropper.js/hover-translate.js/
-  // selection-tooltip.js/overlay.js expects an immediate ShadowRoot back,
-  // not a Promise) — then nudged to the user's real saved values a moment
-  // later once Storage resolves. That gap is a couple of milliseconds at
-  // most, same tradeoff overlay.js's own applyAppearanceSettings() already
+  // Every surface that attaches into this root (cropper.js/hover-translate.js/
+  // selection-tooltip.js/overlay.js/minimized-card.js/rich-tooltips.js) builds
+  // its own per-element filter lazily on attachLiquidGlassRefraction(), using
+  // whatever Scale/Chroma this module currently holds — so this function has
+  // to stay sync (every caller expects an immediate ShadowRoot back, not a
+  // Promise) and just nudges those knobs to the user's real saved values a
+  // moment later once Storage resolves. That gap is a couple of milliseconds
+  // at most, same tradeoff overlay.js's own applyAppearanceSettings() already
   // makes for its other settings.
-  ensureLiquidGlassFilter(shadowRoot);
-  Storage.get(['liquidGlassScale', 'liquidGlassFrequency']).then(({ liquidGlassScale, liquidGlassFrequency }) => {
-    updateLiquidGlassFilter(shadowRoot, { scale: liquidGlassScale, frequency: liquidGlassFrequency });
+  Storage.get(['liquidGlassScale', 'liquidGlassChroma']).then(({ liquidGlassScale, liquidGlassChroma }) => {
+    setGlobalGlassParams({ scale: liquidGlassScale, chroma: liquidGlassChroma });
   });
   return shadowRoot;
 }

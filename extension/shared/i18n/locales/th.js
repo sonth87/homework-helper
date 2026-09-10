@@ -482,9 +482,9 @@ export default {
     overlayThemeOptDark: "มืด",
     cardLiquidGlassTitle: "Liquid Glass",
     labelLiquidGlassScale: "ความบิดเบี้ยว (Scale)",
-    labelLiquidGlassScaleDesc: "ระดับการบิดเบือนภาพด้านหลังกระจก — ยิ่งสูงยิ่งเป็นคลื่นแรง",
-    labelLiquidGlassFrequency: "ความถี่จุดรบกวน",
-    labelLiquidGlassFrequencyDesc: "ความละเอียดของลวดลายจุดรบกวนบนกระจก — ค่าต่ำให้ลายเส้นใหญ่เรียบ ค่าสูงให้คลื่นเล็กถี่",
+    labelLiquidGlassScaleDesc: "ระดับการหักเหและโป่งนูนของพื้นหลังหลังกระจก — ยิ่งค่าติดลบมากยิ่งเข้มขึ้น เข้าใกล้ 0 จะปิดเอฟเฟกต์",
+    labelLiquidGlassChroma: "โครมา (ขอบสีรุ้ง)",
+    labelLiquidGlassChromaDesc: "การแยกสีที่ขอบการหักเห — 0 ปิดเอฟเฟกต์ขอบสีรุ้งทั้งหมด ค่ายิ่งสูงขอบยิ่งเห็นชัด",
     cardFabTitle: "ปุ่มลอยบนหน้าเว็บ (FABs)",
     labelFabDisplay: "แสดงปุ่มลอยบนเว็บไซต์",
     labelFabDisplayDesc:

@@ -2,6 +2,8 @@
  * Rich Tooltips Engine for Options Page
  */
 
+import { attachLiquidGlassRefraction } from '../shared/liquid-glass-refraction.js';
+
 export class OptionsTooltips {
   static init() {
     let tooltipEl = document.getElementById('optGlobalTooltip');
@@ -10,6 +12,7 @@ export class OptionsTooltips {
       tooltipEl.id = 'optGlobalTooltip';
       tooltipEl.className = 'opt-tooltip-popup';
       document.body.appendChild(tooltipEl);
+      attachLiquidGlassRefraction(tooltipEl, { blur: 6, saturate: 1.8 });
     }
 
     let hideTimeout = null;

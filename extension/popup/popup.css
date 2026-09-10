@@ -761,8 +761,12 @@ body.hw-th-sheet-open {
   z-index: 2147483647;
   max-width: 240px;
   background: rgba(var(--hw-glass-rgb), 0.3);
-  backdrop-filter: blur(6px) saturate(180%) url(#hw-liquid-glass-filter);
-  -webkit-backdrop-filter: blur(6px) saturate(180%) url(#hw-liquid-glass-filter);
+  /* No url(#...) here on purpose — popup-tooltips.js sets this element's
+     own per-instance refraction filter inline (attachLiquidGlassRefraction()),
+     which always wins over this stylesheet rule. This plain fallback only
+     matters for the one frame before that JS runs. */
+  backdrop-filter: blur(6px) saturate(180%);
+  -webkit-backdrop-filter: blur(6px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
   border-radius: 10px;

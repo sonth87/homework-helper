@@ -436,9 +436,9 @@ export default {
     overlayThemeOptDark: "Oscuro",
     cardLiquidGlassTitle: "Liquid Glass",
     labelLiquidGlassScale: "Distorsión (Scale)",
-    labelLiquidGlassScaleDesc: "Cuánto se curva el fondo detrás del cristal — un valor más alto produce ondulaciones más fuertes.",
-    labelLiquidGlassFrequency: "Frecuencia del ruido",
-    labelLiquidGlassFrequencyDesc: "Qué tan fino o grueso es el patrón de ruido en el cristal — un valor bajo da rayas grandes y suaves, uno alto da ondas pequeñas y densas.",
+    labelLiquidGlassScaleDesc: "Cuánto se refracta/abulta el fondo detrás del cristal — cuanto más negativo, más fuerte el efecto; hacia 0 se desactiva.",
+    labelLiquidGlassChroma: "Chroma (Borde de color)",
+    labelLiquidGlassChromaDesc: "Separación de color en el borde refractado — 0 desactiva por completo el efecto de borde arcoíris, un valor más alto lo hace más visible.",
     cardFabTitle: "Botones flotantes en la página (FAB)",
     labelFabDisplay: "Mostrar botones flotantes en las páginas",
     descFabDisplay:

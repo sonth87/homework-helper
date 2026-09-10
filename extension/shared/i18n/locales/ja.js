@@ -432,9 +432,9 @@ export default {
     overlayThemeOptDark: "ダーク",
     cardLiquidGlassTitle: "リキッドグラス",
     labelLiquidGlassScale: "歪み具合 (Scale)",
-    labelLiquidGlassScaleDesc: "ガラスの背後にある背景がどれだけ歪むか — 値が高いほど波打ちが強くなります。",
-    labelLiquidGlassFrequency: "ノイズの周波数",
-    labelLiquidGlassFrequencyDesc: "ガラス上のノイズ模様の細かさ — 低いと大きく滑らかな筋に、高いと細かく密な波紋になります。",
+    labelLiquidGlassScaleDesc: "ガラスの背後にある背景がどれだけ屈折して膨らむか — 値がマイナスに大きいほど効果が強くなり、0に近づくと弱まります。",
+    labelLiquidGlassChroma: "クロマ(縁の色収差)",
+    labelLiquidGlassChromaDesc: "屈折部分の色分離 — 0にすると虹色の縁取り効果が完全に無効になり、高いほど縁取りがはっきり見えます。",
     cardFabTitle: "ページ内フローティングボタン (FAB)",
     labelFabDisplay: "Webページ上にフローティングボタンを表示",
     descFabDisplay:
