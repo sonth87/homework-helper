@@ -479,6 +479,7 @@ class HoverTranslate {
     tip.className = `hw-hover-translate-tip theme-${resolvedHtTheme}${textIsDark ? ' hw-tb-text-light' : ''}`;
     tip.style.setProperty('--ht-alpha', ((this.settings.hoverTranslateOpacity ?? 90) / 100).toFixed(2));
     tip.style.setProperty('--ht-blur', `${this.settings.hoverTranslateBlur ?? 6}px`);
+    tip.style.setProperty('--ht-base-rgb', textIsDark ? '15, 23, 42' : '255, 255, 255');
     tip.style.setProperty('--ht-font-size', `${this.settings.hoverTranslateFontSize ?? 13}px`);
     tip.style.setProperty('--ht-max-width', `${this.settings.hoverTranslateMaxWidth ?? 300}px`);
 

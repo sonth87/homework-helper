@@ -170,9 +170,13 @@ export class MinimizedCard {
         // --hw-accent-rgb, but had nothing but the ambient default to read
         // until now since nothing in this file ever set it for this element).
         const isAccentTheme = !['auto', 'glass-light', 'glass-dark'].includes(popupCardTheme);
-        this.popupEl.style.setProperty('--hw-accent-rgb', resolveThemeColorRgb(popupCardTheme));
+        const accentRgb = resolveThemeColorRgb(popupCardTheme);
+        this.popupEl.style.setProperty('--hw-accent-rgb', accentRgb);
         this.popupEl.style.background = isAccentTheme
-          ? `rgba(${resolveThemeColorRgb(popupCardTheme)}, ${popupAlpha})`
+          ? `linear-gradient(135deg, rgba(${accentRgb}, 0.20) 0%, rgba(${accentRgb}, 0.08) 100%), rgba(var(--hw-glass-rgb, 255, 255, 255), ${popupAlpha})`
+          : '';
+        this.popupEl.style.borderColor = isAccentTheme
+          ? `rgba(${accentRgb}, 0.38)`
           : '';
         const circleGlassId = this.circleGlass?.filterId;
         const circleBackdrop = circleGlassId

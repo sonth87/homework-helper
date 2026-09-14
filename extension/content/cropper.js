@@ -64,16 +64,28 @@ class ScreenCropper {
     await new Promise((resolve) => setTimeout(resolve, 60));
 
     // 3. Request crisp screenshot from background service worker
-    chrome.runtime.sendMessage({ action: 'CAPTURE_VISIBLE_TAB' }, async (res) => {
-      if (!res?.success || !res.dataUrl) {
-        console.error('Failed to capture tab:', res?.error);
+    try {
+      if (!chrome.runtime?.id) {
         window.dispatchEvent(new CustomEvent('HOMEWORK_AI_RESTORE_UI'));
         return;
       }
+      chrome.runtime.sendMessage({ action: 'CAPTURE_VISIBLE_TAB' }, async (res) => {
+        if (chrome.runtime.lastError) {
+          window.dispatchEvent(new CustomEvent('HOMEWORK_AI_RESTORE_UI'));
+          return;
+        }
+        if (!res?.success || !res.dataUrl) {
+          console.error('Failed to capture tab:', res?.error);
+          window.dispatchEvent(new CustomEvent('HOMEWORK_AI_RESTORE_UI'));
+          return;
+        }
 
-      this.rawImageDataUrl = res.dataUrl;
-      await this.renderOverlay();
-    });
+        this.rawImageDataUrl = res.dataUrl;
+        await this.renderOverlay();
+      });
+    } catch {
+      window.dispatchEvent(new CustomEvent('HOMEWORK_AI_RESTORE_UI'));
+    }
   }
 
   async renderOverlay() {
@@ -276,10 +288,12 @@ class ScreenCropper {
       ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
       : toolbarTheme;
 
+    const textIsDark = resolvedTheme === 'glass-dark' || (resolvedTheme !== 'glass-light' && matchMedia('(prefers-color-scheme: dark)').matches);
     this.toolbar = document.createElement('div');
-    this.toolbar.className = `hw-selection-toolbar hw-crop-toolbar size-${toolbarSize} theme-${resolvedTheme}`;
+    this.toolbar.className = `hw-selection-toolbar hw-crop-toolbar size-${toolbarSize} theme-${resolvedTheme}${textIsDark ? ' hw-tb-text-light' : ''}`;
     this.toolbar.style.setProperty('--tb-alpha', `${(toolbarOpacity / 100).toFixed(2)}`);
     this.toolbar.style.setProperty('--tb-blur', `${toolbarBlur}px`);
+    this.toolbar.style.setProperty('--tb-base-rgb', textIsDark ? '15, 23, 42' : '255, 255, 255');
     // .hw-selection-toolbar's own position:absolute is left as-is — it's
     // appended into .hw-crop-overlay below, a position:fixed 100vw/100vh box
     // pinned at viewport (0,0), so absolute coordinates inside it already

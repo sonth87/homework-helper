@@ -686,8 +686,11 @@ class InPageOverlay {
       // rules in overlay.css.
       const isAccentTheme = !['auto', 'glass-light', 'glass-dark'].includes(popupCardTheme);
       card.style.background = isAccentTheme
-        ? `rgba(var(--hw-accent-rgb), ${popAlpha})`
+        ? `linear-gradient(135deg, rgba(var(--hw-accent-rgb), 0.20) 0%, rgba(var(--hw-accent-rgb), 0.08) 100%), rgba(var(--hw-glass-rgb), ${popAlpha})`
         : `rgba(var(--hw-glass-rgb), ${popAlpha})`;
+      card.style.borderColor = isAccentTheme
+        ? 'rgba(var(--hw-accent-rgb), 0.38)'
+        : '';
       // The url(#...) reference has to be repeated here: this inline style
       // write completely replaces whatever overlay.css's own
       // .hw-solution-card rule declared for backdrop-filter — inline style

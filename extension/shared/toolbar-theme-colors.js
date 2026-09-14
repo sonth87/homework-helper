@@ -25,3 +25,12 @@ export const DEFAULT_THEME_COLOR_RGB = '2, 132, 199';
 export function resolveThemeColorRgb(toolbarTheme) {
   return TOOLBAR_THEME_COLORS[toolbarTheme] || DEFAULT_THEME_COLOR_RGB;
 }
+
+export const DARK_THEME_TEXT_COLORS = {
+  'cyber-blue': '#7dd3fc',
+  emerald: '#6ee7b7',
+  purple: '#d8b4fe',
+  rose: '#fecdd3',
+  amber: '#fde68a',
+  indigo: '#c7d2fe',
+};

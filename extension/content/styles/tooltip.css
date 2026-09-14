@@ -73,28 +73,40 @@
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 .hw-selection-toolbar.theme-cyber-blue {
-  background: rgba(2, 132, 199, var(--tb-alpha, 0.82));
-  border-color: rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(2, 132, 199, 0.22) 0%, rgba(2, 132, 199, 0.10) 100%),
+    rgba(var(--tb-base-rgb, 255, 255, 255), var(--tb-alpha, 0.82));
+  border-color: rgba(2, 132, 199, 0.38);
 }
 .hw-selection-toolbar.theme-emerald {
-  background: rgba(5, 150, 105, var(--tb-alpha, 0.82));
-  border-color: rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(5, 150, 105, 0.22) 0%, rgba(5, 150, 105, 0.10) 100%),
+    rgba(var(--tb-base-rgb, 255, 255, 255), var(--tb-alpha, 0.82));
+  border-color: rgba(5, 150, 105, 0.38);
 }
 .hw-selection-toolbar.theme-purple {
-  background: rgba(124, 58, 237, var(--tb-alpha, 0.82));
-  border-color: rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(124, 58, 237, 0.22) 0%, rgba(124, 58, 237, 0.10) 100%),
+    rgba(var(--tb-base-rgb, 255, 255, 255), var(--tb-alpha, 0.82));
+  border-color: rgba(124, 58, 237, 0.38);
 }
 .hw-selection-toolbar.theme-rose {
-  background: rgba(225, 29, 72, var(--tb-alpha, 0.82));
-  border-color: rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(225, 29, 72, 0.22) 0%, rgba(225, 29, 72, 0.10) 100%),
+    rgba(var(--tb-base-rgb, 255, 255, 255), var(--tb-alpha, 0.82));
+  border-color: rgba(225, 29, 72, 0.38);
 }
 .hw-selection-toolbar.theme-amber {
-  background: rgba(217, 119, 6, var(--tb-alpha, 0.82));
-  border-color: rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(217, 119, 6, 0.22) 0%, rgba(217, 119, 6, 0.10) 100%),
+    rgba(var(--tb-base-rgb, 255, 255, 255), var(--tb-alpha, 0.82));
+  border-color: rgba(217, 119, 6, 0.38);
 }
 .hw-selection-toolbar.theme-indigo {
-  background: rgba(79, 70, 229, var(--tb-alpha, 0.82));
-  border-color: rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(79, 70, 229, 0.22) 0%, rgba(79, 70, 229, 0.10) 100%),
+    rgba(var(--tb-base-rgb, 255, 255, 255), var(--tb-alpha, 0.82));
+  border-color: rgba(79, 70, 229, 0.38);
 }
 
 /* Applied whenever the surface currently counts as dark (glass-dark, or
@@ -107,14 +119,44 @@
    the tint currently is; harmless dead weight on the genuinely-dark
    glass-dark background, where it's not needed but doesn't hurt anything. */
 .hw-selection-toolbar.hw-tb-text-light {
-  color: #f8fafc;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --tb-fg: #f8fafc;
+  --tb-fg-hover: #ffffff;
+  color: var(--tb-fg);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+.hw-selection-toolbar.hw-tb-text-light.theme-cyber-blue {
+  --tb-fg: #7dd3fc;
+  --tb-fg-hover: #ffffff;
+}
+.hw-selection-toolbar.hw-tb-text-light.theme-emerald {
+  --tb-fg: #6ee7b7;
+  --tb-fg-hover: #ffffff;
+}
+.hw-selection-toolbar.hw-tb-text-light.theme-purple {
+  --tb-fg: #d8b4fe;
+  --tb-fg-hover: #ffffff;
+}
+.hw-selection-toolbar.hw-tb-text-light.theme-rose {
+  --tb-fg: #fecdd3;
+  --tb-fg-hover: #ffffff;
+}
+.hw-selection-toolbar.hw-tb-text-light.theme-amber {
+  --tb-fg: #fde68a;
+  --tb-fg-hover: #ffffff;
+}
+.hw-selection-toolbar.hw-tb-text-light.theme-indigo {
+  --tb-fg: #c7d2fe;
+  --tb-fg-hover: #ffffff;
 }
 .hw-selection-toolbar.hw-tb-text-light svg {
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+.hw-selection-toolbar.hw-tb-text-light .hw-tb-btn {
+  color: var(--tb-fg, #f8fafc);
 }
 .hw-selection-toolbar.hw-tb-text-light .hw-tb-btn:hover {
   background: rgba(255, 255, 255, 0.16);
+  color: var(--tb-fg-hover, #ffffff);
 }
 
 /* .hw-tb-dropdown/.hw-tb-submenu (further below) used to be styled only via
@@ -138,46 +180,77 @@
 }
 .hw-tb-dropdown.theme-cyber-blue,
 .hw-tb-submenu.theme-cyber-blue {
-  background: rgba(2, 132, 199, var(--tb-alpha, 0.82));
-  border-color: rgba(255, 255, 255, 0.3);
+  background:
+    linear-gradient(135deg, rgba(2, 132, 199, 0.22) 0%, rgba(2, 132, 199, 0.10) 100%),
+    rgba(var(--tb-base-rgb, 255, 255, 255), var(--tb-alpha, 0.82));
+  border-color: rgba(2, 132, 199, 0.35);
 }
 .hw-tb-dropdown.theme-emerald,
 .hw-tb-submenu.theme-emerald {
-  background: rgba(5, 150, 105, var(--tb-alpha, 0.82));
-  border-color: rgba(255, 255, 255, 0.3);
+  background:
+    linear-gradient(135deg, rgba(5, 150, 105, 0.22) 0%, rgba(5, 150, 105, 0.10) 100%),
+    rgba(var(--tb-base-rgb, 255, 255, 255), var(--tb-alpha, 0.82));
+  border-color: rgba(5, 150, 105, 0.35);
 }
 .hw-tb-dropdown.theme-purple,
 .hw-tb-submenu.theme-purple {
-  background: rgba(124, 58, 237, var(--tb-alpha, 0.82));
-  border-color: rgba(255, 255, 255, 0.3);
+  background:
+    linear-gradient(135deg, rgba(124, 58, 237, 0.22) 0%, rgba(124, 58, 237, 0.10) 100%),
+    rgba(var(--tb-base-rgb, 255, 255, 255), var(--tb-alpha, 0.82));
+  border-color: rgba(124, 58, 237, 0.35);
 }
 .hw-tb-dropdown.theme-rose,
 .hw-tb-submenu.theme-rose {
-  background: rgba(225, 29, 72, var(--tb-alpha, 0.82));
-  border-color: rgba(255, 255, 255, 0.3);
+  background:
+    linear-gradient(135deg, rgba(225, 29, 72, 0.22) 0%, rgba(225, 29, 72, 0.10) 100%),
+    rgba(var(--tb-base-rgb, 255, 255, 255), var(--tb-alpha, 0.82));
+  border-color: rgba(225, 29, 72, 0.35);
 }
 .hw-tb-dropdown.theme-amber,
 .hw-tb-submenu.theme-amber {
-  background: rgba(217, 119, 6, var(--tb-alpha, 0.82));
-  border-color: rgba(255, 255, 255, 0.3);
+  background:
+    linear-gradient(135deg, rgba(217, 119, 6, 0.22) 0%, rgba(217, 119, 6, 0.10) 100%),
+    rgba(var(--tb-base-rgb, 255, 255, 255), var(--tb-alpha, 0.82));
+  border-color: rgba(217, 119, 6, 0.35);
 }
 .hw-tb-dropdown.theme-indigo,
 .hw-tb-submenu.theme-indigo {
-  background: rgba(79, 70, 229, var(--tb-alpha, 0.82));
-  border-color: rgba(255, 255, 255, 0.3);
+  background:
+    linear-gradient(135deg, rgba(79, 70, 229, 0.22) 0%, rgba(79, 70, 229, 0.10) 100%),
+    rgba(var(--tb-base-rgb, 255, 255, 255), var(--tb-alpha, 0.82));
+  border-color: rgba(79, 70, 229, 0.35);
 }
 
 /* Same hw-tb-text-light toggle as the toolbar above, applied directly since
    these aren't descendants of it (see the portal note above) — independent
    of which theme-X background is active. .hw-tb-menu-item/.hw-tb-sub-item's
    own base rule (further below) is the dark-text default this overrides. */
+.hw-tb-dropdown.hw-tb-text-light,
+.hw-tb-submenu.hw-tb-text-light {
+  --tb-fg: #f1f5f9;
+  --tb-fg-hover: #ffffff;
+}
+.hw-tb-dropdown.hw-tb-text-light.theme-cyber-blue,
+.hw-tb-submenu.hw-tb-text-light.theme-cyber-blue { --tb-fg: #7dd3fc; }
+.hw-tb-dropdown.hw-tb-text-light.theme-emerald,
+.hw-tb-submenu.hw-tb-text-light.theme-emerald { --tb-fg: #6ee7b7; }
+.hw-tb-dropdown.hw-tb-text-light.theme-purple,
+.hw-tb-submenu.hw-tb-text-light.theme-purple { --tb-fg: #d8b4fe; }
+.hw-tb-dropdown.hw-tb-text-light.theme-rose,
+.hw-tb-submenu.hw-tb-text-light.theme-rose { --tb-fg: #fecdd3; }
+.hw-tb-dropdown.hw-tb-text-light.theme-amber,
+.hw-tb-submenu.hw-tb-text-light.theme-amber { --tb-fg: #fde68a; }
+.hw-tb-dropdown.hw-tb-text-light.theme-indigo,
+.hw-tb-submenu.hw-tb-text-light.theme-indigo { --tb-fg: #c7d2fe; }
+
 .hw-tb-dropdown.hw-tb-text-light .hw-tb-menu-item,
 .hw-tb-submenu.hw-tb-text-light .hw-tb-sub-item {
-  color: #f1f5f9;
+  color: var(--tb-fg, #f1f5f9);
 }
 .hw-tb-dropdown.hw-tb-text-light .hw-tb-menu-item:hover,
 .hw-tb-submenu.hw-tb-text-light .hw-tb-sub-item:hover {
   background: rgba(255, 255, 255, 0.14);
+  color: var(--tb-fg-hover, #ffffff);
 }
 .hw-tb-submenu.hw-tb-text-light .hw-tb-sub-footer {
   color: #94a3b8;
@@ -518,28 +591,40 @@
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 .hw-hover-translate-tip.theme-cyber-blue {
-  background: rgba(2, 132, 199, var(--ht-alpha, 0.9));
-  border-color: rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(2, 132, 199, 0.20) 0%, rgba(2, 132, 199, 0.08) 100%),
+    rgba(var(--ht-base-rgb, 255, 255, 255), var(--ht-alpha, 0.9));
+  border-color: rgba(2, 132, 199, 0.38);
 }
 .hw-hover-translate-tip.theme-emerald {
-  background: rgba(5, 150, 105, var(--ht-alpha, 0.9));
-  border-color: rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(5, 150, 105, 0.20) 0%, rgba(5, 150, 105, 0.08) 100%),
+    rgba(var(--ht-base-rgb, 255, 255, 255), var(--ht-alpha, 0.9));
+  border-color: rgba(5, 150, 105, 0.38);
 }
 .hw-hover-translate-tip.theme-purple {
-  background: rgba(124, 58, 237, var(--ht-alpha, 0.9));
-  border-color: rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(124, 58, 237, 0.20) 0%, rgba(124, 58, 237, 0.08) 100%),
+    rgba(var(--ht-base-rgb, 255, 255, 255), var(--ht-alpha, 0.9));
+  border-color: rgba(124, 58, 237, 0.38);
 }
 .hw-hover-translate-tip.theme-rose {
-  background: rgba(225, 29, 72, var(--ht-alpha, 0.9));
-  border-color: rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(225, 29, 72, 0.20) 0%, rgba(225, 29, 72, 0.08) 100%),
+    rgba(var(--ht-base-rgb, 255, 255, 255), var(--ht-alpha, 0.9));
+  border-color: rgba(225, 29, 72, 0.38);
 }
 .hw-hover-translate-tip.theme-amber {
-  background: rgba(217, 119, 6, var(--ht-alpha, 0.9));
-  border-color: rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(217, 119, 6, 0.20) 0%, rgba(217, 119, 6, 0.08) 100%),
+    rgba(var(--ht-base-rgb, 255, 255, 255), var(--ht-alpha, 0.9));
+  border-color: rgba(217, 119, 6, 0.38);
 }
 .hw-hover-translate-tip.theme-indigo {
-  background: rgba(79, 70, 229, var(--ht-alpha, 0.9));
-  border-color: rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(79, 70, 229, 0.20) 0%, rgba(79, 70, 229, 0.08) 100%),
+    rgba(var(--ht-base-rgb, 255, 255, 255), var(--ht-alpha, 0.9));
+  border-color: rgba(79, 70, 229, 0.38);
 }
 
 /* Same reasoning and values as .hw-selection-toolbar.hw-tb-text-light above
@@ -549,11 +634,25 @@
    The tip's own base color: #1e293b (declared on .hw-hover-translate-tip
    itself, further up this file) is the light-text default this overrides. */
 .hw-hover-translate-tip.hw-tb-text-light {
-  color: #f8fafc;
+  --ht-fg: #f8fafc;
+  color: var(--ht-fg);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
+.hw-hover-translate-tip.hw-tb-text-light.theme-cyber-blue { --ht-fg: #7dd3fc; }
+.hw-hover-translate-tip.hw-tb-text-light.theme-emerald { --ht-fg: #6ee7b7; }
+.hw-hover-translate-tip.hw-tb-text-light.theme-purple { --ht-fg: #d8b4fe; }
+.hw-hover-translate-tip.hw-tb-text-light.theme-rose { --ht-fg: #fecdd3; }
+.hw-hover-translate-tip.hw-tb-text-light.theme-amber { --ht-fg: #fde68a; }
+.hw-hover-translate-tip.hw-tb-text-light.theme-indigo { --ht-fg: #c7d2fe; }
+
 .hw-hover-translate-tip.hw-tb-text-light svg {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+.hw-hover-translate-tip.hw-tb-text-light .hw-ht-headword,
+.hw-hover-translate-tip.hw-tb-text-light .hw-ht-trans-text,
+.hw-hover-translate-tip.hw-tb-text-light .hw-ht-speak-btn,
+.hw-hover-translate-tip.hw-tb-text-light .hw-ht-lang-switch {
+  color: var(--ht-fg);
 }
 
 /* Word/Sentence/Paragraph quick switcher (content/hover-translate.js) —

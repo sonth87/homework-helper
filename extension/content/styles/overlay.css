@@ -335,6 +335,55 @@
 .hw-solution-card.theme-amber { --hw-accent: #d97706; --hw-accent-hover: #b45309; --hw-accent-rgb: 217, 119, 6; }
 .hw-solution-card.theme-indigo { --hw-accent: #4f46e5; --hw-accent-hover: #4338ca; --hw-accent-rgb: 79, 70, 229; }
 
+:host([data-theme="dark"]) .hw-solution-card.theme-cyber-blue,
+.hw-solution-card.theme-glass-dark.theme-cyber-blue {
+  --hw-text-main: #e0f2fe;
+  --hw-text-muted: #7dd3fc;
+  --hw-accent: #38bdf8;
+  --hw-accent-hover: #0ea5e9;
+  --hw-accent-rgb: 56, 189, 248;
+}
+:host([data-theme="dark"]) .hw-solution-card.theme-emerald,
+.hw-solution-card.theme-glass-dark.theme-emerald {
+  --hw-text-main: #d1fae5;
+  --hw-text-muted: #6ee7b7;
+  --hw-accent: #34d399;
+  --hw-accent-hover: #10b981;
+  --hw-accent-rgb: 52, 211, 153;
+}
+:host([data-theme="dark"]) .hw-solution-card.theme-purple,
+.hw-solution-card.theme-glass-dark.theme-purple {
+  --hw-text-main: #f3e8ff;
+  --hw-text-muted: #d8b4fe;
+  --hw-accent: #c084fc;
+  --hw-accent-hover: #a855f7;
+  --hw-accent-rgb: 192, 132, 252;
+}
+:host([data-theme="dark"]) .hw-solution-card.theme-rose,
+.hw-solution-card.theme-glass-dark.theme-rose {
+  --hw-text-main: #ffe4e6;
+  --hw-text-muted: #fecdd3;
+  --hw-accent: #fb7185;
+  --hw-accent-hover: #f43f5e;
+  --hw-accent-rgb: 251, 113, 133;
+}
+:host([data-theme="dark"]) .hw-solution-card.theme-amber,
+.hw-solution-card.theme-glass-dark.theme-amber {
+  --hw-text-main: #fef3c7;
+  --hw-text-muted: #fde68a;
+  --hw-accent: #fbbf24;
+  --hw-accent-hover: #f59e0b;
+  --hw-accent-rgb: 251, 191, 36;
+}
+:host([data-theme="dark"]) .hw-solution-card.theme-indigo,
+.hw-solution-card.theme-glass-dark.theme-indigo {
+  --hw-text-main: #e0e7ff;
+  --hw-text-muted: #c7d2fe;
+  --hw-accent: #818cf8;
+  --hw-accent-hover: #6366f1;
+  --hw-accent-rgb: 129, 140, 248;
+}
+
 /* .theme-glass-light/.theme-glass-dark are the one pair of popupCardTheme
    values that are NOT an accent color — a per-popup override that pins this
    card's own glass to light or dark regardless of the global overlayTheme

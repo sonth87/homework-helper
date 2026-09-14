@@ -218,6 +218,7 @@ class SelectionTooltip {
     // Liquid Glass CSS Variables (avoids CSS opacity bug on backdrop-filter)
     this.toolbar.style.setProperty('--tb-alpha', `${(toolbarOpacity / 100).toFixed(2)}`);
     this.toolbar.style.setProperty('--tb-blur', `${toolbarBlur}px`);
+    this.toolbar.style.setProperty('--tb-base-rgb', textIsDark ? '15, 23, 42' : '255, 255, 255');
 
     // Real top/left are computed after the toolbar is in the DOM (see the
     // getBoundingClientRect() call by appendChild below) so centering uses
@@ -404,6 +405,7 @@ class SelectionTooltip {
     this.dropdown.className = `hw-tb-dropdown theme-${this.resolvedTheme}${this.tbTextLight ? ' hw-tb-text-light' : ''}`;
     this.dropdown.style.setProperty('--tb-alpha', this.toolbar.style.getPropertyValue('--tb-alpha'));
     this.dropdown.style.setProperty('--tb-blur', this.toolbar.style.getPropertyValue('--tb-blur'));
+    this.dropdown.style.setProperty('--tb-base-rgb', this.toolbar.style.getPropertyValue('--tb-base-rgb'));
     // Same reasoning as this.toolbar's guard above.
     this.dropdown.addEventListener('mousedown', (e) => e.stopPropagation());
     this.dropdown.addEventListener('mouseup', (e) => e.stopPropagation());
@@ -466,6 +468,7 @@ class SelectionTooltip {
     this.submenu.className = `hw-tb-submenu theme-${this.resolvedTheme}${this.tbTextLight ? ' hw-tb-text-light' : ''}`;
     this.submenu.style.setProperty('--tb-alpha', this.toolbar.style.getPropertyValue('--tb-alpha'));
     this.submenu.style.setProperty('--tb-blur', this.toolbar.style.getPropertyValue('--tb-blur'));
+    this.submenu.style.setProperty('--tb-base-rgb', this.toolbar.style.getPropertyValue('--tb-base-rgb'));
     this.submenu.style.display = 'none';
     this.submenu.innerHTML = `
       <button class="hw-tb-sub-item" data-disable="session">${dict.disableSession}</button>

@@ -4,7 +4,7 @@ import { getSelectionTooltipI18n, getOptionsI18n } from '../../shared/i18n.js';
 import { TOOLBAR_ITEM_ICONS, DEFAULT_TOOLBAR_LAYOUT, normalizeToolbarLayout } from '../../shared/toolbar-items.js';
 import { HOVER_HIGHLIGHT_COLORS } from '../../shared/hover-highlight-colors.js';
 import { HIGHLIGHT_STYLES, DEFAULT_HIGHLIGHT_STYLE, buildHighlight } from '../../shared/highlight-styles.js';
-import { TOOLBAR_THEME_COLORS } from '../../shared/toolbar-theme-colors.js';
+import { TOOLBAR_THEME_COLORS, DARK_THEME_TEXT_COLORS } from '../../shared/toolbar-theme-colors.js';
 import { attachLiquidGlassRefraction, setGlobalGlassParams } from '../../shared/liquid-glass-refraction.js';
 
 // shared/highlight-styles.js only knows style ids — the display name/desc for
@@ -472,17 +472,20 @@ export class AppearanceTab {
         prevToolbar.style.backdropFilter = tbBackdrop;
         prevToolbar.style.webkitBackdropFilter = tbBackdrop;
 
+        const tbTextIsDark = tbThemeSetting === 'glass-dark'
+          || (tbThemeSetting !== 'glass-light' && effectiveOverlayDark);
+        const tbBaseRgb = tbTextIsDark ? '15, 23, 42' : '255, 255, 255';
         const tbSolidRgb = TOOLBAR_THEME_COLORS[tbTheme];
         // Background: 3-way, purely about which theme is picked.
         prevToolbar.style.background = tbTheme === 'glass-dark'
           ? `rgba(15, 23, 42, ${tbAlpha})`
           : tbSolidRgb
-            ? `rgba(${tbSolidRgb}, ${tbAlpha})`
+            ? `linear-gradient(135deg, rgba(${tbSolidRgb}, 0.22) 0%, rgba(${tbSolidRgb}, 0.10) 100%), rgba(${tbBaseRgb}, ${tbAlpha})`
             : `rgba(255, 255, 255, ${tbAlpha})`;
         prevToolbar.style.borderColor = tbTheme === 'glass-dark'
           ? 'rgba(255, 255, 255, 0.2)'
           : tbSolidRgb
-            ? 'rgba(255, 255, 255, 0.35)'
+            ? `rgba(${tbSolidRgb}, 0.38)`
             : 'rgba(255, 255, 255, 0.5)';
 
         // Text/icon colour: a SEPARATE decision from the background above —
@@ -493,13 +496,13 @@ export class AppearanceTab {
         // against tbThemeSetting (the raw select value), not tbTheme, since
         // 'auto' has already been resolved into 'glass-light'/'glass-dark'
         // by then and would otherwise short-circuit this the wrong way.
-        const tbTextIsDark = tbThemeSetting === 'glass-dark'
-          || (tbThemeSetting !== 'glass-light' && effectiveOverlayDark);
-        prevToolbar.style.color = tbTextIsDark ? '#f8fafc' : '#1e293b';
-        // Same low-opacity-tint-vs-opaque-white-text problem as the real
-        // toolbar (see its comment in content/styles/tooltip.css) — only
-        // matters once text is actually light, so tied to tbTextIsDark
-        // rather than "is this an accent theme".
+        const tbTextColor = tbTextIsDark
+          ? (DARK_THEME_TEXT_COLORS[tbThemeSetting] || '#f8fafc')
+          : '#1e293b';
+        prevToolbar.style.color = tbTextColor;
+        prevToolbar.querySelectorAll('.prev-tb-btn, .prev-tb-label').forEach((el) => {
+          el.style.color = tbTextColor;
+        });
         prevToolbar.style.textShadow = tbTextIsDark ? '0 1px 3px rgba(0, 0, 0, 0.35)' : '';
         prevToolbar.classList.toggle('prev-accent-text', tbTextIsDark);
       }
@@ -572,22 +575,31 @@ export class AppearanceTab {
         prevHoverTip.style.backdropFilter = htBackdrop;
         prevHoverTip.style.webkitBackdropFilter = htBackdrop;
 
+        const htTextIsDark = htThemeSetting === 'glass-dark'
+          || (htThemeSetting !== 'glass-light' && effectiveOverlayDark);
+        const htBaseRgb = htTextIsDark ? '15, 23, 42' : '255, 255, 255';
         const htSolidRgb = TOOLBAR_THEME_COLORS[htTheme];
         // Background: 3-way, purely about which theme is picked — same
         // pattern as the Toolbar preview above.
         prevHoverTip.style.background = htTheme === 'glass-dark'
           ? `rgba(15, 23, 42, ${htAlpha})`
           : htSolidRgb
-            ? `rgba(${htSolidRgb}, ${htAlpha})`
+            ? `linear-gradient(135deg, rgba(${htSolidRgb}, 0.20) 0%, rgba(${htSolidRgb}, 0.08) 100%), rgba(${htBaseRgb}, ${htAlpha})`
             : `rgba(255, 255, 255, ${htAlpha})`;
+        prevHoverTip.style.borderColor = htTheme === 'glass-dark'
+          ? 'rgba(255, 255, 255, 0.2)'
+          : htSolidRgb
+            ? `rgba(${htSolidRgb}, 0.38)`
+            : 'rgba(255, 255, 255, 0.5)';
 
         // Text/icon colour: same textIsDark split as the Toolbar preview
         // above and content/hover-translate.js's own real logic (see their
         // comments) — 'glass-light'/'glass-dark' force it, 'auto' and every
         // accent colour instead defer to effectiveOverlayDark.
-        const htTextIsDark = htThemeSetting === 'glass-dark'
-          || (htThemeSetting !== 'glass-light' && effectiveOverlayDark);
-        prevHoverTip.style.color = htTextIsDark ? '#f8fafc' : '#1e293b';
+        const htTextColor = htTextIsDark
+          ? (DARK_THEME_TEXT_COLORS[htThemeSetting] || '#f8fafc')
+          : '#1e293b';
+        prevHoverTip.style.color = htTextColor;
         prevHoverTip.style.textShadow = htTextIsDark ? '0 1px 3px rgba(0, 0, 0, 0.35)' : '';
       }
 
@@ -615,12 +627,20 @@ export class AppearanceTab {
         const popIsAccent = !['auto', 'glass-light', 'glass-dark'].includes(popThemeSetting);
         const popIsDark = popThemeSetting === 'glass-dark'
           || (popThemeSetting !== 'glass-light' && effectiveOverlayDark);
+        const popBaseRgb = popIsDark ? '15, 23, 42' : '255, 255, 255';
         const popBg = popIsAccent
-          ? `rgba(${popRgb}, ${popAlpha})`
+          ? `linear-gradient(135deg, rgba(${popRgb}, 0.20) 0%, rgba(${popRgb}, 0.08) 100%), rgba(${popBaseRgb}, ${popAlpha})`
           : popIsDark
             ? `rgba(15, 23, 42, ${popAlpha})`
             : `rgba(255, 255, 255, ${popAlpha})`;
-        const popColor = popIsDark ? '#f8fafc' : '#1e293b';
+        const popBorder = popIsAccent
+          ? `rgba(${popRgb}, 0.38)`
+          : popIsDark
+            ? 'rgba(255, 255, 255, 0.2)'
+            : 'rgba(255, 255, 255, 0.5)';
+        const popColor = popIsDark
+          ? (popIsAccent ? (DARK_THEME_TEXT_COLORS[popThemeSetting] || '#f8fafc') : '#f8fafc')
+          : '#1e293b';
         // Same light/dark pair as --hw-text-muted in overlay.css's :host —
         // #prevDemoStep is this mock's only secondary/muted text (the real
         // card has plenty, e.g. .hw-card-source-text), and needs its own
@@ -638,6 +658,7 @@ export class AppearanceTab {
         const applyPopupGlass = (el, glass) => {
           if (!el) return;
           el.style.background = popBg;
+          el.style.borderColor = popBorder;
           el.style.color = popColor;
           const glassId = glass?.filterId;
           const backdrop = glassId
