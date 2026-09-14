@@ -1129,8 +1129,10 @@ export class OverlayFloatingCard {
     // A stream still writing into this card would overwrite the free engine's
     // answer the moment its next chunk lands — switching source has to end it,
     // not race it.
-    if (this.overlay.drawer.isStreaming && this.overlay.drawer.activeTarget === 'card') {
+    if (this.overlay.drawer.isStreaming || this.overlay.drawer.activeTarget === 'card') {
       this.overlay.drawer.stopStream();
+      this.overlay.drawer.activeTarget = null;
+      this.overlay.drawer.activeRequestId = null;
     }
 
     const { uiLanguage = 'en', popupCardSize = 'normal' } = await Storage.get(['uiLanguage', 'popupCardSize']);

@@ -17,6 +17,14 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.11.1] — 2026-09-11
+
+### Sửa lỗi
+- Khắc phục cảnh báo "No output language was specified" trên trang Options khi tải
+  model Gemini Nano on-device (nút "Download Now" thiếu tham số ngôn ngữ đầu ra).
+
+---
+
 ## [1.11.0] — 2026-09-09
 
 ### Thêm mới

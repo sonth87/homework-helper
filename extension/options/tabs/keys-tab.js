@@ -208,6 +208,7 @@ export class KeysTab {
         const aiModel = getAiModel();
         if (!aiModel) throw new Error('window.ai not available in this context.');
         await aiModel.create({
+          expectedOutputs: [{ type: 'text', languages: ['en'] }],
           monitor(m) {
             m.addEventListener('downloadprogress', (ev) => {
               const pct = Math.round((ev.loaded || 0) * 100);

@@ -260,12 +260,107 @@ export async function lookupWord({ word, from = 'auto', to = 'en', displayLang =
 }
 
 /**
+ * Wiktionary lookup via Free Dictionary API (with official Wiktionary REST API fallback).
+ * Returns phonetics, definitions grouped by part of speech, and example sentences.
+ */
+export async function lookupWiktionary({ word }) {
+  const term = (word || '').trim();
+  if (!term) return null;
+
+  const normalized = term.toLowerCase();
+
+  // Try Free Dictionary API first (primary structured source from Wiktionary)
+  try {
+    const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(normalized)}`;
+    const data = await fetchJson(url);
+    if (Array.isArray(data) && data[0]) {
+      const entry = data[0];
+      const phonetic = entry.phonetic || (entry.phonetics || []).find((p) => p.text)?.text || '';
+      const senses = [];
+      for (const m of entry.meanings || []) {
+        const pos = m.partOfSpeech || '';
+        for (const d of (m.definitions || []).slice(0, 3)) {
+          senses.push({
+            pos,
+            gloss: d.definition || '',
+            example: d.example || '',
+            exampleHighlight: term,
+            exampleTranslation: '',
+            exampleTranslationHighlight: '',
+          });
+        }
+      }
+      if (senses.length > 0) {
+        return {
+          word: entry.word || term,
+          phonetic,
+          translation: '',
+          description: '',
+          detectedLang: 'en',
+          senses,
+        };
+      }
+    }
+  } catch {
+    // Fall back to official Wikimedia Wiktionary REST API
+  }
+
+  // Fallback to official Wikimedia Wiktionary REST API
+  try {
+    const wikiUrl = `https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(normalized)}`;
+    const data = await fetchJson(wikiUrl);
+    const sections = data?.en || [];
+    if (sections.length > 0) {
+      const senses = [];
+      for (const sec of sections) {
+        const pos = sec.partOfSpeech || '';
+        for (const d of (sec.definitions || []).slice(0, 3)) {
+          const rawDef = String(d.definition || '').replace(/<[^>]+>/g, '').trim();
+          const example = (d.examples || [])[0] ? String(d.examples[0]).replace(/<[^>]+>/g, '').trim() : '';
+          if (rawDef) {
+            senses.push({
+              pos,
+              gloss: rawDef,
+              example,
+              exampleHighlight: term,
+              exampleTranslation: '',
+              exampleTranslationHighlight: '',
+            });
+          }
+        }
+      }
+      if (senses.length > 0) {
+        return {
+          word: term,
+          phonetic: '',
+          translation: '',
+          description: '',
+          detectedLang: 'en',
+          senses,
+        };
+      }
+    }
+  } catch {
+    // Both failed
+  }
+
+  return null;
+}
+
+async function translateWiktionary(text, from, to) {
+  const entry = await lookupWiktionary({ word: text });
+  if (!entry) throw new Error('Not found in Wiktionary');
+  return { translation: JSON.stringify(entry), detectedLang: 'en', isDictionary: true };
+}
+
+/**
  * The keyless engines, in the order the fallback chain tries them.
  * `maxLength` is each service's practical per-request ceiling.
  */
 export const FREE_ENGINES = [
   { id: 'bing', name: providerName('bing'), maxLength: 1800, run: translateBing },
   { id: 'google', name: providerName('google'), maxLength: 5000, run: translateGoogle },
+  { id: 'wiktionary', name: providerName('wiktionary'), maxLength: 200, run: translateWiktionary },
   { id: 'google-legacy', name: providerName('google-legacy'), maxLength: 1500, run: translateGoogleLegacy, hidden: true },
   { id: 'volc', name: providerName('volc'), maxLength: 2000, run: translateVolc },
   { id: 'mymemory', name: providerName('mymemory'), maxLength: 500, run: translateMyMemory },

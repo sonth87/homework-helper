@@ -343,7 +343,8 @@ export default {
     autoClipboardDesc: "Khi mở popup này, tự động dịch ngay nội dung đang có sẵn trong clipboard.",
     hoverShortcutHeld: "Giữ",
     hoverShortcutNone: "Chỉ cần di chuột, không cần giữ phím",
-    shortcutNotSet: "Chưa gán phím tắt — vào chrome://extensions/shortcuts để đặt",
+    shortcutNotSet: "Chưa gán",
+    shortcutsSettingsBtn: "Cài đặt phím tắt trên Chrome",
     shortcutsPanelTitle: "Phím tắt",
     rotationRandom: "Ngẫu nhiên",
     rotationRoundRobin: "Xoay vòng",
@@ -501,6 +502,8 @@ export default {
     labelFabSize: "Kích thước nút nổi FAB",
     labelFabOpacity: "Độ trong suốt nút nổi",
     labelFabOpacityDesc: "Độ mờ kính của 2 nút nổi.",
+    labelFabBlur: "Độ mờ hậu cảnh nút nổi",
+    labelFabBlurDesc: "Hiệu ứng làm mờ trang web phía sau 2 nút nổi.",
     labelFabAutoHide: "Tự động ẩn",
     labelFabAutoHideDesc:
       "Thu 2 nút nổi vào sát mép màn hình khi không dùng tới, hiện lại khi rê chuột vào. Tắt để luôn hiển thị đầy đủ ngoài mép màn hình.",

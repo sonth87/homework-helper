@@ -178,22 +178,32 @@ export class OverlayDrawer {
   // (so a local LM Studio/Ollama model actually stops generating instead of
   // grinding away unseen) and settles the UI as if the stream ended here.
   stopStream() {
-    if (!this.isStreaming) return;
-    if (this.activeRequestId) {
-      chrome.runtime.sendMessage({ action: 'ABORT_STREAM', payload: { requestId: this.activeRequestId } }).catch(() => {});
+    if (!this.isStreaming && !this.activeRequestId) return;
+    const reqId = this.activeRequestId;
+    if (reqId) {
+      chrome.runtime.sendMessage({ action: 'ABORT_STREAM', payload: { requestId: reqId } }).catch(() => {});
+      window.dispatchEvent(new CustomEvent('HOMEWORK_AI_NANO_ABORT', { detail: { requestId: reqId } }));
     }
     this.isStreaming = false;
+    this.activeRequestId = null;
     this.setSendButtonStreaming(false);
 
     if (this.activeTarget === 'card') {
-      this.overlay.floatingCard.cardStatus = 'done';
+      const fc = this.overlay.floatingCard;
+      this.activeTarget = null;
       if (this.overlay.minimizedCard?.isActive()) {
         this.overlay.minimizedCard.finalize();
       } else {
-        this.overlay.floatingCard.stopLoadingSteps();
+        fc.stopLoadingSteps();
       }
-      if (this.overlay.floatingCard.activeCardResponseText) {
-        Storage.addChatMessage({ role: 'assistant', content: this.overlay.floatingCard.activeCardResponseText }, this.activeRequestConversationId);
+      // If switching away from AI in translate mode, don't record partial AI translation into chat history
+      if (fc.popupMode === 'translate' && fc.translateEngine !== 'ai') {
+        fc.activeCardResponseText = '';
+        return;
+      }
+      fc.cardStatus = 'done';
+      if (fc.activeCardResponseText) {
+        Storage.addChatMessage({ role: 'assistant', content: fc.activeCardResponseText }, this.activeRequestConversationId);
       }
       return;
     }
@@ -651,27 +661,31 @@ export class OverlayDrawer {
     // formatMarkdownAndMath('') within milliseconds of the request starting — before
     // any actual answer text ever arrived. Only real, non-empty chunks should touch
     // the rendered content.
-    if (!chunk) return;
+    if (!chunk || !this.isStreaming) return;
 
     if (this.activeTarget === 'card') {
-      this.overlay.floatingCard.activeCardResponseText += chunk;
+      const fc = this.overlay.floatingCard;
+      if (fc.popupMode === 'translate' && fc.translateEngine !== 'ai') {
+        return;
+      }
+      fc.activeCardResponseText += chunk;
       // Minimize mode never shows the real card, so there's nothing to
       // stop-loading-steps or write into — just hand the running total to
       // the circle's own popup (see minimized-card.js), which re-renders it
       // only while actually visible.
       if (this.overlay.minimizedCard?.isActive()) {
-        this.overlay.minimizedCard.updateContent(this.overlay.floatingCard.activeCardResponseText);
+        this.overlay.minimizedCard.updateContent(fc.activeCardResponseText);
         return;
       }
-      this.overlay.floatingCard.stopLoadingSteps();
+      fc.stopLoadingSteps();
       const content = this.shadow.getElementById('hwCardAnswerContent');
       if (content) {
         content.innerHTML = renderAnswer(
-          this.overlay.floatingCard.activeCardResponseText,
+          fc.activeCardResponseText,
           {
             allowMarkdownDict: content.classList.contains('hw-dict-mode'),
-            speakLabel: this.overlay.floatingCard.speakLabel,
-            targetLang: this.overlay.floatingCard.targetLang,
+            speakLabel: fc.speakLabel,
+            targetLang: fc.targetLang,
           }
         );
       }
@@ -699,12 +713,18 @@ export class OverlayDrawer {
     this.updateActiveModelBadge();
 
     if (this.activeTarget === 'card') {
-      this.overlay.floatingCard.cardStatus = 'done';
+      const fc = this.overlay.floatingCard;
+      if (fc.popupMode === 'translate' && fc.translateEngine !== 'ai') {
+        this.activeTarget = null;
+        return;
+      }
+      this.activeTarget = null;
+      fc.cardStatus = 'done';
       if (this.overlay.minimizedCard?.isActive()) {
         this.overlay.minimizedCard.finalize();
       } else {
-        this.overlay.floatingCard.stopLoadingSteps();
-        this.overlay.floatingCard.syncSpeakButton();
+        fc.stopLoadingSteps();
+        fc.syncSpeakButton();
       }
       // Chat history is saved the same way regardless of which display mode
       // rendered the answer — Minimize only changes what's shown on the

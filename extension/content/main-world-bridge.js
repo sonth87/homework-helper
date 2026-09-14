@@ -61,6 +61,19 @@
     }));
   });
 
+  // Active Nano AbortControllers
+  const nanoControllers = new Map();
+
+  window.addEventListener('HOMEWORK_AI_NANO_ABORT', (e) => {
+    const { requestId } = e.detail || {};
+    if (requestId && nanoControllers.has(requestId)) {
+      try {
+        nanoControllers.get(requestId).abort();
+      } catch {}
+      nanoControllers.delete(requestId);
+    }
+  });
+
   // Handle Prompt Execution & Streaming
   window.addEventListener('HOMEWORK_AI_NANO_EXEC', async (e) => {
     const { prompt, requestId, systemPrompt, responseConstraint, history } = e.detail || {};
@@ -85,11 +98,15 @@
       window.dispatchEvent(new CustomEvent('HOMEWORK_AI_NANO_DOWNLOAD_START', { detail: { requestId, status } }));
     }
 
+    const abortController = new AbortController();
+    if (requestId) nanoControllers.set(requestId, abortController);
+
     try {
       const session = await aiModel.create({
         systemPrompt: systemPrompt || undefined,
         temperature: 0.1,
         topK: 1,
+        signal: abortController.signal,
         // Prior turns of the conversation, already truncated to Nano's
         // budget by the caller (drawer.js / floating-card.js, via
         // shared/history-budget.js) before this event was dispatched — this
@@ -109,6 +126,11 @@
         },
       });
 
+      if (abortController.signal.aborted) {
+        session.destroy?.();
+        return;
+      }
+
       if (typeof session.promptStreaming === 'function') {
         // For a single-word dictionary lookup the caller passes a JSON schema
         // to constrain the output. responseConstraint is only available on
@@ -116,14 +138,15 @@
         let stream;
         try {
           stream = responseConstraint
-            ? session.promptStreaming(prompt, { responseConstraint })
-            : session.promptStreaming(prompt);
+            ? session.promptStreaming(prompt, { responseConstraint, signal: abortController.signal })
+            : session.promptStreaming(prompt, { signal: abortController.signal });
         } catch (constraintErr) {
           if (!responseConstraint) throw constraintErr;
-          stream = session.promptStreaming(prompt);
+          stream = session.promptStreaming(prompt, { signal: abortController.signal });
         }
         let accumulated = '';
         for await (const chunk of stream) {
+          if (abortController.signal.aborted) break;
           let delta = '';
           if (typeof chunk === 'string') {
             if (chunk.startsWith(accumulated)) {
@@ -140,22 +163,30 @@
             }));
           }
         }
-        window.dispatchEvent(new CustomEvent('HOMEWORK_AI_NANO_FINISH', {
-          detail: { requestId, success: true }
-        }));
+        if (!abortController.signal.aborted) {
+          window.dispatchEvent(new CustomEvent('HOMEWORK_AI_NANO_FINISH', {
+            detail: { requestId, success: true }
+          }));
+        }
       } else {
-        const reply = await session.prompt(prompt);
-        window.dispatchEvent(new CustomEvent('HOMEWORK_AI_NANO_CHUNK', {
-          detail: { requestId, chunk: reply }
-        }));
-        window.dispatchEvent(new CustomEvent('HOMEWORK_AI_NANO_FINISH', {
-          detail: { requestId, success: true }
-        }));
+        const reply = await session.prompt(prompt, { signal: abortController.signal });
+        if (!abortController.signal.aborted) {
+          window.dispatchEvent(new CustomEvent('HOMEWORK_AI_NANO_CHUNK', {
+            detail: { requestId, chunk: reply }
+          }));
+          window.dispatchEvent(new CustomEvent('HOMEWORK_AI_NANO_FINISH', {
+            detail: { requestId, success: true }
+          }));
+        }
       }
     } catch (err) {
-      window.dispatchEvent(new CustomEvent('HOMEWORK_AI_NANO_ERROR', {
-        detail: { requestId, error: err.message || 'Lỗi khi xử lý với Gemini Nano' }
-      }));
+      if (!abortController.signal.aborted) {
+        window.dispatchEvent(new CustomEvent('HOMEWORK_AI_NANO_ERROR', {
+          detail: { requestId, error: err.message || 'Lỗi khi xử lý với Gemini Nano' }
+        }));
+      }
+    } finally {
+      if (requestId) nanoControllers.delete(requestId);
     }
   });
 })();

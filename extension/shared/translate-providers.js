@@ -41,6 +41,11 @@ const LOGOS = {
     <rect width="24" height="24" rx="5" fill="#2C3E8F"/>
     <path fill="#ffffff" d="M6 17.4V6.6h2.7l3.3 5.5 3.3-5.5H18v10.8h-2.3V10.6l-3.1 5h-1.2l-3.1-5v6.8z"/>
   `),
+  // Wiktionary — Wikimedia styled "W".
+  wiktionary: logo('0 0 24 24', `
+    <rect width="24" height="24" rx="5" fill="#006699"/>
+    <path fill="#ffffff" d="M4 6.5h2.5l2.7 8.5 2.5-7.5h1.8l2.5 7.5 2.7-8.5h2.3l-3.8 11h-2.3l-2.4-7.2-2.4 7.2H6.3z"/>
+  `),
   // The user's own AI models — no third-party brand to show, so the
   // extension's own accent mark stands in.
   ai: logo('0 0 24 24', `
@@ -61,6 +66,7 @@ LOGOS['google-legacy'] = LOGOS.google;
 export const FREE_PROVIDER_NAMES = {
   bing: 'Microsoft Translator',
   google: 'Google Translate',
+  wiktionary: 'Wiktionary',
   volc: 'Volcano Translate',
   mymemory: 'MyMemory',
 };

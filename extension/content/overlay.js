@@ -367,8 +367,8 @@ class InPageOverlay {
     // pre-edit CSS rule declared (some never had saturate(180%) at all —
     // saturate:1 preserves that instead of picking up the library's own
     // default 1.5 boost none of these were actually designed around).
-    attachLiquidGlassRefraction(this.shadow.getElementById('hwFabCrop'), { blur: 16, saturate: 1.8, border: 0.15 });
-    attachLiquidGlassRefraction(this.shadow.getElementById('hwFabToggle'), { blur: 16, saturate: 1.8, border: 0.15 });
+    this.fabCropGlass = attachLiquidGlassRefraction(this.shadow.getElementById('hwFabCrop'), { blur: 8, saturate: 1.8, border: 0.15 });
+    this.fabToggleGlass = attachLiquidGlassRefraction(this.shadow.getElementById('hwFabToggle'), { blur: 8, saturate: 1.8, border: 0.15 });
     attachLiquidGlassRefraction(this.shadow.getElementById('hwCardHistoryPanel'), { blur: 20, saturate: 1 });
     attachLiquidGlassRefraction(this.shadow.getElementById('hwCardFloatTab'), { blur: 8, saturate: 1.8 });
     attachLiquidGlassRefraction(this.shadow.getElementById('hwDrawerEdgeClose'), { blur: 16, saturate: 1, border: 0.15 });
@@ -500,7 +500,7 @@ class InPageOverlay {
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local') {
-          if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.fabAutoHide || changes.popupOpacity || changes.popupBlur || changes.popupCardSize || changes.popupCardTheme || changes.overlayTheme) {
+          if (changes.enableFloatingButton || changes.fabSize || changes.fabOpacity || changes.fabBlur || changes.fabAutoHide || changes.popupOpacity || changes.popupBlur || changes.popupCardSize || changes.popupCardTheme || changes.overlayTheme) {
             this.applyAppearanceSettings();
           }
           if (changes.liquidGlassScale || changes.liquidGlassChroma) {
@@ -636,6 +636,7 @@ class InPageOverlay {
       enableFloatingButton = true,
       fabSize = 'normal',
       fabOpacity = 90,
+      fabBlur = 8,
       fabAutoHide = true,
       popupOpacity = 60,
       popupBlur = 6,
@@ -643,8 +644,27 @@ class InPageOverlay {
       popupCardTheme = 'auto',
     } = await Storage.get();
 
-    this.fabs.applyAppearance(enableFloatingButton, fabSize, fabOpacity, fabAutoHide);
+    this.fabs.applyAppearance(enableFloatingButton, fabSize, fabOpacity, fabAutoHide, fabBlur);
     this.floatingCard?.applyFabAppearance(fabSize, fabOpacity);
+
+    const fabCrop = this.shadow.getElementById('hwFabCrop');
+    const fabToggle = this.shadow.getElementById('hwFabToggle');
+    const cropGlassId = this.fabCropGlass?.filterId;
+    const toggleGlassId = this.fabToggleGlass?.filterId;
+    if (fabCrop) {
+      const b = cropGlassId
+        ? `url(#${cropGlassId}) blur(${fabBlur}px) saturate(180%)`
+        : `blur(${fabBlur}px) saturate(180%)`;
+      fabCrop.style.backdropFilter = b;
+      fabCrop.style.webkitBackdropFilter = b;
+    }
+    if (fabToggle) {
+      const b = toggleGlassId
+        ? `url(#${toggleGlassId}) blur(${fabBlur}px) saturate(180%)`
+        : `blur(${fabBlur}px) saturate(180%)`;
+      fabToggle.style.backdropFilter = b;
+      fabToggle.style.webkitBackdropFilter = b;
+    }
 
     const themeAttr = await getOverlayThemeAttr();
     if (themeAttr) this.host.setAttribute('data-theme', themeAttr);

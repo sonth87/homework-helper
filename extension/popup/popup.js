@@ -267,17 +267,30 @@ document.addEventListener('DOMContentLoaded', async () => {
       // extension or the OS/browser) — the hover-modifier "shortcut" is a
       // Storage setting, always has a value, never needs the warning style.
       const isUnset = !r.alwaysSet && !r.key;
-      const keyLabel = isUnset ? dict.shortcutNotSet : r.key;
+      const keyLabel = isUnset ? (dict.shortcutNotSet || 'Chưa gán') : r.key;
+      const clickAttr = isUnset ? ` role="button" tabindex="0" title="${dict.shortcutsSettingsBtn || 'Cài đặt phím tắt'}"` : '';
       return `
         <div class="pop-shortcut-row">
           <div class="pop-shortcut-info">
             <div class="pop-shortcut-title">${r.title}</div>
             <div class="pop-shortcut-desc">${r.desc}</div>
           </div>
-          <span class="pop-shortcut-key${isUnset ? ' is-unset' : ''}">${keyLabel}</span>
+          <span class="pop-shortcut-key${isUnset ? ' is-unset' : ''}"${clickAttr}>${keyLabel}</span>
         </div>
       `;
     }).join('');
+
+    $('popShortcutsList').querySelectorAll('.pop-shortcut-key.is-unset').forEach((badge) => {
+      badge.addEventListener('click', () => {
+        chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+      });
+      badge.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+        }
+      });
+    });
   }
 
   function openShortcutsPanel() {
@@ -299,6 +312,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   $('popBtnCloseShortcuts').addEventListener('click', closeShortcutsPanel);
   $('popShortcutsBackdrop').addEventListener('click', closeShortcutsPanel);
+  $('popBtnOpenShortcutsSettings')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+  });
 
   // ---------- i18n ----------
   function applyLanguage() {
@@ -314,6 +330,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     els.btnClear.title = dict.btnClear;
     els.btnShortcuts.title = dict.shortcutsPanelTitle;
     $('popShortcutsTitle').textContent = dict.shortcutsPanelTitle;
+    if ($('popShortcutsSettingsText')) {
+      $('popShortcutsSettingsText').textContent = dict.shortcutsSettingsBtn || 'Cài đặt phím tắt';
+    }
     els.btnSpeakSource.title = dict.listen;
     els.btnSpeakResult.title = dict.listen;
     els.btnOptions.title = dict.widgetSettings;

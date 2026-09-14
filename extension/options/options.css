@@ -213,9 +213,9 @@ body {
 .blob-2 {
   width: 180px;
   height: 180px;
-  background: rgba(236, 72, 153, 0.35);
-  bottom: 30px;
-  right: 40px;
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.45), rgba(124, 58, 237, 0.45));
+  bottom: 0px;
+  right: -20px;
 }
 
 .opt-mock-text {
@@ -721,36 +721,57 @@ body {
    .hw-fab-static and keeps it fully visible instead. */
 .opt-preview-fab {
   position: absolute;
-  right: 0px;
+  right: 8px;
   bottom: 20px;
   z-index: 5;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transform: translateX(14px);
+  padding: 8px 4px 8px 16px;
+  margin: -8px -4px -8px -16px;
+  transform: translateX(20px);
   opacity: 0.65;
+  cursor: pointer;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
 }
 
 .opt-preview-fab:hover,
-.opt-preview-fab.prev-fab-static {
+.opt-preview-fab.prev-fab-static,
+.opt-preview-fab.prev-fab-peeking {
   transform: translateX(0);
-  right: 8px;
   opacity: 1;
 }
 
 .prev-fab-btn {
+  position: relative;
   width: 34px;
   height: 34px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #0284c7;
   transition: all 0.15s ease;
+  overflow: hidden;
+}
+
+.prev-fab-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.05) 20%, rgba(255, 255, 255, 0) 35%);
+  box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.25);
+}
+
+.prev-fab-btn svg {
+  position: relative;
+  z-index: 1;
 }
 
 .prev-fab-primary {

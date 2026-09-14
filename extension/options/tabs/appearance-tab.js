@@ -49,6 +49,7 @@ export class AppearanceTab {
       enableFloatingButton = true,
       fabSize = 'normal',
       fabOpacity = 90,
+      fabBlur = 8,
       fabAutoHide = true,
       popupOpacity = 60,
       popupBlur = 6,
@@ -92,6 +93,8 @@ export class AppearanceTab {
     const fabSizeSelect = document.getElementById('optFabSizeSelect');
     const rangeFabOpacity = document.getElementById('optRangeFabOpacity');
     const valFabOpacity = document.getElementById('valFabOpacity');
+    const rangeFabBlur = document.getElementById('optRangeFabBlur');
+    const valFabBlur = document.getElementById('valFabBlur');
     const checkFabAutoHide = document.getElementById('optCheckFabAutoHide');
     const btnResetFab = document.getElementById('optBtnResetFab');
     const fabSettingsSub = document.getElementById('optFabSettingsSub');
@@ -172,6 +175,10 @@ export class AppearanceTab {
     const prevMiniPopupGlass = prevMiniPopup ? attachLiquidGlassRefraction(prevMiniPopup, { blur: 6, saturate: 1.8 }) : null;
     const prevToolbarGlass = prevToolbar ? attachLiquidGlassRefraction(prevToolbar, { blur: 16, saturate: 1.8 }) : null;
     const prevHoverTipGlass = prevHoverTip ? attachLiquidGlassRefraction(prevHoverTip, { blur: 16, saturate: 1.8 }) : null;
+    const prevFabCrop = document.getElementById('prevFabCrop');
+    const prevFabToggle = document.getElementById('prevFabToggle');
+    const prevFabCropGlass = prevFabCrop ? attachLiquidGlassRefraction(prevFabCrop, { blur: 8, saturate: 1.8, border: 0.15 }) : null;
+    const prevFabToggleGlass = prevFabToggle ? attachLiquidGlassRefraction(prevFabToggle, { blur: 8, saturate: 1.8, border: 0.15 }) : null;
 
     if (!checkFab) return;
 
@@ -282,6 +289,10 @@ export class AppearanceTab {
       rangeFabOpacity.value = fabOpacity;
       if (valFabOpacity) valFabOpacity.textContent = `${fabOpacity}%`;
     }
+    if (rangeFabBlur) {
+      rangeFabBlur.value = fabBlur;
+      if (valFabBlur) valFabBlur.textContent = `${fabBlur}px`;
+    }
     if (checkFabAutoHide) checkFabAutoHide.checked = fabAutoHide;
     if (checkToolbarEnableInline) checkToolbarEnableInline.checked = enableTextTooltip;
     setSubDimmed(toolbarSettingsSub, !enableTextTooltip);
@@ -369,8 +380,28 @@ export class AppearanceTab {
         const isFabVisible = checkFab.checked;
         const fSize = fabSizeSelect?.value || 'normal';
         const fabAlpha = rangeFabOpacity ? (parseInt(rangeFabOpacity.value, 10) / 100).toFixed(2) : '0.9';
+        const fabBlurVal = rangeFabBlur ? parseInt(rangeFabBlur.value, 10) : 8;
         prevFab.style.display = isFabVisible ? 'flex' : 'none';
         prevFab.classList.toggle('prev-fab-static', checkFabAutoHide ? !checkFabAutoHide.checked : false);
+
+        const cropGlassId = prevFabCropGlass?.filterId;
+        const toggleGlassId = prevFabToggleGlass?.filterId;
+        const cropBackdrop = cropGlassId
+          ? `url(#${cropGlassId}) blur(${fabBlurVal}px) saturate(180%)`
+          : `blur(${fabBlurVal}px) saturate(180%)`;
+        const toggleBackdrop = toggleGlassId
+          ? `url(#${toggleGlassId}) blur(${fabBlurVal}px) saturate(180%)`
+          : `blur(${fabBlurVal}px) saturate(180%)`;
+
+        if (prevFabCrop) {
+          prevFabCrop.style.backdropFilter = cropBackdrop;
+          prevFabCrop.style.webkitBackdropFilter = cropBackdrop;
+        }
+        if (prevFabToggle) {
+          prevFabToggle.style.backdropFilter = toggleBackdrop;
+          prevFabToggle.style.webkitBackdropFilter = toggleBackdrop;
+        }
+
         prevFab.querySelectorAll('.prev-fab-btn').forEach((btn) => {
           if (fSize === 'tiny') {
             btn.style.width = '22px';
@@ -396,6 +427,8 @@ export class AppearanceTab {
               ? `rgba(15, 23, 42, ${fabAlpha})`
               : `rgba(255, 255, 255, ${fabAlpha})`;
         });
+        prevFabCropGlass?.refresh();
+        prevFabToggleGlass?.refresh();
       }
 
       // 2. Toolbar
@@ -707,15 +740,34 @@ export class AppearanceTab {
       updatePreview();
     });
 
+    let fabPeekTimer = null;
+    const peekFab = () => {
+      if (!prevFab) return;
+      prevFab.classList.add('prev-fab-peeking');
+      clearTimeout(fabPeekTimer);
+      fabPeekTimer = setTimeout(() => {
+        prevFab?.classList.remove('prev-fab-peeking');
+      }, 1400);
+    };
+
     fabSizeSelect?.addEventListener('change', () => {
       Storage.set({ fabSize: fabSizeSelect.value });
       updatePreview();
+      peekFab();
     });
 
     rangeFabOpacity?.addEventListener('input', () => {
       if (valFabOpacity) valFabOpacity.textContent = `${rangeFabOpacity.value}%`;
       Storage.set({ fabOpacity: parseInt(rangeFabOpacity.value, 10) });
       updatePreview();
+      peekFab();
+    });
+
+    rangeFabBlur?.addEventListener('input', () => {
+      if (valFabBlur) valFabBlur.textContent = `${rangeFabBlur.value}px`;
+      Storage.set({ fabBlur: parseInt(rangeFabBlur.value, 10) });
+      updatePreview();
+      peekFab();
     });
 
     checkFabAutoHide?.addEventListener('change', () => {
@@ -735,12 +787,18 @@ export class AppearanceTab {
         rangeFabOpacity.value = d.fabOpacity;
         if (valFabOpacity) valFabOpacity.textContent = `${d.fabOpacity}%`;
       }
+      if (rangeFabBlur) {
+        rangeFabBlur.value = d.fabBlur;
+        if (valFabBlur) valFabBlur.textContent = `${d.fabBlur}px`;
+      }
 
       Storage.set({
         fabSize: d.fabSize,
         fabOpacity: d.fabOpacity,
+        fabBlur: d.fabBlur,
       });
       updatePreview();
+      peekFab();
     });
 
     // Same setting (enableTextTooltip) as General tab's own "Text Selection

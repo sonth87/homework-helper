@@ -66,6 +66,9 @@ export class OptionsController {
     } else if (window.location.hash === '#ocr') {
       const ocrNav = document.querySelector('[data-tab="ocr"]');
       if (ocrNav) ocrNav.click();
+    } else if (window.location.hash === '#appearance') {
+      const appNav = document.querySelector('[data-tab="appearance"]');
+      if (appNav) appNav.click();
     } else if (window.location.hash === '#local-model-guide') {
       const guideCard = document.getElementById('optLocalGuideCard');
       if (guideCard) {
@@ -346,6 +349,8 @@ export class OptionsController {
     setText('optLabelFabSize', dict.labelFabSize);
     setText('optLabelFabOpacity', dict.labelFabOpacity);
     setText('optLabelFabOpacityDesc', dict.labelFabOpacityDesc);
+    setText('optLabelFabBlur', dict.labelFabBlur);
+    setText('optLabelFabBlurDesc', dict.labelFabBlurDesc);
     setText('optLabelFabAutoHide', dict.labelFabAutoHide);
     setText('optLabelFabAutoHideDesc', dict.labelFabAutoHideDesc);
     // Reuses the toolbar layout editor's own "Restore Default" string —

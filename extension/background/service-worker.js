@@ -8,7 +8,7 @@ import { keyRotator } from './key-rotator.js';
 import { Storage } from '../shared/storage.js';
 import { runOcrInOffscreen } from './ocr-bridge.js';
 import { detectLocalModels } from '../shared/local-model-detect.js';
-import { translateText, lookupWord } from './translate-engines.js';
+import { translateText, lookupWord, lookupWiktionary } from './translate-engines.js';
 import { isSingleWord } from '../shared/dictionary.js';
 import { getCachedTranslation, setCachedTranslation } from './translate-cache.js';
 
@@ -207,15 +207,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const from = 'auto';
       const to = (targetLang && targetLang !== 'auto') ? targetLang : 'en';
       try {
-        const cached = await getCachedTranslation(text, from, to);
+        const { popupTranslateEngine = 'bing' } = await Storage.get(['popupTranslateEngine']);
+        const cached = await getCachedTranslation(text, from, to, popupTranslateEngine);
         if (cached) {
           sendResponse({ success: true, translation: cached.translation, detectedLang: cached.detectedLang });
           return;
         }
 
-        const { popupTranslateEngine } = await Storage.get(['popupTranslateEngine']);
         const result = await translateText({ text, from, to, engine: popupTranslateEngine });
-        setCachedTranslation(text, from, to, result).catch(() => {});
+        setCachedTranslation(text, from, to, result, popupTranslateEngine).catch(() => {});
         sendResponse({ success: true, translation: result.translation, detectedLang: result.detectedLang });
       } catch (err) {
         sendResponse({ success: false, error: err.message });
@@ -229,7 +229,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // single reply instead of streamed — the popup can be dismissed mid-stream
   // and would leave an orphaned AI_STREAM_CHUNK broadcast with no listener.
   if (action === 'TRANSLATE_TEXT') {
-    const { text, from = 'auto', to = 'en', engine, preferredConfigId } = payload || {};
+    const { text, from = 'auto', to = 'en', engine = 'bing', preferredConfigId } = payload || {};
     (async () => {
       try {
         if (engine === 'ai') {
@@ -250,12 +250,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return;
         }
 
-        // A single word gets a dictionary lookup first — phonetics, meanings by
-        // part of speech, example sentences — so the free engines reach parity
-        // with what the AI path already returns for a word. It answers null for
-        // anything it does not recognise as a word, which falls through to a
-        // plain translation below.
-        if (isSingleWord(text)) {
+        // A single word gets a Google dictionary lookup when the user chooses Google
+        // (phonetics, meanings by part of speech, example sentences). For other engines
+        // (Bing, Volc, MyMemory), we use machine translation directly so the user's
+        // chosen engine is always respected.
+        if (engine === 'google' && isSingleWord(text)) {
           try {
             const { uiLanguage = 'en' } = await Storage.get(['uiLanguage']);
             const entry = await lookupWord({ word: text, from, to, displayLang: uiLanguage });
@@ -276,19 +275,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
         }
 
-        const cached = await getCachedTranslation(text, from, to);
+        // Wiktionary lookup (definitions, phonetics, parts of speech)
+        if (engine === 'wiktionary') {
+          try {
+            const entry = await lookupWiktionary({ word: text });
+            if (entry) {
+              sendResponse({
+                success: true,
+                translation: JSON.stringify(entry),
+                detectedLang: entry.detectedLang,
+                engine: 'wiktionary',
+                isDictionary: true,
+                spoken: { source: entry.word, target: entry.word },
+                isAi: false,
+              });
+              return;
+            }
+          } catch {
+            // Lookup is an enrichment, falls through to fallback translation below
+          }
+        }
+
+        const cached = await getCachedTranslation(text, from, to, engine);
         if (cached) {
-          // engine/fellBack không lưu trong cache (khoá cache gộp mọi engine
-          // dịch máy làm một, xem translate-cache.js) — trả lại engine đang
-          // được chọn hiện tại để UI (popup.js:247-248) không hiển thị
-          // "undefined", và fellBack: false vì lần này không có chuyện rơi
-          // provider nào cả, trả thẳng từ cache.
           sendResponse({ success: true, translation: cached.translation, detectedLang: cached.detectedLang, engine, fellBack: false, isAi: false });
           return;
         }
 
         const result = await translateText({ text, from, to, engine });
-        setCachedTranslation(text, from, to, result).catch(() => {});
+        setCachedTranslation(text, from, to, result, engine).catch(() => {});
         sendResponse({
           success: true,
           translation: result.translation,

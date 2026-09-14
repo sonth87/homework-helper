@@ -310,7 +310,8 @@ export const DEFAULT_SETTINGS = {
   liquidGlassScale: -187, // -300 - 0 (feDisplacementMap scale — more negative = stronger magnifying bulge)
   liquidGlassChroma: 10, // 0 - 20 (per-channel scale stagger — the faint RGB-fringe "prism" look at the edge; 0 disables it)
   fabSize: "normal", // 'tiny' | 'small' | 'normal' | 'large'
-  fabOpacity: 90, // 30 - 100% (Liquid Glass background alpha)
+  fabOpacity: 90, // 10 - 100% (Liquid Glass background alpha)
+  fabBlur: 8, // 0 - 16px (Liquid Glass backdrop blur)
   fabAutoHide: true, // true (slides into the screen edge at rest, revealed on hover) | false (stays fully visible)
   fabPosition: null, // null (default docked position) | { dock: 'left' | 'right', top: number(px) } — set by dragging the FAB cluster
   drawerWidth: null, // null (default 480px from CSS) | number(px) — set by dragging the drawer's left-edge resize handle
