@@ -19,7 +19,7 @@
  * by content/styles/tooltip.css.
  */
 
-import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
+import { Storage, SUPPORTED_LANGUAGES, TRANSLATE_LANGUAGES } from '../shared/storage.js';
 import { getHoverTranslateI18n } from '../shared/i18n.js';
 import { Icons } from '../shared/icons.js';
 import { speak, isSpeechAvailable } from '../shared/tts.js';
@@ -508,10 +508,10 @@ class HoverTranslate {
     // own output-language dropdown (shared/storage.js SUPPORTED_LANGUAGES),
     // not a separate one just for this feature.
     const currentLangId = this.settings.outputLanguage || 'en';
-    const currentLang = SUPPORTED_LANGUAGES.find((l) => l.id === currentLangId) || SUPPORTED_LANGUAGES[1];
+    const currentLang = TRANSLATE_LANGUAGES.find((l) => l.id === currentLangId) || TRANSLATE_LANGUAGES[0];
     const langCode = currentLang.id === 'auto' ? '..' : currentLang.id.split('-')[0].toUpperCase();
-    const langOptionsHtml = SUPPORTED_LANGUAGES
-      .map((l) => `<option value="${l.id}" ${l.id === currentLangId ? 'selected' : ''}>${l.name}</option>`)
+    const langOptionsHtml = TRANSLATE_LANGUAGES
+      .map((l) => `<option value="${l.id}" ${l.id === currentLangId ? 'selected' : ''}>${l.native || l.name}</option>`)
       .join('');
     const langSwitchHtml = `
       <div class="hw-ht-lang-switch" title="${this.dict.outputLanguageLabel || ''}">

@@ -1,5 +1,6 @@
-import { Storage, SUPPORTED_LANGUAGES } from '../../shared/storage.js';
+import { Storage, UI_LANGUAGES, TRANSLATE_LANGUAGES } from '../../shared/storage.js';
 import { getOptionsI18n } from '../../shared/i18n.js';
+import { LanguageCombobox } from '../../shared/language-combobox.js';
 
 export class GeneralTab {
   constructor(optionsController) {
@@ -15,9 +16,8 @@ export class GeneralTab {
 
     const uiLangSelect = document.getElementById('optUiLanguageSelect');
     if (uiLangSelect) {
-      const uiLangs = SUPPORTED_LANGUAGES.filter((l) => l.id !== 'auto');
-      uiLangSelect.innerHTML = uiLangs.map(
-        (l) => `<option value="${l.id}" ${l.id === uiLanguage ? 'selected' : ''}>${l.name}</option>`
+      uiLangSelect.innerHTML = UI_LANGUAGES.map(
+        (l) => `<option value="${l.id}" ${l.id === uiLanguage ? 'selected' : ''}>${l.native || l.name}</option>`
       ).join('');
       uiLangSelect.onchange = async () => {
         const newLang = uiLangSelect.value;
@@ -28,16 +28,20 @@ export class GeneralTab {
       };
     }
 
-    const langSelect = document.getElementById('optOutputLanguageSelect');
-    if (langSelect) {
-      langSelect.innerHTML = SUPPORTED_LANGUAGES.map(
-        (l) => `<option value="${l.id}" ${l.id === outputLanguage ? 'selected' : ''}>${l.name}</option>`
-      ).join('');
-      langSelect.onchange = async () => {
-        await Storage.set({ outputLanguage: langSelect.value });
-        const dict = getOptionsI18n(uiLangSelect?.value || 'en');
-        this.controller.showToast(dict.toastLangUpdated || 'Language updated!');
-      };
+    const langContainer = document.getElementById('optOutputLanguageWrap') || document.getElementById('optOutputLanguageSelect');
+    if (langContainer) {
+      new LanguageCombobox(langContainer, {
+        value: outputLanguage || 'en',
+        includeAuto: false,
+        placeholder: 'Tìm ngôn ngữ / Search...',
+        pinnedGroupLabel: 'Phổ biến',
+        allGroupLabel: 'Tất cả ngôn ngữ',
+        onChange: async (newVal) => {
+          await Storage.set({ outputLanguage: newVal });
+          const dict = getOptionsI18n(uiLangSelect?.value || 'en');
+          this.controller.showToast(dict.toastLangUpdated || 'Language updated!');
+        },
+      });
     }
 
     const checkForms = document.getElementById('optCheckForms');

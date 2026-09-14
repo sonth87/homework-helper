@@ -17,6 +17,20 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.11.2] — 2026-09-14
+
+### Thêm mới
+- **Mở rộng danh sách ngôn ngữ dịch & phản hồi AI**: Tách biệt 13 ngôn ngữ giao diện (UI) và hơn 100+ ngôn ngữ thế giới dùng cho dịch thuật và ngôn ngữ phản hồi AI của mô hình.
+- **Component `LanguageCombobox` (Searchable Combobox)**:
+  - Cho phép người dùng gõ tìm kiếm nhanh theo tên tiếng Anh, tên bản xứ, mã ISO hoặc tiếng Việt không dấu.
+  - Hiển thị ngôn ngữ theo dạng bản ngữ (Endonym/Autonym): "Tiếng Việt", "English", "Français", "Deutsch", "Español", "日本語", "한국어", "简体中文", v.v.
+  - Ghim cố định tiếng Anh và tiếng Việt lên đầu danh sách ở nhóm "Phổ biến" (kèm tùy chọn "Tự động nhận diện" ở ô ngôn ngữ nguồn trên popup dịch).
+  - Tích hợp điều hướng bàn phím linh hoạt (`ArrowUp`, `ArrowDown`, `Enter`, `Esc`), tự động đảo chiều popup menu nếu gần đáy màn hình và hỗ trợ giao diện Liquid Glass đồng bộ.
+  - Áp dụng trên popup dịch thuật, trang Cài đặt (ngôn ngữ phản hồi AI), thanh công cụ bôi đen, tooltip rê chuột, Side Panel và ngăn kéo chat.
+- **Cải thiện luồng hủy tác vụ dịch**: Tự động hủy (`AbortController`) tiến trình dịch AI đang chạy khi người dùng chuyển nhanh sang dịch vụ dịch thuật khác (như Google Translate, Bing, Lingva, Wiktionary).
+
+---
+
 ## [1.11.1] — 2026-09-11
 
 ### Sửa lỗi

@@ -8,9 +8,10 @@
  */
 
 import { Icons } from '../shared/icons.js';
-import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
+import { Storage, TRANSLATE_LANGUAGES } from '../shared/storage.js';
 import { getPopupI18n, getOptionsI18n } from '../shared/i18n.js';
 import { EnginePicker } from '../shared/engine-picker.js';
+import { LanguageCombobox } from '../shared/language-combobox.js';
 import { AI_PROVIDER_ID, PICKABLE_PROVIDER_IDS, providerName } from '../shared/translate-providers.js';
 import { TranslateHistorySheet } from '../shared/translate-history-sheet.js';
 import { renderAnswer, bindCopyCodeButtons } from '../shared/markdown-katex.js';
@@ -128,17 +129,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   );
 
   // ---------- Selects ----------
-  const langName = (id) => SUPPORTED_LANGUAGES.find((l) => l.id === id)?.name || id;
-  const targetLangs = SUPPORTED_LANGUAGES.filter((l) => l.id !== 'auto');
+  const langName = (id) => TRANSLATE_LANGUAGES.find((l) => l.id === id)?.native || id;
+  const targetLangs = TRANSLATE_LANGUAGES;
+
+  let langFromPicker = null;
+  let langToPicker = null;
+
+  const getLangFrom = () => (langFromPicker ? langFromPicker.getValue() : popupTranslateSource || 'auto');
+  const getLangTo = () => (langToPicker ? langToPicker.getValue() : popupTranslateTarget || 'vi');
 
   function buildLangSelects() {
-    els.langFrom.innerHTML = [
-      `<option value="auto">${dict.sourceAuto}</option>`,
-      ...targetLangs.map((l) => `<option value="${l.id}">${l.name}</option>`),
-    ].join('');
-    els.langTo.innerHTML = targetLangs.map((l) => `<option value="${l.id}">${l.name}</option>`).join('');
-    els.langFrom.value = popupTranslateSource;
-    els.langTo.value = targetLangs.some((l) => l.id === popupTranslateTarget) ? popupTranslateTarget : 'vi';
+    langFromPicker = new LanguageCombobox(els.langFrom, {
+      value: popupTranslateSource || 'auto',
+      includeAuto: true,
+      autoLabel: dict.sourceAuto || 'Tự động nhận diện',
+      placeholder: dict.searchLang || 'Tìm ngôn ngữ...',
+      pinnedGroupLabel: dict.groupPinned || 'Phổ biến',
+      allGroupLabel: dict.groupAll || 'Tất cả ngôn ngữ',
+      onChange: (val) => {
+        syncSwapButton();
+        Storage.set({ popupTranslateSource: val });
+      },
+    });
+
+    langToPicker = new LanguageCombobox(els.langTo, {
+      value: popupTranslateTarget || 'vi',
+      includeAuto: false,
+      placeholder: dict.searchLang || 'Tìm ngôn ngữ...',
+      pinnedGroupLabel: dict.groupPinned || 'Phổ biến',
+      allGroupLabel: dict.groupAll || 'Tất cả ngôn ngữ',
+      onChange: (val) => {
+        syncSwapButton();
+        Storage.set({ popupTranslateTarget: val });
+      },
+    });
   }
 
   // Which service does the translating. Held here rather than read off a
@@ -435,8 +459,8 @@ document.addEventListener('DOMContentLoaded', async () => {
    * rather than silently producing a same-language pair.
    */
   function syncSwapButton() {
-    const from = els.langFrom.value === 'auto' ? lastDetectedLang : els.langFrom.value;
-    els.btnSwap.disabled = !from || from === els.langTo.value || !targetLangs.some((l) => l.id === from);
+    const from = getLangFrom() === 'auto' ? lastDetectedLang : getLangFrom();
+    els.btnSwap.disabled = !from || from === getLangTo() || !targetLangs.some((l) => l.id === from);
   }
 
   /**
@@ -475,8 +499,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         action: 'TRANSLATE_TEXT',
         payload: {
           text,
-          from: els.langFrom.value,
-          to: els.langTo.value,
+          from: getLangFrom(),
+          to: getLangTo(),
           engine: engineValue,
         },
       });
@@ -488,7 +512,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // formats the plain translation as markdown.
       els.result.innerHTML = renderAnswer(res.translation, {
         speakLabel: dict.listen,
-        targetLang: els.langTo.value,
+        targetLang: getLangTo(),
       });
       els.resultBox.hidden = false;
 
@@ -503,15 +527,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       else if (res.isDictionary) parts.push(dict.engineDictionary);
       else if (res.fellBack) parts.push(`${dict.engineFallback} ${engineDisplayName(res.engine)}`);
       else parts.push(engineDisplayName(res.engine));
-      if (res.detectedLang && els.langFrom.value === 'auto') parts.push(langName(res.detectedLang));
+      if (res.detectedLang && getLangFrom() === 'auto') parts.push(langName(res.detectedLang));
       els.resultMeta.textContent = parts.join(' · ');
       syncSwapButton();
 
       const historyEntry = await Storage.addTranslateHistory({
         sourceText: text,
         translatedRaw: res.translation,
-        sourceLang: res.detectedLang || els.langFrom.value,
-        targetLang: els.langTo.value,
+        sourceLang: res.detectedLang || getLangFrom(),
+        targetLang: getLangTo(),
       });
       currentHistoryEntryId = historyEntry?.id || null;
       syncFavoriteButton(historyEntry?.isFavorite);
@@ -569,15 +593,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   els.btnSwap.addEventListener('click', () => {
-    const to = els.langTo.value;
+    const to = getLangTo();
     // The target side has no 'auto' entry, so swapping while the source is
     // 'auto' has to resolve it first — otherwise both sides land on the same
     // language and the next translation echoes its input back.
-    const from = els.langFrom.value === 'auto' ? lastDetectedLang : els.langFrom.value;
+    const from = getLangFrom() === 'auto' ? lastDetectedLang : getLangFrom();
     if (!from || from === to || !targetLangs.some((l) => l.id === from)) return;
 
-    els.langFrom.value = to;
-    els.langTo.value = from;
+    langFromPicker?.setValue(to);
+    langToPicker?.setValue(from);
 
     // Send the translation back the other way rather than making the user
     // re-type it; its language is now the source language.
@@ -591,24 +615,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     syncSpeakButtons();
     lastDetectedLang = null;
     syncSwapButton();
-    Storage.set({ popupTranslateSource: els.langFrom.value, popupTranslateTarget: els.langTo.value });
-  });
-
-  els.langFrom.addEventListener('change', () => {
-    syncSwapButton();
-    Storage.set({ popupTranslateSource: els.langFrom.value });
-  });
-  els.langTo.addEventListener('change', () => {
-    syncSwapButton();
-    Storage.set({ popupTranslateTarget: els.langTo.value });
+    Storage.set({ popupTranslateSource: to, popupTranslateTarget: from });
   });
 
   els.btnSpeakSource.addEventListener('click', () => {
-    speak(spoken.source, lastDetectedLang || els.langFrom.value);
+    speak(spoken.source, lastDetectedLang || getLangFrom());
   });
 
   els.btnSpeakResult.addEventListener('click', () => {
-    speak(spoken.target, els.langTo.value);
+    speak(spoken.target, getLangTo());
   });
 
   els.btnCopy.addEventListener('click', async () => {

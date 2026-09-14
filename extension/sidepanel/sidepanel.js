@@ -4,7 +4,7 @@
  */
 
 import { Icons } from '../shared/icons.js';
-import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
+import { Storage, SUPPORTED_LANGUAGES, TRANSLATE_LANGUAGES } from '../shared/storage.js';
 import { formatMarkdownAndMath, renderAnswer, bindCopyCodeButtons } from '../shared/markdown-katex.js';
 import { getI18n } from '../shared/i18n.js';
 import { bindSpeakButtons } from '../shared/tts.js';
@@ -681,8 +681,8 @@ export class SidePanelController {
 
     if (langSelect) {
       const curVal = langSelect.value || outputLanguage;
-      langSelect.innerHTML = SUPPORTED_LANGUAGES.map(
-        (l) => `<option value="${l.id}" ${l.id === curVal ? 'selected' : ''}>${l.name}</option>`
+      langSelect.innerHTML = TRANSLATE_LANGUAGES.map(
+        (l) => `<option value="${l.id}" ${l.id === curVal ? 'selected' : ''}>${l.native || l.name}</option>`
       ).join('');
     }
 

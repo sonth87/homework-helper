@@ -4,7 +4,7 @@
  */
 
 import { Icons } from '../shared/icons.js';
-import { Storage, SUPPORTED_LANGUAGES } from '../shared/storage.js';
+import { Storage, SUPPORTED_LANGUAGES, TRANSLATE_LANGUAGES } from '../shared/storage.js';
 import { getI18n, getFloatingPopupI18n, getOptionsI18n } from '../shared/i18n.js';
 import { renderAnswer } from '../shared/markdown-katex.js';
 import { getOverlayThemeAttr } from '../shared/theme.js';
@@ -831,35 +831,18 @@ class InPageOverlay {
     this.floatingCard?.applyEnginePickerLabels(cardDict);
     this.floatingCard?.applyHistorySheetLabels(cardDict);
 
-    // Populate native language options (with compact names for display)
+    // Populate native language options with native endonyms (English and Tiếng Việt pinned at top)
     if (langSelect) {
       const curVal = langSelect.value || outputLanguage;
-      const langDisplayNames = {
-        'vi': 'Tiếng Việt',
-        'en': 'English',
-        'th': 'ไทย',
-        'zh-CN': '简体中文',
-        'zh-TW': '繁體中文',
-        'ja': '日本語',
-        'ko': '한국어',
-        'es': 'Español',
-        'fr': 'Français',
-        'de': 'Deutsch',
-        'pt': 'Português',
-        'id': 'Bahasa Indo',
-        'ru': 'Русский',
-        'auto': 'Auto'
-      };
-      langSelect.innerHTML = SUPPORTED_LANGUAGES.map(
-        (l) => `<option value="${l.id}" ${l.id === curVal ? 'selected' : ''}>${langDisplayNames[l.id] || l.name}</option>`
+      langSelect.innerHTML = TRANSLATE_LANGUAGES.map(
+        (l) => `<option value="${l.id}" ${l.id === curVal ? 'selected' : ''}>${l.native || l.name}</option>`
       ).join('');
     }
 
     if (targetLangSelect) {
       const curTarget = targetLangSelect.value || outputLanguage;
-      const targetLangs = SUPPORTED_LANGUAGES.filter((l) => l.id !== 'auto');
-      targetLangSelect.innerHTML = targetLangs.map(
-        (l) => `<option value="${l.id}" ${l.id === curTarget ? 'selected' : ''}>${l.name}</option>`
+      targetLangSelect.innerHTML = TRANSLATE_LANGUAGES.map(
+        (l) => `<option value="${l.id}" ${l.id === curTarget ? 'selected' : ''}>${l.native || l.name}</option>`
       ).join('');
     }
 

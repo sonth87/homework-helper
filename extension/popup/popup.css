@@ -270,6 +270,24 @@ body.hw-th-sheet-open {
   gap: 6px;
 }
 
+.pop-lang-combobox-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.pop-lang-combobox-wrap .hw-lcb-wrap {
+  width: 100%;
+}
+
+.pop-lang-combobox-wrap .hw-lcb-trigger {
+  height: 30px;
+  font-size: 12px;
+  border-radius: 8px;
+  border-color: var(--hw-border-color);
+  background: var(--hw-bg-primary);
+  color: var(--hw-text-main);
+}
+
 .pop-select {
   flex: 1;
   min-width: 0;
