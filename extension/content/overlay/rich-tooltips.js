@@ -24,6 +24,7 @@ export class OverlayRichTooltips {
       tooltipEl = document.createElement('div');
       tooltipEl.id = 'hwTooltipPopup';
       tooltipEl.className = 'hw-rich-tooltip';
+      tooltipEl.style.display = 'none';
       this.shadow.appendChild(tooltipEl);
       // Created once and reused for every tooltip shown after this (see the
       // (!tooltipEl) guard above) — no destroy() needed, it never leaves the DOM.

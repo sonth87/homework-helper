@@ -47,6 +47,7 @@ export class MinimizedCard {
   buildDom() {
     const circle = document.createElement('div');
     circle.className = 'hw-mini-circle';
+    circle.style.display = 'none';
     circle.innerHTML = `<button class="hw-mini-close" title="${this.overlay.drawer.currentDict?.miniCloseLabel || ''}">${Icons.x(8)}</button>`;
     this.shadow.appendChild(circle);
     this.circleEl = circle;
@@ -58,6 +59,7 @@ export class MinimizedCard {
 
     const popup = document.createElement('div');
     popup.className = 'hw-mini-popup';
+    popup.style.display = 'none';
     // The scrollable area (long answers) is a separate inner box from the
     // outer popup on purpose: #hwMiniModeSwitch below pokes half outside the
     // *outer* box's edge (see minimized-card.css), same trick as the card's

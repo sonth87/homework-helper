@@ -35,11 +35,12 @@ class InPageOverlay {
     // exposed to a content script's isolated world, so this asks the
     // background for it instead (see its GET_COMMAND_SHORTCUTS handler).
     // Falls back to {} (no shortcut shown) if the message ever fails.
-    this.commandShortcuts = await new Promise((resolve) => {
+    const shortcutsPromise = new Promise((resolve) => {
       chrome.runtime.sendMessage({ action: 'GET_COMMAND_SHORTCUTS' }, (res) => resolve(res || {}));
     }).catch(() => ({}));
     await this.applyAppearanceSettings();
     await this.applyLanguageI18n();
+    this.commandShortcuts = await shortcutsPromise;
   }
 
   createShadowDOM() {
@@ -53,7 +54,7 @@ class InPageOverlay {
     // holds the UI back until the real sheet has landed (see reveal below).
     const bootStyle = document.createElement('style');
     bootStyle.textContent =
-      '.hw-overlay-wrapper{visibility:hidden}.hw-overlay-wrapper.hw-styles-ready{visibility:visible}';
+      '.hw-overlay-wrapper{visibility:hidden}.hw-overlay-wrapper.hw-styles-ready{visibility:visible}.hw-mini-circle,.hw-mini-popup,.hw-rich-tooltip{display:none}';
     this.shadow.appendChild(bootStyle);
 
     const link = ensureStylesheet('content/styles/overlay.css');
