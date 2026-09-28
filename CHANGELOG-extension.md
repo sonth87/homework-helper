@@ -17,6 +17,21 @@ _Chưa có thay đổi nào chờ phát hành._
 
 ---
 
+## [1.11.4] — 2026-09-28
+
+### Cải tiến
+- **Tối ưu lịch sử dịch thuật**: Bỏ qua việc lưu vào lịch sử nếu kết quả dịch trả về trùng khớp hoàn toàn với văn bản đầu vào (ví dụ chuỗi ký tự ngẫu nhiên/văn bản rác không dịch được, hoặc văn bản đã cùng ngôn ngữ đích).
+- **Trải nghiệm tự động dịch clipboard trên popup**: Khi người dùng copy văn bản và mở popup trên thanh công cụ, nếu kết quả dịch trả về trùng khớp hoàn toàn với văn bản gốc thì giữ văn bản trong ô nhập liệu nhưng ẩn khung kết quả dịch, tránh gây phiền nhiễu và không ghi vào lịch sử. Người dùng vẫn có thể bấm nút "Dịch" thủ công để xem kết quả khi có nhu cầu.
+
+---
+
+## [1.11.3] — 2026-09-26
+
+### Sửa lỗi
+- Khắc phục hiện tượng chớp nháy (rendering flash) của các mini component trên overlay khi tải trang.
+
+---
+
 ## [1.11.2] — 2026-09-14
 
 ### Thêm mới

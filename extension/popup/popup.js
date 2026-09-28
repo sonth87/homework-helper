@@ -8,7 +8,7 @@
  */
 
 import { Icons } from '../shared/icons.js';
-import { Storage, TRANSLATE_LANGUAGES } from '../shared/storage.js';
+import { Storage, TRANSLATE_LANGUAGES, isSameTranslation } from '../shared/storage.js';
 import { getPopupI18n, getOptionsI18n } from '../shared/i18n.js';
 import { EnginePicker } from '../shared/engine-picker.js';
 import { LanguageCombobox } from '../shared/language-combobox.js';
@@ -485,13 +485,68 @@ document.addEventListener('DOMContentLoaded', async () => {
     return id === AI_PROVIDER_ID ? dict.engineAi : providerName(id);
   }
 
-  async function runTranslate() {
+  // When clipboard auto-translation returns identical output to input, we hide
+  // the result card initially. If the user then actively clicks "Translate"
+  // (or presses Enter), we reuse this cached result to immediately display it
+  // without redundant network delays, while still keeping it out of history.
+  let pendingSameClipboardResult = null;
+  let userRequestedTranslate = false;
+
+  async function runTranslate({ fromClipboard = false } = {}) {
     const text = els.input.value.trim();
-    if (!text || busy) return;
+    if (!text) return;
+
+    if (!fromClipboard) {
+      userRequestedTranslate = true;
+
+      // If we already have the completed identical translation from the recent
+      // clipboard auto-fetch for this exact query, display it immediately!
+      if (
+        pendingSameClipboardResult &&
+        pendingSameClipboardResult.text === text &&
+        pendingSameClipboardResult.from === getLangFrom() &&
+        pendingSameClipboardResult.to === getLangTo() &&
+        pendingSameClipboardResult.engine === engineValue
+      ) {
+        const { res } = pendingSameClipboardResult;
+        pendingSameClipboardResult = null;
+        userRequestedTranslate = false;
+
+        clearError();
+        els.result.innerHTML = renderAnswer(res.translation, {
+          speakLabel: dict.listen,
+          targetLang: getLangTo(),
+        });
+        els.resultBox.hidden = false;
+
+        lastDetectedLang = targetLangs.some((l) => l.id === res.detectedLang) ? res.detectedLang : null;
+        spoken = res.spoken || { source: text, target: els.result.textContent || '' };
+        syncSpeakButtons();
+
+        const parts = [];
+        if (res.isAi && res.model) parts.push(res.model);
+        else if (res.isDictionary) parts.push(dict.engineDictionary);
+        else if (res.fellBack) parts.push(`${dict.engineFallback} ${engineDisplayName(res.engine)}`);
+        else parts.push(engineDisplayName(res.engine));
+        if (res.detectedLang && getLangFrom() === 'auto') parts.push(langName(res.detectedLang));
+        els.resultMeta.textContent = parts.join(' · ');
+        syncSwapButton();
+
+        currentHistoryEntryId = null;
+        syncFavoriteButton(false);
+        return;
+      }
+    }
+
+    if (busy) return;
 
     busy = true;
     clearError();
-    els.btnTranslate.disabled = true;
+    // Only disable button during manual translate so clicks during in-flight
+    // clipboard auto-translate are captured to force displaying the result.
+    if (!fromClipboard) {
+      els.btnTranslate.disabled = true;
+    }
     els.btnTranslateText.textContent = dict.btnTranslating;
 
     try {
@@ -505,7 +560,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
       });
 
+      // If user typed or cleared while translation was in flight, discard this result
+      if (els.input.value.trim() !== text) return;
+
       if (!res?.success) throw new Error(res?.error || dict.errorTranslate);
+
+      const isSame = isSameTranslation(text, res.translation);
+
+      // Auto-translate triggered by clipboard: if input and output are identical,
+      // and user has NOT actively clicked Translate during the request,
+      // do not show the translation result card and do not save to history.
+      if (fromClipboard && isSame && !userRequestedTranslate) {
+        pendingSameClipboardResult = {
+          text,
+          res,
+          from: getLangFrom(),
+          to: getLangTo(),
+          engine: engineValue,
+        };
+        els.resultBox.hidden = true;
+        currentHistoryEntryId = null;
+        syncFavoriteButton(false);
+        spoken = { source: text, target: '' };
+        syncSpeakButtons();
+        return;
+      }
+
+      // Either manual translate OR clipboard translate where output differed
+      // (or user clicked Translate while in-flight): display the result card.
+      pendingSameClipboardResult = null;
+      userRequestedTranslate = false;
 
       // An AI reply can be a dictionary-schema JSON object for a single word;
       // renderAnswer detects that shape and renders the card, otherwise it
@@ -531,16 +615,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       els.resultMeta.textContent = parts.join(' · ');
       syncSwapButton();
 
-      const historyEntry = await Storage.addTranslateHistory({
-        sourceText: text,
-        translatedRaw: res.translation,
-        sourceLang: res.detectedLang || getLangFrom(),
-        targetLang: getLangTo(),
-      });
-      currentHistoryEntryId = historyEntry?.id || null;
-      syncFavoriteButton(historyEntry?.isFavorite);
-      historySheet.refresh();
+      if (!isSame) {
+        const historyEntry = await Storage.addTranslateHistory({
+          sourceText: text,
+          translatedRaw: res.translation,
+          sourceLang: res.detectedLang || getLangFrom(),
+          targetLang: getLangTo(),
+        });
+        currentHistoryEntryId = historyEntry?.id || null;
+        syncFavoriteButton(historyEntry?.isFavorite);
+        historySheet.refresh();
+      } else {
+        currentHistoryEntryId = null;
+        syncFavoriteButton(false);
+      }
     } catch (err) {
+      if (els.input.value.trim() !== text) return;
       els.resultBox.hidden = true;
       showError(`${dict.errorTranslate} (${err.message})`);
     } finally {
@@ -550,7 +640,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  els.btnTranslate.addEventListener('click', runTranslate);
+  els.btnTranslate.addEventListener('click', () => {
+    runTranslate({ fromClipboard: false });
+  });
 
   // Enter translates; a new line needs Shift+Enter. The box is a scratch pad
   // for a phrase to look up, not a place to compose in, so the key pressed
@@ -562,12 +654,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.key !== 'Enter' || e.shiftKey) return;
     if (e.isComposing || e.keyCode === 229) return;
     e.preventDefault();
-    runTranslate();
+    runTranslate({ fromClipboard: false });
   });
 
   els.input.addEventListener('input', () => {
     syncClearButton();
     els.clipboardNote.hidden = true;
+    pendingSameClipboardResult = null;
+    userRequestedTranslate = false;
   });
 
   els.btnClear.addEventListener('click', () => {
@@ -580,6 +674,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     syncSpeakButtons();
     currentHistoryEntryId = null;
     syncFavoriteButton(false);
+    pendingSameClipboardResult = null;
+    userRequestedTranslate = false;
     els.input.focus();
   });
 
@@ -761,7 +857,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     els.clipboardNoteText.textContent = dict.clipboardPasted;
     els.clipboardNote.hidden = false;
-    runTranslate();
+    runTranslate({ fromClipboard: true });
   }
 
   // ---------- Quick actions ----------

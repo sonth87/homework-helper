@@ -3,7 +3,14 @@
  * Persists user models, API keys, rotation strategy, and preferences in chrome.storage.local
  */
 
-import { isSingleWord, buildWordLookupPrompt, buildSentenceTranslatePrompt, DICTIONARY_SCHEMA } from './dictionary.js';
+import {
+  isSingleWord,
+  buildWordLookupPrompt,
+  buildSentenceTranslatePrompt,
+  DICTIONARY_SCHEMA,
+  looksLikeDictionaryJson,
+  parseDictionaryEntry,
+} from './dictionary.js';
 import { DEFAULT_TOOLBAR_LAYOUT } from './toolbar-items.js';
 import { CASUAL_CHAT_NOTE } from './study-prompt.js';
 
@@ -524,6 +531,41 @@ function translateHistoryKey(sourceText, targetLang) {
   return `${sourceText.trim()}::${targetLang || ''}`;
 }
 
+/**
+ * Checks if the translation output is essentially identical to the source text
+ * (e.g. untranslated gibberish, identical strings, or echo from the engine).
+ *
+ * Rich structured dictionary responses (JSON objects with definitions, senses, phonetics)
+ * are lookups, not plain echoes, so they return false.
+ *
+ * @param {string} sourceText
+ * @param {string|object} translatedRaw
+ * @returns {boolean}
+ */
+export function isSameTranslation(sourceText, translatedRaw) {
+  if (!sourceText || !translatedRaw) return false;
+  if (typeof translatedRaw !== 'string') return false;
+
+  if (looksLikeDictionaryJson(translatedRaw) && parseDictionaryEntry(translatedRaw)) {
+    return false;
+  }
+
+  const normSource = sourceText.trim().replace(/\s+/g, ' ');
+  const normTarget = translatedRaw.trim().replace(/\s+/g, ' ');
+  if (!normSource || !normTarget) return false;
+
+  if (normSource.toLowerCase() === normTarget.toLowerCase()) return true;
+
+  const stripQuotes = (s) => s.replace(/^["'“”«»`]+|["'“”«»`]+$/g, '').trim();
+  const cleanSource = stripQuotes(normSource);
+  const cleanTarget = stripQuotes(normTarget);
+  if (cleanSource && cleanTarget && cleanSource.toLowerCase() === cleanTarget.toLowerCase()) {
+    return true;
+  }
+
+  return false;
+}
+
 // Plenty for a text-only list (no images, unlike chatHistory's 50-message
 // cap) while still keeping chrome.storage.local's per-item write cheap.
 const TRANSLATE_HISTORY_LIMIT = 300;
@@ -1002,6 +1044,7 @@ export const Storage = {
   async addTranslateHistory({ sourceText, translatedRaw, sourceLang = "auto", targetLang }) {
     const text = (sourceText || "").trim();
     if (!text || !translatedRaw) return null;
+    if (isSameTranslation(text, translatedRaw)) return null;
 
     const history = await this.getTranslateHistory();
     const key = translateHistoryKey(text, targetLang);
