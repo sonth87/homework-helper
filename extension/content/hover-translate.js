@@ -797,42 +797,29 @@ class HoverTranslate {
 
   applySelectionIndicatorTheme(indicator) {
     if (!indicator) return;
-    let resolvedTheme = 'glass-light';
-    let textIsDark = false;
-    let tbAlpha = '0.85';
-    let tbBlur = '16px';
-    let tbBaseRgb = '255, 255, 255';
 
-    const existingToolbar = getSharedShadowRoot().querySelector('.hw-selection-toolbar');
-    if (existingToolbar) {
-      const themeMatch = existingToolbar.className.match(/\btheme-([a-z-]+)\b/);
-      if (themeMatch) resolvedTheme = themeMatch[1];
-      textIsDark = existingToolbar.classList.contains('hw-tb-text-light');
-      tbAlpha = existingToolbar.style.getPropertyValue('--tb-alpha') || tbAlpha;
-      tbBlur = existingToolbar.style.getPropertyValue('--tb-blur') || tbBlur;
-      tbBaseRgb = existingToolbar.style.getPropertyValue('--tb-base-rgb') || (textIsDark ? '15, 23, 42' : '255, 255, 255');
-    } else {
-      const toolbarTheme = this.settings.toolbarTheme || 'auto';
-      const overlayTheme = this.settings.overlayTheme || 'auto';
-      resolvedTheme = toolbarTheme === 'auto'
-        ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
-        : toolbarTheme;
-      textIsDark = toolbarTheme === 'glass-dark'
-        || (toolbarTheme !== 'glass-light'
-          && (overlayTheme === 'dark'
-            || (overlayTheme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)));
-      const toolbarOpacity = this.settings.toolbarOpacity ?? 80;
-      const toolbarBlur = this.settings.toolbarBlur ?? 16;
-      tbAlpha = `${(toolbarOpacity / 100).toFixed(2)}`;
-      tbBlur = `${toolbarBlur}px`;
-      tbBaseRgb = textIsDark ? '15, 23, 42' : '255, 255, 255';
-    }
+    // Uses "Chủ đề màu Tooltip" (hoverTranslateTheme)
+    const htTheme = this.settings.hoverTranslateTheme || 'glass-light';
+    const resolvedHtTheme = htTheme === 'auto'
+      ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
+      : htTheme;
+    const overlayTheme = this.settings.overlayTheme || 'auto';
+    const textIsDark = htTheme === 'glass-dark'
+      || (htTheme !== 'glass-light'
+        && (overlayTheme === 'dark'
+          || (overlayTheme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)));
+    const htAlpha = ((this.settings.hoverTranslateOpacity ?? 90) / 100).toFixed(2);
+    const htBlur = `${this.settings.hoverTranslateBlur ?? 6}px`;
+    const htBaseRgb = textIsDark ? '15, 23, 42' : '255, 255, 255';
 
     const isShowing = indicator.classList.contains('show');
-    indicator.className = `hw-ht-selection-indicator theme-${resolvedTheme}${textIsDark ? ' hw-tb-text-light' : ''}${isShowing ? ' show' : ''}`;
-    indicator.style.setProperty('--tb-alpha', tbAlpha);
-    indicator.style.setProperty('--tb-blur', tbBlur);
-    indicator.style.setProperty('--tb-base-rgb', tbBaseRgb);
+    indicator.className = `hw-ht-selection-indicator theme-${resolvedHtTheme}${textIsDark ? ' hw-tb-text-light' : ''}${isShowing ? ' show' : ''}`;
+    indicator.style.setProperty('--ht-alpha', htAlpha);
+    indicator.style.setProperty('--ht-blur', htBlur);
+    indicator.style.setProperty('--ht-base-rgb', htBaseRgb);
+    indicator.style.setProperty('--tb-alpha', htAlpha);
+    indicator.style.setProperty('--tb-blur', htBlur);
+    indicator.style.setProperty('--tb-base-rgb', htBaseRgb);
   }
 
   renderSelectionIndicator(anchorRect) {
