@@ -28,10 +28,12 @@ import { getSharedShadowRoot, ensureStylesheet } from './shadow-root.js';
 import { attachLiquidGlassRefraction } from '../shared/liquid-glass-refraction.js';
 
 const SETTINGS_KEYS = [
-  'enableHoverTranslate', 'hoverTranslateModifiers', 'hoverTranslateGranularity', 'hoverTranslateDelay',
+  'enableHoverTranslate',
+  'hoverTranslateModifiers', 'hoverTranslateGranularity', 'hoverTranslateDelay',
   'hoverTranslateOpacity', 'hoverTranslateBlur', 'hoverTranslateFontSize', 'hoverTranslateMaxWidth', 'hoverTranslateTheme',
   'hoverTranslateHighlight', 'hoverTranslateHighlightColor', 'hoverTranslateHighlightOpacity', 'hoverTranslateHighlightStyle',
   'hoverTranslateAnimation', 'outputLanguage', 'disabledSites', 'uiLanguage', 'overlayTheme',
+  'toolbarTheme', 'toolbarOpacity', 'toolbarBlur',
 ];
 
 const MODIFIER_EVENT_KEYS = { ctrl: 'ctrlKey', shift: 'shiftKey', alt: 'altKey', meta: 'metaKey' };
@@ -79,6 +81,7 @@ class HoverTranslate {
     this.settings = {};
     this.dict = {};
     this.tooltip = null;
+    this.selectionIndicator = null;
     this.lastPoint = null;
     this.dwellTimer = null;
     this.epoch = 0;
@@ -87,6 +90,12 @@ class HoverTranslate {
     this._spokenText = '';
     this._lastPoint = null;
     this._highlightBoxes = [];
+    this._selectedText = '';
+    this._selectionRange = null;
+    this._selectionRect = null;
+    this._indicatorHoverTimer = null;
+    this._selectionTipCloseTimer = null;
+    this._isSelectionTranslation = false;
     this.init();
   }
 
@@ -99,9 +108,15 @@ class HoverTranslate {
 
     document.addEventListener('mousemove', this.handleMouseMove.bind(this), { passive: true });
     document.addEventListener('mouseleave', () => this.hideTooltip());
-    document.addEventListener('scroll', () => this.hideTooltip(), true);
+    document.addEventListener('scroll', () => {
+      this.hideTooltip();
+      this.updateSelectionIndicatorPosition();
+    }, true);
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') this.hideTooltip();
+      if (e.key === 'Escape') {
+        this.hideTooltip();
+        this.removeSelectionIndicator();
+      }
       this.refreshModifierState(e);
     });
     // ctrlKey/shiftKey/altKey/metaKey on this.lastPoint are otherwise only
@@ -111,12 +126,32 @@ class HoverTranslate {
     // modifier state happened to be true on the last real mousemove instead
     // of what's actually held right now, so it silently failed
     // modifiersMatch() until the next move. See refreshModifierState().
-    document.addEventListener('keyup', (e) => this.refreshModifierState(e));
-    document.addEventListener('mousedown', (e) => {
-      if (this.tooltip && !e.target.closest('.hw-hover-translate-tip')) this.hideTooltip();
+    document.addEventListener('keyup', (e) => {
+      this.refreshModifierState(e);
+      if (e.shiftKey || ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
+        setTimeout(() => this.checkSelectionIndicator(), 30);
+      }
     });
+    document.addEventListener('mousedown', (e) => {
+      const isTip = e.composedPath ? e.composedPath().includes(this.tooltip) : false;
+      const isIndicator = this.selectionIndicator && e.composedPath ? e.composedPath().includes(this.selectionIndicator) : false;
+      if (this.tooltip && !isTip) this.hideTooltip();
+      if (this.selectionIndicator && !isIndicator) {
+        setTimeout(() => this.checkSelectionIndicator(), 50);
+      }
+    });
+    document.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+    document.addEventListener('selectionchange', () => this.handleSelectionChange());
+    window.addEventListener('resize', () => this.handleResize());
 
-    window.addEventListener('HOMEWORK_AI_HIDE_ALL_UI', () => this.hideTooltip());
+    window.addEventListener('HOMEWORK_AI_OPEN_POPUP', () => {
+      this.hideTooltip();
+      this.removeSelectionIndicator();
+    });
+    window.addEventListener('HOMEWORK_AI_HIDE_ALL_UI', () => {
+      this.hideTooltip();
+      this.removeSelectionIndicator();
+    });
 
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
@@ -130,7 +165,12 @@ class HoverTranslate {
   async loadSettings() {
     this.settings = await Storage.get(SETTINGS_KEYS);
     this.dict = getHoverTranslateI18n(this.settings.uiLanguage || 'en');
-    if (!this.settings.enableHoverTranslate) this.hideTooltip();
+    if (!this.settings.enableHoverTranslate) {
+      this.hideTooltip();
+      this.removeSelectionIndicator();
+    } else if (this.selectionIndicator) {
+      this.applySelectionIndicatorTheme(this.selectionIndicator);
+    }
   }
 
   handleMouseMove(e) {
@@ -147,9 +187,35 @@ class HoverTranslate {
       // that tree — so a mousemove originating inside the tip gets
       // retargeted to the shadow host, never the tip itself. composedPath()
       // still carries the real path across the shadow boundary.
-      const overTooltip = e.composedPath ? e.composedPath().includes(this.tooltip) : false;
-      const nearWord = this._activeRect && this.pointNearRect(e.clientX, e.clientY, this._activeRect);
-      if (!overTooltip && !nearWord) this.hideTooltip();
+      const path = e.composedPath ? e.composedPath() : [];
+      const overTooltip = path.includes(this.tooltip);
+      const overIndicator = this.selectionIndicator && path.includes(this.selectionIndicator);
+
+      let nearTarget = false;
+      if (this._activeRect) {
+        const buffer = this._isSelectionTranslation ? 90 : 40;
+        nearTarget = this.pointNearRect(e.clientX, e.clientY, this._activeRect, buffer);
+      }
+      if (this.selectionIndicator && !nearTarget) {
+        const indRect = this.selectionIndicator.getBoundingClientRect();
+        nearTarget = this.pointNearRect(e.clientX, e.clientY, indRect, 60);
+      }
+
+      if (overTooltip || overIndicator || nearTarget) {
+        clearTimeout(this._selectionTipCloseTimer);
+        this._selectionTipCloseTimer = null;
+      } else {
+        if (this._isSelectionTranslation) {
+          if (!this._selectionTipCloseTimer) {
+            this._selectionTipCloseTimer = setTimeout(() => {
+              this._selectionTipCloseTimer = null;
+              this.hideTooltip();
+            }, 350);
+          }
+        } else {
+          this.hideTooltip();
+        }
+      }
     }
 
     if (!this.settings.enableHoverTranslate) return;
@@ -191,7 +257,7 @@ class HoverTranslate {
   isGuardedTarget(target) {
     if (!target || !target.closest) return true;
     if (target.closest('#homework-ai-root')) return true;
-    if (target.closest('.hw-selection-toolbar, .hw-tb-dropdown, .hw-hover-translate-tip')) return true;
+    if (target.closest('.hw-selection-toolbar, .hw-tb-dropdown, .hw-hover-translate-tip, .hw-ht-selection-indicator')) return true;
     // Only real form controls are excluded — a contenteditable rich-text
     // region (ProseMirror/Notion/ChatGPT-style editors, AI chat replies you
     // can edit) is a legitimate place to read and hover-translate text, not
@@ -484,6 +550,21 @@ class HoverTranslate {
     tip.style.setProperty('--ht-max-width', `${this.settings.hoverTranslateMaxWidth ?? 300}px`);
 
     const currentGran = this.settings.hoverTranslateGranularity || 'sentence';
+    const textLen = (sourceText || '').length;
+    const userMaxWidth = this.settings.hoverTranslateMaxWidth ?? 300;
+    let effectiveMaxWidth = userMaxWidth;
+
+    // Adaptive max-width (Phương án A):
+    // Words stay compact; sentences expand comfortably; paragraphs or long texts expand wide.
+    if (currentGran === 'paragraph' || textLen > 120) {
+      effectiveMaxWidth = Math.max(560, Math.min(680, window.innerWidth - 40));
+    } else if (currentGran === 'sentence' || textLen > 40) {
+      effectiveMaxWidth = Math.max(380, Math.min(500, Math.max(userMaxWidth, 380)));
+    } else {
+      effectiveMaxWidth = Math.min(320, userMaxWidth);
+    }
+    tip.style.setProperty('--ht-max-width', `${effectiveMaxWidth}px`);
+
     const granDotsHtml = GRANULARITY_OPTIONS
       .map(({ id, dictKey, icon }) => `
         <button class="hw-ht-gran-dot${id === currentGran ? ' active' : ''}" data-gran="${id}" title="${this.dict[dictKey] || ''}">${icon}</button>
@@ -548,6 +629,9 @@ class HoverTranslate {
 
     getSharedShadowRoot().appendChild(tip);
     this.tooltip = tip;
+    if (this._isSelectionTranslation) {
+      tip.querySelector('.hw-ht-gran-switch')?.style.setProperty('display', 'none');
+    }
     // Fresh per hover (created and .remove()'d — see removeTooltip()) —
     // its destroy() has to run there too, or every hover-translate leaks
     // another filter/ResizeObserver.
@@ -555,7 +639,9 @@ class HoverTranslate {
     // .hw-ht-gran-switch grows its own glass pill on :hover (tooltip.css) —
     // same per-tip lifecycle as the tip itself, torn down alongside it below.
     const granSwitchEl = tip.querySelector('.hw-ht-gran-switch');
-    if (granSwitchEl) this.granSwitchGlass = attachLiquidGlassRefraction(granSwitchEl, { blur: this.settings.hoverTranslateBlur ?? 6, saturate: 1.8 });
+    if (granSwitchEl && !this._isSelectionTranslation) {
+      this.granSwitchGlass = attachLiquidGlassRefraction(granSwitchEl, { blur: this.settings.hoverTranslateBlur ?? 6, saturate: 1.8 });
+    }
     this._activeRect = rect;
     this.positionTooltip(tip, rect);
   }
@@ -568,10 +654,45 @@ class HoverTranslate {
     const tw = tip.offsetWidth;
     const th = tip.offsetHeight;
 
-    let top = window.scrollY + rect.top - th - 10;
-    if (rect.top - th - 10 < margin) {
-      top = window.scrollY + rect.bottom + 10;
+    // Detect if .hw-selection-toolbar is active on page and avoid overlapping it
+    const shadow = getSharedShadowRoot();
+    const tb = shadow?.querySelector('.hw-selection-toolbar');
+    let tbAbove = false;
+    let tbBelow = false;
+    if (tb && tb.style.visibility !== 'hidden') {
+      const tbRect = tb.getBoundingClientRect();
+      if (tbRect.bottom <= rect.top + 15) tbAbove = true;
+      else if (tbRect.top >= rect.bottom - 15) tbBelow = true;
     }
+
+    let top;
+    if (tbAbove) {
+      if (rect.bottom + th + 10 <= window.innerHeight - margin) {
+        top = window.scrollY + rect.bottom + 10;
+      } else {
+        top = window.scrollY + rect.top - th - 10;
+      }
+    } else if (tbBelow) {
+      if (rect.top - th - 10 >= margin) {
+        top = window.scrollY + rect.top - th - 10;
+      } else {
+        top = window.scrollY + rect.bottom + 10;
+      }
+    } else {
+      top = window.scrollY + rect.top - th - 10;
+      if (rect.top - th - 10 < margin) {
+        top = window.scrollY + rect.bottom + 10;
+      }
+    }
+
+    // Prevent tooltip from overflowing the bottom of the viewport
+    if (top + th > window.scrollY + window.innerHeight - margin) {
+      top = Math.max(window.scrollY + margin, window.scrollY + window.innerHeight - th - margin);
+    }
+    if (top < window.scrollY + margin) {
+      top = window.scrollY + margin;
+    }
+
     // Centered over the hovered word/sentence/paragraph rather than
     // left-aligned to its start, then clamped back onto the viewport.
     let left = window.scrollX + rect.left + rect.width / 2 - tw / 2;
@@ -608,7 +729,204 @@ class HoverTranslate {
   hideTooltip() {
     this.epoch++;
     this._lastText = null;
+    this._isSelectionTranslation = false;
+    clearTimeout(this._selectionTipCloseTimer);
+    this._selectionTipCloseTimer = null;
+    clearTimeout(this._indicatorHoverTimer);
+    this._indicatorHoverTimer = null;
     this.removeTooltip();
+  }
+
+  handleMouseUp(e) {
+    if (this.tooltip && e.composedPath && e.composedPath().includes(this.tooltip)) return;
+    if (this.selectionIndicator && e.composedPath && e.composedPath().includes(this.selectionIndicator)) return;
+    setTimeout(() => this.checkSelectionIndicator(), 20);
+  }
+
+  handleSelectionChange() {
+    const sel = window.getSelection();
+    if (!sel || !sel.toString().trim()) {
+      this.removeSelectionIndicator();
+      if (this._isSelectionTranslation) {
+        this.hideTooltip();
+      }
+    }
+  }
+
+  handleResize() {
+    this.updateSelectionIndicatorPosition();
+    if (this.tooltip) this.hideTooltip();
+  }
+
+  checkSelectionIndicator() {
+    if (!this.settings.enableHoverTranslate) {
+      this.removeSelectionIndicator();
+      return;
+    }
+    if ((this.settings.disabledSites || []).includes(window.location.hostname)) {
+      this.removeSelectionIndicator();
+      return;
+    }
+
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) {
+      this.removeSelectionIndicator();
+      return;
+    }
+
+    const text = sel.toString().trim();
+    if (!text || text.length < 2) {
+      this.removeSelectionIndicator();
+      return;
+    }
+
+    const range = sel.getRangeAt(0);
+    const rects = Array.from(range.getClientRects()).filter((r) => r.width > 0 && r.height > 0);
+    const anchorRect = rects[rects.length - 1] || range.getBoundingClientRect();
+    if (!anchorRect || (anchorRect.width === 0 && anchorRect.height === 0)) {
+      this.removeSelectionIndicator();
+      return;
+    }
+
+    this._selectedText = text;
+    this._selectionRange = range.cloneRange();
+    this._selectionRect = range.getBoundingClientRect();
+
+    this.renderSelectionIndicator(anchorRect);
+  }
+
+  applySelectionIndicatorTheme(indicator) {
+    if (!indicator) return;
+    let resolvedTheme = 'glass-light';
+    let textIsDark = false;
+    let tbAlpha = '0.85';
+    let tbBlur = '16px';
+    let tbBaseRgb = '255, 255, 255';
+
+    const existingToolbar = getSharedShadowRoot().querySelector('.hw-selection-toolbar');
+    if (existingToolbar) {
+      const themeMatch = existingToolbar.className.match(/\btheme-([a-z-]+)\b/);
+      if (themeMatch) resolvedTheme = themeMatch[1];
+      textIsDark = existingToolbar.classList.contains('hw-tb-text-light');
+      tbAlpha = existingToolbar.style.getPropertyValue('--tb-alpha') || tbAlpha;
+      tbBlur = existingToolbar.style.getPropertyValue('--tb-blur') || tbBlur;
+      tbBaseRgb = existingToolbar.style.getPropertyValue('--tb-base-rgb') || (textIsDark ? '15, 23, 42' : '255, 255, 255');
+    } else {
+      const toolbarTheme = this.settings.toolbarTheme || 'auto';
+      const overlayTheme = this.settings.overlayTheme || 'auto';
+      resolvedTheme = toolbarTheme === 'auto'
+        ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'glass-dark' : 'glass-light')
+        : toolbarTheme;
+      textIsDark = toolbarTheme === 'glass-dark'
+        || (toolbarTheme !== 'glass-light'
+          && (overlayTheme === 'dark'
+            || (overlayTheme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)));
+      const toolbarOpacity = this.settings.toolbarOpacity ?? 80;
+      const toolbarBlur = this.settings.toolbarBlur ?? 16;
+      tbAlpha = `${(toolbarOpacity / 100).toFixed(2)}`;
+      tbBlur = `${toolbarBlur}px`;
+      tbBaseRgb = textIsDark ? '15, 23, 42' : '255, 255, 255';
+    }
+
+    const isShowing = indicator.classList.contains('show');
+    indicator.className = `hw-ht-selection-indicator theme-${resolvedTheme}${textIsDark ? ' hw-tb-text-light' : ''}${isShowing ? ' show' : ''}`;
+    indicator.style.setProperty('--tb-alpha', tbAlpha);
+    indicator.style.setProperty('--tb-blur', tbBlur);
+    indicator.style.setProperty('--tb-base-rgb', tbBaseRgb);
+  }
+
+  renderSelectionIndicator(anchorRect) {
+    this.removeSelectionIndicator();
+
+    const indicator = document.createElement('div');
+    this.applySelectionIndicatorTheme(indicator);
+
+    // Position at bottom-right corner of the selection, spaced out slightly
+    const top = window.scrollY + anchorRect.bottom + 3;
+    const left = window.scrollX + anchorRect.right + 7;
+
+    indicator.style.top = `${Math.max(window.scrollY + 4, top)}px`;
+    indicator.style.left = `${Math.min(window.scrollX + window.innerWidth - 16, left)}px`;
+
+    indicator.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    indicator.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      clearTimeout(this._indicatorHoverTimer);
+      this._indicatorHoverTimer = null;
+      this.triggerSelectionTranslate(anchorRect);
+    });
+
+    indicator.addEventListener('mouseenter', () => {
+      clearTimeout(this._indicatorHoverTimer);
+      const delay = this.settings.hoverTranslateDelay || 300;
+      this._indicatorHoverTimer = setTimeout(() => {
+        this._indicatorHoverTimer = null;
+        this.triggerSelectionTranslate(anchorRect);
+      }, delay);
+    });
+
+    indicator.addEventListener('mouseleave', () => {
+      clearTimeout(this._indicatorHoverTimer);
+      this._indicatorHoverTimer = null;
+    });
+
+    getSharedShadowRoot().appendChild(indicator);
+    this.selectionIndicator = indicator;
+
+    requestAnimationFrame(() => {
+      if (this.selectionIndicator === indicator) {
+        indicator.classList.add('show');
+      }
+    });
+  }
+
+  updateSelectionIndicatorPosition() {
+    if (!this.selectionIndicator || !this._selectionRange) return;
+    const rects = Array.from(this._selectionRange.getClientRects()).filter((r) => r.width > 0 && r.height > 0);
+    const anchorRect = rects[rects.length - 1] || this._selectionRange.getBoundingClientRect();
+    if (!anchorRect || (anchorRect.width === 0 && anchorRect.height === 0)) {
+      this.removeSelectionIndicator();
+      return;
+    }
+    const top = window.scrollY + anchorRect.bottom + 3;
+    const left = window.scrollX + anchorRect.right + 7;
+    this.selectionIndicator.style.top = `${Math.max(window.scrollY + 4, top)}px`;
+    this.selectionIndicator.style.left = `${Math.min(window.scrollX + window.innerWidth - 16, left)}px`;
+  }
+
+  removeSelectionIndicator() {
+    clearTimeout(this._indicatorHoverTimer);
+    clearTimeout(this._selectionTipCloseTimer);
+    this._selectionTipCloseTimer = null;
+    if (this.selectionIndicator) {
+      this.selectionIndicator.remove();
+      this.selectionIndicator = null;
+    }
+    this._selectedText = '';
+    this._selectionRange = null;
+    this._selectionRect = null;
+  }
+
+  triggerSelectionTranslate(anchorRect) {
+    if (!this.settings.enableHoverTranslate) return;
+    const sel = window.getSelection();
+    const selText = sel ? sel.toString().trim() : '';
+    const text = selText || this._selectedText;
+    if (!text) return;
+
+    this._isSelectionTranslation = true;
+    this._lastText = text;
+
+    const range = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0) : this._selectionRange;
+    const rect = range ? range.getBoundingClientRect() : (this._selectionRect || anchorRect);
+
+    this.clearTextEffects();
+    this.showLoadingTooltip(rect, text);
+    this.runTranslate(text, rect);
   }
 
   removeTooltip() {
