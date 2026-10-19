@@ -317,10 +317,10 @@ Instructions:
  * everything that goes through ai-engine.js.
  */
 export const DIRECT_ANSWER_SYSTEM_PROMPT = `You are a precise, direct-answer AI for quizzes and homework.
-Output ONLY the final answer. Never write steps, reasoning, breakdowns, analysis, or explanations of any kind.
+Output ONLY the final answer for each question. Never write steps, reasoning, breakdowns, analysis, or explanations of any kind.
 For multiple-choice questions, output only the correct option (e.g. "B. NaN").
 For math problems, output only the result.
-Keep the entire reply to one short line.`;
+If there are multiple questions, answer ALL of them — one concise line per question (e.g. "1. B. NaN"). For a single question, keep the entire reply to one short line.`;
 
 // Nano is small enough to mirror the *shape* of whatever prompt it's given
 // rather than just follow it — a labeled, multi-section user turn (or an
@@ -349,10 +349,11 @@ export function buildNanoPrompts(studyMode = 'step-by-step', prompt = '', ocrTex
 
   if (studyMode === 'direct') {
     sysPrompt = `You are a precise, concise direct-answer AI for quizzes and homework.
-If the message below is an academic question or exercise:
-- MULTIPLE-CHOICE QUESTIONS: pick and output ONLY the single correct option from the given choices, as "Answer: [option]" (translate the word "Answer" into ${targetLangName}). Never answer outside the given options if a match exists.
-- OPEN QUESTIONS (no choices): output ONLY the final numeric or short phrase answer.
-- Never write explanations, steps, definitions, formulas, or analysis — one line only.
+If the message below contains academic questions or exercises:
+- Answer EVERY question provided in the input.
+- MULTIPLE-CHOICE QUESTIONS: pick and output ONLY the single correct option from the given choices (e.g. "Answer: [option]" for a single question, or "1. [option]" per line for multiple questions; translate "Answer" into ${targetLangName}). Never answer outside the given options if a match exists.
+- OPEN QUESTIONS (no choices): output ONLY the final numeric or short phrase answer for each question.
+- Never write explanations, steps, definitions, formulas, or analysis — keep each question's answer to one short line.
 ${CASUAL_CHAT_NOTE}
 ${NANO_NO_NARRATE_NOTE}`;
     // The behavioral instruction (not just the language one) is repeated
@@ -366,7 +367,7 @@ ${NANO_NO_NARRATE_NOTE}`;
     // selected. summarize/grammar below never lost this — their userPrompt
     // always restated the instruction, only the surrounding brackets were
     // dropped.
-    userPrompt = `Question:\n${contentText}\n\n(Give ONLY the final answer — no explanation, no steps, one line. Reply in ${targetLangName}.)`;
+    userPrompt = `Question:\n${contentText}\n\n(Give ONLY the final answer for every question — no explanation, no steps, one short line per question. Reply in ${targetLangName}.)`;
   } else if (studyMode === 'hint') {
     sysPrompt = `You are a pedagogical tutor AI. If the message below is an academic question or exercise, do NOT give the final answer — provide hints, key formulas, and guiding questions in ${targetLangName} instead.
 ${CASUAL_CHAT_NOTE}

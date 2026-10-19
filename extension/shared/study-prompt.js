@@ -55,7 +55,7 @@ export function formatStudyPrompt(studyMode, prompt, outputLanguage = 'en') {
 
   let body;
   if (!studyMode || studyMode === 'direct') {
-    body = `[MODE: DIRECT ANSWER]\nIf the content below is an academic question or exercise: reply with ONLY the final answer, as CONCISELY as possible — no explanation, no analysis, no step-by-step breakdown. For multiple-choice questions, give only the option's letter/name (e.g. "C. NaN"). For math problems, give only the numeric result. No more than 2-3 sentences.\n${CASUAL_CHAT_NOTE}\n\nContent:\n${prompt}`;
+    body = `[MODE: DIRECT ANSWER]\nIf the content below contains one or more academic questions or exercises: reply with ONLY the final answer for EVERY question, as CONCISELY as possible — no explanation, no analysis, no step-by-step breakdown. For multiple-choice questions, give only the option's letter/name (e.g. "C. NaN"). For math problems, give only the numeric result. If there are multiple questions, list the direct answer for all of them, one short line per question (e.g. "1. C. NaN"). For a single question, use no more than 1-2 lines.\n${CASUAL_CHAT_NOTE}\n\nContent:\n${prompt}`;
   } else {
     switch (studyMode) {
       case 'hint':

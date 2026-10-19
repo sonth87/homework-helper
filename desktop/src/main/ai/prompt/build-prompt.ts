@@ -18,7 +18,7 @@ const BASE_ROLE = `You are an elite academic tutor helping a student with materi
 
 const MODE_INSTRUCTIONS: Record<StudyMode, string> = {
   'step-by-step': `Give the final answer first, then the method and theorems used, then every transformation step in order.`,
-  direct: `Output ONLY the final answer. No steps, no reasoning, no analysis. For multiple choice, output only the option letter and its text. Keep it under two lines.`,
+  direct: `Output ONLY the final answer for every question. No steps, no reasoning, no analysis. For multiple choice, output only the option letter and its text. If there are multiple questions, answer all of them with one short line per question.`,
   hint: `Do NOT reveal the final answer. Give the approach, the formulas needed, and guiding questions so the student can finish it themselves.`,
   explain: `Explain the underlying theory and intuition rather than only answering. Cover definitions, a worked example, and common pitfalls.`,
   translate: `Translate accurately into the target language. Preserve every mathematical symbol, formula, and structure exactly as written.`,

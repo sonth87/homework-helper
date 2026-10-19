@@ -46,7 +46,7 @@ export class AiEngine {
     const isDirect = studyMode === 'direct';
     let directSysInstruction = '';
     if (isDirect) {
-      directSysInstruction = `\n\n[STRICT DIRECT-ANSWER INSTRUCTION]: You MUST output ONLY the direct final answer. DO NOT write steps, reasoning, breakdown, analysis, or explanations. For multiple-choice questions, output ONLY the correct option letter and/or answer text (e.g. "Answer: 2" or "D. 2"). Keep the response under 1-2 lines.`;
+      directSysInstruction = `\n\n[STRICT DIRECT-ANSWER INSTRUCTION]: You MUST output ONLY the direct final answer for every question in the input. DO NOT write steps, reasoning, breakdown, analysis, or explanations. For multiple-choice questions, output ONLY the correct option letter and/or answer text (e.g. "Answer: 2" or "D. 2"). If multiple questions are provided, answer ALL of them with one short line per question (e.g. "1. D. 2"). For a single question, keep the response to 1 line.`;
     }
 
     // The language requirement is placed FIRST, ahead of the (often long,
